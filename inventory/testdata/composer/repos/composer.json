@@ -1,0 +1,23 @@
+{
+    "name": "acme/shop",
+    "require": {
+        "php": "^8.2",
+        "Monolog/Monolog": "^3.0",
+        "acme/utils": "*",
+        "acme/billing": "^2.0",
+        "agency/theme-kit": "^1.4",
+        "acme/forked-lib": "dev-main",
+        "acme/legacy-zip": "1.0.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "repositories": [
+        {"type": "path", "url": "../packages/utils"},
+        {"type": "composer", "url": "https://repo.acme.example"},
+        {"type": "composer", "url": "https://satis.agency.example/"},
+        {"type": "vcs", "url": "https://github.com/acme/forked-lib"},
+        {"type": "package", "package": {"name": "acme/legacy-zip", "version": "1.0.0", "dist": {"url": "https://files.acme.example/legacy-1.0.0.zip", "type": "zip"}}}
+    ],
+    "config": {"vendor-dir": "lib/vendor"}
+}
