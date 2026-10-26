@@ -235,3 +235,48 @@ func TestBaselineAtBase(t *testing.T) {
 		t.Errorf("without git show: %v", err)
 	}
 }
+
+func TestConfigAtBaseAllowFiles(t *testing.T) {
+	const base = "allow_file: approvals/allowed.yaml\nallow_from: [shared/allowed.yaml]\n"
+	note := func(what string) string {
+		return what + ": relaxed in this change, not counted (--trust-pr-allow counts it)"
+	}
+	cases := []struct {
+		name, head string
+		want       []string
+		file       string
+		from       []string
+	}{
+		{"same paths", "allow_file: ./approvals/allowed.yaml\nallow_from: [shared//allowed.yaml]\n",
+			nil, "./approvals/allowed.yaml", []string{"shared//allowed.yaml"}},
+		{"allow_from dropped is stricter", "allow_file: approvals/allowed.yaml\n",
+			nil, "approvals/allowed.yaml", nil},
+		{"allow_file outside the repository", "allow_file: /tmp/allowed.yaml\nallow_from: [shared/allowed.yaml]\n",
+			[]string{note(`allow_file "/tmp/allowed.yaml"`)}, "approvals/allowed.yaml", []string{"shared/allowed.yaml"}},
+		{"allow_file removed", "allow_from: [shared/allowed.yaml]\n",
+			[]string{note("allow_file removed")}, "approvals/allowed.yaml", []string{"shared/allowed.yaml"}},
+		{"allow_from of another project", "allow_file: approvals/allowed.yaml\nallow_from: [shared/allowed.yaml, ../other/.sightread/allowed.yaml]\n",
+			[]string{note(`allow_from "../other/.sightread/allowed.yaml"`)}, "approvals/allowed.yaml", []string{"shared/allowed.yaml"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			dir, _ := gitProject(t, map[string]string{"origin/main:.sightread/config.yaml": base})
+			writeConfig(t, dir, tc.head)
+			s := testStore(nil)
+			cfg, cp, err := s.LoadConfig(dir, "", false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			notes, err := s.ConfigAtBase(cfg, cp, "origin/main")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !slices.Equal(notes, tc.want) {
+				t.Errorf("notes %q, want %q", notes, tc.want)
+			}
+			if cfg.AllowFile != tc.file || !slices.Equal(cfg.AllowFrom, tc.from) {
+				t.Errorf("allow_file %q allow_from %q, want %q %q", cfg.AllowFile, cfg.AllowFrom, tc.file, tc.from)
+			}
+		})
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -30,7 +31,13 @@ const inChangeConfigNote = "%s: relaxed in this change, not counted (--trust-pr-
 //   - a domains_ok host the base doesn't have is dropped;
 //   - min_confidence confirmed counts only when the base has it;
 //   - fail_on keeps the stricter of the two (the base's when the
-//     change removed it).
+//     change removed it);
+//   - allow_file keeps the base's path and an allow_from path the
+//     base doesn't name is dropped, so the change can't point the
+//     approvals at another file.
+//
+// The caller runs it before LoadAllow, which then reads the files the
+// base names.
 //
 // cfg is changed in place. It returns one note per change it did not
 // apply, for Report.Notes. With baseRef or configPath empty, or a config
@@ -138,7 +145,38 @@ func relaxBack(cfg, base *core.Config) []string {
 			cfg.FailOn = base.FailOn
 		}
 	}
+
+	// The allow files hold approvals. Pointing allow_file or allow_from
+	// at another file would count that file's entries: one outside the
+	// repository is never read at the base, and another project's file
+	// in the same repository has entries the base already holds.
+	if !samePath(cfg.AllowFile, base.AllowFile) {
+		what := "allow_file removed"
+		if cfg.AllowFile != "" {
+			what = "allow_file " + show(cfg.AllowFile)
+		}
+		note(what)
+		cfg.AllowFile = base.AllowFile
+	}
+	var from []string
+	for _, p := range cfg.AllowFrom {
+		if slices.ContainsFunc(base.AllowFrom, func(b string) bool { return samePath(p, b) }) {
+			from = append(from, p)
+		} else {
+			note("allow_from " + show(p))
+		}
+	}
+	cfg.AllowFrom = from
 	return notes
+}
+
+// samePath reports whether two config paths name the same file. Both
+// are relative to the same project folder, so a clean compare is enough.
+func samePath(a, b string) bool {
+	if a == "" || b == "" {
+		return a == b
+	}
+	return filepath.Clean(a) == filepath.Clean(b)
 }
 
 // baseIgnore finds the base entry that hides the same thing as ig: the
