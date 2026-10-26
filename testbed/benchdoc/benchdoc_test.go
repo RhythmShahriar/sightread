@@ -1,0 +1,195 @@
+// Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+// SPDX-License-Identifier: MIT
+
+package benchdoc
+
+import (
+	"bytes"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+)
+
+// passing is a complete run that meets every target.
+func passing() *Results {
+	ok := func(id, kind, status string, exit int) ScenarioResult {
+		return ScenarioResult{ID: id, Kind: kind, Title: id + " title", Status: status, Verdict: "HOLD", WantVerdict: "HOLD",
+			Exit: exit, WantExit: exit, NotCheckedOK: true, WarmStatus: status, WarmExit: exit,
+			Cold: Timing{Seconds: 0.8, RSSMB: 60}, Warm: Timing{Seconds: 0.2, RSSMB: 40},
+			Tools: map[string]string{"npm audit": ToolMissed}}
+	}
+	g := ok("g01", "good", "clean", 0)
+	g.Verdict, g.WantVerdict = "ROUTINE", "ROUTINE"
+	return &Results{
+		Schema:    Schema,
+		Started:   time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC),
+		Seconds:   252,
+		Version:   "rhythm-sightread 1.0.0",
+		Machine:   "linux/amd64, 4 CPUs",
+		Scenarios: []ScenarioResult{ok("b01", "bad", "caught", 1), g},
+		Control:   Control{Rounds: 10, Runs: 10},
+		Env:       []EnvResult{{ID: "e01", Title: "registry down", Result: ResultPass}, {ID: "e13", Title: "Windows", Result: ResultNotRun, Notes: []string{"Windows only"}}},
+		Staging:   []EnvResult{{ID: "applies", Title: "update lands in the container", Result: ResultPass}},
+		Large:     Large{Ran: true, Files: 4021, MB: 41, Cold: Timing{3, 300}, Warm: Timing{1.5, 280}},
+		Tools:     []Tool{{Name: "npm audit", Version: "11.0.0", Scope: "npm lockfiles"}, {Name: "GuardDog", NotRun: "not installed", Scope: "npm tarballs"}},
+	}
+}
+
+func TestPassingRunMeetsEveryTarget(t *testing.T) {
+	r := passing()
+	for _, tg := range r.Targets() {
+		if !tg.Met {
+			t.Errorf("%s not met: %s", tg.Name, tg.Detail)
+		}
+	}
+	if !r.Met() {
+		t.Error("Met() = false for a passing run")
+	}
+	r.Partial = true
+	if r.Met() {
+		t.Error("a partial run claimed the targets")
+	}
+}
+
+func TestEachFailureBreaksATarget(t *testing.T) {
+	cases := map[string]func(r *Results){
+		"missed":       func(r *Results) { r.Scenarios[0].Status, r.Scenarios[0].WarmStatus = "missed", "missed" },
+		"false alarm":  func(r *Results) { r.Scenarios[1].Status, r.Scenarios[1].WarmStatus = "false-alarm", "false-alarm" },
+		"exit":         func(r *Results) { r.Scenarios[0].Exit, r.Scenarios[0].WarmExit = 0, 0 },
+		"verdict":      func(r *Results) { r.Scenarios[0].Verdict = "REVIEW" },
+		"not checked":  func(r *Results) { r.Scenarios[0].NotCheckedOK = false },
+		"control":      func(r *Results) { r.Control.FalseAlarms = 1 },
+		"no control":   func(r *Results) { r.Control.Rounds = 0 },
+		"unstable":     func(r *Results) { r.Control.Unstable = []string{"g01"} },
+		"canary":       func(r *Results) { r.Safety.CanaryConnections = 1 },
+		"canary file":  func(r *Results) { r.Safety.CanaryFiles = []string{"b10"} },
+		"egress":       func(r *Results) { r.Safety.Egress = []string{"CONNECT registry.npmjs.org:443 HTTP/1.1"} },
+		"outside":      func(r *Results) { r.Safety.OutsideWrites = []string{"b01: added: .config/x"} },
+		"env":          func(r *Results) { r.Env[0].Result = ResultFail },
+		"staging":      func(r *Results) { r.Staging[0].Result = ResultFail },
+		"cold != warm": func(r *Results) { r.Scenarios[0].WarmStatus = "missed" },
+		"large slow":   func(r *Results) { r.Large.Warm.Seconds = 12 },
+		"large big":    func(r *Results) { r.Large.Cold.RSSMB = 600 },
+		"large failed": func(r *Results) { r.Large.Exit = 3 },
+		"large absent": func(r *Results) { r.Large = Large{Note: "binary missing"} },
+		"slow bench":   func(r *Results) { r.Seconds = 601 },
+		"no binary":    func(r *Results) { r.BinErr = "go build failed" },
+	}
+	for name, breakIt := range cases {
+		r := passing()
+		breakIt(r)
+		if r.Met() {
+			t.Errorf("%s: the run still meets every target", name)
+		}
+	}
+	// A pending scenario is shown apart and does not fail the gate.
+	r := passing()
+	r.Scenarios[0].Status, r.Scenarios[0].Pending, r.Scenarios[0].Exit = "pending", "detector not merged", 0
+	r.Scenarios[0].WarmStatus, r.Scenarios[0].WarmExit = "pending", 0
+	if !r.Met() {
+		t.Errorf("a pending scenario broke the gate: %+v", r.Targets())
+	}
+}
+
+func TestRender(t *testing.T) {
+	r := passing()
+	page := Render(r, CorpusBlock(""))
+	for _, want := range []string{
+		"# Sightread benchmark\n\n" + Header + "\n\n" + Framing,
+		"| Binary | rhythm-sightread 1.0.0 |",
+		"**Every target is met.**",
+		"## Scoreboard",
+		"| b01 | b01 title | caught |",
+		"## False alarms",
+		"Control pass: every good scenario again 10 times",
+		"| Canary connections | 0 | 0 |",
+		"## Environment scenarios",
+		"| e13 | Windows | not run | Windows only |",
+		"## --soundcheck end to end (e15)",
+		"## Reproducibility",
+		"p01-large (4021 files, 41 MB",
+		"| Scenario | Sightread | npm audit | GuardDog |",
+		"| b01 | **caught** | missed | not run |",
+		"GuardDog not run (not installed)",
+		"## Known gaps",
+		CorpusStart,
+		"Not run yet.",
+		CorpusEnd,
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("page misses %q", want)
+		}
+	}
+	if strings.Contains(page, "\u2014") {
+		t.Error("the page holds an em dash")
+	}
+
+	r.Safety.Egress = []string{"CONNECT api.wordpress.org:443 HTTP/1.1"}
+	r.Scenarios[0].Problem = "no JSON report: exit 2"
+	page = Render(r, CorpusBlock(""))
+	for _, want := range []string{"**Not every target is met.**", "**NOT MET**", "- `CONNECT api.wordpress.org:443 HTTP/1.1`", "| b01 | no JSON report: exit 2 |"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("failing page misses %q", want)
+		}
+	}
+}
+
+func TestCorpusBlockSurvivesRegeneration(t *testing.T) {
+	r := passing()
+	page := Render(r, CorpusBlock(""))
+	section := "## Real releases (owner-run)\n\nFetched 2026-10-20.\n"
+	page = SpliceCorpus(page, section)
+	if !strings.Contains(page, "Fetched 2026-10-20.") || strings.Contains(page, "Not run yet.") {
+		t.Fatalf("splice did not replace the placeholder:\n%s", page)
+	}
+	// The bench regenerates the page and keeps the block.
+	again := Render(r, CorpusBlock(page))
+	if !strings.Contains(again, "Fetched 2026-10-20.") || strings.Count(again, CorpusStart) != 1 {
+		t.Errorf("the corpus block was lost or doubled:\n%s", again)
+	}
+	// A page without markers gets the block appended.
+	if got := SpliceCorpus("# Page\n", section); !strings.HasSuffix(got, CorpusEnd+"\n") || !strings.HasPrefix(got, "# Page\n\n"+CorpusStart) {
+		t.Errorf("append form: %q", got)
+	}
+}
+
+func TestDiffAndReadWrite(t *testing.T) {
+	a, b := passing(), passing()
+	b.Scenarios[0].Cold.Seconds = 9 // times never count
+	var out bytes.Buffer
+	if !Diff(a, b, &out) || !strings.Contains(out.String(), "identical") {
+		t.Errorf("identical runs differ:\n%s", out.String())
+	}
+	b.Scenarios[0].Status = "missed"
+	b.Env[0].Result = ResultFail
+	out.Reset()
+	if Diff(a, b, &out) {
+		t.Fatal("different runs are identical")
+	}
+	for _, want := range []string{"scenario b01: caught exit 1 verdict HOLD -> missed exit 1 verdict HOLD", "env e01: pass -> fail"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("diff misses %q:\n%s", want, out.String())
+		}
+	}
+
+	path := filepath.Join(t.TempDir(), "results.json")
+	if err := a.Write(path); err != nil {
+		t.Fatal(err)
+	}
+	back, err := Read(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out.Reset()
+	if !Diff(a, back, &out) {
+		t.Errorf("a written run reads back different:\n%s", out.String())
+	}
+	a.Schema = "other/v1"
+	if err := a.Write(path); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Read(path); err == nil {
+		t.Error("Read accepted a foreign schema")
+	}
+}
