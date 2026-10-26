@@ -1307,7 +1307,7 @@ The installed copy differs from the official copy of the installed version. Some
 
 ### False alarms
 
-Changes to readme.txt and languages files are not counted.
+Changes to readme.txt, .po, .mo and .pot files and JSON translations under languages/ are not counted. PHP translation files (.l10n.php) are: PHP runs them.
 
 ### How to review
 

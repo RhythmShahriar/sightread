@@ -372,16 +372,18 @@ func verbFor(n int) string {
 }
 
 // driftIgnored reports whether a drifted path is one sites change on
-// their own: readme.txt and translation files.
+// their own: readme.txt, .po, .mo and .pot catalogues anywhere and JSON
+// script translations under languages/. PHP stays checked even there:
+// a .l10n.php file is code PHP runs, so a site could hide an edit in it.
 func driftIgnored(p string) bool {
 	lp := strings.ToLower(p)
-	if lp == "readme.txt" || strings.HasPrefix(lp, "languages/") {
+	if lp == "readme.txt" {
 		return true
 	}
-	for _, ext := range []string{".po", ".mo", ".pot", ".l10n.php"} {
+	for _, ext := range []string{".po", ".mo", ".pot"} {
 		if strings.HasSuffix(lp, ext) {
 			return true
 		}
 	}
-	return false
+	return strings.HasPrefix(lp, "languages/") && strings.HasSuffix(lp, ".json")
 }

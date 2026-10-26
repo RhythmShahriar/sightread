@@ -10,7 +10,9 @@ how_to_review:
   - "Decide whether the changes are edits you made."
   - "Keep a copy of edits you want before updating."
 false_alarms: >-
-  Changes to readme.txt and languages files are not counted.
+  Changes to readme.txt, .po, .mo and .pot files and JSON translations
+  under languages/ are not counted. PHP translation files (.l10n.php)
+  are: PHP runs them.
 incidents: []
 advice: "Updating will overwrite these files. Keep a copy of edits you want."
 more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#local-drift

@@ -161,3 +161,22 @@ func TestConfusionWording(t *testing.T) {
 		t.Errorf("evidence = %q, want %q", f.Evidence, want)
 	}
 }
+
+func TestDriftIgnored(t *testing.T) {
+	for p, want := range map[string]bool{
+		"readme.txt":                       true,
+		"languages/acme-de_DE.po":          true,
+		"languages/acme-de_DE.mo":          true,
+		"i18n/acme.pot":                    true,
+		"languages/acme-de_DE-abc123.json": true,
+		"languages/acme-de_DE.l10n.php":    false,
+		"languages/index.php":              false,
+		"acme-de_DE.l10n.php":              false,
+		"assets/data.json":                 false,
+		"acme.php":                         false,
+	} {
+		if got := driftIgnored(p); got != want {
+			t.Errorf("driftIgnored(%q) = %v, want %v", p, got, want)
+		}
+	}
+}
