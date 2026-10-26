@@ -273,7 +273,7 @@ func multilineAttributes(toks []php.Token) []int {
 // attribute that spans lines are code there; WordPress still runs on
 // PHP 7, so code could hide in such an attribute. The bracket after
 // each such "#" is blanked, which leaves offsets, lines and snippets
-// right, and the file is lexed again until no attribute spans lines.
+// right; the file is lexed again until no attribute spans lines.
 // Only the walk and the hosts run again, as in rereadJS.
 func rereadPHP7(path string, src []byte, ctx string, lines lineIndex, clk *clock) []core.Feature {
 	patched := bytes.Clone(src)

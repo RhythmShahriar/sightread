@@ -409,8 +409,8 @@ func TestSecretsPEM(t *testing.T) {
 	if strings.Contains(string(out)+dump(set), "TUlJRXBBSUJBQUtDQVFFQXNpZ2h0") {
 		t.Errorf("raw key in the output")
 	}
-	// Text in a documentation context is not scanned by Analyze, but the
-	// scan itself places a block in any text.
+	// Analyze skips text in a documentation context; the scan itself
+	// places a block in any text.
 	fs := secretFeatures("notes.txt", []byte("a\nb\n"+key), false)
 	if len(fs) != 1 || fs[0].Ev.Line != 3 {
 		t.Errorf("notes.txt: %+v", fs)
