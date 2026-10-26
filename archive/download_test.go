@@ -72,3 +72,35 @@ func TestReadZipDownloadCorrupt(t *testing.T) {
 		t.Error("missing blob read")
 	}
 }
+
+// A blob that went bad on disk fails one read and is deleted, and the
+// next download stores it fresh, so later runs read it again.
+func TestReadZipDownloadRepairs(t *testing.T) {
+	data := makeZip(t, zent{name: "a.php", body: "<?php"})
+	disk, err := blob.OpenDisk(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := store(t, disk, data)
+	flipped := bytes.Clone(data)
+	flipped[0] ^= 0xff
+	if err := os.WriteFile(d.Path, flipped, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ReadZipDownload(context.Background(), d, disk, core.Limits{}, StripSingle); !errors.Is(err, core.ErrBlobCorrupt) {
+		t.Fatalf("corrupt blob: %v, want ErrBlobCorrupt", err)
+	}
+	if disk.Has(d.SHA256) {
+		t.Error("corrupt blob kept after a failed read")
+	}
+	if err := os.WriteFile(d.Path, flipped, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// The next run downloads the same bytes over the bad blob.
+	d = store(t, disk, data)
+	for run := range 3 {
+		if _, err := ReadZipDownload(context.Background(), d, disk, core.Limits{}, StripSingle); err != nil {
+			t.Fatalf("run %d: %v", run, err)
+		}
+	}
+}

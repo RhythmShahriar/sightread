@@ -184,6 +184,57 @@ func TestCorruptBlob(t *testing.T) {
 }
 
 // TestConcurrentPut: two writers of the same content both succeed (e07).
+// A blob torn by a crash or changed on disk is replaced when the same
+// bytes are stored again, while a sound one is kept as it is.
+func TestPutRepairsCorruptBlob(t *testing.T) {
+	const body = "original contents"
+	for name, bad := range map[string][]byte{
+		"flipped byte": []byte("original contentS"),
+		"zero length":  {},
+		"torn":         []byte("origin"),
+	} {
+		d, _ := OpenDisk(t.TempDir())
+		sum, _, err := d.Put(context.Background(), strings.NewReader(body), 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+		p, _ := d.Path(sum)
+		if err := os.WriteFile(p, bad, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, _, err := d.Put(context.Background(), strings.NewReader(body), 100); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if got, err := readAll(t, d, sum); err != nil || string(got) != body {
+			t.Errorf("%s: after Put again %q %v", name, got, err)
+		}
+		if n := len(files(t, d.Dir())); n != 1 {
+			t.Errorf("%s: %d files left, want 1", name, n)
+		}
+	}
+
+	d, _ := OpenDisk(t.TempDir())
+	sum, _, err := d.Put(context.Background(), strings.NewReader(body), 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := d.Path(sum)
+	before, err := os.Stat(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := d.Put(context.Background(), strings.NewReader(body), 100); err != nil {
+		t.Fatal(err)
+	}
+	after, err := os.Stat(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !os.SameFile(before, after) {
+		t.Error("a sound blob was replaced")
+	}
+}
+
 func TestConcurrentPut(t *testing.T) {
 	d, _ := OpenDisk(t.TempDir())
 	data := bytes.Repeat([]byte("shared plugin file\n"), 4096)

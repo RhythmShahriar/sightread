@@ -35,13 +35,19 @@ func ReadZipDownload(ctx context.Context, d core.Download, blobs core.BlobStore,
 	return tree, nil
 }
 
-// openDownload gives random access to a downloaded blob.
+// openDownload gives random access to a downloaded blob. A blob on disk
+// is first read through the store's self-checking Open, which deletes
+// it when its bytes don't match its name, so a torn or changed blob
+// fails this run only and the next download stores it fresh.
 func openDownload(d core.Download, blobs core.BlobStore) (io.ReaderAt, func(), error) {
 	path := d.Path
 	if path == "" {
 		path, _ = blobs.Path(d.SHA256)
 	}
 	if path != "" {
+		if err := verify(d, blobs); err != nil {
+			return nil, nil, err
+		}
 		f, err := os.Open(path) //nolint:gosec // a path the blob store gave for a hash
 		if err != nil {
 			return nil, nil, fmt.Errorf("open the downloaded archive: %w", err)
@@ -62,4 +68,21 @@ func openDownload(d core.Download, blobs core.BlobStore) (io.ReaderAt, func(), e
 		return nil, nil, fmt.Errorf("read the downloaded archive: %w", core.ErrBlobCorrupt)
 	}
 	return bytes.NewReader(data), func() {}, nil
+}
+
+// verify reads the whole blob through the store, which re-hashes it.
+func verify(d core.Download, blobs core.BlobStore) error {
+	rc, err := blobs.Open(d.SHA256)
+	if err != nil {
+		return fmt.Errorf("open the downloaded archive: %w", err)
+	}
+	defer func() { _ = rc.Close() }()
+	n, err := io.Copy(io.Discard, rc)
+	if err != nil {
+		return fmt.Errorf("read the downloaded archive: %w", err)
+	}
+	if n != d.Size {
+		return fmt.Errorf("read the downloaded archive: %w", core.ErrBlobCorrupt)
+	}
+	return nil
 }

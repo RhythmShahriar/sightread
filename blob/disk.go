@@ -89,9 +89,9 @@ func (d *Disk) Put(ctx context.Context, r io.Reader, limit int64) (sum [32]byte,
 	if n > limit {
 		return sum, 0, core.ErrTooLarge
 	}
-	// No fsync: a blob a crash tears is caught by the re-hash in Open and
-	// fetched again, while a flush per file costs about 7 ms, 14 s for a
-	// 2,000-file plugin.
+	// No fsync: a blob a crash tears is caught by the re-hash in Open or
+	// by place when the same bytes are stored again, while a flush per
+	// file costs about 7 ms, 14 s for a 2,000-file plugin.
 	if err := tmp.Close(); err != nil {
 		return sum, 0, fmt.Errorf("blob store: %w", err)
 	}
@@ -103,37 +103,70 @@ func (d *Disk) Put(ctx context.Context, r io.Reader, limit int64) (sum [32]byte,
 	if err := os.MkdirAll(filepath.Dir(final), 0o700); err != nil {
 		return [32]byte{}, 0, fmt.Errorf("blob store: %w", err)
 	}
-	if err := place(name, final); err != nil {
+	if err := place(name, final, sum, n); err != nil {
 		return [32]byte{}, 0, fmt.Errorf("blob store: %w", err)
 	}
 	return sum, n, nil
 }
 
-// place puts the temp file tmp at final unless a blob is already there.
-// A hard link fails when final exists, so nothing is ever replaced; a
-// file system without hard links gets a rename after a check, which can
-// only race with a writer of the same bytes.
-func place(tmp, final string) error {
-	err := os.Link(tmp, final)
-	if err == nil {
-		return nil
-	}
-	if errors.Is(err, fs.ErrExist) {
-		// The blob is in use again: Prune goes by this time.
-		now := time.Now()
-		_ = os.Chtimes(final, now, now)
-		return nil
-	}
-	if _, serr := os.Lstat(final); serr == nil {
-		return nil
-	}
-	if rerr := os.Rename(tmp, final); rerr != nil {
-		if _, serr := os.Lstat(final); serr == nil {
+// place puts the temp file tmp at final unless a good blob is already
+// there. A hard link fails when final exists, so a sound blob is never
+// replaced; a file system without hard links gets a rename after a
+// check, which can only race with a writer of the same bytes. A blob
+// already at final that isn't sum (torn by a crash, since Put skips
+// fsync, or changed on disk) is removed and linked again, so storing
+// the right bytes repairs it.
+func place(tmp, final string, sum [32]byte, n int64) error {
+	for attempt := 0; ; attempt++ {
+		err := os.Link(tmp, final)
+		if err == nil {
 			return nil
 		}
-		return rerr
+		if !errors.Is(err, fs.ErrExist) {
+			if _, serr := os.Lstat(final); serr == nil {
+				return nil
+			}
+			if rerr := os.Rename(tmp, final); rerr != nil {
+				if _, serr := os.Lstat(final); serr == nil {
+					return nil
+				}
+				return rerr
+			}
+			return nil
+		}
+		if sound(final, sum, n) {
+			// The blob is in use again: Prune goes by this time.
+			now := time.Now()
+			_ = os.Chtimes(final, now, now)
+			return nil
+		}
+		// One retry: a writer racing us here stores the same bytes.
+		if attempt > 0 {
+			return fmt.Errorf("blob %x is corrupt and can't be replaced", sum[:4])
+		}
+		if rerr := os.Remove(final); rerr != nil && !errors.Is(rerr, fs.ErrNotExist) {
+			return fmt.Errorf("replace corrupt blob %x: %w", sum[:4], rerr)
+		}
 	}
-	return nil
+}
+
+// sound reports whether the file at p is n bytes that hash to sum.
+func sound(p string, sum [32]byte, n int64) bool {
+	f, err := os.Open(p) //nolint:gosec // a path built from a hash under the store
+	if err != nil {
+		return false
+	}
+	defer func() { _ = f.Close() }()
+	if fi, err := f.Stat(); err != nil || !fi.Mode().IsRegular() || fi.Size() != n {
+		return false
+	}
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return false
+	}
+	var got [32]byte
+	copy(got[:], h.Sum(nil))
+	return got == sum
 }
 
 // ctxReader stops a copy once ctx is done.
