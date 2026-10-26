@@ -37,6 +37,9 @@ func (r *reviewer) pick(ctx context.Context, t *target) error {
 	if src == nil {
 		return fmt.Errorf("%s source %w", t.eco, core.ErrNotLinked)
 	}
+	if r.req.Rereview {
+		return r.pickPrevious(ctx, src, t)
+	}
 	res, err := pickCandidate(ctx, src, pickInput{Command: r.req.Command, Eco: t.eco, Name: t.name, From: t.fromVersion,
 		Constraint: t.constraint, To: r.req.To, Pre: r.req.Pre, Downgrade: r.req.AllowDowngrade, Explicit: r.req.To != ""})
 	if err != nil {
@@ -54,6 +57,42 @@ func (r *reviewer) pick(ctx context.Context, t *target) error {
 	default:
 		t.picked = true
 	}
+	return nil
+}
+
+// pickPrevious is --rereview: the candidate is the installed version and
+// the from side the newest release before it, so the signals of the
+// current data run over code the site already runs. A package with no
+// earlier release has nothing to compare and is left out.
+func (r *reviewer) pickPrevious(ctx context.Context, src core.Source, t *target) error {
+	vs := core.Versions(t.eco)
+	if vs == nil {
+		return fmt.Errorf("%s version scheme %w", t.eco, core.ErrNotLinked)
+	}
+	installed := t.fromVersion
+	if installed == "" || !vs.Valid(installed) {
+		t.skip = true
+		return nil
+	}
+	versions, err := src.Versions(ctx, t.name)
+	if err != nil {
+		return withCommand(err, r.req.Command)
+	}
+	prev := ""
+	for _, v := range versions {
+		if !vs.Valid(v) || vs.Compare(v, installed) >= 0 || (vs.Prerelease(v) && !r.req.Pre && !vs.Prerelease(installed)) {
+			continue
+		}
+		if prev == "" || vs.Compare(v, prev) > 0 {
+			prev = v
+		}
+	}
+	if prev == "" || !slices.Contains(versions, installed) {
+		t.skip = true
+		return nil
+	}
+	t.versions, t.cand = versions, candidate{Version: installed}
+	t.fromVersion, t.rereview, t.picked = prev, true, true
 	return nil
 }
 
@@ -273,7 +312,9 @@ func (r *reviewer) finish(u *core.Update) {
 // the first member is the Subject's.
 func (r *reviewer) drift(ctx context.Context, src core.Source, t *target, res *result) (*core.Drift, []member) {
 	lv, ok := src.(core.LocalVerifier)
-	if !ok || r.inv == nil || t.fromVersion == "" || t.fromFile != "" || t.localFrom != "" {
+	// A rereview's from side is the release before the installed one, so
+	// the installed copy is not a copy of it.
+	if !ok || r.inv == nil || t.fromVersion == "" || t.fromFile != "" || t.localFrom != "" || t.rereview {
 		return nil, t.members
 	}
 	var first *core.Drift

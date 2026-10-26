@@ -103,6 +103,7 @@ type reviewFlags struct {
 	base, before, after                       string   // changes
 	lockfiles                                 cli.RepeatFlag
 	sites                                     string // all --sites
+	rereview                                  bool   // all --rereview
 	set                                       map[string]bool
 	groups                                    []flagGroup
 	shortOf                                   map[string]string // long name to its one-letter alias
@@ -238,6 +239,7 @@ func (f *reviewFlags) changesFlags(fs *flag.FlagSet) {
 // fleetFlags registers the flags only all takes.
 func (f *reviewFlags) fleetFlags(fs *flag.FlagSet) {
 	fs.StringVar(&f.sites, f.add("sites"), "", "review every site of this sites.yaml `file` once per update")
+	fs.BoolVar(&f.rereview, f.add("rereview"), false, "review each installed version against the release before it, so new signals reach what you already run (watch does this after a signal data update)")
 }
 
 // register adds every flag of c to fs, by group.
@@ -315,6 +317,9 @@ func (f *reviewFlags) plan(c *reviewCommand, env func(string) string, version st
 
 	// Versions
 	q.To, q.From, q.ToFile, q.FromFile = f.to, f.from, f.toFile, f.fromFile
+	if q.Rereview = f.rereview; f.rereview && (f.to != "" || f.from != "") {
+		return nil, badFlag("--rereview reviews the installed versions against the release before them, so it takes no --to or --from")
+	}
 	q.AllowDowngrade, q.Pre, q.Transitive = f.allowDowngrade, f.pre, f.transitive
 	q.Only, q.Skip = slices.Clone(f.only), slices.Clone(f.skip)
 	q.Inventory = core.InventoryRequest{Root: f.path, TunerReport: f.fromTuner, Transitive: f.transitive}

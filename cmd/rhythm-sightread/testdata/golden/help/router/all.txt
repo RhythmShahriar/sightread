@@ -36,6 +36,10 @@ Versions:
 Fleet:
   --sites <file>                 review every site of this sites.yaml file once
                                  per update
+  --rereview                     review each installed version against the
+                                 release before it, so new signals reach what
+                                 you already run (watch does this after a signal
+                                 data update)
 
 Sources and integrity:
   --offline                      use cached archives only (RHYTHM_OFFLINE=1 does

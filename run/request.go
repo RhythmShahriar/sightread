@@ -56,8 +56,13 @@ type Request struct {
 	To, From         string // --to and --from
 	ToFile, FromFile string // --to-file and --from-file: zip, tgz or folder
 	AllowDowngrade   bool
-	Pre, Transitive  bool
-	Only, Skip       []string
+	// Rereview (all --rereview) reviews every installed version against
+	// the release before it instead of looking for updates: watch runs
+	// it after a signal data update, so new signals reach versions a
+	// site already runs.
+	Rereview        bool
+	Pre, Transitive bool
+	Only, Skip      []string
 
 	// Getter is built from the flags and the environment (tokens,
 	// SIGHTREAD_* mirrors). Review fills the Bases a variable left unset

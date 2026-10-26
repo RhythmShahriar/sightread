@@ -121,6 +121,7 @@ func TestBadFlagValues(t *testing.T) {
 		{[]string{"changes", "--before", "a.json"}, `rhythm-sightread: --before and --after go together: the old and the new lockfile`},
 		{[]string{"all", "--to-file", "x.zip"}, `rhythm-sightread: --to-file and --from-file review one package: use rhythm-sightread plugin, theme, composer or npm with a name`},
 		{[]string{"plugin", "a", "--", "--limit", "100"}, `rhythm-sightread: the arguments after -- go to rhythm-soundcheck, so they need --soundcheck <staging-url>`},
+		{[]string{"all", "--rereview", "--to", "latest"}, `rhythm-sightread: --rereview reviews the installed versions against the release before them, so it takes no --to or --from`},
 	}
 	for _, c := range cases {
 		code, _, errOut := execute(t, c.args...)
@@ -227,6 +228,8 @@ func TestFlagMapping(t *testing.T) {
 			func(p *plan) any { return []any{p.soundcheck, p.write.Soundcheck} },
 			[]any{soundcheckPlan{Staging: "https://staging.shop.test", Apply: "wp plugin install x", FailOn: "new", Rollback: true, Anyway: true,
 				Skip: true, Args: []string{"--limit", "100"}}, true}},
+		{"rereview", []string{"all", "--rereview"}, nil, func(p *plan) any { return p.req.Rereview }, true},
+		{"no rereview", []string{"all"}, nil, func(p *plan) any { return p.req.Rereview }, false},
 		{"soundcheck-fail-on default", []string{"plugin", "a"}, nil, func(p *plan) any { return p.soundcheck.FailOn }, "broke"},
 		{"changes", []string{"changes", "--base", "origin/main", "--lockfile", "web/package-lock.json", "--path", "repo"}, nil,
 			func(p *plan) any { return *p.req.Changes },

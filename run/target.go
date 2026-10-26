@@ -33,6 +33,7 @@ type target struct {
 	fromFile    string
 	localFrom   string // the installed folder as the from side (premium plugin with --to-file)
 	private     bool   // reviewed through a configured private registry
+	rereview    bool   // --rereview: the installed version against the release before it
 
 	versions []string // the source's version list, kept for History
 	cand     candidate
