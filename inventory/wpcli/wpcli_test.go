@@ -221,8 +221,28 @@ func TestE1OnBadCoreVersion(t *testing.T) {
 	dir, _ := fixture(t)
 	writeFile(t, dir, "core.txt", "Error: not installed")
 	_, err := List(context.Background(), []string{stubWP}, Options{})
-	if core.CodeOf(err) != core.ENothingInstalled {
+	if core.CodeOf(err) != core.ENothingInstalled || !strings.Contains(err.Error(), "core version did not print a WordPress version") ||
+		!strings.Contains(err.Error(), "check that "+stubWP+" core version works on its own") {
 		t.Errorf("err = %v", err)
+	}
+}
+
+// TestHintNamesTheFailedListing: a theme list that prints something
+// else than JSON points the hint at theme list, not plugin list.
+func TestHintNamesTheFailedListing(t *testing.T) {
+	dir, _ := fixture(t)
+	writeFile(t, dir, "theme.json", "Success: done")
+	_, err := List(context.Background(), []string{stubWP}, Options{})
+	if core.CodeOf(err) != core.ENothingInstalled || !strings.Contains(err.Error(), "theme list did not print the JSON Sightread reads") ||
+		!strings.Contains(err.Error(), "check that "+stubWP+" theme list works on its own") || strings.Contains(err.Error(), "plugin list") {
+		t.Errorf("err = %v", err)
+	}
+	fixture(t)
+	t.Setenv("STUBWP_SLEEP", "theme")
+	t.Setenv("GORACE", "atexit_sleep_ms=0")
+	_, err = List(context.Background(), []string{stubWP}, Options{Timeout: 300 * time.Millisecond})
+	if !strings.Contains(err.Error(), "check that "+stubWP+" theme list works on its own") {
+		t.Errorf("timeout err = %v", err)
 	}
 }
 

@@ -14,6 +14,8 @@ Flags:
                     .sightread/config.yaml
   --file <file>     the allow file (default .sightread/allowed.yaml next to the
                     config)
+  --force           replace an entry that allows the same version with another
+                    sha256
   --from <report>   take every update of this saved JSON report
   --json            allow list: print the kind allowed JSON document
   --no-config       read no config

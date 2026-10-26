@@ -12,12 +12,11 @@ the HTML one.
 Flags:
   --keep                keep the generated archives, cache and site and print
                         their folder
-  --no-color            no colour (also NO_COLOR)
+  --no-color            no color (NO_COLOR does the same)
   --open                open the HTML report in the browser when done
   -o, --output <file>   also write the report to this file (repeatable; .json,
                         .md, .html or .sarif)
-  --plain               no colour or symbols (also when stdout is not a
-                        terminal)
+  --plain               no color or symbols (also when stdout is not a terminal)
 
 Examples:
   rhythm-sightread demo

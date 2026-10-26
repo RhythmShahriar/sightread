@@ -205,7 +205,7 @@ or both. Findings win over gaps (exit 1).
   lines under the header; warnings as `!` lines under the footer.
 - Next steps include the update command Sightread never runs:
   `wp plugin update a b`, `composer update vendor/pkg` or `npm install pkg@1.2.3`.
-- `--plain` (and any output that is not a terminal) drops colour, glyphs
+- `--plain` (and any output that is not a terminal) drops color, glyphs
   and the box: `[CRITICAL] Fetches remote code and runs it - includes/class-wpos-analytics.php:88`.
 - `-q` prints the table and the findings only.
 - Package text shows control characters and bidi controls escaped

@@ -9,7 +9,7 @@ are installed. --offline skips the network checks. Exit 1 when a check fails.
 Flags:
   --json      print the kind doctor JSON document
   --offline   skip the network checks (also RHYTHM_OFFLINE)
-  --plain     no symbols or colour (also when stdout is not a terminal)
+  --plain     no symbols or color (also when stdout is not a terminal)
 
 Examples:
   rhythm sightread doctor

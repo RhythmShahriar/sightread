@@ -70,7 +70,7 @@ func TestTerminalNoColor(t *testing.T) {
 // writer may emit.
 var sgr = regexp.MustCompile("\x1b\\[[0-9;]*m")
 
-// TestTerminalColorANSI: a colour run emits colour and nothing but SGR
+// TestTerminalColorANSI: a color run emits color and nothing but SGR
 // sequences, so package text can't smuggle a cursor move or OSC in.
 func TestTerminalColorANSI(t *testing.T) {
 	o := termOpts(80)
@@ -79,7 +79,7 @@ func TestTerminalColorANSI(t *testing.T) {
 	r.Updates[0].Changelog[0].Text = "fix \x1b]52;c;cm0gLXJmIH4=\x07 and \x1b[2J"
 	out := writeTerm(t, r, o)
 	if !sgr.MatchString(out) {
-		t.Fatal("no colour in a colour run")
+		t.Fatal("no color in a color run")
 	}
 	if rest := sgr.ReplaceAllString(out, ""); strings.Contains(rest, "\x1b") {
 		i := strings.Index(rest, "\x1b")

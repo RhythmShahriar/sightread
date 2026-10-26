@@ -87,10 +87,10 @@ type Options struct {
 // listing just has none.
 func List(ctx context.Context, prefix []string, opt Options) (*Listing, error) {
 	if len(prefix) == 0 || prefix[0] == "" {
-		return nil, wpError(opt.Command, prefix, "the --wp command is empty", nil)
+		return nil, wpError(opt.Command, prefix, "", "the --wp command is empty", nil)
 	}
 	if _, err := proc.LookPath(prefix[0]); err != nil {
-		return nil, wpError(opt.Command, prefix, fmt.Sprintf("%s was not found", clip(prefix[0])), err)
+		return nil, wpError(opt.Command, prefix, "", fmt.Sprintf("%s was not found", clip(prefix[0])), err)
 	}
 	l := &Listing{}
 	out, err := call(ctx, prefix, pluginList, opt)
@@ -148,19 +148,19 @@ func call(ctx context.Context, prefix, args []string, opt Options) ([]byte, erro
 	sub := strings.Join(args[:2], " ")
 	switch {
 	case err != nil && errors.Is(err, proc.ErrOutputTooLarge):
-		return nil, wpError(opt.Command, prefix, fmt.Sprintf("%s printed over 16 MiB", sub), err)
+		return nil, wpError(opt.Command, prefix, sub, fmt.Sprintf("%s printed over 16 MiB", sub), err)
 	case err != nil && ctx.Err() != nil:
 		return nil, ctx.Err()
 	case err != nil && errors.Is(err, context.DeadlineExceeded):
-		return nil, wpError(opt.Command, prefix, fmt.Sprintf("%s did not finish within %s", sub, timeout), err)
+		return nil, wpError(opt.Command, prefix, sub, fmt.Sprintf("%s did not finish within %s", sub, timeout), err)
 	case err != nil:
-		return nil, wpError(opt.Command, prefix, fmt.Sprintf("%s could not run: %s", sub, clip(err.Error())), err)
+		return nil, wpError(opt.Command, prefix, sub, fmt.Sprintf("%s could not run: %s", sub, clip(err.Error())), err)
 	case res.Code != 0:
 		what := fmt.Sprintf("%s failed (exit %d)", sub, res.Code)
 		if line := firstLine(res.Stderr); line != "" {
 			what += ": " + line
 		}
-		return nil, wpError(opt.Command, prefix, what, nil)
+		return nil, wpError(opt.Command, prefix, sub, what, nil)
 	}
 	return res.Stdout, nil
 }
@@ -273,19 +273,29 @@ func Display(prefix []string) string {
 
 // badOutput is E1 for output that isn't what the call should print.
 func badOutput(command string, prefix, args []string, err error) error {
-	return wpError(command, prefix, fmt.Sprintf("%s did not print the JSON Sightread reads: %s", strings.Join(args[:2], " "), clip(err.Error())), err)
+	sub := strings.Join(args[:2], " ")
+	what := "the JSON Sightread reads"
+	if slices.Equal(args, coreVer) {
+		what = "a WordPress version"
+	}
+	return wpError(command, prefix, sub, fmt.Sprintf("%s did not print %s: %s", sub, what, clip(err.Error())), err)
 }
 
 // wpError is E1 for a --wp failure.
-func wpError(command string, prefix []string, what string, cause error) error {
+// The hint names sub, the listing that failed ("theme list"), or
+// "plugin list", the first one, when none ran yet.
+func wpError(command string, prefix []string, sub, what string, cause error) error {
 	cmd := Display(prefix)
+	if sub == "" {
+		sub = "plugin list"
+	}
 	return &core.Error{
 		Code:    core.ENothingInstalled,
 		Exit:    2,
 		Command: command,
 		What:    fmt.Sprintf("--wp %q: %s", cmd, what),
 		Hint: []string{
-			fmt.Sprintf("check that %s plugin list works on its own", cmd),
+			fmt.Sprintf("check that %s %s works on its own", cmd, sub),
 			"or name the site with --path /var/www/site, or give the version: --from <version>",
 		},
 		Err: cause,

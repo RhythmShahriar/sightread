@@ -178,7 +178,7 @@ func cachedSide(cache string, u *core.Update, s core.Side, blobs core.BlobStore)
 	return t, true
 }
 
-// colorOn reports whether terminal output to w may use colour.
+// colorOn reports whether terminal output to w may use color.
 func colorOn(w io.Writer) bool {
 	return cli.IsTerminal(w) && os.Getenv("NO_COLOR") == ""
 }

@@ -120,9 +120,12 @@ nothing installed found under <root> (looked for a WordPress site up to 6 folder
   name the site or project folder, read a site with --wp "wp --path=..." or give a Tuner report with --from-tuner <report.json>
 
 --wp "<cmd>": <what>
-  check that <cmd> plugin list works on its own
+  check that <cmd> <listing> works on its own
   or name the site with --path /var/www/site, or give the version: --from <version>
 ```
+
+`<listing>` is the call that failed: `plugin list`, `theme list` or `core version` (`plugin
+list` when the command itself is missing).
 
 E4, no lockfile:
 

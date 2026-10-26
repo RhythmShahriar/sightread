@@ -25,7 +25,7 @@ func init() { core.RegisterWriter(TerminalWriter{}) }
 // TerminalWriter writes the report for a person at a terminal (PRD 9.1),
 // in Tuner's look: a ♪ header and rule, ▸ facts, severity groups with ▌
 // bars, a rounded verdict box, ! notes and → next steps. With
-// WriteOptions.Plain it drops colour, boxes and glyphs for logs and
+// WriteOptions.Plain it drops color, boxes and glyphs for logs and
 // screen readers; with Quiet it prints the table and findings only.
 type TerminalWriter struct{}
 
@@ -82,7 +82,7 @@ func newTermView(r *core.Report, o core.WriteOptions) *termView {
 	if cols <= 0 {
 		cols = termDefaultColumns
 	}
-	// A renderer of its own: the colour profile comes from the options,
+	// A renderer of its own: the color profile comes from the options,
 	// never from whatever the process's stdout happens to be; it also
 	// never queries the terminal for its background.
 	re := lipgloss.NewRenderer(io.Discard)
@@ -114,7 +114,7 @@ func (t *termView) sevStyle(s cli.Severity) lipgloss.Style {
 	return t.re.NewStyle().Foreground(ui.SeverityColor(s.String())).Bold(true)
 }
 
-// verdictColors colour the verdict words the way the HTML pills do.
+// verdictColors color the verdict words the way the HTML pills do.
 var verdictColors = map[core.Verdict]string{
 	core.Hold: ui.Danger, core.Review: ui.High, core.Unverified: ui.Warn, core.Allowed: ui.Ok, core.Routine: ui.Ok,
 }
@@ -619,7 +619,7 @@ func (t *termView) evidence(f *core.Finding, n int) []string {
 }
 
 // badge renders a severity label: filled for a confirmed finding,
-// outlined (text in its colour) for a likely one, as in Tuner.
+// outlined (text in its color) for a likely one, as in Tuner.
 func (t *termView) badge(f *core.Finding) string {
 	label := " " + ui.Pad(strings.ToUpper(f.Severity.String()), badgeWidth-2) + " "
 	if f.Confidence == core.Likely {
@@ -630,7 +630,7 @@ func (t *termView) badge(f *core.Finding) string {
 }
 
 // card writes a critical, high or medium finding behind a ▌ bar in its
-// severity's colour: title and place, evidence, notes and → advice.
+// severity's color: title and place, evidence, notes and → advice.
 func (t *termView) card(f *core.Finding) {
 	content := t.width - 1 // " ▌ " plus content spans the rule's width
 	col := content - titleIndent
@@ -683,7 +683,7 @@ func (t *termView) card(f *core.Finding) {
 	}
 }
 
-// glyphs mark low and info findings without relying on colour.
+// glyphs mark low and info findings without relying on color.
 var glyphs = map[cli.Severity]string{cli.SeverityLow: "●", cli.SeverityInfo: "·"}
 
 // compact writes a low or info finding on one line.
@@ -909,7 +909,7 @@ func (t *termView) fleetTable(ups []*core.Update) {
 }
 
 // tableRows writes the header and rows, cutting cells to their column
-// and the last cell at the report's edge. The verdict cell has its colour.
+// and the last cell at the report's edge. The verdict cell has its color.
 func (t *termView) tableRows(widths []int, head []string, rows [][]string, ups []*core.Update) {
 	vcol := 0
 	if t.fleet() {

@@ -64,7 +64,7 @@ var doctorCommand = &simpleCommand{
 	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
 		offline := fs.Bool("offline", false, "skip the network checks (also RHYTHM_OFFLINE)")
 		asJSON := fs.Bool("json", false, "print the kind doctor JSON document")
-		plain := fs.Bool("plain", false, "no symbols or colour (also when stdout is not a terminal)")
+		plain := fs.Bool("plain", false, "no symbols or color (also when stdout is not a terminal)")
 		return func(ctx context.Context, pos []string, stdout, _ io.Writer) error {
 			if len(pos) > 0 {
 				return cli.Usagef("doctor takes no arguments, got %q", pos[0])

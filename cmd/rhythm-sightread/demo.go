@@ -46,8 +46,8 @@ var demoCommand = &simpleCommand{
 		fs.Var(&outputs, "output", "also write the report to this `file` (repeatable; .json, .md, .html or .sarif)")
 		sf.short(fs, "o", "output")
 		open := fs.Bool("open", false, "open the HTML report in the browser when done")
-		plain := fs.Bool("plain", false, "no colour or symbols (also when stdout is not a terminal)")
-		noColor := fs.Bool("no-color", false, "no colour (also NO_COLOR)")
+		plain := fs.Bool("plain", false, "no color or symbols (also when stdout is not a terminal)")
+		noColor := fs.Bool("no-color", false, "no color (NO_COLOR does the same)")
 		return func(ctx context.Context, pos []string, stdout, stderr io.Writer) error {
 			if len(pos) > 0 {
 				return cli.Usagef("demo takes no arguments, got %q", pos[0])

@@ -51,6 +51,10 @@ func TestHelpGolden(t *testing.T) {
 				if !strings.HasPrefix(out.String(), "Usage: "+prog+" ") && c.Name != "pick" {
 					t.Errorf("usage line %q", strings.SplitN(out.String(), "\n", 2)[0])
 				}
+				// One spelling across every page: color, as --no-color has it.
+				if strings.Contains(strings.ToLower(out.String()), "colour") {
+					t.Errorf("help says colour, not color")
+				}
 				// Prose wraps at helpWidth; only the usage line and the
 				// example commands, which are copied whole, may run over.
 				for _, line := range strings.Split(out.String(), "\n") {
