@@ -56,6 +56,9 @@ type builder struct {
 	cases map[string]string
 	tops  map[string]bool // first segment of every accepted name
 	flat  bool            // a file sits at the top
+	// stream counts the compressed bytes a tar.gz reader consumed, so a
+	// tar entry's ratio can be measured; nil for zip.
+	stream *int64
 }
 
 func newBuilder(ctx context.Context, blobs core.BlobStore, lim core.Limits) *builder {
@@ -160,8 +163,20 @@ type countingReader struct {
 	b          *builder
 	r          io.Reader
 	read       int64
-	compressed int64
-	err        error // errRatio or the total cap, once passed
+	compressed int64 // the entry's compressed size, or -1 for none
+	// stream, when set, counts the compressed bytes of a gzip stream; the
+	// entry's compressed size is then what it advanced past streamAt.
+	stream   *int64
+	streamAt int64
+	err      error // errRatio or the total cap, once passed
+}
+
+// packed is the entry's compressed size so far, or -1 when it has none.
+func (c *countingReader) packed() int64 {
+	if c.stream != nil {
+		return *c.stream - c.streamAt
+	}
+	return c.compressed
 }
 
 func (c *countingReader) Read(p []byte) (int, error) {
@@ -174,7 +189,7 @@ func (c *countingReader) Read(p []byte) (int, error) {
 	switch {
 	case c.b.total > c.b.lim.Uncompressed:
 		c.err = fetch.TooLarge(c.b.lim.Uncompressed)
-	case c.compressed >= 0 && c.read > ratioFloor && c.read > int64(c.b.lim.Ratio)*max(c.compressed, 1):
+	case c.read > ratioFloor && c.packed() >= 0 && c.read > int64(c.b.lim.Ratio)*max(c.packed(), 1):
 		c.err = errRatio
 	}
 	if c.err != nil {
@@ -187,10 +202,14 @@ func (c *countingReader) Read(p []byte) (int, error) {
 var errStop = errors.New("stop reading the archive")
 
 // file stores one regular entry. compressed is its compressed size, or
-// -1 when it has none (tar). It returns errStop or an E11 error when the
+// -1 when it has none; a tar entry counts what the gzip stream advanced
+// instead (builder.stream). It returns errStop or an E11 error when the
 // walk must end.
 func (b *builder) file(raw, name string, mode fs.FileMode, r io.Reader, compressed int64) error {
 	cr := &countingReader{b: b, r: r, compressed: compressed}
+	if b.stream != nil {
+		cr.stream, cr.streamAt = b.stream, *b.stream
+	}
 	sum, n, err := b.blobs.Put(b.ctx, cr, b.lim.EntryStored)
 	switch {
 	case cr.err != nil && errors.Is(cr.err, errRatio):
@@ -223,11 +242,22 @@ func (b *builder) link(raw, name string, mode fs.FileMode, target string) {
 		b.issue(core.IssueLinkEscape, raw, target, "symlink to outside the package")
 	case mode&fs.ModeSymlink != 0:
 		b.issue(core.IssueLink, raw, target, "symlink")
-	case mode.Type() == 0:
-		b.issue(core.IssueLink, raw, target, "hard link")
 	default:
 		b.issue(core.IssueLink, raw, target, nonRegular(mode))
 	}
+}
+
+// hardLink records a tar hard link. Its Mode is fs.ModeIrregular, so
+// like every entry that is not a regular file it has no blob; the target
+// is another entry's name, resolved from the archive root.
+func (b *builder) hardLink(raw, name string, perm fs.FileMode, target string) {
+	path := b.unique(raw, name)
+	b.tree.Files = append(b.tree.Files, core.File{Path: path, Mode: fs.ModeIrregular | perm, Link: target, Kind: core.KindBinary})
+	if hardEscapes(target) {
+		b.issue(core.IssueLinkEscape, raw, target, "hard link to outside the package")
+		return
+	}
+	b.issue(core.IssueLink, raw, target, "hard link")
 }
 
 // nonRegular names a non-regular mode.
@@ -264,6 +294,14 @@ func escapes(name, target string) bool {
 	}
 	top, _, nested := strings.Cut(name, "/")
 	return nested && j != top && !strings.HasPrefix(j, top+"/")
+}
+
+// hardEscapes reports whether a hard link's target, a name inside the
+// archive that an extractor resolves from the archive root, would leave
+// it: anything ValidateName refuses.
+func hardEscapes(target string) bool {
+	_, _, ok := ValidateName(strings.TrimSuffix(target, "/"))
+	return !ok
 }
 
 // finish strips the top folder by rule and sorts the files.

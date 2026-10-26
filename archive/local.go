@@ -55,7 +55,7 @@ func ReadLocal(ctx context.Context, path string, blobs core.BlobStore, lim core.
 	case bytes.HasPrefix(head, zipMagic), bytes.HasPrefix(head, zipEmptyMagic):
 		return ReadZip(ctx, f, fi.Size(), blobs, lim, StripSingle)
 	case bytes.HasPrefix(head, gzipMagic):
-		return readLocalTarGz(ctx, f, blobs, lim)
+		return readLocalTarGz(ctx, f, fi.Size(), blobs, lim)
 	}
 	return nil, notArchive(path)
 }
@@ -69,8 +69,17 @@ func notArchive(path string) *core.Error {
 	}
 }
 
-// readLocalTarGz reads a local tgz. ReadTarGz (lane item 5) replaces
-// this placeholder; until then a tgz is reported as not readable yet.
-var readLocalTarGz = func(_ context.Context, f *os.File, _ core.BlobStore, _ core.Limits) (*core.Tree, error) {
-	return nil, fmt.Errorf("%s: reading tgz archives is not built yet", term.Sanitize(f.Name()))
+// readLocalTarGz reads a local tgz. The file's hash is taken first, so
+// Tree.SHA256 is set even when a limit stops the walk early.
+func readLocalTarGz(ctx context.Context, f *os.File, size int64, blobs core.BlobStore, lim core.Limits) (*core.Tree, error) {
+	sum, err := hashAll(ctx, f, size)
+	if err != nil {
+		return nil, err
+	}
+	tree, err := ReadTarGz(ctx, io.NewSectionReader(f, 0, size), blobs, lim, StripSingle)
+	if err != nil {
+		return nil, err
+	}
+	tree.SHA256 = sum
+	return tree, nil
 }

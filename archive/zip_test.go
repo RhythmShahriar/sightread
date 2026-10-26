@@ -533,16 +533,20 @@ func TestReadLocal(t *testing.T) {
 	}
 
 	tgz := filepath.Join(dir, "pkg.tgz")
-	_ = os.WriteFile(tgz, []byte{0x1f, 0x8b, 8, 0}, 0o600)
-	called := false
-	old := readLocalTarGz
-	readLocalTarGz = func(context.Context, *os.File, core.BlobStore, core.Limits) (*core.Tree, error) {
-		called = true
-		return &core.Tree{}, nil
+	tgzData := makeTgz(t, tent{name: "package/index.js", body: "1"})
+	_ = os.WriteFile(tgz, tgzData, 0o600)
+	tree, err = ReadLocal(context.Background(), tgz, blob.Memory(), core.DefaultLimits())
+	if err != nil || tree.Root != "package/" || !slices.Equal(paths(tree), []string{"index.js"}) || tree.SHA256 != sha256.Sum256(tgzData) {
+		t.Errorf("tgz: %v", err)
 	}
-	defer func() { readLocalTarGz = old }()
-	if _, err := ReadLocal(context.Background(), tgz, blob.Memory(), core.DefaultLimits()); err != nil || !called {
-		t.Errorf("tgz not handed to the tar reader: %v", err)
+	// A tgz a limit stops early still carries the file's hash.
+	lim0 := core.DefaultLimits()
+	lim0.Entries = 1
+	two := filepath.Join(dir, "two.tgz")
+	twoData := makeTgz(t, tent{name: "package/a.js", body: "1"}, tent{name: "package/b.js", body: "2"})
+	_ = os.WriteFile(two, twoData, 0o600)
+	if tree, err := ReadLocal(context.Background(), two, blob.Memory(), lim0); err != nil || tree.SHA256 != sha256.Sum256(twoData) || !hasIssue(tree, core.IssueLimit, "") {
+		t.Errorf("stopped tgz: %v", err)
 	}
 
 	text := filepath.Join(dir, "notes.zip")
