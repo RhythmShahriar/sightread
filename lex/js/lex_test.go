@@ -107,6 +107,35 @@ func TestLexKinds(t *testing.T) {
 			"Punct:{", "Identifier:x", "Punct:/", "Number:2", "Punct:}", "Punct:<", "Punct:/", "Identifier:p", "Punct:>", "Punct:;"}},
 		{"strings", `'a\'b' "c\"d" 'line\
 cont'`, []string{`String:'a\'b'`, `String:"c\"d"`, "String:'line\\\ncont'"}},
+		{"regex after if head", "if (x) /'/.test(s) && eval(location.hash);", []string{
+			"Keyword:if", "Punct:(", "Identifier:x", "Punct:)", "RegExp:/'/", "Punct:.", "Identifier:test", "Punct:(", "Identifier:s", "Punct:)",
+			"Punct:&&", "Identifier:eval", "Punct:(", "Identifier:location", "Punct:.", "Identifier:hash", "Punct:)", "Punct:;"}},
+		{"regex after while, for and with heads", "while (a) /x/g; for (;;) /y/; with (o) /z/", []string{
+			"Keyword:while", "Punct:(", "Identifier:a", "Punct:)", "RegExp:/x/g", "Punct:;",
+			"Keyword:for", "Punct:(", "Punct:;", "Punct:;", "Punct:)", "RegExp:/y/", "Punct:;",
+			"Keyword:with", "Punct:(", "Identifier:o", "Punct:)", "RegExp:/z/"}},
+		{"regex after a head with nested parens", "if (f(a) && (b)) /re/.test(c)", []string{
+			"Keyword:if", "Punct:(", "Identifier:f", "Punct:(", "Identifier:a", "Punct:)", "Punct:&&", "Punct:(", "Identifier:b", "Punct:)", "Punct:)",
+			"RegExp:/re/", "Punct:.", "Identifier:test", "Punct:(", "Identifier:c", "Punct:)"}},
+		{"division after a call", "f(x) / 2 / g", []string{
+			"Identifier:f", "Punct:(", "Identifier:x", "Punct:)", "Punct:/", "Number:2", "Punct:/", "Identifier:g"}},
+		{"division after a method named if", "a.if(x) / 2 / b", []string{
+			"Identifier:a", "Punct:.", "Identifier:if", "Punct:(", "Identifier:x", "Punct:)", "Punct:/", "Number:2", "Punct:/", "Identifier:b"}},
+		{"division inside an if head", "if (a / b) / c", []string{
+			"Keyword:if", "Punct:(", "Identifier:a", "Punct:/", "Identifier:b", "Punct:)", "Punct:/", "Identifier:c"}},
+		{"line separator ends a line comment", "// hi\u2028eval(location.hash);", []string{
+			"Identifier:eval", "Punct:(", "Identifier:location", "Punct:.", "Identifier:hash", "Punct:)", "Punct:;"}},
+		{"paragraph separator ends a line comment", "// hi\u2029require('child_process')", []string{
+			"Identifier:require", "Punct:(", "String:'child_process'", "Punct:)"}},
+		{"line separator ends the hashbang", "#!/usr/bin/env node\u2028eval(x)", []string{
+			"Identifier:eval", "Punct:(", "Identifier:x", "Punct:)"}},
+		{"unicode spaces separate tokens", "\u00a0eval\u3000(\u2000y\u202f)\ufeff;\u1680", []string{
+			"Identifier:eval", "Punct:(", "Identifier:y", "Punct:)", "Punct:;"}},
+		{"regex ends at a line separator", "return /a\u2028/", []string{"Keyword:return", "Punct:/", "Identifier:a", "Punct:/"}},
+		{"line separator inside a string is text", "s = 'a\u2028b'", []string{"Identifier:s", "Punct:=", "String:'a\u2028b'"}},
+		{"other non-ASCII stays in a name", "caf\u00e9 = \u03c0", []string{"Identifier:caf\u00e9", "Punct:=", "Identifier:\u03c0"}},
+		{"an open quote hides nothing", "x = 'a; eval(y)", []string{
+			"Identifier:x", "Punct:=", "Error:'", "Identifier:a", "Punct:;", "Identifier:eval", "Punct:(", "Identifier:y", "Punct:)"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -122,14 +151,14 @@ func TestLexErrors(t *testing.T) {
 	tests := []struct {
 		name, src, construct string
 		line                 int
-		rest                 bool // the Error token runs to the end
+		rest                 bool // the Error token runs to the end; else it is one quote
 	}{
 		{"unterminated template", "a\n`abc ${x}\n eval(y)", "template", 2, true},
 		{"unterminated substitution", "a\n`abc ${ f(\n eval(y)", "template", 2, true},
 		{"unterminated nested template", "`a${ `b${ c }", "template", 1, true},
 		{"unterminated comment", "x\n/* eval(y)", "comment", 2, true},
 		{"unterminated string ends at the line", "s = 'abc\neval(y)", "string", 1, false},
-		{"string open at the end", `s = "abc\`, "string", 1, true},
+		{"string open at the end", `s = "abc\`, "string", 1, false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -153,8 +182,11 @@ func TestLexErrors(t *testing.T) {
 			if (e.End() == len(tc.src)) != tc.rest {
 				t.Errorf("error token %q: runs to the end = %v, want %v", e.Text, e.End() == len(tc.src), tc.rest)
 			}
-			if !tc.rest && toks[len(toks)-2].Text != "y" {
-				t.Errorf("lexing should go on after the line: %v", sig(toks))
+			if !tc.rest && len(e.Text) != 1 {
+				t.Errorf("an open quote should be a one-byte Error token, got %q", e.Text)
+			}
+			if !tc.rest && toks[len(toks)-1].Kind == Error {
+				t.Errorf("lexing should go on after the quote: %v", sig(toks))
 			}
 		})
 	}

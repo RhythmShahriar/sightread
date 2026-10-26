@@ -106,7 +106,9 @@ func TestUnicode(t *testing.T) {
 		{"bidi in PHP comment", langPHP, "<?php\n// " + rlo + "secret\n$a = 1;\n", []string{"bidi:comment"}},
 		{"zero-width in JS name", langJS, "var is" + zws + "Admin = true;\n", []string{"zero-width:identifier"}},
 		{"zero-width in Latin string", langPHP, "<?php\n$k = 'ad" + zws + "min';\n", []string{"zero-width:string"}},
-		{"BOM inside code", langJS, "var a = 1;\n" + bom + "eval(x);\n", []string{"zero-width:identifier"}},
+		// JavaScript reads a BOM as whitespace: it sits in code, not in
+		// the name after it.
+		{"BOM inside code", langJS, "var a = 1;\n" + bom + "eval(x);\n", []string{"zero-width:code"}},
 		{"PHP homoglyph function", langPHP, "<?php\nfunction is_" + cyA + "dmin() { return true; }\n", []string{"homoglyph:identifier"}},
 		{"PHP homoglyph variable", langPHP, "<?php\n$p" + cyA + "ss = $_GET['p'];\n", []string{"homoglyph:identifier"}},
 		{"JS homoglyph Greek", langJS, "const c" + grO + "nfig = require('x');\n", []string{"homoglyph:identifier"}},

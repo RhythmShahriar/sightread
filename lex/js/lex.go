@@ -27,6 +27,9 @@ type lexer struct {
 	lpos, line int // line is the line of offset lpos
 
 	stack []brace
+	// parens has one entry per open parenthesis: true when it opens the
+	// head of an if, while, for or with.
+	parens []bool
 
 	// The previous significant token decides whether a slash starts a
 	// regular expression and whether a brace opens a block.
@@ -34,7 +37,11 @@ type lexer struct {
 	prevText    string
 	havePrev    bool
 	closedBlock bool // the previous token was a } that closed a block
-	member      bool // the previous token was . or ?.
+	// closedHead is set when the previous token was a ) that closed the
+	// head of an if, while, for or with: a statement follows, so a
+	// slash there starts a regular expression.
+	closedHead bool
+	member     bool // the previous token was . or ?.
 
 	// noRegexUntil stops a slash from being tried as a regular
 	// expression again on a line where that already failed, which keeps
@@ -53,10 +60,18 @@ type lexer struct {
 //
 // Unterminated constructs: a block comment or template literal (or a
 // template substitution left open) turns the rest of the input into
-// one Error token. A string cannot span lines in JavaScript, so an
-// unterminated one is an Error token up to the end of its line and
-// lexing goes on. A regular expression that does not close on its line
-// was a division after all and is lexed as one.
+// one Error token. A string cannot span lines in JavaScript, so a quote
+// that does not close on its line is a one-byte Error token and lexing
+// goes on right after it: when the lexer misread a quote (inside a
+// regular expression it took for a division, say), the rest of the
+// line is still read as code and nothing on it is hidden. A regular
+// expression that does not close on its line was a division after all
+// and is lexed as one.
+//
+// Lines end at \n, \r, U+2028 or U+2029. The Unicode spaces
+// ECMAScript allows between tokens (U+00A0, U+FEFF and the Zs
+// category) are Whitespace, so "// x\u2028eval(y)" and
+// "\u00a0eval(y)" both show the eval.
 func Lex(src []byte) []Token {
 	l := &lexer{src: string(src), line: 1}
 	// Minified bundles run near one token per two bytes; reserving that
@@ -92,6 +107,7 @@ func (l *lexer) emit(k Kind, start int) {
 	l.prevKind, l.prevText, l.havePrev = k, t.Text, true
 	l.member = k == Punct && (t.Text == "." || t.Text == "?.")
 	l.closedBlock = false
+	l.closedHead = false
 }
 
 // fail drops the tokens from index mark on and makes the rest of the
@@ -104,6 +120,7 @@ func (l *lexer) fail(mark, off int) {
 	l.toks = append(l.toks[:mark], Token{Kind: Error, Off: off, Line: line, Text: l.src[off:]})
 	l.pos = len(l.src)
 	l.stack = l.stack[:0]
+	l.parens = l.parens[:0]
 }
 
 func (l *lexer) run() {
@@ -121,11 +138,8 @@ func (l *lexer) run() {
 			next = s[start+1]
 		}
 		switch {
-		case isSpace(c):
-			l.pos++
-			for l.pos < n && isSpace(s[l.pos]) {
-				l.pos++
-			}
+		case isSpace(c) || (c >= 0x80 && uniSpace(s, start) > 0):
+			l.pos = spaceEnd(s, start)
 			l.emit(Whitespace, start)
 		case c == '/' && next == '/':
 			l.pos = lineEnd(s, start)
@@ -168,6 +182,23 @@ func (l *lexer) run() {
 			l.pos++
 			l.emit(Punct, start)
 			l.closedBlock = block
+		case c == '(':
+			// A parenthesis right after if, while, for or with opens a
+			// statement head. After a member dot those words are names
+			// and lexed as identifiers, so they never count.
+			head := l.havePrev && l.prevKind == Keyword && headKeyword(l.prevText)
+			l.parens = append(l.parens, head)
+			l.pos++
+			l.emit(Punct, start)
+		case c == ')':
+			head := false
+			if k := len(l.parens); k > 0 {
+				head = l.parens[k-1]
+				l.parens = l.parens[:k-1]
+			}
+			l.pos++
+			l.emit(Punct, start)
+			l.closedHead = head
 		case isIdentStart(c) || (c == '\\' && next == 'u') || (c == '#' && isIdentStart(next)):
 			l.ident()
 		case isDigit(c) || (c == '.' && isDigit(next)):
@@ -187,11 +218,88 @@ func (l *lexer) run() {
 	}
 }
 
+// lineEnd returns the offset of the line terminator at or after j, or
+// len(s).
 func lineEnd(s string, j int) int {
-	for j < len(s) && s[j] != '\n' && s[j] != '\r' {
+	for j < len(s) && !isLineEnd(s, j) {
 		j++
 	}
 	return j
+}
+
+// isLineEnd reports a line terminator at j: \n, \r, U+2028 (line
+// separator) or U+2029 (paragraph separator). ECMAScript ends line
+// comments, the hashbang and regular expressions at all four.
+func isLineEnd(s string, j int) bool {
+	switch s[j] {
+	case '\n', '\r':
+		return true
+	case 0xE2:
+		return j+2 < len(s) && s[j+1] == 0x80 && (s[j+2] == 0xA8 || s[j+2] == 0xA9)
+	}
+	return false
+}
+
+// uniSpace returns the length of the Unicode space or line separator
+// that starts at j, or 0: U+00A0, U+FEFF, U+1680, U+2000 to U+200A,
+// U+2028, U+2029, U+202F, U+205F and U+3000. ECMAScript reads them all
+// as whitespace between tokens, so they must not join an identifier.
+func uniSpace(s string, j int) int {
+	if j+1 < len(s) && s[j] == 0xC2 && s[j+1] == 0xA0 {
+		return 2
+	}
+	if j+2 >= len(s) {
+		return 0
+	}
+	a, b := s[j+1], s[j+2]
+	switch s[j] {
+	case 0xE1:
+		if a == 0x9A && b == 0x80 {
+			return 3
+		}
+	case 0xE2:
+		if a == 0x80 && ((b >= 0x80 && b <= 0x8A) || b == 0xA8 || b == 0xA9 || b == 0xAF) {
+			return 3
+		}
+		if a == 0x81 && b == 0x9F {
+			return 3
+		}
+	case 0xE3:
+		if a == 0x80 && b == 0x80 {
+			return 3
+		}
+	case 0xEF:
+		if a == 0xBB && b == 0xBF {
+			return 3
+		}
+	}
+	return 0
+}
+
+// spaceEnd returns the end of the run of ASCII and Unicode whitespace
+// that starts at j.
+func spaceEnd(s string, j int) int {
+	for j < len(s) {
+		if isSpace(s[j]) {
+			j++
+			continue
+		}
+		if s[j] >= 0x80 {
+			if k := uniSpace(s, j); k > 0 {
+				j += k
+				continue
+			}
+		}
+		break
+	}
+	return j
+}
+
+// headKeyword reports the keywords whose parenthesised head is followed
+// by a statement: after their closing parenthesis a slash starts a
+// regular expression, as in "if (x) /re/.test(s)".
+func headKeyword(s string) bool {
+	return s == "if" || s == "while" || s == "for" || s == "with"
 }
 
 func (l *lexer) regexAllowed() bool {
@@ -201,7 +309,9 @@ func (l *lexer) regexAllowed() bool {
 	switch l.prevKind {
 	case Punct:
 		switch l.prevText {
-		case ")", "]", "++", "--":
+		case ")":
+			return l.closedHead
+		case "]", "++", "--":
 			return false
 		case "}":
 			return l.closedBlock
@@ -248,14 +358,14 @@ func (l *lexer) regex() bool {
 	j := start + 1
 	class := false
 	for {
-		if j >= len(s) || s[j] == '\n' || s[j] == '\r' {
+		if j >= len(s) || isLineEnd(s, j) {
 			l.noRegexUntil = j
 			return false
 		}
 		switch s[j] {
 		case '\\':
 			j++
-			if j < len(s) && (s[j] == '\n' || s[j] == '\r') {
+			if j < len(s) && isLineEnd(s, j) {
 				l.noRegexUntil = j
 				return false
 			}
@@ -278,8 +388,9 @@ func (l *lexer) regex() bool {
 	}
 }
 
-// str lexes a quoted string. One left open at the end of its line is an
-// Error token up to the line break.
+// str lexes a quoted string. A quote left open at the end of its line
+// is a one-byte Error token and the rest of the line is lexed as code
+// (see Lex). U+2028 and U+2029 may sit inside a string.
 func (l *lexer) str(q byte) {
 	s := l.src
 	start := l.pos
@@ -291,7 +402,7 @@ func (l *lexer) str(q byte) {
 	for {
 		k := strings.IndexAny(s[j:], set)
 		if k < 0 {
-			l.pos = len(s)
+			l.pos = start + 1
 			l.emit(Error, start)
 			return
 		}
@@ -310,12 +421,12 @@ func (l *lexer) str(q byte) {
 				j += 2
 			}
 			if j > len(s) {
-				l.pos = len(s)
+				l.pos = start + 1
 				l.emit(Error, start)
 				return
 			}
 		default:
-			l.pos = j
+			l.pos = start + 1
 			l.emit(Error, start)
 			return
 		}
@@ -378,6 +489,9 @@ func (l *lexer) ident() {
 	escaped := false
 	for j < len(s) {
 		if isIdentChar(s[j]) {
+			if s[j] >= 0x80 && uniSpace(s, j) > 0 {
+				break
+			}
 			j++
 			continue
 		}
