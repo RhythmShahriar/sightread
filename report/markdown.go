@@ -537,7 +537,7 @@ func changelogLine(u *core.Update) string {
 		return "Changelog: none for this version."
 	}
 	c := u.Changelog[0]
-	return "Changelog: " + mdInline(c.Version) + ": \"" + md(firstLine(c.Text, 200)) + "\""
+	return "Changelog: " + mdInline(c.Version) + ": \"" + md(firstLine(c.Quote(), 200)) + "\""
 }
 
 // firstLine is the first line of s, cut to max runes.

@@ -334,7 +334,7 @@ func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) ht
 	c.Publisher, c.PublisherChanged = publisherText(u)
 	if len(u.Changelog) > 0 && strings.TrimSpace(u.Changelog[0].Text) != "" {
 		c.ChangelogVersion = text(u.Changelog[0].Version)
-		c.Changelog = firstLine(text(u.Changelog[0].Text), 400)
+		c.Changelog = firstLine(text(u.Changelog[0].Quote()), 400)
 	}
 	c.Adds = adds(u)
 	d := u.Diff

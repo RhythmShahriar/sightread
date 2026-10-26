@@ -790,3 +790,16 @@ func TestPublisherFact(t *testing.T) {
 		t.Errorf("html: %q %v", got, changed)
 	}
 }
+
+// TestTerminalChangelogQuote: the Changelog line quotes a readme
+// bullet without its marker.
+func TestTerminalChangelogQuote(t *testing.T) {
+	o := termOpts(120)
+	o.Plain = true
+	r := oneUpdate()
+	r.Updates[0].Changelog = []core.ChangelogEntry{{Version: "2.6.8", Text: "* Check compatibility with WordPress 6.8\n* Tweak"}}
+	out := writeTerm(t, r, o)
+	if !strings.Contains(out, `Changelog: 2.6.8: "Check compatibility with WordPress 6.8"`) {
+		t.Errorf("bullet kept:\n%s", out)
+	}
+}

@@ -436,3 +436,22 @@ func TestInLockfile(t *testing.T) {
 		}
 	}
 }
+
+// TestChangelogQuote: a quote drops the list marker of each line and
+// keeps everything else, a hyphen inside a word or a marker with no
+// space after it included.
+func TestChangelogQuote(t *testing.T) {
+	for text, want := range map[string]string{
+		"* Check compatibility":         "Check compatibility",
+		"- Fix: a\n  * Tweak: b\n+ New": "Fix: a\nTweak: b\nNew",
+		"Tested up to 6.8":              "Tested up to 6.8",
+		"-1 day fix":                    "-1 day fix",
+		"*bold* text":                   "*bold* text",
+		"re-run the - check":            "re-run the - check",
+		"":                              "",
+	} {
+		if got := (core.ChangelogEntry{Text: text}).Quote(); got != want {
+			t.Errorf("Quote(%q) = %q, want %q", text, got, want)
+		}
+	}
+}

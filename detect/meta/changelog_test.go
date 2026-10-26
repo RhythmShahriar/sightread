@@ -31,6 +31,12 @@ func TestChangelogWording(t *testing.T) {
 	if f.Evidence.String() != want || f.File != "inc/cron.php" || f.Line != 5 {
 		t.Errorf("finding = %q @%s:%d\nwant %q", f.Evidence, f.File, f.Line, want)
 	}
+	// A readme bullet is quoted without its marker.
+	s = changelogSubject("* Check compatibility with WordPress 6.8", true, cron)
+	f = only(t, run(t, changelogDetector{}, s), SigChangelogMismatch)
+	if want := `changelog for 2.0.0 says only "Check compatibility with WordPress 6.8"; the update adds scheduled tasks (inc/cron.php:5)`; f.Evidence.String() != want {
+		t.Errorf("bullet: %q", f.Evidence)
+	}
 	s = changelogSubject("", false, cron)
 	f = only(t, run(t, changelogDetector{}, s), SigChangelogMismatch)
 	if want := "no changelog entry for 2.0.0; the update adds scheduled tasks (inc/cron.php:5)"; f.Evidence.String() != want || f.Severity != cli.SeverityMedium {

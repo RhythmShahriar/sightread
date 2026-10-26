@@ -477,7 +477,7 @@ func (t *termView) changelogText(u *core.Update) string {
 		return "none for this version"
 	}
 	c := u.Changelog[0]
-	return tt(c.Version) + ": \"" + tt(firstLine(c.Text, 200)) + "\""
+	return tt(c.Version) + ": \"" + tt(firstLine(c.Quote(), 200)) + "\""
 }
 
 // limited returns the counted findings of u the terminal shows and how

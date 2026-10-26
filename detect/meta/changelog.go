@@ -224,7 +224,7 @@ func mismatchEvidence(s *core.Subject, entries []core.ChangelogEntry, caps []cap
 	if len(entries) == 0 {
 		head = "no changelog entry for " + v
 	} else {
-		q := strings.Join(strings.Fields(entries[0].Text), " ")
+		q := strings.Join(strings.Fields(entries[0].Quote()), " ")
 		if len(q) > changelogQuote {
 			cut := changelogQuote
 			for cut > 0 && q[cut]&0xC0 == 0x80 {

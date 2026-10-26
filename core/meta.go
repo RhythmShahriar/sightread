@@ -3,7 +3,10 @@
 
 package core
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Person is a maintainer, committer or publisher. Email is masked in
 // every output.
@@ -36,6 +39,22 @@ type ChangelogEntry struct {
 	Version string
 	Text    string
 	Generic bool // only "compatibility", "tested up to", "bug fixes" and the like
+}
+
+// Quote is the entry's text as reports quote it: each line without the
+// list marker ("* ", "- ", "+ ") it starts with, so a readme bullet
+// reads "Check compatibility" and not "* Check compatibility". Text
+// keeps the entry as the release wrote it.
+func (e ChangelogEntry) Quote() string {
+	lines := strings.Split(e.Text, "\n")
+	for i, l := range lines {
+		t := strings.TrimLeft(l, " \t")
+		if len(t) >= 2 && strings.ContainsRune("*-+", rune(t[0])) && (t[1] == ' ' || t[1] == '\t') {
+			l = strings.TrimLeft(t[2:], " \t")
+		}
+		lines[i] = l
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
 // Release is one earlier release, for dormant-release and size-jump.
