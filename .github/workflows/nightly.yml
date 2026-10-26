@@ -91,6 +91,11 @@ jobs:
       # states are clean and p01-large is within its limits.
       - name: Bench tests
         run: make -C testbed test-bench
+      # The analyzer and lexer speed targets, which shared runners only
+      # hold loosely in the ordinary test run.
+      - name: Speed targets
+        if: success() || failure()
+        run: make perf
       - name: Benchmark
         if: success() || failure()
         run: make -C testbed bench

@@ -11,7 +11,7 @@ FUZZTIME ?= 30s
 SHARD ?= 0
 SHARDS ?= 1
 
-.PHONY: build test test-short test-integrated lint fmt check hooks fuzz signals-doc testbed testbed-down bench reproduce actionlint
+.PHONY: build test test-short test-integrated lint fmt check hooks fuzz signals-doc testbed testbed-down perf bench reproduce actionlint
 
 build: ## build bin/rhythm-sightread
 	go build -o bin/rhythm-sightread ./cmd/rhythm-sightread
@@ -57,7 +57,11 @@ testbed: ## start the fixture registries on 127.0.0.1
 testbed-down:
 	$(MAKE) -C testbed down
 
-bench: build ## run the benchmark against the testbed; writes docs/benchmark.md
+perf: ## hold the speed targets: 2 s per plugin side and 50 MB/s of lexing
+	SIGHTREAD_PERF=1 go test -count=1 -run 'TestAnalyzePluginTime|TestLexThroughput' ./analyze ./lex/...
+	go test -run '^$$' -bench BenchmarkAnalyzeWordPressPlugin -benchtime 3x ./analyze
+
+bench: build perf ## the speed targets, then the benchmark against the testbed; writes docs/benchmark.md
 	$(MAKE) -C testbed bench
 
 reproduce: build ## replay the testbed scenarios and compare with the expected reports
