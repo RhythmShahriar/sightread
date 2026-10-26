@@ -6,8 +6,10 @@ package archive
 import (
 	"archive/zip"
 	"bytes"
+	"compress/flate"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"hash/crc32"
@@ -493,6 +495,48 @@ func TestReadZipDeflateBomb(t *testing.T) {
 	}
 	if _, ok := tree.Lookup("z.php"); ok {
 		t.Error("read on past the bomb")
+	}
+}
+
+// TestReadZipClaimedSizeBomb: an entry whose header claims a large
+// compressed size, as overlapping entries do, is held to the bytes it
+// actually read.
+func TestReadZipClaimedSizeBomb(t *testing.T) {
+	body := make([]byte, 10<<20)
+	var packed bytes.Buffer
+	fw, err := flate.NewWriter(&packed, flate.BestCompression)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = fw.Write(body)
+	_ = fw.Close()
+	var buf bytes.Buffer
+	w := zip.NewWriter(&buf)
+	raw, err := w.CreateRaw(&zip.FileHeader{
+		Name: "p/bomb.bin", Method: zip.Deflate, CRC32: crc32.ChecksumIEEE(body),
+		CompressedSize64: 1 << 30, UncompressedSize64: uint64(len(body)),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = raw.Write(packed.Bytes())
+	_ = w.Close()
+	tree, _ := mustZip(t, buf.Bytes(), StripSingle)
+	if !hasIssue(tree, core.IssueLimit, "p/bomb.bin") {
+		t.Errorf("issues %v", issues(tree))
+	}
+
+	// An entry over 1 MiB that compresses under the limit is read in
+	// full: hex of a hash chain packs about 2:1.
+	var text strings.Builder
+	sum := sha256.Sum256(nil)
+	for text.Len() < 2<<20 {
+		sum = sha256.Sum256(sum[:])
+		text.WriteString(hex.EncodeToString(sum[:]))
+	}
+	tree, m := mustZip(t, makeZip(t, zent{name: "p/a.php", body: text.String()}), StripSingle)
+	if len(tree.Issues) != 0 || m.Len() != 1 {
+		t.Errorf("honest entry: issues %v, %d blobs", issues(tree), m.Len())
 	}
 }
 

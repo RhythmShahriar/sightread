@@ -111,7 +111,7 @@ func tarEntry(b *builder, tr *tar.Reader, hdr *tar.Header) error {
 	perm := fs.FileMode(hdr.Mode).Perm() //nolint:gosec // only the permission bits are kept
 	switch hdr.Typeflag {
 	case tar.TypeReg, tar.TypeGNUSparse:
-		if err := b.file(raw, name, perm, tr, -1); err != nil {
+		if err := b.file(raw, name, perm, tr); err != nil {
 			return err
 		}
 		return skipRest(b, raw, tr)
@@ -135,7 +135,7 @@ func tarEntry(b *builder, tr *tar.Reader, hdr *tar.Header) error {
 // over lim.EntryStored, or unreadable) through the counter, so the bytes
 // tar would otherwise skip uncounted still meet the total and the ratio.
 func skipRest(b *builder, raw string, tr io.Reader) error {
-	cr := &countingReader{b: b, r: tr, compressed: -1, stream: b.stream, streamAt: *b.stream}
+	cr := &countingReader{b: b, r: tr, stream: b.stream, streamAt: *b.stream}
 	_, _ = io.Copy(io.Discard, cr)
 	switch {
 	case errors.Is(cr.err, errRatio):
@@ -160,7 +160,7 @@ func clip(s string) string {
 // against the uncompressed total. complete is false when the check gave
 // up past maxTrailing bytes.
 func tarTrailing(b *builder, gz *gzip.Reader, br *bufio.Reader) (complete bool, err error) {
-	cr := &countingReader{b: b, r: gz, compressed: -1}
+	cr := &countingReader{b: b, r: gz}
 	inner, err := hidden(io.LimitReader(cr, maxTrailing+1))
 	switch {
 	case cr.err != nil:

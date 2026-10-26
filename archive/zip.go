@@ -27,13 +27,18 @@ import (
 // lim.Uncompressed is an error: E11, which run reports as Not checked
 // too-large.
 func ReadZip(ctx context.Context, ra io.ReaderAt, size int64, blobs core.BlobStore, lim core.Limits, strip StripRule) (*core.Tree, error) {
-	zr, err := zip.NewReader(ra, size)
+	// Entry data is read through cra, so the ratio check divides by the
+	// compressed bytes actually read, not the header's claim: entries
+	// that overlap and claim large sizes can't hide a bomb that way.
+	cra := &countingReaderAt{ra: ra}
+	zr, err := zip.NewReader(cra, size)
 	// With GODEBUG=zipinsecurepath=0 the reader also reports unsafe names;
 	// ValidateName judges every name here either way.
 	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
 		return nil, fmt.Errorf("not a readable zip archive: %w", err)
 	}
 	b := newBuilder(ctx, blobs, lim)
+	b.stream = &cra.n
 	for i, f := range zr.File {
 		if err := ctx.Err(); err != nil {
 			return nil, err
@@ -108,7 +113,23 @@ func zipEntry(b *builder, ra io.ReaderAt, f *zip.File) error {
 		return nil
 	}
 	defer func() { _ = rc.Close() }()
-	return b.file(raw, name, mode, rc, int64(min(f.CompressedSize64, uint64(1)<<62)))
+	// b.stream counts what the entry reads; the header's size isn't used.
+	return b.file(raw, name, mode, rc)
+}
+
+// countingReaderAt counts the bytes read through it. A zip is read one
+// entry at a time, so what n advances while an entry is read is that
+// entry's compressed bytes (plus its local header and a read-ahead
+// buffer at most).
+type countingReaderAt struct {
+	ra io.ReaderAt
+	n  int64
+}
+
+func (c *countingReaderAt) ReadAt(p []byte, off int64) (int, error) {
+	n, err := c.ra.ReadAt(p, off)
+	c.n += int64(n)
+	return n, err
 }
 
 // linkTarget reads a zip symlink's target, which the entry holds as its
@@ -119,7 +140,7 @@ func linkTarget(b *builder, f *zip.File) (string, error) {
 		return "", nil //nolint:nilerr // an unreadable target is recorded as empty
 	}
 	defer func() { _ = rc.Close() }()
-	cr := &countingReader{b: b, r: io.LimitReader(rc, maxLink), compressed: -1}
+	cr := &countingReader{b: b, r: io.LimitReader(rc, maxLink)}
 	data, err := io.ReadAll(cr)
 	if cr.err != nil {
 		return "", cr.err

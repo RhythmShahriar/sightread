@@ -56,8 +56,9 @@ type builder struct {
 	cases map[string]string
 	tops  map[string]bool // first segment of every accepted name
 	flat  bool            // a file sits at the top
-	// stream counts the compressed bytes a tar.gz reader consumed, so a
-	// tar entry's ratio can be measured; nil for zip.
+	// stream counts the compressed bytes read from a tar.gz stream or a
+	// zip file, so an entry's ratio is measured on bytes actually read;
+	// nil for a folder on disk.
 	stream *int64
 }
 
@@ -160,12 +161,12 @@ func (b *builder) unique(raw, name string) string {
 // countingReader counts the bytes actually read from one entry against
 // the entry's compressed size and the archive total.
 type countingReader struct {
-	b          *builder
-	r          io.Reader
-	read       int64
-	compressed int64 // the entry's compressed size, or -1 for none
-	// stream, when set, counts the compressed bytes of a gzip stream; the
-	// entry's compressed size is then what it advanced past streamAt.
+	b    *builder
+	r    io.Reader
+	read int64
+	// stream, when set, counts the compressed bytes read from the
+	// archive; the entry's compressed size is then what it advanced past
+	// streamAt.
 	stream   *int64
 	streamAt int64
 	err      error // errRatio or the total cap, once passed
@@ -176,7 +177,7 @@ func (c *countingReader) packed() int64 {
 	if c.stream != nil {
 		return *c.stream - c.streamAt
 	}
-	return c.compressed
+	return -1
 }
 
 func (c *countingReader) Read(p []byte) (int, error) {
@@ -201,12 +202,12 @@ func (c *countingReader) Read(p []byte) (int, error) {
 // errStop ends the walk early with what the tree has so far.
 var errStop = errors.New("stop reading the archive")
 
-// file stores one regular entry. compressed is its compressed size, or
-// -1 when it has none; a tar entry counts what the gzip stream advanced
-// instead (builder.stream). It returns errStop or an E11 error when the
+// file stores one regular entry. Its compressed size is what
+// builder.stream advanced while it was read; without a stream the ratio
+// isn't checked. It returns errStop or an E11 error when the
 // walk must end.
-func (b *builder) file(raw, name string, mode fs.FileMode, r io.Reader, compressed int64) error {
-	cr := &countingReader{b: b, r: r, compressed: compressed}
+func (b *builder) file(raw, name string, mode fs.FileMode, r io.Reader) error {
+	cr := &countingReader{b: b, r: r}
 	if b.stream != nil {
 		cr.stream, cr.streamAt = b.stream, *b.stream
 	}
