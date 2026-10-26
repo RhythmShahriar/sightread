@@ -30,6 +30,22 @@ type Scorer struct {
 	// report. Keyed by the update's identity, not its address, as the
 	// pipeline may copy an update between the two.
 	notes map[string][]string
+	// configName is the config the unanalysed note names.
+	configName string
+}
+
+// maxNoteUpdates bounds notes for a caller that scores without ever
+// summarising, such as a long watch: past it the oldest run's notes are
+// dropped. A real run holds far fewer updates.
+const maxNoteUpdates = 1 << 16
+
+// SetConfigPath names the config file the header notes cite, as the user
+// should see it (--config may name any file). Empty means the usual
+// .sightread/config.yaml.
+func (s *Scorer) SetConfigPath(p string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.configName = p
 }
 
 // New returns a Scorer on the real clock.
@@ -45,8 +61,12 @@ func (s *Scorer) now() time.Time {
 }
 
 // unanalysedNote is the header line for a lowered unanalysed
-// signal (PRD 0).
-const unanalysedNote = "unanalysed lowered to %s by .sightread/config.yaml"
+// signal (PRD 0): the severity, then the config file.
+const unanalysedNote = "unanalysed lowered to %s by %s"
+
+// defaultConfigName is the config the notes name when SetConfigPath was
+// not called.
+const defaultConfigName = ".sightread/config.yaml"
 
 // inChangeNote is the header line for an allow entry the change under
 // review added itself.
@@ -63,6 +83,8 @@ func (s *Scorer) Score(_ context.Context, u *core.Update, cfg *core.Config, allo
 	if cfg == nil {
 		cfg = &core.Config{}
 	}
+	// Scoring an update again replaces what it noted before.
+	s.takeNotes(u)
 	overrides := severityOverrides(cfg)
 	for i := range u.Findings {
 		f := &u.Findings[i]
@@ -72,7 +94,7 @@ func (s *Scorer) Score(_ context.Context, u *core.Update, cfg *core.Config, allo
 		}
 	}
 	if sev, ok := overrides["unanalysed"]; ok && sev < defaultSeverity("unanalysed") {
-		s.note(u, fmt.Sprintf(unanalysedNote, sev))
+		s.note(u, fmt.Sprintf(unanalysedNote, sev, s.configShown()))
 	}
 
 	raiseOwnerChange(u.Findings)
@@ -265,13 +287,22 @@ func short(h string) string {
 	return h
 }
 
+func (s *Scorer) configShown() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.configName == "" {
+		return defaultConfigName
+	}
+	return s.configName
+}
+
 func (s *Scorer) note(u *core.Update, line string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.notes == nil {
+	k := updateKey(u)
+	if s.notes == nil || len(s.notes) >= maxNoteUpdates && s.notes[k] == nil {
 		s.notes = map[string][]string{}
 	}
-	k := updateKey(u)
 	if !slices.Contains(s.notes[k], line) {
 		s.notes[k] = append(s.notes[k], line)
 	}

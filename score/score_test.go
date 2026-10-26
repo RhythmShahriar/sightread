@@ -5,6 +5,7 @@ package score
 
 import (
 	"context"
+	"fmt"
 	"math/rand/v2"
 	"path/filepath"
 	"reflect"
@@ -733,5 +734,38 @@ func TestGateReasons(t *testing.T) {
 				t.Errorf("exit %d %q, want %d %q", exit, reason, tc.exit, tc.want)
 			}
 		})
+	}
+}
+
+func TestNotesLifetime(t *testing.T) {
+	lowered := &core.Config{Signals: core.SignalConfig{Severity: map[string]string{"unanalysed": "low"}}}
+	s := testScorer()
+	s.SetConfigPath("ci/sightread.yaml")
+	u := upd(core.NPM, "a", fd("unanalysed", "big.js", 0))
+	s.Score(context.Background(), u, lowered, nil, nil)
+	r := &core.Report{Updates: []core.Update{*u}}
+	s.Summarise(r)
+	if want := []string{"unanalysed lowered to low by ci/sightread.yaml"}; !reflect.DeepEqual(r.Notes, want) {
+		t.Errorf("notes %q, want %q", r.Notes, want)
+	}
+
+	// Scoring again with a config that no longer lowers it drops the note.
+	u = upd(core.NPM, "a", fd("unanalysed", "big.js", 0))
+	s.Score(context.Background(), u, lowered, nil, nil)
+	s.Score(context.Background(), u, &core.Config{}, nil, nil)
+	r = &core.Report{Updates: []core.Update{*u}}
+	s.Summarise(r)
+	if len(r.Notes) != 0 {
+		t.Errorf("a stale note survived rescoring: %q", r.Notes)
+	}
+
+	// Notes of updates scored but never summarised (a long watch) stay
+	// bounded. Summarise can't drop them all: another report scored at
+	// the same time may still be waiting for its own.
+	for i := range maxNoteUpdates + 10 {
+		s.Score(context.Background(), upd(core.NPM, fmt.Sprintf("p%d", i)), lowered, nil, nil)
+	}
+	if n := len(s.notes); n > maxNoteUpdates {
+		t.Errorf("%d updates' notes kept, cap %d", n, maxNoteUpdates)
 	}
 }
