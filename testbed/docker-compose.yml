@@ -78,7 +78,9 @@ services:
       - wp:/var/www/html
       - ./packages:/fixtures:ro
       - ./state/wp-share:/share:ro
-      - ./wp/seed.sh:/seed.sh:ro
+      # The folder, not the file: an editor that replaces seed.sh would
+      # leave a file mount pointing at the old copy.
+      - ./wp:/seed:ro
 
 volumes:
   wp: {}

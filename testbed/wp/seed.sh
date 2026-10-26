@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: MIT
 
 # Installs WordPress and the old versions of the plugins the e15 cases
-# update, as www-data inside the wp container. Run by `make up` and
-# again by the benchmark between cases, so it is safe to repeat: each
-# run puts the old versions back.
+# update, as www-data inside the wp container. Run by `make up-wp` and
+# again by the benchmark between cases and Soundcheck runs, so it is
+# safe to repeat: each run puts the seeded state back.
 set -eu
 
 wp="wp --path=/var/www/html"
@@ -24,6 +24,23 @@ if ! $wp core is-installed 2>/dev/null; then
 		--admin_user=admin --admin_password=admin \
 		--admin_email=admin@example.test --skip-email
 fi
+
+# Anything a benchmark run installed goes: other plugins, must-use
+# plugins (b07 writes one) and themes other than the default.
+rm -rf /var/www/html/wp-content/mu-plugins
+for slug in $($wp plugin list --field=name); do
+	case $slug in
+	akismet | hello | e15-soundcheck | b01-widget) ;;
+	*) $wp plugin delete "$slug" >/dev/null ;;
+	esac
+done
+[ "$($wp theme list --status=active --field=name)" = twentytwentyfive ] || $wp theme activate twentytwentyfive >/dev/null
+for theme in $($wp theme list --field=name); do
+	case $theme in
+	twenty*) ;;
+	*) $wp theme delete "$theme" >/dev/null ;;
+	esac
+done
 
 for slug in e15-soundcheck b01-widget; do
 	dest=/var/www/html/wp-content/plugins/$slug
