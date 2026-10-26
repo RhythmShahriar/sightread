@@ -68,11 +68,15 @@ Signals:
                                  (repeatable)
   --no-signal-updates            use the built-in signals and names, not a newer
                                  downloaded pack
-  --id <ids>                     only findings with these signal ids (globs)
-  --exclude-id <ids>             drop findings with these signal ids (globs);
-                                 integrity and allow signals always stay
+  --id <ids>                     show only findings with these signal ids
+                                 (globs); the others still count for the verdict
+                                 and --fail-on
+  --exclude-id <ids>             hide findings with these signal ids (globs),
+                                 never integrity or allow signals; they still
+                                 count for the verdict and --fail-on
   --severity <level>             hide findings below this level: info, low,
-                                 medium, high or critical (default info)
+                                 medium, high or critical; they still count for
+                                 the verdict and --fail-on (default info)
   --min-confidence <confidence>
                                  confidence a finding needs to count: confirmed
                                  or likely (config min_confidence) (default

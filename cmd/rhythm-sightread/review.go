@@ -145,6 +145,18 @@ func (c *reviewCommand) positional(p *plan, f *reviewFlags, pos []string) error 
 		if len(pos) > 1 {
 			return cli.Usagef("all takes one folder, got %d", len(pos))
 		}
+		if f.sites != "" {
+			// Each site of the fleet file names its own folder and
+			// WP-CLI command, so these would be ignored.
+			if len(pos) == 1 {
+				return badFlag("all takes no folder with --sites: the fleet file names each site's folder")
+			}
+			for _, name := range []string{"path", "wp", "from-tuner"} {
+				if f.set[name] {
+					return badFlag("all takes no --%s with --sites: the fleet file sets it for each site", name)
+				}
+			}
+		}
 		if len(pos) == 1 {
 			q.Inventory.Root = pos[0]
 			q.Set["path"] = true
@@ -166,6 +178,9 @@ func (c *reviewCommand) positional(p *plan, f *reviewFlags, pos []string) error 
 		if f.before != "" && f.base != "" {
 			return badFlag("--base reads the lockfiles from git and --before and --after from files: pick one")
 		}
+		if f.before != "" && f.set["path"] {
+			return badFlag("--path is the git repository --base reads; --before and --after name the lockfiles themselves")
+		}
 		base := f.base
 		if base == "" && f.before == "" {
 			if ref := os.Getenv("GITHUB_BASE_REF"); ref != "" {
@@ -175,10 +190,7 @@ func (c *reviewCommand) positional(p *plan, f *reviewFlags, pos []string) error 
 		q.Changes = &core.ChangesRequest{Repo: q.Inventory.Root, Base: base, Before: f.before, After: f.after,
 			Lockfiles: slices.Clone(f.lockfiles)}
 	}
-	if !c.named && (q.ToFile != "" || q.FromFile != "") {
-		return badFlag("--to-file and --from-file review one package: use %s plugin, theme, composer or npm with a name", cli.Name())
-	}
-	return nil
+	return f.offFlag(c.name)
 }
 
 // run reviews and writes the report.

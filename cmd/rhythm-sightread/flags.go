@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -108,6 +109,7 @@ type reviewFlags struct {
 	set                                       map[string]bool
 	groups                                    []flagGroup
 	shortOf                                   map[string]string // long name to its one-letter alias
+	off                                       map[string]string // flags parsed but not used, to why
 	soundcheckOn, changesOn, sitesOn, namedOn bool
 }
 
@@ -140,20 +142,65 @@ func (f *reviewFlags) short(fs *flag.FlagSet, letter, long string) {
 	f.shortOf[long] = letter
 }
 
-// versionFlags registers the Versions group.
+// versionFlags registers the Versions group. The flags that pick one
+// package's versions don't apply to all (--from) or changes (the
+// lockfiles give both versions): they are still parsed, so using one
+// is refused by name (offFlag) rather than ignored, but the help page
+// leaves them out.
 func (f *reviewFlags) versionFlags(fs *flag.FlagSet) {
-	fs.StringVar(&f.to, f.add("to"), "", "the candidate `version`: latest (plugins, themes), wanted (composer, npm), installed (against an older --from), x.y.z, an npm dist-tag, or list to print the published versions")
-	fs.StringVar(&f.from, f.add("from"), "", "the installed `version` (default: read from --path, --wp, --from-tuner or the lockfile)")
-	fs.StringVar(&f.toFile, f.add("to-file"), "", "the candidate from a local zip, tgz or folder at this `path` (premium plugins, vendor downloads); marked unverified")
-	fs.StringVar(&f.fromFile, f.add("from-file"), "", "the installed version from a local zip, tgz or folder at this `path`")
-	fs.StringVar(&f.path, f.add("path"), ".", "the site or project `folder`: a WordPress root or a folder with lockfiles")
-	fs.StringVar(&f.wp, f.add("wp"), "", "read installed WordPress versions with this WP-CLI `command`, e.g. \"ssh deploy@host -- wp --path=/srv/www\"")
-	fs.StringVar(&f.fromTuner, f.add("from-tuner"), "", "read installed plugin and theme versions from a rhythm-tuner JSON `report`")
-	fs.BoolVar(&f.allowDowngrade, f.add("allow-downgrade"), false, "review a --to older than the installed version")
-	fs.BoolVar(&f.pre, f.add("pre"), false, "let latest and wanted pick pre-releases")
-	fs.BoolVar(&f.transitive, f.add("transitive"), false, "composer and npm: review transitive dependencies too")
-	fs.Var(&f.only, f.add("only"), "only these `packages`: ecosystem IDs or <eco>:<name> globs, e.g. wp-plugin:*,npm:@acme/*")
-	fs.Var(&f.skip, f.add("skip"), "leave these `packages` out (same form as --only)")
+	reg := f.add
+	off := func(why string) func(string) string {
+		return func(name string) string {
+			if f.off == nil {
+				f.off = map[string]string{}
+			}
+			f.off[name] = why
+			return name
+		}
+	}
+	single := off("") // --to-file and --from-file have their own message
+	from, picks := reg, reg
+	switch {
+	case f.changesOn:
+		from = off("changes reads the old and new versions from the lockfiles")
+		picks = from
+	case f.sitesOn:
+		from = off("all reads each installed version from the site or project; name one package with plugin, theme, composer or npm")
+	default:
+		single = reg
+	}
+	fs.StringVar(&f.to, picks("to"), "", "the candidate `version`: latest (plugins, themes), wanted (composer, npm), installed (against an older --from), x.y.z, an npm dist-tag, or list to print the published versions")
+	fs.StringVar(&f.from, from("from"), "", "the installed `version` (default: read from --path, --wp, --from-tuner or the lockfile)")
+	fs.StringVar(&f.toFile, single("to-file"), "", "the candidate from a local zip, tgz or folder at this `path` (premium plugins, vendor downloads); marked unverified")
+	fs.StringVar(&f.fromFile, single("from-file"), "", "the installed version from a local zip, tgz or folder at this `path`")
+	if f.changesOn {
+		fs.StringVar(&f.path, reg("path"), ".", "the git repository `folder` whose lockfiles --base compares")
+	} else {
+		fs.StringVar(&f.path, reg("path"), ".", "the site or project `folder`: a WordPress root or a folder with lockfiles")
+	}
+	fs.StringVar(&f.wp, picks("wp"), "", "read installed WordPress versions with this WP-CLI `command`, e.g. \"ssh deploy@host -- wp --path=/srv/www\"")
+	fs.StringVar(&f.fromTuner, picks("from-tuner"), "", "read installed plugin and theme versions from a rhythm-tuner JSON `report`")
+	fs.BoolVar(&f.allowDowngrade, picks("allow-downgrade"), false, "review a --to older than the installed version")
+	fs.BoolVar(&f.pre, picks("pre"), false, "let latest and wanted pick pre-releases")
+	fs.BoolVar(&f.transitive, reg("transitive"), false, "composer and npm: review transitive dependencies too")
+	fs.Var(&f.only, reg("only"), "only these `packages`: ecosystem IDs or <eco>:<name> globs, e.g. wp-plugin:*,npm:@acme/*")
+	fs.Var(&f.skip, reg("skip"), "leave these `packages` out (same form as --only)")
+}
+
+// offFlag refuses a flag this command parses but doesn't use (E13), so
+// a mistyped command line is never run as if the flag did something.
+// --to-file and --from-file say which commands take them.
+func (f *reviewFlags) offFlag(command string) error {
+	for _, name := range slices.Sorted(maps.Keys(f.off)) {
+		if !f.set[name] {
+			continue
+		}
+		if why := f.off[name]; why != "" {
+			return badFlag("%s takes no --%s: %s", command, name, why)
+		}
+		return badFlag("--to-file and --from-file review one package: use %s plugin, theme, composer or npm with a name", cli.Name())
+	}
+	return nil
 }
 
 // sourceFlags registers the Sources and integrity group.
@@ -178,9 +225,9 @@ func (f *reviewFlags) sourceFlags(fs *flag.FlagSet) {
 func (f *reviewFlags) signalFlags(fs *flag.FlagSet) {
 	fs.Var(&f.signals, f.add("signals"), "load extra signal YAML from this `folder` (repeatable)")
 	fs.BoolVar(&f.noSignalUpdates, f.add("no-signal-updates"), false, "use the built-in signals and names, not a newer downloaded pack")
-	fs.Var(&f.ids, f.add("id"), "only findings with these signal `ids` (globs)")
-	fs.Var(&f.excludeIDs, f.add("exclude-id"), "drop findings with these signal `ids` (globs); integrity and allow signals always stay")
-	fs.StringVar(&f.severity, f.add("severity"), defaultSeverity, "hide findings below this `level`: info, low, medium, high or critical")
+	fs.Var(&f.ids, f.add("id"), "show only findings with these signal `ids` (globs); the others still count for the verdict and --fail-on")
+	fs.Var(&f.excludeIDs, f.add("exclude-id"), "hide findings with these signal `ids` (globs), never integrity or allow signals; they still count for the verdict and --fail-on")
+	fs.StringVar(&f.severity, f.add("severity"), defaultSeverity, "hide findings below this `level`: info, low, medium, high or critical; they still count for the verdict and --fail-on")
 	fs.StringVar(&f.minConfidence, f.add("min-confidence"), defaultConfidence, "`confidence` a finding needs to count: confirmed or likely (config min_confidence)")
 	fs.StringVar(&f.minAge, f.add("min-age"), defaultMinAge, "fresh-release fires for a candidate younger than this `duration` (config min_age)")
 }

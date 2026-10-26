@@ -6,27 +6,8 @@ with no git. Allow entries count from the base ref only, so a pull request can't
 approve its own update. This is what the GitHub Action runs on pull requests.
 
 Versions:
-  --to <version>                 the candidate version: latest (plugins,
-                                 themes), wanted (composer, npm), installed
-                                 (against an older --from), x.y.z, an npm
-                                 dist-tag, or list to print the published
-                                 versions
-  --from <version>               the installed version (default: read from
-                                 --path, --wp, --from-tuner or the lockfile)
-  --to-file <path>               the candidate from a local zip, tgz or folder
-                                 at this path (premium plugins, vendor
-                                 downloads); marked unverified
-  --from-file <path>             the installed version from a local zip, tgz or
-                                 folder at this path
-  --path <folder>                the site or project folder: a WordPress root or
-                                 a folder with lockfiles (default .)
-  --wp <command>                 read installed WordPress versions with this
-                                 WP-CLI command, e.g. "ssh deploy@host -- wp
-                                 --path=/srv/www"
-  --from-tuner <report>          read installed plugin and theme versions from a
-                                 rhythm-tuner JSON report
-  --allow-downgrade              review a --to older than the installed version
-  --pre                          let latest and wanted pick pre-releases
+  --path <folder>                the git repository folder whose lockfiles
+                                 --base compares (default .)
   --transitive                   composer and npm: review transitive
                                  dependencies too
   --only <packages>              only these packages: ecosystem IDs or
@@ -77,11 +58,15 @@ Signals:
                                  (repeatable)
   --no-signal-updates            use the built-in signals and names, not a newer
                                  downloaded pack
-  --id <ids>                     only findings with these signal ids (globs)
-  --exclude-id <ids>             drop findings with these signal ids (globs);
-                                 integrity and allow signals always stay
+  --id <ids>                     show only findings with these signal ids
+                                 (globs); the others still count for the verdict
+                                 and --fail-on
+  --exclude-id <ids>             hide findings with these signal ids (globs),
+                                 never integrity or allow signals; they still
+                                 count for the verdict and --fail-on
   --severity <level>             hide findings below this level: info, low,
-                                 medium, high or critical (default info)
+                                 medium, high or critical; they still count for
+                                 the verdict and --fail-on (default info)
   --min-confidence <confidence>
                                  confidence a finding needs to count: confirmed
                                  or likely (config min_confidence) (default
