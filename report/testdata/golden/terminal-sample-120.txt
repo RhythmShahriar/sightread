@@ -236,5 +236,5 @@
   → explain a finding: rhythm sightread explain integrity-mismatch
   → update the routine ones: wp plugin update wordfence wpforms-lite
   → update the routine ones: composer update monolog/monolog
-  → record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."
+  → record a review: rhythm sightread allow npm:@acme/widgets@1.5.0 --reason "..."
 

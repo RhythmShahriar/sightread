@@ -39,7 +39,9 @@ func TestMarkdownLayout(t *testing.T) {
 		"(demoted: vendored path)",
 		"Not counted: 1 in the baseline, 1 ignored by config and 1 below --min-confidence.",
 		"<details><summary>Diff of the flagged lines</summary>\n\n```diff\n@@ -80,2 +80,4 @@ includes/class-wpos-analytics.php\n",
-		"Record your review: `rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason \"...\"`",
+		// countdown's archive doesn't match its hash: allow would refuse it.
+		"This version doesn't match its published hash, so it can't be allowed.\n",
+		"Record your review: `rhythm sightread allow npm:@acme/widgets@1.5.0 --reason \"...\"`",
 		"### Not checked\n",
 		"Static diff of official releases; Sightread never ran this code. Not proof an update is safe.",
 		"Sightread reports what changed. It does not judge intent.",
@@ -90,6 +92,46 @@ func TestMarkdownUnverifiedWithFindings(t *testing.T) {
 	}
 	if !strings.Contains(out, "### Unverified\n\n- left-pad 1.3.1 (npm): its integrity could not be checked") {
 		t.Errorf("no Unverified list:\n%s", out)
+	}
+}
+
+// TestMarkdownAllowRefused: an update allow would refuse (E18 or a local
+// copy) gets the reason in place of the allow command, which users copy
+// from pull request comments; a verified one gets the command.
+func TestMarkdownAllowRefused(t *testing.T) {
+	cases := []struct {
+		name string
+		edit func(u *core.Update)
+		want string
+	}{
+		{"verified", func(*core.Update) {}, "Record your review: `rhythm sightread allow npm:left-pad@1.3.1 --reason \"...\"`"},
+		{"unverified", func(u *core.Update) { u.Verdict, u.To.Verified = core.Unverified, core.ByNone }, allowUnverified},
+		{"local copy", func(u *core.Update) {
+			u.To.Version, u.To.Verified, u.To.Source = "2.8.1", core.ByNone, "local file"
+		}, allowUnverified},
+		{"failed", func(u *core.Update) { u.To.Verified = core.ByFailed }, allowMismatch},
+		{"integrity-mismatch", func(u *core.Update) {
+			u.Findings = append(u.Findings, core.Finding{ID: "integrity-mismatch", Severity: cli.SeverityCritical})
+		}, allowMismatch},
+		{"approved-version-changed", func(u *core.Update) {
+			u.Findings = append(u.Findings, core.Finding{ID: "approved-version-changed", Severity: cli.SeverityCritical})
+		}, allowChanged},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			r := smallReport()
+			u := &r.Updates[0]
+			u.Verdict = core.Hold
+			u.Findings = []core.Finding{{ID: "eval-dynamic", Title: "Runs code built at run time", Severity: cli.SeverityHigh, File: "index.js", Line: 3}}
+			c.edit(u)
+			out := writeMD(t, r)
+			if !strings.Contains(out, c.want+"\n") {
+				t.Errorf("missing %q:\n%s", c.want, out)
+			}
+			if c.name != "verified" && strings.Contains(out, " allow ") {
+				t.Errorf("an allow command for a version allow refuses:\n%s", out)
+			}
+		})
 	}
 }
 

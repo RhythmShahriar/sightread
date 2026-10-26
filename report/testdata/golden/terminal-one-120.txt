@@ -68,5 +68,4 @@
 
   → the full diff: rhythm sightread plugin countdown-timer-ultimate -o review.html --open
   → explain a finding: rhythm sightread explain integrity-mismatch
-  → record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."
 

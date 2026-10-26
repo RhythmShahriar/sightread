@@ -169,5 +169,5 @@ next: every finding and the full diff: run again with -o review.html --open
 next: explain a finding: rhythm sightread explain integrity-mismatch
 next: update the routine ones: wp plugin update wordfence wpforms-lite
 next: update the routine ones: composer update monolog/monolog
-next: record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."
+next: record a review: rhythm sightread allow npm:@acme/widgets@1.5.0 --reason "..."
 

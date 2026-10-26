@@ -51,5 +51,4 @@ Sightread reports what changed. It does not judge intent.
 
 next: the full diff: rhythm sightread plugin countdown-timer-ultimate -o review.html --open
 next: explain a finding: rhythm sightread explain integrity-mismatch
-next: record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."
 

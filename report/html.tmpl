@@ -241,7 +241,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
 <code>{{.Allow}}</code> <button type="button" data-copy="{{.Allow}}">copy</button>
 <p class="muted">It records this archive by its sha256 <code>{{.AllowSHA}}</code>; any other bytes for {{.To}} are flagged.</p>
 {{- else}}
-<p class="muted">This version isn't verified, so it can't be allowed yet.</p>
+<p class="muted">{{.AllowWhy}}</p>
 {{- end}}
 </div>
 {{- end}}

@@ -1282,7 +1282,7 @@ func (t *termView) next() {
 		steps = append(steps, [2]string{label, c})
 	}
 	for _, u := range t.sectioned() {
-		if verified(u.To) {
+		if allowRefusal(u) == "" {
 			steps = append(steps, [2]string{"record a review", mdReport{r: t.r, o: t.o}.allowCommand(u)})
 			break
 		}

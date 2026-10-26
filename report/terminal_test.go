@@ -5,6 +5,7 @@ package report
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -162,7 +163,6 @@ func TestTerminalLayout(t *testing.T) {
 		"  1 update reviewed · 2 archives verified · 0 from cache · 8.1s\n",
 		"  → the full diff:\n    rhythm sightread plugin countdown-timer-ultimate -o review.html --open\n",
 		"  → explain a finding: rhythm sightread explain integrity-mismatch\n",
-		"  → record a review:\n    rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason \"...\"\n",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q", want)
@@ -243,6 +243,25 @@ func TestTerminalPlain(t *testing.T) {
 }
 
 // TestTerminalMulti asserts the table, the sections and the box of a
+// TestRecordReviewStep: the allow step of an update allow would accept
+// is wrapped whole under its label at 80 columns; one whose archive
+// doesn't match its hash, or whose allowed bytes changed, gets none.
+func TestRecordReviewStep(t *testing.T) {
+	r := oneUpdate()
+	u := &r.Updates[0]
+	u.Findings = slices.DeleteFunc(u.Findings, func(f core.Finding) bool {
+		return f.ID == "integrity-mismatch" || f.ID == "approved-version-changed"
+	})
+	coretest.FakeScorer{}.Summarise(r)
+	step := "  → record a review:\n    rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason \"...\"\n"
+	if out := writeTerm(t, r, termOpts(80)); !strings.Contains(out, step) {
+		t.Errorf("missing %q in\n%s", step, out)
+	}
+	if out := writeTerm(t, oneUpdate(), termOpts(80)); strings.Contains(out, "record a review") {
+		t.Errorf("a tampered archive is offered to allow:\n%s", out)
+	}
+}
+
 // run with several updates.
 func TestTerminalMulti(t *testing.T) {
 	out := writeTerm(t, coretest.SampleReport(), termOpts(120))
@@ -269,7 +288,9 @@ func TestTerminalMulti(t *testing.T) {
 		"  → every finding and the full diff: run again with -o review.html --open\n",
 		"  → update the routine ones: wp plugin update wordfence wpforms-lite\n",
 		"  → update the routine ones: composer update monolog/monolog\n",
-		"  → record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8",
+		// countdown's archive doesn't match its hash, so allow would
+		// refuse it; the next reviewed update is offered instead.
+		"  → record a review: rhythm sightread allow npm:@acme/widgets@1.5.0",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q", want)

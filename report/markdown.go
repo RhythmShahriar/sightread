@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -425,7 +426,37 @@ func (m mdReport) section(b *strings.Builder, u *core.Update, t mdTrim) {
 	if t.hunks {
 		m.hunks(b, u, fs)
 	}
+	if why := allowRefusal(u); why != "" {
+		b.WriteString(why + "\n\n")
+		return
+	}
 	fmt.Fprintf(b, "Record your review: %s\n\n", term.MarkdownCode(m.allowCommand(u)))
+}
+
+// The texts shown in place of the allow command for a version allow
+// would refuse (E18), so nobody copies a command that fails.
+const (
+	allowUnverified = "This version isn't verified, so it can't be allowed yet."
+	allowMismatch   = "This version doesn't match its published hash, so it can't be allowed."
+	allowChanged    = "This allowed version now has other bytes, so it can't be allowed again until you know why."
+)
+
+// allowRefusal is why u's new version can't be allowed, or "" when the
+// allow command works: a local copy, an unverified or tampered archive
+// and an allowed version whose bytes changed are refused.
+func allowRefusal(u *core.Update) string {
+	has := func(id string) bool {
+		return slices.ContainsFunc(u.Findings, func(f core.Finding) bool { return f.ID == id })
+	}
+	switch {
+	case u.To.Verified == core.ByFailed || has("integrity-mismatch"):
+		return allowMismatch
+	case has("approved-version-changed"):
+		return allowChanged
+	case !verified(u.To) || u.To.Version == "":
+		return allowUnverified
+	}
+	return ""
 }
 
 // allowCommand is the one-line allow for the reviewed version.

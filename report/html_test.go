@@ -176,8 +176,10 @@ func TestHTMLLayout(t *testing.T) {
 		`<p class="muted">Raised by owner-change.</p>`, `<p class="muted">Demoted: vendored path.</p>`,
 		`<p>Static diff of official releases; Sightread never ran this code. Not proof an update is safe.</p>`,
 		`<p>Sightread reports what changed. It does not judge intent.</p>`,
-		`rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason &#34;...&#34;`,
-		`It records this archive by its sha256 <code>` + strings.Repeat("2", 64) + `</code>`,
+		// countdown's archive doesn't match its hash: allow would refuse it.
+		`<p class="muted">This version doesn't match its published hash, so it can't be allowed.</p>`,
+		`rhythm sightread allow npm:@acme/widgets@1.5.0 --reason &#34;...&#34;`,
+		`It records this archive by its sha256 <code>`,
 		`<h2>Not checked</h2>`,
 	} {
 		if !strings.Contains(out, want) {

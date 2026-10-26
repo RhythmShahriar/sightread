@@ -43,7 +43,7 @@ Changelog: 2.6.8: "Check compatibility with WordPress 6.8"
 ```
 </details>
 
-Record your review: `rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."`
+This version doesn't match its published hash, so it can't be allowed.
 
 ### ⚠️ \@acme/widgets 1.4.0 → 1.5.0
 

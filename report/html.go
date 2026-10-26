@@ -115,7 +115,10 @@ type htmlCard struct {
 	Rest                                        []htmlDir
 	RestCount                                   int
 	Allow, AllowSHA                             string
-	Errors                                      []string
+	// AllowWhy is why allow would refuse the version, shown in place of
+	// the command: one of Sightread's own fixed texts, never package text.
+	AllowWhy template.HTML
+	Errors   []string
 }
 
 type htmlCount struct {
@@ -361,7 +364,9 @@ func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) ht
 	// already on record and ROUTINE has nothing to accept.
 	if (u.Verdict == core.Hold || u.Verdict == core.Review || u.Verdict == core.Unverified) && u.To.Version != "" {
 		c.Allow = allowLine(o.Program, u)
-		if c.Verified {
+		why := allowRefusal(u)
+		//nolint:gosec // a fixed text of this package, kept unescaped so the apostrophes stay as typed
+		if c.AllowWhy = template.HTML(why); why == "" {
 			c.AllowSHA = c.SHA256
 		}
 	}
