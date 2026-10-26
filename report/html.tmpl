@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="{{.CSP}}">
+<meta name="referrer" content="no-referrer">
+<meta name="generator" content="rhythm-sightread {{.Version}}">
+<title>{{.Title}}</title>
+<style>
+:root {
+  --bg: #f6f6f4; --card: #ffffff; --text: #1b1b1f; --muted: #5f5f6b; --line: #e2e2dd; --code: #f0f0ec;
+  --critical: #b3261e; --high: #c2570c; --medium: #9a6b00; --low: #2f5f9e; --info: #5f5f6b;
+  --hold: #b3261e; --review: #9a6b00; --routine: #1e7a46; --allowed: #2f5f9e; --unverified: #6b3fa0;
+  --add: #e6f4ea; --del: #fbe9e7; --hunk: #eef1f8;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131316; --card: #1c1c21; --text: #ececf1; --muted: #a2a2ad; --line: #2e2e36; --code: #17171b;
+    --critical: #ff6b61; --high: #ff9a4d; --medium: #e6b84a; --low: #7aa7e6; --info: #a2a2ad;
+    --hold: #ff6b61; --review: #e6b84a; --routine: #5ccf8b; --allowed: #7aa7e6; --unverified: #b48cf0;
+    --add: #15301f; --del: #3a1a17; --hunk: #1f2433;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 26px; margin: 0; overflow-wrap: anywhere; }
+h2 { font-size: 21px; margin: 0 0 4px; overflow-wrap: anywhere; }
+h3 { font-size: 15px; margin: 20px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+h4 { font-size: 15px; margin: 0 0 4px; overflow-wrap: anywhere; }
+p { margin: 4px 0; }
+.muted { color: var(--muted); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+th { color: var(--muted); font-weight: 600; }
+table.sortable th[data-col] { cursor: pointer; user-select: none; }
+th[aria-sort="ascending"]::after { content: " ▲"; }
+th[aria-sort="descending"]::after { content: " ▼"; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 0; padding: 0; list-style: none; }
+.pills li { border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; font-size: 13px; background: var(--card); }
+.pills b { font-size: 15px; }
+.verdict { display: inline-block; min-width: 92px; text-align: center; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 700; color: #fff; }
+.v-hold { background: var(--hold); } .v-review { background: var(--review); } .v-routine { background: var(--routine); }
+.v-allowed { background: var(--allowed); } .v-unverified { background: var(--unverified); }
+.pills .hold b { color: var(--hold); } .pills .review b { color: var(--review); } .pills .routine b { color: var(--routine); }
+.pills .allowed b { color: var(--allowed); } .pills .unverified b { color: var(--unverified); }
+.sev { display: inline-block; min-width: 72px; text-align: center; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 700; color: #fff; }
+.sev-critical { background: var(--critical); } .sev-high { background: var(--high); } .sev-medium { background: var(--medium); }
+.sev-low { background: var(--low); } .sev-info { background: var(--info); }
+.sev.likely { background: transparent; border: 1px solid currentColor; }
+.sev.likely.sev-critical { color: var(--critical); } .sev.likely.sev-high { color: var(--high); } .sev.likely.sev-medium { color: var(--medium); }
+.sev.likely.sev-low { color: var(--low); } .sev.likely.sev-info { color: var(--info); }
+.notes { border-left: 4px solid var(--high); padding: 8px 12px; margin: 12px 0; background: var(--card); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 12px 0; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+blockquote { margin: 0; padding: 6px 12px; border-left: 3px solid var(--line); overflow-wrap: anywhere; }
+ul.adds { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: max-content max-content; gap: 0 12px; }
+ul.adds .zero { color: var(--muted); }
+.size { margin: 8px 0; font-size: 13px; }
+.bar { height: 8px; border-radius: 4px; background: var(--muted); margin: 2px 0 6px; }
+.bar.to { background: var(--high); }
+article.finding { border-top: 1px solid var(--line); padding: 12px 0; }
+article.finding:first-of-type { border-top: 0; }
+.where, code, pre, td.code, td.ln { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+.where, code { overflow-wrap: anywhere; }
+pre { background: var(--code); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; }
+.tag { display: inline-block; border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; font-size: 12px; color: var(--muted); }
+details { margin: 6px 0; }
+summary { cursor: pointer; }
+.explain p { margin: 6px 0; }
+button { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 4px; padding: 1px 8px; cursor: pointer; }
+.toolbar { display: flex; justify-content: flex-end; margin: 8px 0; }
+table.diff { margin: 6px 0; border: 1px solid var(--line); table-layout: fixed; }
+table.diff td { border: 0; padding: 0 6px; white-space: pre-wrap; overflow-wrap: anywhere; }
+table.diff td.ln { width: 4.5em; color: var(--muted); text-align: right; user-select: none; }
+table.diff.unified td.code { width: auto; }
+tr.add td.code, td.code.add { background: var(--add); }
+tr.del td.code, td.code.del { background: var(--del); }
+tr.hunk td, td.code.hunk { background: var(--hunk); color: var(--muted); }
+table.split { display: none; }
+body.side table.split { display: table; }
+body.side table.unified { display: none; }
+.file { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; }
+.allow code { display: inline-block; margin-top: 4px; }
+footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
+@media print {
+  body { background: #fff; }
+  .card { border: 0; padding: 0; }
+  button, .toolbar { display: none; }
+  article.finding { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>{{.Title}}</h1>
+<p class="muted">{{if .Date}}{{.Date}} · {{end}}rhythm-sightread {{.Version}}{{if .Packs}} · {{.Packs}}{{end}}{{if .Fleet}} · {{len .Sites}} sites{{end}}</p>
+<ul class="pills">
+{{- range .Pills}}
+<li class="{{.Class}}"><b>{{.N}}</b> {{.Label}}</li>
+{{- end}}
+</ul>
+{{- if or .Notes .Incomplete}}
+<div class="notes">
+{{- if .Incomplete}}
+<p><strong>{{.Incomplete}}</strong></p>
+{{- end}}
+{{- range .Notes}}
+<p>{{.}}</p>
+{{- end}}
+</div>
+{{- end}}
+</header>
+
+{{- if .Rows}}
+<section class="card">
+<h2>Updates</h2>
+<table class="sortable">
+<thead><tr><th data-col="0">Verdict</th><th data-col="1">Update</th><th data-col="2">From</th><th data-col="3">To</th><th data-col="4">Findings</th>{{if .Fleet}}<th data-col="5">Sites</th>{{end}}</tr></thead>
+<tbody>
+{{- range .Rows}}
+<tr><td data-v="{{.Rank}}"><span class="verdict v-{{lower .Verdict}}">{{.Verdict}}</span></td><td><a href="#{{.Anchor}}">{{.Name}}</a> <span class="muted">({{.Eco}})</span></td><td>{{.From}}</td><td>{{.To}}</td><td data-v="{{.Worst}}">{{.Findings}}</td>{{if $.Fleet}}<td data-v="{{.Sites}}">{{.Sites}}</td>{{end}}</tr>
+{{- end}}
+</tbody>
+</table>
+</section>
+{{- else}}
+<section class="card"><p>No updates to review.</p></section>
+{{- end}}
+
+{{- if .HasDiff}}
+<div class="toolbar"><button type="button" id="view">Show side by side</button></div>
+{{- end}}
+
+{{- range .Cards}}
+<section class="card" id="{{.Anchor}}">
+<h2><span class="verdict v-{{.Class}}">{{.Verdict}}</span> {{.Name}} {{if .From}}{{.From}} → {{end}}{{.To}}</h2>
+<p class="muted">{{.Eco}}{{if .Sites}} · on {{len .Sites}} sites{{end}}</p>
+{{- if .Sites}}
+<details><summary>Sites</summary>
+<ul>
+{{- range .Sites}}
+<li>{{.}}</li>
+{{- end}}
+</ul>
+</details>
+{{- end}}
+<dl class="facts">
+{{- if .Installed}}
+<dt>Installed</dt><dd class="where">{{.Installed}}</dd>
+{{- end}}
+<dt>Integrity</dt><dd>{{.Integrity}}{{if .Source}} <span class="muted">({{.Source}})</span>{{end}}</dd>
+{{- if .SHA256}}
+<dt>sha256</dt><dd><code>{{.SHA256}}</code> <button type="button" data-copy="{{.SHA256}}">copy</button></dd>
+{{- end}}
+{{- if .URL}}
+<dt>Archive</dt><dd><code>{{.URL}}</code></dd>
+{{- end}}
+<dt>Publisher</dt><dd>{{if .PublisherChanged}}<strong>changed:</strong> {{end}}{{.Publisher}}</dd>
+{{- if .DiffLine}}
+<dt>Diff</dt><dd>{{.DiffLine}}</dd>
+{{- end}}
+</dl>
+{{- range .Errors}}
+<p class="notes">{{.}}</p>
+{{- end}}
+<div class="pair">
+<div>
+<h3>Changelog</h3>
+{{- if .Changelog}}
+<blockquote>{{if .ChangelogVersion}}<span class="muted">{{.ChangelogVersion}}:</span> {{end}}{{.Changelog}}</blockquote>
+{{- else}}
+<p class="muted">None for this version.</p>
+{{- end}}
+</div>
+<div>
+<h3>What the diff adds</h3>
+<ul class="adds">
+{{- range .Adds}}
+<li{{if not .N}} class="zero"{{end}}>{{.Label}}</li><li{{if not .N}} class="zero"{{end}}>{{.N}}</li>
+{{- end}}
+</ul>
+</div>
+</div>
+{{- if .SizeTo}}
+<div class="size">
+<span class="muted">Size from</span> {{.SizeFrom}}
+<div class="bar" style="width: {{.FromPct}}%"></div>
+<span class="muted">to</span> {{.SizeTo}}
+<div class="bar to" style="width: {{.ToPct}}%"></div>
+</div>
+{{- end}}
+
+{{- if .Findings}}
+<h3>Findings ({{len .Findings}})</h3>
+{{- range .Findings}}
+{{template "finding" .}}
+{{- end}}
+{{- end}}
+{{- if .Set}}
+<details><summary>Not counted: {{.SetLine}}</summary>
+{{- range .Set}}
+{{template "finding" .}}
+{{- end}}
+</details>
+{{- end}}
+
+{{- if or .Flagged .Rest}}
+<h3>Diff</h3>
+{{- range .Flagged}}
+<details open><summary class="file">{{.Path}}</summary>
+{{template "file" .}}
+</details>
+{{- end}}
+{{- if .Rest}}
+<details><summary>Other changed files ({{.RestCount}})</summary>
+{{- range .Rest}}
+<details><summary class="file">{{.Dir}}/</summary>
+{{- range .Files}}
+<details><summary class="file">{{.Path}}</summary>
+{{template "file" .}}
+</details>
+{{- end}}
+</details>
+{{- end}}
+</details>
+{{- end}}
+{{- end}}
+
+{{- if .Allow}}
+<div class="allow">
+<h3>Record your review</h3>
+{{- if .AllowSHA}}
+<code>{{.Allow}}</code> <button type="button" data-copy="{{.Allow}}">copy</button>
+<p class="muted">It records this archive by its sha256 <code>{{.AllowSHA}}</code>; any other bytes for {{.To}} are flagged.</p>
+{{- else}}
+<p class="muted">This version isn't verified, so it can't be allowed yet.</p>
+{{- end}}
+</div>
+{{- end}}
+</section>
+{{- end}}
+
+{{- if .Soundcheck}}
+<section class="card">
+<h2>Soundcheck</h2>
+<table>
+<thead><tr><th>Update</th><th>Staging</th><th>Result</th><th>Report</th></tr></thead>
+<tbody>
+{{- range .Soundcheck}}
+<tr><td>{{.Name}}</td><td>{{.Staging}}</td><td>{{.Counts}}{{if .RolledBack}}; rolled back{{end}}{{if .Applied}}<br><span class="muted">applied with {{.Applied}}</span>{{end}}</td><td><code>{{.Report}}</code></td></tr>
+{{- end}}
+</tbody>
+</table>
+</section>
+{{- end}}
+
+{{- if or .NotChecked .Errors}}
+<section class="card">
+<h2>Not checked</h2>
+<ul>
+{{- range .NotChecked}}
+<li>{{.}}</li>
+{{- end}}
+{{- range .Errors}}
+<li>{{.}}</li>
+{{- end}}
+</ul>
+</section>
+{{- end}}
+
+{{- if .Warnings}}
+<section class="card">
+<h2>Warnings</h2>
+<ul>
+{{- range .Warnings}}
+<li>{{.}}</li>
+{{- end}}
+</ul>
+</section>
+{{- end}}
+
+<footer>
+<p>{{.Honesty}}</p>
+<p>{{.Intent}}</p>
+<p>Record a review with <code>{{.Program}} allow &lt;eco:name@version&gt; --reason "..."</code>; it is kept in .sightread/allowed.yaml by the archive's sha256.</p>
+{{- if .Signed}}
+<p>Signed JSON report sha256: <code>{{.Signed}}</code></p>
+{{- end}}
+<p>Signal reference: {{.Reference}} · rhythm-sightread {{.Version}}</p>
+</footer>
+</main>
+<script>{{.Script}}</script>
+</body>
+</html>
+{{- define "finding"}}
+<article class="finding">
+<h4><span class="sev sev-{{.Severity}}{{if eq .Confidence "likely"}} likely{{end}}">{{upper .Severity}}{{if eq .Confidence "likely"}}, LIKELY{{end}}</span> {{.Title}} <span class="tag">{{.ID}}</span>{{if .Status}} <span class="tag">{{.Status}}</span>{{end}}</h4>
+{{- if .Where}}
+<div class="where">{{.Where}}</div>
+{{- end}}
+{{- if .Raised}}
+<p class="muted">Raised by {{.Raised}}.</p>
+{{- end}}
+{{- if .Demoted}}
+<p class="muted">Demoted: {{.Demoted}}.</p>
+{{- end}}
+{{- if .Evidence}}
+<pre>{{.Evidence}}</pre>
+{{- end}}
+{{- if .Domains}}
+<p>Domains: {{range $i, $d := .Domains}}{{if $i}}, {{end}}<code>{{$d}}</code>{{end}}</p>
+{{- end}}
+{{- if .Advice}}
+<p>→ {{.Advice}}</p>
+{{- end}}
+{{- if or .Why .HowToReview .FalseAlarms}}
+<details class="explain"><summary>Explain</summary>
+{{- if .Why}}
+<p><strong>Why it matters.</strong> {{.Why}}</p>
+{{- end}}
+{{- if .HowToReview}}
+<p><strong>How to review.</strong> {{.HowToReview}}</p>
+{{- end}}
+{{- if .FalseAlarms}}
+<p><strong>False alarms.</strong> {{.FalseAlarms}}</p>
+{{- end}}
+</details>
+{{- end}}
+</article>
+{{- end}}
+{{- define "file"}}
+{{- if .Minified}}
+<p class="muted">{{.Minified}}</p>
+{{- else}}
+{{- range .Hunks}}
+<table class="diff unified"><tbody>
+{{- range .Lines}}
+<tr class="{{.Class}}" data-k="{{.K}}"><td class="ln">{{.Old}}</td><td class="ln">{{.New}}</td><td class="code">{{.Text}}</td></tr>
+{{- end}}
+</tbody></table>
+{{- end}}
+{{- end}}
+{{- end}}

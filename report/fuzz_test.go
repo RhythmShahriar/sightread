@@ -55,6 +55,9 @@ var formatChecks = map[string]func(t *testing.T, out []byte){
 			t.Errorf("md: %d characters, over %d", len(out), markdownMax)
 		}
 	},
+	core.FormatHTML: func(t *testing.T, out []byte) {
+		checkHTML(t, out)
+	},
 	core.FormatJSONL: func(t *testing.T, out []byte) {
 		for i, line := range bytes.Split(bytes.TrimSpace(out), []byte("\n")) {
 			if !json.Valid(line) {
