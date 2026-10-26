@@ -457,7 +457,9 @@ func (s *Store) AddAllow(path string, e core.AllowEntry) error {
 	}
 	return editAllow(path, func(entries []core.AllowEntry) ([]core.AllowEntry, error) {
 		if i := findDup(entries, e); i >= 0 {
-			return nil, configError(path, fmt.Sprintf("%s@%s with sha256 %s is already allowed (entry %d)", e.Package, e.Version, shortHash(e.SHA256), i+1))
+			err := configError(path, fmt.Sprintf("%s@%s with sha256 %s is already allowed (entry %d)", e.Package, e.Version, shortHash(e.SHA256), i+1))
+			err.Err = core.ErrAlreadyAllowed
+			return nil, err
 		}
 		return append(entries, e), nil
 	})

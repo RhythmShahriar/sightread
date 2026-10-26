@@ -5,6 +5,7 @@ package core
 
 import (
 	"context"
+	"errors"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 )
@@ -35,6 +36,10 @@ type AllowSet interface {
 	Match(eco Ecosystem, name, version, sha256 string) (match *AllowEntry, counted bool, conflict *AllowEntry)
 }
 
+// ErrAlreadyAllowed is the cause of the error AddAllow returns for an
+// entry the file already has, so allow --from can skip it and go on.
+var ErrAlreadyAllowed = errors.New("already allowed")
+
 // Policy loads and edits config, allow and baseline files (package
 // policy).
 type Policy interface {
@@ -45,6 +50,8 @@ type Policy interface {
 	// LoadAllow reads the allow files; baseRef, when set, reads them at
 	// that git ref too (changes).
 	LoadAllow(cfg *Config, configPath string, baseRef string) (AllowSet, error)
+	// AddAllow appends e; an error wrapping ErrAlreadyAllowed means the
+	// same package, version and hash is already there.
 	AddAllow(path string, e AllowEntry) error
 	RemoveAllow(path string, r Ref) error
 	ImportAllow(path, from string) (int, error)

@@ -256,6 +256,16 @@ func TestAllowRefuses(t *testing.T) {
 		!strings.HasPrefix(out, "allowed wp-plugin:akismet@5.3.5 (sha256 abababababab)") {
 		t.Errorf("--from added %+v, printed %q", p.Allow, out)
 	}
+	// A report made after that allow lists akismet as ALLOWED: it is
+	// skipped and the new update after it is still recorded.
+	rep.Updates = append(rep.Updates[2:], core.Update{Eco: core.NPM, Name: "right-pad", To: core.Side{Version: "2.0.0", SHA256: sum, Verified: core.BySignature}})
+	rep.Updates[0].Verdict = core.Allowed
+	code, out, errOut = execute(t, "allow", "--from", saveReport(t, rep), "--reason", "reviewed in PR 413")
+	if code != cli.ExitOK || errOut != "" || len(p.Allow) != 2 || p.Allow[1].Package != "npm:right-pad" ||
+		!strings.HasPrefix(out, "already allowed wp-plugin:akismet@5.3.5 (sha256 abababababab)") ||
+		!strings.Contains(out, "\nallowed npm:right-pad@2.0.0 (sha256 abababababab)") {
+		t.Errorf("--from again: exit %d %q %q, entries %+v", code, out, errOut, p.Allow)
+	}
 	// A local copy has no published archive: refused before any fetch.
 	code, _, errOut = execute(t, "allow", "wp-plugin:acme-i@local", "--reason", "ok")
 	if code != cli.ExitUsage || !strings.HasPrefix(errOut, "rhythm-sightread: wp-plugin:acme-i@local is a local copy, which can't be allowed; allow records a published version: wp-plugin:acme-i@<version>\n") {

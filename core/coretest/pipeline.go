@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 
@@ -283,10 +284,17 @@ func (p *FakePolicy) LoadAllow(*core.Config, string, string) (core.AllowSet, err
 	return AllowList(append([]core.AllowEntry(nil), p.Allow...)), nil
 }
 
-// AddAllow appends e.
+// AddAllow appends e, or refuses it like the real policy when the same
+// package, version and hash is already there.
 func (p *FakePolicy) AddAllow(_ string, e core.AllowEntry) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	for _, a := range p.Allow {
+		if a.Package == e.Package && a.Version == e.Version && strings.EqualFold(a.SHA256, e.SHA256) {
+			return &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage, What: e.Package + "@" + e.Version + " is already allowed",
+				Err: core.ErrAlreadyAllowed}
+		}
+	}
 	p.Allow = append(p.Allow, e)
 	return nil
 }

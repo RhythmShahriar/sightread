@@ -449,7 +449,7 @@ func TestAddAllow(t *testing.T) {
 	dup.Reason = "another look"
 	err = s.AddAllow(p, dup)
 	wantErr := "rhythm sightread: .sightread/allowed.yaml: npm:a@2.0.0 with sha256 aaaaaaaaaaaa is already allowed (entry 2)"
-	if err == nil || err.Error() != wantErr {
+	if err == nil || err.Error() != wantErr || !errors.Is(err, core.ErrAlreadyAllowed) {
 		t.Errorf("duplicate: %v", err)
 	}
 	// An invalid entry is refused with the same text LoadAllow gives.

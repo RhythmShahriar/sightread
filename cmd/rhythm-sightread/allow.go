@@ -169,7 +169,8 @@ func (f *allowFlags) run(ctx context.Context, pos []string, stdout, stderr io.Wr
 
 // fromReport allows every update a saved report reviewed. A refused
 // update is reported and the others are still recorded; the exit is 2
-// when any was refused.
+// when any was refused. One already allowed with the same hash is
+// skipped with a line saying so.
 func (f *allowFlags) fromReport(policy core.Policy, path string, stdout, stderr io.Writer) error {
 	rep, err := readReport("allow", f.from)
 	if err != nil {
@@ -189,6 +190,12 @@ func (f *allowFlags) fromReport(policy core.Policy, path string, stdout, stderr 
 			continue
 		}
 		if err := f.add(policy, path, ref, u.To, stdout); err != nil {
+			// A report made after an earlier allow lists that update as
+			// ALLOWED: skipping it is the normal flow, not a failure.
+			if errors.Is(err, core.ErrAlreadyAllowed) {
+				fmt.Fprintf(stdout, "already allowed %s (sha256 %s) in %s\n", ref, short(u.To.SHA256), shown(path))
+				continue
+			}
 			return err
 		}
 	}
