@@ -4,5 +4,9 @@
 // Package js is a JavaScript lexer for feature extraction. It tokenises
 // code, never evaluates it.
 //
-// The skeleton created this package empty; the analyze lane builds it.
+// Lex covers its input exactly, runs in linear time and never fails. It
+// tells regular expressions from division by the previous significant
+// token, tracks template literal nesting with a stack (no recursion)
+// and tolerates JSX. StringValue, TemplateText and IdentName give the
+// values of literals and escaped names for constant folding.
 package js
