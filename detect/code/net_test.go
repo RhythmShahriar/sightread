@@ -247,3 +247,30 @@ func TestOwnHostsSkipCodeHosts(t *testing.T) {
 		t.Errorf("ownHosts = %q, want none", got)
 	}
 }
+
+// TestExfilTarget: data-exfil names a literal local address as such and
+// says "built at run time" only when no target was written.
+func TestExfilTarget(t *testing.T) {
+	send := func(attrs map[string]string) core.Feature {
+		f := coretest.Feat(core.FSend, "fsockopen", "x.php", 3)
+		f.Attrs = attrs
+		return f
+	}
+	for _, c := range []struct {
+		name  string
+		attrs map[string]string
+		want  string
+	}{
+		{"loopback", map[string]string{AttrReads: "env", AttrLocal: "127.0.0.1"}, "sends env to the local address 127.0.0.1: "},
+		{"dynamic", map[string]string{AttrReads: "env"}, "sends env to a host built at run time: "},
+		{"literal host", map[string]string{AttrReads: "env", AttrHost: "evil.test", AttrDomain: "evil.test"}, "sends env to evil.test: "},
+	} {
+		got, ok := exfilFinding(subject(core.WPPlugin, nil, coretest.Features()), send(c.attrs))
+		if !ok || !strings.HasPrefix(got.Evidence.String(), c.want) {
+			t.Errorf("%s: %v %q, want prefix %q", c.name, ok, got.Evidence, c.want)
+		}
+		if c.name != "literal host" && got.Severity != cli.SeverityMedium {
+			t.Errorf("%s: severity %s, want medium", c.name, got.Severity)
+		}
+	}
+}

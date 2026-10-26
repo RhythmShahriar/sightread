@@ -4,6 +4,7 @@
 package analyze
 
 import (
+	"net/netip"
 	"net/url"
 	"strings"
 	"testing"
@@ -275,6 +276,39 @@ func FuzzExtractURLs(f *testing.F) {
 			if u.Hostname() != r.host {
 				t.Errorf("url %q has host %q, want %q", r.url, u.Hostname(), r.host)
 			}
+		}
+	})
+}
+
+// TestLocalAddr: only localhost and addresses publicAddr rejects are
+// local; hosts, public and private addresses and zoned ones are not.
+func TestLocalAddr(t *testing.T) {
+	for in, want := range map[string]string{
+		"127.0.0.1": "127.0.0.1", "127.0.0.1:18905": "127.0.0.1", "tcp://[::1]:80": "::1", "http://user@localhost./x": "localhost",
+		"https://[fe80::1]/p": "fe80::1", "0.0.0.0": "0.0.0.0", "udp://224.0.0.1:5353": "224.0.0.1",
+		"evil.test": "", "10.0.0.1": "", "203.0.113.9:80": "", "fe80::1%eth0": "", "gopher://127.0.0.1/": "", "": "",
+	} {
+		got, ok := localAddr(in)
+		if got != want || ok != (want != "") {
+			t.Errorf("localAddr(%q) = %q %v, want %q", in, got, ok, want)
+		}
+	}
+}
+
+func FuzzLocalAddr(f *testing.F) {
+	for _, s := range []string{"127.0.0.1:80", "tcp://[::1]:80", "http://localhost/x", "evil.test", "[", "a@b@[::1"} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, s string) {
+		if h, ok := localAddr(s); ok {
+			if h != "localhost" {
+				a, err := netip.ParseAddr(h)
+				if err != nil || publicAddr(a) {
+					t.Fatalf("localAddr(%q) = %q, not a local address", s, h)
+				}
+			}
+		} else if h != "" {
+			t.Fatalf("localAddr(%q) = %q without ok", s, h)
 		}
 	})
 }

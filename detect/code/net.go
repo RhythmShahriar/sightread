@@ -36,6 +36,9 @@ const (
 	AttrCategory = "category"
 	// AttrHost is the host an FSend goes to, when it could be folded.
 	AttrHost = "host"
+	// AttrLocal is the loopback or other local address (or localhost)
+	// an FSend names as written, when it has no AttrHost.
+	AttrLocal = "local"
 	// AttrDomain is the registrable domain (eTLD+1) of AttrHost, the
 	// key an FDomain feature of the same host has.
 	AttrDomain = "domain"
@@ -347,7 +350,8 @@ func urlHost(raw string) string {
 
 // exfilFinding is a data-exfil finding for a new send that carries what
 // its function reads: high to a host new in this version, medium to a
-// host the installed version already used or one built at run time.
+// host the installed version already used, a local address or one
+// built at run time.
 func exfilFinding(s *core.Subject, f core.Feature) (core.Finding, bool) {
 	reads := strings.TrimSpace(f.Attrs[AttrReads])
 	if reads == "" {
@@ -361,7 +365,11 @@ func exfilFinding(s *core.Subject, f core.Feature) (core.Finding, bool) {
 	if host == "" || knownHost(s.OldFeatures, host) || knownHost(s.OldFeatures, normHost(f.Attrs[AttrDomain])) {
 		fd.Severity = cli.SeverityMedium
 	}
-	fd.Evidence = core.NewSnippet("sends " + reads + " to " + cmp.Or(host, "a host built at run time") + ": " + f.Ev.Snippet.String())
+	to := cmp.Or(host, "a host built at run time")
+	if local := strings.TrimSpace(f.Attrs[AttrLocal]); host == "" && local != "" {
+		to = "the local address " + local
+	}
+	fd.Evidence = core.NewSnippet("sends " + reads + " to " + to + ": " + f.Ev.Snippet.String())
 	return fd, true
 }
 

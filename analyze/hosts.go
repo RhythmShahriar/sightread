@@ -482,6 +482,66 @@ func sendHost(c *callSite, channel string) (hostRef, bool) {
 	return hostRef{}, false
 }
 
+// sendLocal is the target of a send call that names a loopback,
+// unspecified, link-local or multicast address, or localhost, as
+// written. sendHost leaves those out (they are not hosts on the
+// internet), so without this the send would read as going to a host
+// built at run time.
+func sendLocal(c *callSite, channel string) (string, bool) {
+	n := 0
+	switch channel {
+	case "http":
+		n = 1
+	case "socket", "dns":
+		n = 4
+	}
+	for i := 0; i < len(c.args) && i < n; i++ {
+		v, ok := c.args[i].v.str()
+		if !ok || v == "" {
+			continue
+		}
+		if h, ok := localAddr(v); ok {
+			return h, true
+		}
+	}
+	return "", false
+}
+
+// localAddr returns the address of s, a URL, a host with a port or a
+// bare host, when it is local: localhost or an address publicAddr
+// rejects.
+func localAddr(s string) (string, bool) {
+	s = strings.TrimSpace(s)
+	if scheme, rest, ok := strings.Cut(s, "://"); ok {
+		if !allowedSchemes[strings.ToLower(scheme)] && !socketSchemes[strings.ToLower(scheme)] {
+			return "", false
+		}
+		s = rest
+	}
+	if k := strings.IndexAny(s, "/?#"); k >= 0 {
+		s = s[:k]
+	}
+	if at := strings.LastIndexByte(s, '@'); at >= 0 {
+		s = s[at+1:]
+	}
+	switch {
+	case strings.HasPrefix(s, "["):
+		if c := strings.IndexByte(s, ']'); c > 0 {
+			s = s[1:c]
+		}
+	case strings.Count(s, ":") == 1:
+		s, _, _ = strings.Cut(s, ":")
+	}
+	if strings.EqualFold(strings.TrimSuffix(s, "."), "localhost") {
+		return "localhost", true
+	}
+	a, err := netip.ParseAddr(s)
+	if err != nil || a.Zone() != "" || publicAddr(a) {
+		return "", false
+	}
+	return a.String(), true
+}
+
 // socketSchemes are the transports PHP's stream_socket_client and
 // fsockopen take in front of a host.
 var socketSchemes = map[string]bool{"tcp": true, "udp": true, "ssl": true, "tls": true}

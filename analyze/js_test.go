@@ -84,7 +84,11 @@ func TestJSFeatures(t *testing.T) {
 			map[string]string{"host": "collect.evil-cdn.com", "domain": "evil-cdn.com"}, true},
 		{"socket host", `const net = require('net'); net.connect(4444, '198.51.100.7');`, core.FSend, "net.connect",
 			map[string]string{"host": "198.51.100.7"}, true},
-		{"fetch built host", `fetch(base + '/x', { body });`, core.FSend, "fetch", map[string]string{"host": ""}, true},
+		{"fetch built host", `fetch(base + '/x', { body });`, core.FSend, "fetch", map[string]string{"host": "", "local": ""}, true},
+		{"loopback v6 fetch", `fetch('http://[::1]:3000/x', { method: 'POST', body });`, core.FSend, "fetch",
+			map[string]string{"host": "", "local": "::1"}, true},
+		{"loopback socket", `const net = require('net'); net.connect(4444, '127.0.0.2');`, core.FSend, "net.connect",
+			map[string]string{"host": "", "local": "127.0.0.2"}, true},
 
 		// FEval.
 		{"eval", `eval(x);`, core.FEval, "eval", map[string]string{"arg": "dynamic"}, true},
