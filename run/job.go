@@ -221,8 +221,17 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 		from := ""
 		if old != nil {
 			from = old.info.Version
+			if !scheme.Valid(from) {
+				// A local file has no version ("local"): the newest one
+				// its own changelog lists is where the update starts.
+				from = newestEntry(old.meta.Changelog, scheme)
+			}
 		}
-		cur.meta.Changelog = changelog.Between(cur.meta.Changelog, from, cur.info.Version, scheme)
+		to := cur.info.Version
+		if !scheme.Valid(to) {
+			to = "" // a local candidate: every entry above from
+		}
+		cur.meta.Changelog = changelog.Between(cur.meta.Changelog, from, to, scheme)
 	}
 	u.Changelog = cur.meta.Changelog
 
@@ -380,7 +389,14 @@ func (r *reviewer) side(ctx context.Context, src core.Source, t *target, isNew b
 			what = "installed copy"
 		}
 		in := core.Integrity{By: core.ByNone, Method: what + "; nothing to check it against", Detail: what}
-		return &side{meta: &core.Meta{Ref: ref}, tree: tree, in: in, info: r.sideInfo(ref, nil, tree, in, what)}, nil
+		// The changelog, composer.json and readme facts come from the
+		// files themselves, as for a fetched release, so a local review
+		// reads the same changelog and install hooks.
+		m := &core.Meta{Ref: ref}
+		if mf, ok := src.(treeMeta); ok {
+			mf.MetaFromTree(m, tree)
+		}
+		return &side{meta: m, tree: tree, in: in, info: r.sideInfo(ref, nil, tree, in, what)}, nil
 	}
 	m, err := src.Meta(ctx, ref)
 	if err != nil {
@@ -790,3 +806,14 @@ func (r *reviewer) publicShadow(ctx context.Context, eco core.Ecosystem, name, v
 // joinRoot joins a site root and an installed path the inventory wrote
 // with slashes.
 func joinRoot(root, rel string) string { return filepath.Join(root, filepath.FromSlash(rel)) }
+
+// newestEntry is the highest version entries list, or "".
+func newestEntry(entries []core.ChangelogEntry, scheme core.VersionScheme) string {
+	v := ""
+	for _, e := range entries {
+		if scheme.Valid(e.Version) && (v == "" || scheme.Compare(e.Version, v) > 0) {
+			v = e.Version
+		}
+	}
+	return v
+}
