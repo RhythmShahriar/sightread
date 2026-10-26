@@ -21,6 +21,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/RhythmShahriar/rhythm/kit/config"
+	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/sightread/core"
 )
 
@@ -319,9 +320,11 @@ func (r *reviewer) packs(rep *core.Report) {
 	}
 }
 
+// logf writes one -v line. Errors can carry text from a registry or a
+// package, so every line is secret-masked (SR-10).
 func (r *reviewer) logf(format string, a ...any) {
 	if r.req.Log != nil {
-		fmt.Fprintf(r.req.Log, "sightread: "+format+"\n", a...)
+		fmt.Fprintln(r.req.Log, secrets.Redact("sightread: "+fmt.Sprintf(format, a...)))
 	}
 }
 
@@ -532,17 +535,17 @@ func hostOf(raw string) string {
 }
 
 // firstLine is the first line of an error's text, the summary PRD 10
-// shows without -v.
+// shows without -v, secret-masked because it goes into the report.
 func firstLine(err error) string {
 	var e *core.Error
 	if errors.As(err, &e) {
-		return e.What
+		return secrets.Redact(e.What)
 	}
 	s := err.Error()
 	if i := strings.IndexByte(s, '\n'); i >= 0 {
 		s = s[:i]
 	}
-	return s
+	return secrets.Redact(s)
 }
 
 // isStop reports whether err only says the run was stopped.
