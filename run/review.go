@@ -56,7 +56,7 @@ type reviewer struct {
 	notes    []string
 	warnings []string
 	onUpdate sync.Mutex
-	stopped  atomic.Bool // the hard stop came: no more --jsonl lines
+	stopped  atomic.Bool  // the hard stop came: no more --jsonl lines
 	ghPlan   atomic.Int64 // api.github.com requests the run plans
 }
 
