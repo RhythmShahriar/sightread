@@ -105,7 +105,7 @@ func TestGoreleaserConfig(t *testing.T) {
 			t.Errorf("archive file %s matches nothing", src)
 		}
 	}
-	if !slices.Equal(files, []string{"README.md", "LICENSE", "THIRD_PARTY/publicsuffix/*"}) {
+	if !slices.Equal(files, []string{"README.md", "LICENSE", "THIRD_PARTY/publicsuffix/*", "THIRD_PARTY/notices/*"}) {
 		t.Errorf("archive files %q", files)
 	}
 	if !strings.Contains(string(repoFile(t, "THIRD_PARTY/publicsuffix/LICENSE")), "Mozilla Public License, version 2.0") {

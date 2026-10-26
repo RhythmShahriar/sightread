@@ -26,12 +26,16 @@ archives:
         formats: [zip]
     # The binary embeds the Public Suffix List (MPL-2.0) through
     # golang.org/x/net/publicsuffix, so its license and source ship beside
-    # it.
+    # it. It also links Apache-2.0 modules whose NOTICE files must travel
+    # with it.
     files:
       - README.md
       - LICENSE
       - src: THIRD_PARTY/publicsuffix/*
         dst: THIRD_PARTY/publicsuffix
+        strip_parent: true
+      - src: THIRD_PARTY/notices/*
+        dst: THIRD_PARTY/notices
         strip_parent: true
 
 # The data packs (sightread-names.json and sightread-signals.tar.gz,

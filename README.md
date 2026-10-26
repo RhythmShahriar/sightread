@@ -198,6 +198,6 @@ Sightread's source is MIT licensed. The `rhythm-sightread` binary links the Rhyt
 
 ### Third-party
 
-The binary embeds the [Public Suffix List](https://publicsuffix.org) through `golang.org/x/net/publicsuffix`, under the Mozilla Public License 2.0. Release archives carry its license and a note on its source under `THIRD_PARTY/publicsuffix/`.
+The binary embeds the [Public Suffix List](https://publicsuffix.org) through `golang.org/x/net/publicsuffix`, under the Mozilla Public License 2.0. Release archives carry its license and a note on its source under `THIRD_PARTY/publicsuffix/`. The NOTICE files of the Apache-2.0 modules it links (mostly the Sigstore libraries that check a data pack's signature) are under `THIRD_PARTY/notices/`.
 
 <p align="center"><sub>Part of <a href="https://github.com/RhythmShahriar/rhythm"><b>rhythm</b></a> · Useful ideas. Working systems.</sub></p>
