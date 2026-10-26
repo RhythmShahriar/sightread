@@ -448,8 +448,8 @@ func TestVerifyTreeLimitCut(t *testing.T) {
 	tree := coretest.TreeWith(map[string]string{"a.php": "a"},
 		[]core.ArchiveIssue{{Kind: core.IssueLimit, Detail: "more than 100000 entries; the rest were not read"}})
 	want := sums{"a.php": {sha("a")}, "b.php": {sha("b")}}
-	if in := verifyTree(tree, want); in.By != core.ByNone || in.Detail == "" {
-		t.Errorf("cut tree: %+v, want none", in)
+	if in := verifyTree(tree, want); in.By != core.ByNone || in.Detail == "" || in.Method != MethodChecksumsCut {
+		t.Errorf("cut tree: %+v, want none with the limit as the method", in)
 	}
 	tree = coretest.TreeWith(map[string]string{"a.php": "changed"},
 		[]core.ArchiveIssue{{Kind: core.IssueLimit}})

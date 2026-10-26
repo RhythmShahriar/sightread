@@ -63,6 +63,7 @@ The `verified-by` value of each package and its exact Method text:
 | wp-plugin | `checksums` | `matches WordPress.org's own checksums (both come from WordPress.org, so this proves the copy was not changed on the way, not what the author intended)` |
 | wp-plugin | `failed` | `does not match WordPress.org's own checksums` (Detail `3 files differ from WordPress.org's checksums`) |
 | wp-plugin | `none` | `not verified: WordPress.org's checksums for this version are unavailable` |
+| wp-plugin | `none` (archive limit) | `not verified: the archive hit a limit, so not every file could be checked against WordPress.org's checksums` |
 | wp-theme | `tls` | `downloaded over TLS from WordPress.org; WordPress.org publishes no theme checksums` |
 | wp-theme | `svn` | `every file matches themes.svn.wordpress.org` |
 | wp-theme | `failed` | `does not match the theme's files on themes.svn.wordpress.org` |

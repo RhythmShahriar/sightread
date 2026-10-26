@@ -25,6 +25,7 @@ const (
 	MethodChecksums       = "matches WordPress.org's own checksums (both come from WordPress.org, so this proves the copy was not changed on the way, not what the author intended)"
 	MethodChecksumsFailed = "does not match WordPress.org's own checksums"
 	MethodChecksumsNone   = "not verified: WordPress.org's checksums for this version are unavailable"
+	MethodChecksumsCut    = "not verified: the archive hit a limit, so not every file could be checked against WordPress.org's checksums"
 )
 
 // reasonNoChecksums is the E5 reason of a release WordPress.org lists
@@ -156,7 +157,9 @@ func verifyTree(tree *core.Tree, want sums) core.Integrity {
 		return core.Integrity{By: core.ByFailed, Method: MethodChecksumsFailed, Mismatch: bad,
 			Detail: fmt.Sprintf("%d %s differ from WordPress.org's checksums", len(bad), plural(len(bad), "file", "files"))}
 	case cut:
-		return core.Integrity{By: core.ByNone, Method: MethodChecksumsNone,
+		// The checksums were there: the archive's limit is why nothing
+		// is verified, and the Integrity fact must say so.
+		return core.Integrity{By: core.ByNone, Method: MethodChecksumsCut,
 			Detail: "the archive hit a limit, so not every file could be checked"}
 	}
 	return core.Integrity{By: core.ByChecksums, Method: MethodChecksums}
