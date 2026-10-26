@@ -373,6 +373,7 @@ func (s *scope) exprArg(i, end int) (res, int) {
 		return res{}, i
 	}
 	if s.depth > maxEvalDepth {
+		s.f.st.deep = true
 		return res{}, s.skipExpr(i, end)
 	}
 	s.depth++

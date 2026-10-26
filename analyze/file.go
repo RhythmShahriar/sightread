@@ -28,6 +28,10 @@ func codeFeatures(l lang, path string, src []byte, ctx string) []core.Feature {
 const (
 	reasonTimeLimit = "analysis time limit"
 	reasonUnread    = "could not read the file"
+	// reasonTooDeep is a file with brackets, calls or string
+	// interpolation nested deeper than the walk follows. PHP accepts
+	// such code, so the part not followed must fail closed.
+	reasonTooDeep = "code nested too deep to analyse"
 )
 
 // reasonUnterminated is the Unanalysed reason of a lexer Error token:
@@ -100,6 +104,9 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 		if t, ok := phpError(ptoks); ok && ctx != core.CtxDecoded {
 			un = append(un, core.Unanalysed{Path: path, Reason: reasonUnterminated(t.Construct(), t.Line)})
 		}
+		if phpDeep(ptoks) {
+			un = append(un, core.Unanalysed{Path: path, Reason: reasonTooDeep})
+		}
 		st = newStream(langPHP, normPHP(ptoks))
 		ptoks = keepPHP(ptoks)
 	} else {
@@ -149,6 +156,9 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 		out = unionFeatures(out, rereadPHP7(path, src, ctx, lines, env.clk))
 	}
 	sortFeatures(out)
+	if st.deep && !slices.ContainsFunc(un, func(u core.Unanalysed) bool { return u.Reason == reasonTooDeep }) {
+		un = append(un, core.Unanalysed{Path: path, Reason: reasonTooDeep})
+	}
 	if bs.un {
 		un = append(un, core.Unanalysed{Path: path, Reason: reasonDecodeLimit})
 	}
@@ -331,6 +341,18 @@ func phpError(toks []php.Token) (php.Token, bool) {
 		return toks[n-1], true
 	}
 	return php.Token{}, false
+}
+
+// phpDeep reports whether a string's interpolation went past
+// php.MaxDepth, where the lexer left code unread. Parts nest at most
+// MaxDepth deep, so the recursion is bounded.
+func phpDeep(toks []php.Token) bool {
+	for _, t := range toks {
+		if t.Deep || (len(t.Parts) > 0 && phpDeep(t.Parts)) {
+			return true
+		}
+	}
+	return false
 }
 
 // jsError finds an Error token that runs to the end of a JavaScript

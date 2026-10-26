@@ -60,6 +60,10 @@ type stream struct {
 	toks  []tok
 	match []int32 // index of the matching bracket, or len(toks) when unbalanced; int32 halves it
 	clk   *clock  // the file's time budget, ticked by the walk
+	// deep is set when the walk skipped an expression nested deeper
+	// than maxEvalDepth: what it holds was not evaluated, so the file
+	// is listed as unanalysed rather than passed as clean.
+	deep bool
 }
 
 func newStream(l lang, toks []tok) *stream {
