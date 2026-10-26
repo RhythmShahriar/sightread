@@ -20,17 +20,17 @@ const inChangeConfigNote = "%s: relaxed in this change, not counted (--trust-pr-
 
 // ConfigAtBase applies the pull request rule to the config itself, as
 // LoadAllow does to the allow file (SR-61: the config is code). The
-// config's own file is read at baseRef through core.GetGitShow, and what
-// the working tree relaxes against it is put back:
+// config's own file is read at baseRef through core.GetGitShow. What the
+// working tree relaxes against it is put back:
 //
-//   - an ignore entry the base doesn't have is dropped, and one whose
+//   - an ignore entry the base doesn't have is dropped; one whose
 //     until the change moved later keeps the base's date;
 //   - a signals.severity value lower than the base's (or than the
 //     catalogue default when the base has none) is raised back;
 //   - a domains_ok host the base doesn't have is dropped;
 //   - min_confidence confirmed counts only when the base has it;
-//   - fail_on keeps the stricter of the two, and the base's when the
-//     change removed it.
+//   - fail_on keeps the stricter of the two (the base's when the
+//     change removed it).
 //
 // cfg is changed in place. It returns one note per change it did not
 // apply, for Report.Notes. With baseRef or configPath empty, or a config

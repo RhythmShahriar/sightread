@@ -160,7 +160,7 @@ func TestConfigAtBaseSkips(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// --trust-pr-allow passes no base ref, and no config means nothing to do.
+	// --trust-pr-allow passes no base ref; no config means nothing to do.
 	for _, c := range []struct{ path, ref string }{{cp, ""}, {"", "origin/main"}} {
 		notes, err := s.ConfigAtBase(cfg, c.path, c.ref)
 		if err != nil || notes != nil || len(cfg.Ignore) != 1 {
