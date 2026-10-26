@@ -57,6 +57,9 @@ func (e *ErrAuth) Error() string { return fmt.Sprintf("%s answered %d", e.Host, 
 type StatusError struct {
 	Host   string
 	Status int
+	// Body is up to 4 KiB of the answer when it is JSON, which some
+	// registries use to say why (a closed WordPress.org plugin); else nil.
+	Body []byte
 }
 
 func (e *StatusError) Error() string { return fmt.Sprintf("%s answered %d", e.Host, e.Status) }
@@ -252,4 +255,19 @@ func (p Package) Wrap(err error) error {
 		out.What = fmt.Sprintf("the %s %s of %s %s", p.Version, noun, p.Name, size.Error())
 	}
 	return &out
+}
+
+// hintUnverified is the E5 hint of PRD section 10.
+const hintUnverified = "not diffed; run again later, or --allow-unverified to review it anyway (the report marks it unverified)"
+
+// Unverified is E5: the integrity of name at version could not be
+// checked, for reason ("wordpress.org checksums answered 503"). Sources
+// put the first line in Integrity.Detail; run returns the error unless
+// --allow-unverified.
+func Unverified(command, name, version, reason string) *core.Error {
+	return &core.Error{
+		Code: core.EUnverifiable, Exit: cli.ExitUnavailable, Command: command,
+		What: fmt.Sprintf("couldn't verify %s %s: %s", name, version, reason),
+		Hint: []string{hintUnverified},
+	}
 }

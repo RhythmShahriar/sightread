@@ -381,10 +381,23 @@ func (c *Client) do(hc *http.Client, req *http.Request) (*http.Response, error) 
 	if resp.StatusCode/100 == 2 {
 		return resp, nil
 	}
+	// A registry may explain a refusal in a short JSON body (WordPress.org
+	// answers 404 with {"error": "closed", ...}); keep that much for the
+	// source and drain the rest of the first 4 KiB so the connection can
+	// be reused.
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, errorBodyCap))
 	_, _ = io.CopyN(io.Discard, resp.Body, 4<<10)
 	_ = resp.Body.Close()
-	return nil, c.statusError(resp)
+	err = c.statusError(resp)
+	var se *StatusError
+	if errors.As(err, &se) && json.Valid(body) {
+		se.Body = body
+	}
+	return nil, err
 }
+
+// errorBodyCap is how much of a non-2xx answer StatusError keeps.
+const errorBodyCap = 4 << 10
 
 // statusError maps a non-2xx answer.
 func (c *Client) statusError(resp *http.Response) error {
