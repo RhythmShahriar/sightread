@@ -384,6 +384,23 @@ func TestExcludeIDKeepsIntegrity(t *testing.T) {
 	}
 }
 
+// TestHiddenFindingsStillGate: a finding --exclude-id hides is out of
+// the report but still sets the verdict and trips --fail-on.
+func TestHiddenFindingsStillGate(t *testing.T) {
+	w := world(t)
+	w.Publish(core.WPPlugin, "a", "1.0.0", "1.1.0")
+	w.Install(core.WPPlugin, "a", "1.0.0")
+	w.Detector.Set("a", "remote-fetch-exec")
+	code, _, _ := execute(t, "all", "--exclude-id", "remote-*", "--fail-on", "high")
+	if code != cli.ExitFindings {
+		t.Errorf("exit %d, want %d", code, cli.ExitFindings)
+	}
+	rep := w.Writers[core.FormatTerminal].Got()[0]
+	if u := rep.Updates[0]; len(u.Findings) != 0 || len(u.Hidden) != 1 || u.Verdict != core.Hold || rep.Summary.Hidden != 1 {
+		t.Errorf("verdict %s, findings %+v, hidden %+v, summary %+v", u.Verdict, u.Findings, u.Hidden, rep.Summary)
+	}
+}
+
 // TestOpenWithoutOpener: --open with no OS opener says where the report
 // is.
 func TestOpenWithoutOpener(t *testing.T) {
