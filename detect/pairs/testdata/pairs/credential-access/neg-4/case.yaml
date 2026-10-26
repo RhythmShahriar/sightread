@@ -1,0 +1,10 @@
+eco: npm
+note: a token read in a test
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: env-read, key: GITHUB_TOKEN, path: test/release.test.js, line: 8, context: test}
+forbid:
+- credential-access

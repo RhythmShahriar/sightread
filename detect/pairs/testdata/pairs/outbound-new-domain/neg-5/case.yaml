@@ -1,0 +1,14 @@
+eco: npm
+note: a host the project lists in signals.domains_ok
+config:
+  signals:
+    domains_ok:
+    - '*.payments.test'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: domain, key: api.payments.test, path: src/pay.js, line: 4}
+expect:
+- {id: outbound-new-domain, max_severity: info}

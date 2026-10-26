@@ -1,0 +1,11 @@
+eco: npm
+note: JavaScript in a font that the package requires
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: code-in-asset, key: fonts/icons.woff, path: fonts/icons.woff, line: 1}
+- {kind: include, key: require, path: index.js, line: 2, attrs: {target: ./fonts/icons.woff}}
+expect:
+- {id: code-in-asset, min_severity: critical}

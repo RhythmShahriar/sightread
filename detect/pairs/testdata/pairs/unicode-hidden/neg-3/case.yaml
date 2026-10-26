@@ -1,0 +1,11 @@
+eco: npm
+note: the same characters were in the installed version
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+- {kind: unicode, key: U+200B, path: src/a.js, line: 3}
+features_new:
+- {kind: unicode, key: U+200B, path: src/a.js, line: 4}
+forbid:
+- unicode-hidden

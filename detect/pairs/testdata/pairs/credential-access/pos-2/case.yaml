@@ -1,0 +1,10 @@
+eco: npm
+note: a new NPM_TOKEN read
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: env-read, key: NPM_TOKEN, path: lib/index.js, line: 3}
+expect:
+- {id: credential-access, min_severity: high}

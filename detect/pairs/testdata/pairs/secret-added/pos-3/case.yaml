@@ -1,0 +1,10 @@
+eco: composer
+note: a GitHub token in a comment is still published
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: secret, key: github-token, path: src/Api.php, line: 9, context: comment, snippet: '// token: {{fakekey:github}}'}
+expect:
+- {id: secret-added, min_severity: medium}

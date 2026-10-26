@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a wp-config.php constant read and kept
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: cred-read, key: 'wp-config:AUTH_SALT', path: includes/hash.php, line: 12}
+forbid:
+- credential-access

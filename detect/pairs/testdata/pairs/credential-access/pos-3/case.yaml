@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: wp-config.php database password sent out
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: cred-read, key: 'wp-config:DB_PASSWORD', path: includes/diag.php, line: 12}
+- {kind: send, key: wp_remote_post, path: includes/diag.php, line: 20, attrs: {host: diag.test}}
+expect:
+- {id: credential-access, min_severity: high}

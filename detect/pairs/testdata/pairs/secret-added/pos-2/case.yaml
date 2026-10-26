@@ -1,0 +1,10 @@
+eco: npm
+note: an npm token in a shipped .npmrc
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: secret, key: npm-token, path: .npmrc, line: 1, snippet: '//registry.npmjs.org/:_authToken={{fakekey:npm}}'}
+expect:
+- {id: secret-added, min_severity: medium}

@@ -1,0 +1,10 @@
+eco: npm
+note: the environment posted to a new host
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: send, key: fetch, path: lib/setup.js, line: 7, attrs: {host: 203.0.113.50, reads: env}}
+expect:
+- {id: data-exfil, min_severity: high}

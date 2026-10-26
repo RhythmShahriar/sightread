@@ -1,0 +1,10 @@
+eco: npm
+note: the whole environment read
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: env-read, key: '*', path: scripts/post.js, line: 2, snippet: JSON.stringify(process.env)}
+expect:
+- {id: credential-access, min_severity: high}

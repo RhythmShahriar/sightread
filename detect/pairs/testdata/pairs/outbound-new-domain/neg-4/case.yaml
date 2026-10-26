@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: the plugin's own homepage host
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+  homepage: https://www.acme-forms.test/plugin
+features_old: []
+features_new:
+- {kind: domain, key: license.acme-forms.test, path: includes/license.php, line: 20}
+expect:
+- {id: outbound-new-domain, max_severity: info}

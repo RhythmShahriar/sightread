@@ -1,0 +1,10 @@
+eco: composer
+note: 'files outside the package sent to a host built at run time: medium'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: send, key: curl_exec, path: src/Sync.php, line: 50, attrs: {reads: files}}
+expect:
+- {id: data-exfil, min_severity: medium}

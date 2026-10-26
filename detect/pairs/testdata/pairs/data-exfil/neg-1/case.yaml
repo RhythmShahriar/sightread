@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a version check to a new host that sends nothing it read
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: send, key: wp_remote_get, path: includes/update.php, line: 10, attrs: {host: updates.acme.test}}
+forbid:
+- data-exfil
