@@ -1,0 +1,2475 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "rhythm-sightread",
+          "version": "1.0.0",
+          "informationUri": "https://github.com/RhythmShahriar/sightread",
+          "rules": [
+            {
+              "id": "integrity-mismatch",
+              "name": "integrity-mismatch",
+              "shortDescription": {
+                "text": "Archive does not match the published hash"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#integrity-mismatch",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "version-republished",
+              "name": "version-republished",
+              "shortDescription": {
+                "text": "Same version, different bytes than the lockfile recorded"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#version-republished",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "approved-version-changed",
+              "name": "approved-version-changed",
+              "shortDescription": {
+                "text": "Allowed version now has a different hash"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#approved-version-changed",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "known-malicious",
+              "name": "known-malicious",
+              "shortDescription": {
+                "text": "Listed as malicious by OSV"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#known-malicious",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "wporg-closed",
+              "name": "wporg-closed",
+              "shortDescription": {
+                "text": "Closed on WordPress.org"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#wporg-closed",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "archive-path-escape",
+              "name": "archive-path-escape",
+              "shortDescription": {
+                "text": "Archive entry points outside the package"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-path-escape",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "remote-fetch-exec",
+              "name": "remote-fetch-exec",
+              "shortDescription": {
+                "text": "Fetches remote code and runs it"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "decode-exec",
+              "name": "decode-exec",
+              "shortDescription": {
+                "text": "Decodes hidden code and runs it"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#decode-exec",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "admin-user-hidden",
+              "name": "admin-user-hidden",
+              "shortDescription": {
+                "text": "Hides users from the admin user list"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#admin-user-hidden",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "lockfile-source-change",
+              "name": "lockfile-source-change",
+              "shortDescription": {
+                "text": "Lockfile entry moved off the registry"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#lockfile-source-change",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "archive-link",
+              "name": "archive-link",
+              "shortDescription": {
+                "text": "Archive holds a link or special file"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-link",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "archive-collision",
+              "name": "archive-collision",
+              "shortDescription": {
+                "text": "Archive holds two entries with the same name"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-collision",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "unanalysed",
+              "name": "unanalysed",
+              "shortDescription": {
+                "text": "Code that could not be analysed"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#unanalysed",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "eval-dynamic",
+              "name": "eval-dynamic",
+              "shortDescription": {
+                "text": "Runs code built at run time"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#eval-dynamic",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "obfuscation",
+              "name": "obfuscation",
+              "shortDescription": {
+                "text": "Adds a large encoded or scrambled blob"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#obfuscation",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "input-unserialize",
+              "name": "input-unserialize",
+              "shortDescription": {
+                "text": "Unserializes request or remote data"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#input-unserialize",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "write-outside-package",
+              "name": "write-outside-package",
+              "shortDescription": {
+                "text": "Writes files outside its own folder"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#write-outside-package",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "admin-user-create",
+              "name": "admin-user-create",
+              "shortDescription": {
+                "text": "Creates an administrator account"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#admin-user-create",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "capability-change",
+              "name": "capability-change",
+              "shortDescription": {
+                "text": "Grants admin capabilities to another role"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#capability-change",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "update-suppression",
+              "name": "update-suppression",
+              "shortDescription": {
+                "text": "Blocks updates of other plugins or themes"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#update-suppression",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "bot-cloaking",
+              "name": "bot-cloaking",
+              "shortDescription": {
+                "text": "Shows search engines different content"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#bot-cloaking",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "credential-access",
+              "name": "credential-access",
+              "shortDescription": {
+                "text": "Reads credentials or tokens"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#credential-access",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "data-exfil",
+              "name": "data-exfil",
+              "shortDescription": {
+                "text": "Sends site data to a new host"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#data-exfil",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "code-in-asset",
+              "name": "code-in-asset",
+              "shortDescription": {
+                "text": "Hides code in an image, font or text file"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#code-in-asset",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "npm-install-script-new",
+              "name": "npm-install-script-new",
+              "shortDescription": {
+                "text": "Adds or changes an install script"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#npm-install-script-new",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "composer-plugin-new",
+              "name": "composer-plugin-new",
+              "shortDescription": {
+                "text": "Runs code when Composer installs it"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#composer-plugin-new",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "owner-change",
+              "name": "owner-change",
+              "shortDescription": {
+                "text": "New owner or publisher"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#owner-change",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "provenance-dropped",
+              "name": "provenance-dropped",
+              "shortDescription": {
+                "text": "Release lost its build provenance"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#provenance-dropped",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "typosquat",
+              "name": "typosquat",
+              "shortDescription": {
+                "text": "New dependency named like a popular package"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#typosquat",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "known-vulnerable",
+              "name": "known-vulnerable",
+              "shortDescription": {
+                "text": "Has a known vulnerability"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#known-vulnerable",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "8.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "dependency-confusion",
+              "name": "dependency-confusion",
+              "shortDescription": {
+                "text": "Private name also published publicly"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dependency-confusion",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "security-severity": "9.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "outbound-new-domain",
+              "name": "outbound-new-domain",
+              "shortDescription": {
+                "text": "Contacts a new domain"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#outbound-new-domain",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "rest-open-route",
+              "name": "rest-open-route",
+              "shortDescription": {
+                "text": "Adds a REST route anyone can call"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#rest-open-route",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "changelog-mismatch",
+              "name": "changelog-mismatch",
+              "shortDescription": {
+                "text": "Changelog does not mention what the code adds"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#changelog-mismatch",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "dependency-new",
+              "name": "dependency-new",
+              "shortDescription": {
+                "text": "Adds a runtime dependency"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dependency-new",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "composer-autoload-files",
+              "name": "composer-autoload-files",
+              "shortDescription": {
+                "text": "Adds a file that runs on every request"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#composer-autoload-files",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "fresh-release",
+              "name": "fresh-release",
+              "shortDescription": {
+                "text": "Released very recently"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#fresh-release",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "dormant-release",
+              "name": "dormant-release",
+              "shortDescription": {
+                "text": "First release after a long silence"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dormant-release",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "git-tag-missing",
+              "name": "git-tag-missing",
+              "shortDescription": {
+                "text": "No matching tag in the repository"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#git-tag-missing",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "size-jump",
+              "name": "size-jump",
+              "shortDescription": {
+                "text": "Code grew far more than usual"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#size-jump",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "unicode-hidden",
+              "name": "unicode-hidden",
+              "shortDescription": {
+                "text": "Hidden or bidirectional characters in code"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#unicode-hidden",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "secret-added",
+              "name": "secret-added",
+              "shortDescription": {
+                "text": "Adds a credential to the code"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#secret-added",
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "properties": {
+                "security-severity": "5.5",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "cron-new-hook",
+              "name": "cron-new-hook",
+              "shortDescription": {
+                "text": "Schedules a new background task"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#cron-new-hook",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "security-severity": "3.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "license-change",
+              "name": "license-change",
+              "shortDescription": {
+                "text": "License changed"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#license-change",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "security-severity": "3.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "abandoned",
+              "name": "abandoned",
+              "shortDescription": {
+                "text": "Marked abandoned or not updated in years"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#abandoned",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "security-severity": "3.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "local-drift",
+              "name": "local-drift",
+              "shortDescription": {
+                "text": "Installed copy differs from the official one"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#local-drift",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "security-severity": "0.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "php-requirement",
+              "name": "php-requirement",
+              "shortDescription": {
+                "text": "PHP requirement changed"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#php-requirement",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "security-severity": "0.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            },
+            {
+              "id": "files-removed",
+              "name": "files-removed",
+              "shortDescription": {
+                "text": "Removes security-relevant files"
+              },
+              "helpUri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#files-removed",
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "security-severity": "0.0",
+                "tags": [
+                  "security",
+                  "supply-chain"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": false,
+          "toolExecutionNotifications": [
+            {
+              "level": "error",
+              "message": {
+                "text": "astra 4.8.1 is unverified: couldn't verify astra 4.8.1: wordpress.org checksums answered 503"
+              }
+            },
+            {
+              "level": "error",
+              "message": {
+                "text": "E7 left-pad: can't reach registry.npmjs.org (no such host)"
+              }
+            },
+            {
+              "level": "note",
+              "message": {
+                "text": "gravityforms 2.8.1 not checked: not on WordPress.org"
+              }
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "integrity-mismatch",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Archive does not match the published hash (includes/integrity-mismatch.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "e401719e99b5af5b"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/integrity-mismatch.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "version-republished",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Same version, different bytes than the lockfile recorded (includes/version-republished.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "803c571616186054"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/version-republished.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "approved-version-changed",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Allowed version now has a different hash (includes/approved-version-changed.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "acfcefa2dac8e1c0"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/approved-version-changed.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "known-malicious",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Listed as malicious by OSV (includes/known-malicious.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "30d5e9ade9481e40"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/known-malicious.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "wporg-closed",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Closed on WordPress.org (includes/wporg-closed.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "8f7bf354fe8b7dc7"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/wporg-closed.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "archive-path-escape",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Archive entry points outside the package (includes/archive-path-escape.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "bc9cb4a62a5faf4b"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/archive-path-escape.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "remote-fetch-exec",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Fetches remote code and runs it (includes/class-wpos-analytics.php:88). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "42676b77378d2cfc"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/class-wpos-analytics.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "decode-exec",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Decodes hidden code and runs it (includes/decode-exec.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "aca56c7198a828a0"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/decode-exec.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "admin-user-hidden",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Hides users from the admin user list (includes/admin-user-hidden.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "07a5d0aa81422466"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/admin-user-hidden.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "dependency-confusion",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Private name also published publicly (includes/dependency-confusion.php:10). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "6c3c5d1e4d59b5c1"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/dependency-confusion.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "eval-dynamic",
+          "level": "error",
+          "message": {
+            "text": "countdown-timer-ultimate 2.6.7 → 2.6.8: Runs code built at run time (includes/loader.php:20). Verdict HOLD."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".",
+                  "uriBaseId": "SRCROOT"
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "4f26104a8315f51c"
+          },
+          "properties": {
+            "ecosystem": "wp-plugin",
+            "from": "2.6.7",
+            "package": "countdown-timer-ultimate",
+            "package_path": "includes/loader.php",
+            "security-severity": "9.5",
+            "to": "2.6.8",
+            "verdict": "hold"
+          }
+        },
+        {
+          "ruleId": "lockfile-source-change",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Lockfile entry moved off the registry (includes/lockfile-source-change.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "4b679f318fedd09e"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/lockfile-source-change.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "archive-link",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Archive holds a link or special file (includes/archive-link.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "095f522ed058b400"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/archive-link.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "archive-collision",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Archive holds two entries with the same name (includes/archive-collision.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "970b56dc06c22fc0"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/archive-collision.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "unanalysed",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Code that could not be analysed (includes/unanalysed.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "0e30abc32cca093c"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/unanalysed.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "eval-dynamic",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Runs code built at run time (includes/eval-dynamic.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "e2c90e271593e7b2"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/eval-dynamic.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "obfuscation",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds a large encoded or scrambled blob (includes/obfuscation.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "bb476982c6bbcf7d"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/obfuscation.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "input-unserialize",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Unserializes request or remote data (includes/input-unserialize.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "3798c75c4c151808"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/input-unserialize.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "write-outside-package",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Writes files outside its own folder (includes/write-outside-package.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "415e660b7bc0f391"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/write-outside-package.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "admin-user-create",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Creates an administrator account (includes/admin-user-create.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "1b3b4b88f2a7649b"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/admin-user-create.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "capability-change",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Grants admin capabilities to another role (includes/capability-change.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "9c15e5400cf72928"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/capability-change.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "update-suppression",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Blocks updates of other plugins or themes (includes/update-suppression.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "9963ab827d9fafbf"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/update-suppression.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "bot-cloaking",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Shows search engines different content (includes/bot-cloaking.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "3677d838c2fd07bf"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/bot-cloaking.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "credential-access",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Reads credentials or tokens (includes/credential-access.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "4b276eeac27eac01"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/credential-access.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "data-exfil",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Sends site data to a new host (includes/data-exfil.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "3f758ba7e1f9292d"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/data-exfil.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "code-in-asset",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Hides code in an image, font or text file (includes/code-in-asset.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "9042facf62ae58ec"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/code-in-asset.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "npm-install-script-new",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds or changes an install script (includes/npm-install-script-new.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "259f94395a1f1a40"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/npm-install-script-new.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "composer-plugin-new",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Runs code when Composer installs it (includes/composer-plugin-new.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "34719210582eaffc"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/composer-plugin-new.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "owner-change",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: New owner or publisher (includes/owner-change.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "b2e5aa4ec20d82ea"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/owner-change.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "provenance-dropped",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Release lost its build provenance (includes/provenance-dropped.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "c2a8cf996794c049"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/provenance-dropped.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "typosquat",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: New dependency named like a popular package (includes/typosquat.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "1acba8f657797e06"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/typosquat.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "known-vulnerable",
+          "level": "error",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Has a known vulnerability (includes/known-vulnerable.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "231de040bd305690"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/known-vulnerable.php",
+            "security-severity": "8.0",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "outbound-new-domain",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Contacts a new domain (includes/outbound-new-domain.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "98012750c8eefe00"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/outbound-new-domain.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "rest-open-route",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds a REST route anyone can call (includes/rest-open-route.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "ebf2cfb434bb29c4"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/rest-open-route.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "changelog-mismatch",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Changelog does not mention what the code adds (includes/changelog-mismatch.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "1c5f808f6469b060"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/changelog-mismatch.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "dependency-new",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds a runtime dependency (includes/dependency-new.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "392048135acb92fc"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/dependency-new.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "composer-autoload-files",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds a file that runs on every request (includes/composer-autoload-files.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "5cc693e51ff78e3e"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/composer-autoload-files.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "fresh-release",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Released very recently (includes/fresh-release.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "ac2fb955db63c627"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/fresh-release.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "dormant-release",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: First release after a long silence (includes/dormant-release.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "c38c5a7e5ce32542"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/dormant-release.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "git-tag-missing",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: No matching tag in the repository (includes/git-tag-missing.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "7f1e046d64c46522"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/git-tag-missing.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "size-jump",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Code grew far more than usual (includes/size-jump.php:10). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "b9b83b36879edd54"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/size-jump.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "unicode-hidden",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Hidden or bidirectional characters in code (includes/admin.php:12). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "0c8293df2aadd5cc"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/admin.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "secret-added",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds a credential to the code (includes/config.php:3). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "63bbe6b4e70fef4a"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "includes/config.php",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "obfuscation",
+          "level": "warning",
+          "message": {
+            "text": "@acme/widgets 1.4.0 → 1.5.0: Adds a large encoded or scrambled blob (assets/js/vendor.min.js:1). Verdict REVIEW."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "package-lock.json",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 42
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "10ecda8529a46e63"
+          },
+          "properties": {
+            "ecosystem": "npm",
+            "from": "1.4.0",
+            "package": "@acme/widgets",
+            "package_path": "assets/js/vendor.min.js",
+            "security-severity": "5.5",
+            "to": "1.5.0",
+            "verdict": "review"
+          }
+        },
+        {
+          "ruleId": "cron-new-hook",
+          "level": "note",
+          "message": {
+            "text": "monolog/monolog 3.12.0 → 3.12.1: Schedules a new background task (includes/cron-new-hook.php:10). Verdict ROUTINE."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "composer.lock",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "ac0eef296851712c"
+          },
+          "properties": {
+            "ecosystem": "composer",
+            "from": "3.12.0",
+            "package": "monolog/monolog",
+            "package_path": "includes/cron-new-hook.php",
+            "security-severity": "3.0",
+            "to": "3.12.1",
+            "verdict": "routine"
+          }
+        },
+        {
+          "ruleId": "license-change",
+          "level": "note",
+          "message": {
+            "text": "monolog/monolog 3.12.0 → 3.12.1: License changed (includes/license-change.php:10). Verdict ROUTINE."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "composer.lock",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "99969e8c66b43461"
+          },
+          "properties": {
+            "ecosystem": "composer",
+            "from": "3.12.0",
+            "package": "monolog/monolog",
+            "package_path": "includes/license-change.php",
+            "security-severity": "3.0",
+            "to": "3.12.1",
+            "verdict": "routine"
+          }
+        },
+        {
+          "ruleId": "abandoned",
+          "level": "note",
+          "message": {
+            "text": "monolog/monolog 3.12.0 → 3.12.1: Marked abandoned or not updated in years (includes/abandoned.php:10). Verdict ROUTINE."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "composer.lock",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "81515d30a1c40d97"
+          },
+          "properties": {
+            "ecosystem": "composer",
+            "from": "3.12.0",
+            "package": "monolog/monolog",
+            "package_path": "includes/abandoned.php",
+            "security-severity": "3.0",
+            "to": "3.12.1",
+            "verdict": "routine"
+          }
+        },
+        {
+          "ruleId": "local-drift",
+          "level": "note",
+          "message": {
+            "text": "monolog/monolog 3.12.0 → 3.12.1: Installed copy differs from the official one (includes/local-drift.php:10). Verdict ROUTINE."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "composer.lock",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "f00088b902625e30"
+          },
+          "properties": {
+            "ecosystem": "composer",
+            "from": "3.12.0",
+            "package": "monolog/monolog",
+            "package_path": "includes/local-drift.php",
+            "security-severity": "0.0",
+            "to": "3.12.1",
+            "verdict": "routine"
+          }
+        },
+        {
+          "ruleId": "php-requirement",
+          "level": "note",
+          "message": {
+            "text": "monolog/monolog 3.12.0 → 3.12.1: PHP requirement changed (includes/php-requirement.php:10). Verdict ROUTINE."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "composer.lock",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "f27e7700605e131c"
+          },
+          "properties": {
+            "ecosystem": "composer",
+            "from": "3.12.0",
+            "package": "monolog/monolog",
+            "package_path": "includes/php-requirement.php",
+            "security-severity": "0.0",
+            "to": "3.12.1",
+            "verdict": "routine"
+          }
+        },
+        {
+          "ruleId": "files-removed",
+          "level": "note",
+          "message": {
+            "text": "monolog/monolog 3.12.0 → 3.12.1: Removes security-relevant files (includes/files-removed.php:10). Verdict ROUTINE."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "composer.lock",
+                  "uriBaseId": "SRCROOT"
+                },
+                "region": {
+                  "startLine": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "sightreadFinding/v1": "796c2a293b883d89"
+          },
+          "properties": {
+            "ecosystem": "composer",
+            "from": "3.12.0",
+            "package": "monolog/monolog",
+            "package_path": "includes/files-removed.php",
+            "security-severity": "0.0",
+            "to": "3.12.1",
+            "verdict": "routine"
+          }
+        }
+      ]
+    }
+  ]
+}

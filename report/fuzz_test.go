@@ -23,6 +23,24 @@ var formatChecks = map[string]func(t *testing.T, out []byte){
 			t.Errorf("json output does not parse:\n%s", out)
 		}
 	},
+	core.FormatSARIF: func(t *testing.T, out []byte) {
+		if !json.Valid(out) {
+			t.Errorf("sarif output does not parse:\n%s", out)
+		}
+		var l sarifLog
+		if err := json.Unmarshal(out, &l); err != nil {
+			return
+		}
+		for _, run := range l.Runs {
+			for _, res := range run.Results {
+				for _, loc := range res.Locations {
+					if uri := loc.PhysicalLocation.ArtifactLocation.URI; strings.Contains(uri, ":") || strings.HasPrefix(uri, "/") || strings.HasPrefix(uri, "..") {
+						t.Errorf("sarif location %q is not inside the repository", uri)
+					}
+				}
+			}
+		}
+	},
 	core.FormatJSONL: func(t *testing.T, out []byte) {
 		for i, line := range bytes.Split(bytes.TrimSpace(out), []byte("\n")) {
 			if !json.Valid(line) {
