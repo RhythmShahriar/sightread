@@ -1,0 +1,1358 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/RhythmShahriar/sightread/blob/master/docs/schema/rhythm-sightread-v1.json",
+  "title": "rhythm-sightread/v1",
+  "description": "The JSON Sightread writes: an envelope for every command's --json and -o file.json, and the lines of --jsonl. Fields are only ever added within v1, so validators should allow unknown properties.",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/envelope"
+    },
+    {
+      "$ref": "#/$defs/update_line"
+    }
+  ],
+  "$defs": {
+    "summary": {
+      "type": "object",
+      "description": "Counts of the report header. Every key is always written, zero included.",
+      "required": [
+        "updates",
+        "hold",
+        "review",
+        "routine",
+        "allowed",
+        "unverified",
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info",
+        "baselined",
+        "allowed_findings",
+        "ignored",
+        "demoted",
+        "not_checked",
+        "from_cache"
+      ],
+      "properties": {
+        "updates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hold": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "review": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "routine": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "allowed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unverified": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "critical": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "low": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "baselined": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "allowed_findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ignored": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "demoted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "not_checked": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "from_cache": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "path",
+        "kind",
+        "wordpress",
+        "sites"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "wordpress": {
+          "type": "string"
+        },
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "side": {
+      "type": "object",
+      "required": [
+        "version",
+        "source",
+        "url",
+        "sha256",
+        "hash",
+        "verified",
+        "method",
+        "released",
+        "publisher",
+        "latest",
+        "wanted",
+        "constraint"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{64})?$"
+        },
+        "hash": {
+          "type": "string",
+          "enum": [
+            "",
+            "archive",
+            "manifest"
+          ]
+        },
+        "verified": {
+          "type": "string",
+          "enum": [
+            "",
+            "checksums",
+            "svn",
+            "signature",
+            "integrity",
+            "shasum",
+            "commit",
+            "tls",
+            "none",
+            "failed"
+          ]
+        },
+        "method": {
+          "type": "string"
+        },
+        "released": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "RFC 3339, null when the source gave no date"
+        },
+        "publisher": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "latest": {
+          "type": "boolean"
+        },
+        "wanted": {
+          "type": "boolean"
+        },
+        "constraint": {
+          "type": "string"
+        }
+      }
+    },
+    "installed": {
+      "type": "object",
+      "required": [
+        "path",
+        "lockfile",
+        "lock_line",
+        "drift",
+        "drift_files"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "lockfile": {
+          "type": "string"
+        },
+        "lock_line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "drift": {
+          "type": "boolean"
+        },
+        "drift_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "diff": {
+      "type": "object",
+      "required": [
+        "files_changed",
+        "files_added",
+        "files_removed",
+        "lines_added",
+        "lines_removed",
+        "bytes_from",
+        "bytes_to"
+      ],
+      "properties": {
+        "files_changed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "files_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lines_added": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lines_removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes_to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "changelog": {
+      "type": "object",
+      "required": [
+        "version",
+        "text",
+        "generic"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "generic": {
+          "type": "boolean"
+        }
+      }
+    },
+    "allow_match": {
+      "type": "object",
+      "required": [
+        "by",
+        "reason",
+        "date",
+        "until",
+        "source"
+      ],
+      "properties": {
+        "by": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "until": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "severity",
+        "confidence",
+        "file",
+        "line",
+        "end_line",
+        "evidence",
+        "domains",
+        "raised_by",
+        "demoted",
+        "advice",
+        "help_uri",
+        "fingerprint",
+        "allowed",
+        "baselined",
+        "ignored",
+        "below_confidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "likely"
+          ]
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence": {
+          "type": "string",
+          "description": "At most 300 bytes, sanitised and secret-masked"
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "raised_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "demoted": {
+          "type": "string"
+        },
+        "advice": {
+          "type": "string"
+        },
+        "help_uri": {
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "allowed": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/allow_match"
+            }
+          ]
+        },
+        "baselined": {
+          "type": "boolean"
+        },
+        "ignored": {
+          "type": "boolean"
+        },
+        "below_confidence": {
+          "type": "boolean"
+        }
+      }
+    },
+    "hunk": {
+      "type": "object",
+      "required": [
+        "path",
+        "old_start",
+        "old_lines",
+        "new_start",
+        "new_lines",
+        "lines"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "old_start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "old_lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "soundcheck": {
+      "type": "object",
+      "required": [
+        "staging",
+        "roadie_verify",
+        "snapshot",
+        "applied",
+        "summary",
+        "report",
+        "rolled_back"
+      ],
+      "properties": {
+        "staging": {
+          "type": "string"
+        },
+        "roadie_verify": {
+          "type": "string"
+        },
+        "snapshot": {
+          "type": "string"
+        },
+        "applied": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "object",
+          "required": [
+            "broke",
+            "new",
+            "changed"
+          ],
+          "properties": {
+            "broke": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "new": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "changed": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "report": {
+          "type": "string"
+        },
+        "rolled_back": {
+          "type": "boolean"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "ecosystem",
+        "name",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "ecosystem": {
+          "type": "string",
+          "enum": [
+            "",
+            "wp-plugin",
+            "wp-theme",
+            "composer",
+            "npm"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^E[0-9]+$"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "not_checked": {
+      "type": "object",
+      "required": [
+        "ecosystem",
+        "name",
+        "version",
+        "reason",
+        "text",
+        "hint"
+      ],
+      "properties": {
+        "ecosystem": {
+          "type": "string",
+          "enum": [
+            "",
+            "wp-plugin",
+            "wp-theme",
+            "composer",
+            "npm"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "no-header",
+            "not-wporg",
+            "private",
+            "vcs",
+            "unsupported-lock",
+            "fetch-failed",
+            "mu-plugin",
+            "core",
+            "too-large"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "hint": {
+          "type": "string"
+        }
+      }
+    },
+    "update": {
+      "type": "object",
+      "required": [
+        "ecosystem",
+        "name",
+        "from",
+        "to",
+        "installed",
+        "verdict",
+        "diff",
+        "changelog",
+        "findings",
+        "hunks",
+        "soundcheck",
+        "errors",
+        "sites",
+        "from_cache"
+      ],
+      "properties": {
+        "ecosystem": {
+          "type": "string",
+          "enum": [
+            "wp-plugin",
+            "wp-theme",
+            "composer",
+            "npm"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/side"
+        },
+        "to": {
+          "$ref": "#/$defs/side"
+        },
+        "installed": {
+          "$ref": "#/$defs/installed"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "hold",
+            "review",
+            "routine",
+            "allowed",
+            "unverified"
+          ]
+        },
+        "diff": {
+          "$ref": "#/$defs/diff"
+        },
+        "changelog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/changelog"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        },
+        "hunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hunk"
+          }
+        },
+        "soundcheck": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/soundcheck"
+            }
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error"
+          }
+        },
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "from_cache": {
+          "type": "boolean"
+        }
+      }
+    },
+    "update_line": {
+      "type": "object",
+      "description": "One line of --jsonl: an update as it finishes. The closing envelope follows the last one.",
+      "required": [
+        "kind",
+        "ecosystem",
+        "name",
+        "from",
+        "to",
+        "installed",
+        "verdict",
+        "diff",
+        "changelog",
+        "findings",
+        "hunks",
+        "soundcheck",
+        "errors",
+        "sites",
+        "from_cache"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "update"
+          ]
+        },
+        "ecosystem": {
+          "type": "string",
+          "enum": [
+            "wp-plugin",
+            "wp-theme",
+            "composer",
+            "npm"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/side"
+        },
+        "to": {
+          "$ref": "#/$defs/side"
+        },
+        "installed": {
+          "$ref": "#/$defs/installed"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "hold",
+            "review",
+            "routine",
+            "allowed",
+            "unverified"
+          ]
+        },
+        "diff": {
+          "$ref": "#/$defs/diff"
+        },
+        "changelog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/changelog"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        },
+        "hunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hunk"
+          }
+        },
+        "soundcheck": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/soundcheck"
+            }
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error"
+          }
+        },
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "from_cache": {
+          "type": "boolean"
+        }
+      }
+    },
+    "review_data": {
+      "type": "object",
+      "description": "The data of kind review. updates is left out only by the closing envelope of --jsonl.",
+      "required": [
+        "target",
+        "started",
+        "duration_ms",
+        "stopped_by",
+        "signal_pack",
+        "names_pack",
+        "fail_on",
+        "min_confidence",
+        "not_checked",
+        "warnings",
+        "errors",
+        "notes"
+      ],
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "started": {
+          "type": "string"
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stopped_by": {
+          "type": "string",
+          "enum": [
+            "",
+            "interrupted",
+            "deadline"
+          ]
+        },
+        "signal_pack": {
+          "type": "string"
+        },
+        "names_pack": {
+          "type": "string"
+        },
+        "fail_on": {
+          "type": "string"
+        },
+        "min_confidence": {
+          "type": "string"
+        },
+        "updates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/update"
+          }
+        },
+        "not_checked": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/not_checked"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error"
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "allow_entry": {
+      "type": "object",
+      "required": [
+        "package",
+        "version",
+        "sha256",
+        "reason",
+        "by",
+        "date"
+      ],
+      "properties": {
+        "package": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "hash": {
+          "type": "string",
+          "enum": [
+            "archive",
+            "manifest"
+          ]
+        },
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string"
+        },
+        "by": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "until": {
+          "type": "string"
+        },
+        "imported_from": {
+          "type": "string"
+        }
+      }
+    },
+    "allowed_data": {
+      "type": "object",
+      "required": [
+        "file",
+        "entries"
+      ],
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/allow_entry"
+          }
+        }
+      }
+    },
+    "signal": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "severity",
+        "confidence",
+        "ecosystems",
+        "emitter",
+        "unignorable",
+        "help_uri"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "likely"
+          ]
+        },
+        "ecosystems": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "wp-plugin",
+              "wp-theme",
+              "composer",
+              "npm"
+            ]
+          }
+        },
+        "emitter": {
+          "type": "string",
+          "enum": [
+            "detect",
+            "policy"
+          ]
+        },
+        "unignorable": {
+          "type": "boolean"
+        },
+        "help_uri": {
+          "type": "string",
+          "pattern": "^https://"
+        }
+      }
+    },
+    "signals_data": {
+      "type": "object",
+      "required": [
+        "signals"
+      ],
+      "properties": {
+        "signals": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/signal"
+          }
+        }
+      }
+    },
+    "explain": {
+      "type": "object",
+      "required": [
+        "why",
+        "how_to_review",
+        "false_alarms",
+        "incidents",
+        "advice",
+        "more"
+      ],
+      "properties": {
+        "why": {
+          "type": "string"
+        },
+        "how_to_review": {
+          "type": "string"
+        },
+        "false_alarms": {
+          "type": "string"
+        },
+        "incidents": {
+          "type": "string"
+        },
+        "advice": {
+          "type": "string"
+        },
+        "more": {
+          "type": "string"
+        }
+      }
+    },
+    "explain_data": {
+      "type": "object",
+      "required": [
+        "signal",
+        "explain"
+      ],
+      "properties": {
+        "signal": {
+          "$ref": "#/$defs/signal"
+        },
+        "explain": {
+          "$ref": "#/$defs/explain"
+        },
+        "finding": {
+          "$ref": "#/$defs/finding"
+        },
+        "hunks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hunk"
+          }
+        }
+      }
+    },
+    "doctor_check": {
+      "type": "object",
+      "required": [
+        "name",
+        "status",
+        "detail"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "warn",
+            "fail",
+            "skipped"
+          ]
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "doctor_data": {
+      "type": "object",
+      "required": [
+        "checks"
+      ],
+      "properties": {
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/doctor_check"
+          }
+        }
+      }
+    },
+    "verify_data": {
+      "type": "object",
+      "required": [
+        "file",
+        "key",
+        "trusted",
+        "valid"
+      ],
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "trusted": {
+          "type": "boolean"
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "watch_data": {
+      "type": "object",
+      "required": [
+        "name",
+        "sites",
+        "updates",
+        "review",
+        "hold",
+        "report",
+        "notified"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sites": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "updates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "review": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hold": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "report": {
+          "type": "string"
+        },
+        "notified": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "description": "Every Sightread JSON document: Echo's envelope. data follows the kind.",
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "version",
+        "complete",
+        "summary",
+        "verdict",
+        "data"
+      ],
+      "properties": {
+        "schema": {
+          "type": "string",
+          "enum": [
+            "rhythm-sightread/v1"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "review",
+            "allowed",
+            "watch",
+            "signals",
+            "explain",
+            "doctor",
+            "verify"
+          ]
+        },
+        "tool": {
+          "type": "string",
+          "enum": [
+            "rhythm-sightread"
+          ]
+        },
+        "version": {
+          "type": "string"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        },
+        "verdict": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "findings",
+            "error"
+          ]
+        },
+        "data": {
+          "type": "object"
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "review"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/review_data"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "allowed"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/allowed_data"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "watch"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/watch_data"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "signals"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/signals_data"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "explain"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/explain_data"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "doctor"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/doctor_data"
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "verify"
+              ]
+            },
+            "data": {
+              "$ref": "#/$defs/verify_data"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    }
+  }
+}
