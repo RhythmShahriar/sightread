@@ -192,19 +192,27 @@ func (s *site) meta(ctx context.Context, ref core.Ref) (*core.Meta, *info, error
 		return nil, nil, err
 	}
 	m := &core.Meta{
-		Ref: ref, Contributors: slices.Clone(in.Contributors), Author: in.Author,
-		AuthorProfile: in.AuthorProfile, Homepage: in.Homepage, RequiresPHP: in.RequiresPHP,
+		Ref: ref, Homepage: in.Homepage, RequiresPHP: in.RequiresPHP,
 		Latest: in.Version, Closed: in.Closed, ClosedReason: in.ClosedReason,
+	}
+	if ref.Version == "" && !in.Closed {
+		m.Ref.Version = in.Version
+	}
+	v := m.Ref.Version
+	if in.Closed || v == in.Version {
+		// The info API describes the current release only. An older
+		// version takes its contributors from its own readme
+		// (metaFromTree) and its publisher from its SVN tag: given the
+		// current list, a new committer would count as an old owner
+		// and owner-change would never fire.
+		m.Contributors = slices.Clone(in.Contributors)
+		m.Author, m.AuthorProfile = in.Author, in.AuthorProfile
 	}
 	if in.Closed {
 		// Nothing can be downloaded; run reports wporg-closed from this.
 		return m, in, nil
 	}
 	all := versions(in)
-	if ref.Version == "" {
-		m.Ref.Version = in.Version
-	}
-	v := m.Ref.Version
 	if !slices.Contains(all, v) {
 		return nil, nil, s.noVersion(ref.Name, v, in.Version)
 	}

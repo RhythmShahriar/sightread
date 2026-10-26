@@ -1,0 +1,18 @@
+eco: wp-plugin
+note: no readme Contributors line, the old tag creator published again
+lookalike: true
+meta_old:
+  ref:
+    version: 2.6.7
+  publisher:
+    login: wponlinesupport
+meta_new:
+  ref:
+    version: 2.6.8
+  contributors:
+  - wponlinesupport
+  - essentialplugin
+  publisher:
+    login: wponlinesupport
+forbid:
+- owner-change

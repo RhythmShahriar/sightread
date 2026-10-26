@@ -561,3 +561,37 @@ func FuzzWPInfo(f *testing.F) {
 		_ = versions(in)
 	})
 }
+
+// TestPluginOlderVersionOwners: the info API's contributors and author
+// describe the current release only, so an older version gets none of
+// them and takes its contributors from its own readme. Given the
+// current list, a new committer would count as an old owner and
+// owner-change would never fire.
+func TestPluginOlderVersionOwners(t *testing.T) {
+	r := newRegistry()
+	akismet(t, r, akismetFiles, akismetFiles)
+	p := NewPlugin(start(t, r, core.SourceOptions{}))
+	ctx := context.Background()
+	old, err := p.Meta(ctx, core.Ref{Eco: core.WPPlugin, Name: "akismet", Version: "5.3.4"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(old.Contributors) != 0 || old.Author != "" || old.AuthorProfile != "" {
+		t.Errorf("5.3.4 got the current release's owners: %q, %q, %q", old.Contributors, old.Author, old.AuthorProfile)
+	}
+	if old.Latest != "5.3.5" {
+		t.Errorf("latest %q", old.Latest)
+	}
+	cur, err := p.Meta(ctx, core.Ref{Eco: core.WPPlugin, Name: "akismet"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(cur.Contributors, ",") != "automattic,kbrownkd" || cur.AuthorProfile == "" {
+		t.Errorf("current release lost its owners: %q, %q", cur.Contributors, cur.AuthorProfile)
+	}
+	// The readme of the older release names its own contributors.
+	metaFromTree(old, coretest.Tree(map[string]string{"readme.txt": "=== Akismet ===\nContributors: automattic\n\n== Description ==\n"}))
+	if strings.Join(old.Contributors, ",") != "automattic" {
+		t.Errorf("readme contributors %q", old.Contributors)
+	}
+}

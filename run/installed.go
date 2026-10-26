@@ -90,6 +90,19 @@ func Installed(ctx context.Context, req Request) ([]InstalledStatus, error) {
 				r.logf("%s: %v", ref, err)
 				return nil
 			}
+			if isWP(ref.Eco) && m.Latest != "" && m.Latest != ref.Version && !m.Closed {
+				// WordPress.org lists the contributors of the current
+				// release only and gives an older version none (its
+				// readme is not read here). Who can publish today is
+				// what watch compares.
+				cur := ref
+				cur.Version = m.Latest
+				if lm, err := src.Meta(gctx, cur); err == nil {
+					c := *m
+					c.Contributors, c.AuthorProfile = lm.Contributors, lm.AuthorProfile
+					m = &c
+				}
+			}
 			mu.Lock()
 			metas[ref] = m
 			mu.Unlock()

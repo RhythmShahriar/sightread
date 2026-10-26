@@ -1,0 +1,19 @@
+eco: wp-plugin
+note: 'b01: no readme Contributors line, the old tag creator stays and a new committer published'
+meta_old:
+  ref:
+    version: 2.6.7
+  publisher:
+    login: wponlinesupport
+meta_new:
+  ref:
+    version: 2.6.8
+  contributors:
+  - wponlinesupport
+  - essentialplugin
+  author_profile: https://profiles.wordpress.org/wponlinesupport/
+  publisher:
+    login: essentialplugin
+expect:
+- id: owner-change
+  min_severity: high
