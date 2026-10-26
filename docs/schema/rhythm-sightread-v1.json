@@ -109,6 +109,7 @@
       "type": "object",
       "required": [
         "path",
+        "repo_path",
         "kind",
         "wordpress",
         "sites"
@@ -116,6 +117,10 @@
       "properties": {
         "path": {
           "type": "string"
+        },
+        "repo_path": {
+          "type": "string",
+          "description": "The target relative to the git repository that holds it, with forward slashes (\".\" for the root); empty outside a repository. Kept when path is redacted, so a saved report can still be located."
         },
         "kind": {
           "type": "string"

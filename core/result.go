@@ -104,7 +104,12 @@ type Report struct {
 
 // Target is what a run reviewed.
 type Target struct {
-	Path      string
+	Path string
+	// RepoPath is Path relative to the git repository that holds it,
+	// with forward slashes ("." for the root), and "" outside one. A
+	// report whose Path was redacted or merged still finds its files in
+	// the repository through it (SARIF).
+	RepoPath  string
 	Kind      string
 	WordPress string
 	Sites     []string

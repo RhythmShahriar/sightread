@@ -27,6 +27,7 @@
   "data": {
     "target": {
       "path": "/var/www/shop",
+      "repo_path": "",
       "kind": "mixed",
       "wordpress": "6.8.3",
       "sites": [

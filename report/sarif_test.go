@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -188,6 +189,61 @@ func TestSARIFLocationInRepository(t *testing.T) {
 	doc := writeWith(t, core.FormatSARIF, r, testOpts)
 	if bytes.Contains(doc, []byte("file:")) || bytes.Contains(doc, []byte(repo)) {
 		t.Errorf("an absolute path or file URI is in the SARIF:\n%s", doc)
+	}
+}
+
+// TestSARIFRedactedReport: a report saved with --redact-paths keeps the
+// target's repository path, so SARIF rendered from it later points at
+// the same files as the direct run: in the checkout it finds the main
+// file, elsewhere it points at the folder; a repo_path that leaves the
+// repository is ignored.
+func TestSARIFRedactedReport(t *testing.T) {
+	repo := t.TempDir()
+	for _, p := range []string{".git", "projects/wp/wp-content/plugins/hello"} {
+		if err := os.MkdirAll(filepath.Join(repo, filepath.FromSlash(p)), 0o750); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(repo, "projects/wp/wp-content/plugins/hello/hello.php"), []byte("<?php\n/* Plugin Name: Hello */"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	finding := core.Finding{ID: "eval-dynamic", Title: "Runs code built at run time", Severity: cli.SeverityHigh, File: "x.php", Line: 3}
+	r := &core.Report{Kind: core.KindReview, Target: core.Target{Path: filepath.Join(repo, "projects", "wp")}, Updates: []core.Update{
+		{Eco: core.WPPlugin, Name: "hello", From: core.Side{Version: "1"}, To: core.Side{Version: "2"}, Verdict: core.Review,
+			Installed: core.InstalledInfo{Path: "wp-content/plugins/hello"}, Findings: []core.Finding{finding}},
+		{Eco: core.Composer, Name: "acme/x", From: core.Side{Version: "1"}, To: core.Side{Version: "2"}, Verdict: core.Review,
+			Installed: core.InstalledInfo{Lockfile: "composer.lock", LockLine: 4}, Findings: []core.Finding{finding}},
+	}}
+	o := testOpts
+	o.RedactPaths = true
+	saved, err := ReadReport(bytes.NewReader(writeWith(t, core.FormatJSON, r, o)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.Target.Path != "." || saved.Target.RepoPath != "projects/wp" {
+		t.Fatalf("saved target %+v", saved.Target)
+	}
+	uris := func(r *core.Report) []string {
+		var out []string
+		for _, res := range readSARIF(t, writeWith(t, core.FormatSARIF, r, testOpts)).Runs[0].Results {
+			out = append(out, res.Locations[0].PhysicalLocation.ArtifactLocation.URI)
+		}
+		return out
+	}
+	t.Chdir(repo)
+	if got, want := uris(saved), []string{"projects/wp/wp-content/plugins/hello/hello.php", "projects/wp/composer.lock"}; !slices.Equal(got, want) {
+		t.Errorf("in the checkout: %q, want %q", got, want)
+	}
+	t.Chdir(t.TempDir())
+	if got, want := uris(saved), []string{"projects/wp/wp-content/plugins/hello", "projects/wp/composer.lock"}; !slices.Equal(got, want) {
+		t.Errorf("elsewhere: %q, want %q", got, want)
+	}
+	for _, bad := range []string{"../outside", "/etc", `projects\wp`} {
+		crafted := *saved
+		crafted.Target.RepoPath = bad
+		if got, want := uris(&crafted), []string{".", "composer.lock"}; !slices.Equal(got, want) {
+			t.Errorf("repo_path %q: %q, want %q", bad, got, want)
+		}
 	}
 }
 

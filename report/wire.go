@@ -45,6 +45,7 @@ type jsonSummary struct {
 
 type jsonTarget struct {
 	Path      string   `json:"path"`
+	RepoPath  string   `json:"repo_path"`
 	Kind      string   `json:"kind"`
 	WordPress string   `json:"wordpress"`
 	Sites     []string `json:"sites"`

@@ -12,12 +12,14 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/rhythm/kit/config"
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/report"
 	"github.com/RhythmShahriar/sightread/run"
 )
 
@@ -77,12 +79,30 @@ var reportCommand = &simpleCommand{
 
 // mergeReports joins reports into one: every update, Not checked entry,
 // warning, error and note, in the order given. One report comes back as
-// it is. The summary is counted again by the scorer.
+// it is. The summary is counted again by the scorer. Reports of one
+// target keep it, so SARIF still finds its files. Reports of several
+// targets in one repository have their installed paths and lockfiles
+// rewritten relative to the repository root, which becomes the merged
+// target's repository path.
 func mergeReports(reps []*core.Report) *core.Report {
 	if len(reps) == 1 {
 		return reps[0]
 	}
 	m := &core.Report{Kind: core.KindReview, Complete: true, Target: core.Target{Kind: "merged"}}
+	same, inRepo := true, true
+	for _, r := range reps {
+		t, first := r.Target, reps[0].Target
+		same = same && t.Path == first.Path && report.TargetRepoPath(t) == report.TargetRepoPath(first)
+		inRepo = inRepo && report.TargetRepoPath(t) != ""
+	}
+	switch {
+	case same:
+		m.Target = reps[0].Target
+		m.Target.RepoPath = report.TargetRepoPath(m.Target)
+		m.Target.Sites = slices.Clone(m.Target.Sites)
+	case inRepo:
+		m.Target.RepoPath = "."
+	}
 	for _, r := range reps {
 		if m.Started.IsZero() || !r.Started.IsZero() && r.Started.Before(m.Started) {
 			m.Started = r.Started
@@ -92,15 +112,21 @@ func mergeReports(reps []*core.Report) *core.Report {
 		m.SignalPack, m.NamesPack = cmp.Or(m.SignalPack, r.SignalPack), cmp.Or(m.NamesPack, r.NamesPack)
 		m.FailOn, m.MinConfidence = cmp.Or(m.FailOn, r.FailOn), cmp.Or(m.MinConfidence, r.MinConfidence)
 		m.Complete = m.Complete && r.Complete
-		if r.Target.Path != "" && !slices.Contains(m.Target.Sites, r.Target.Path) {
-			m.Target.Sites = append(m.Target.Sites, r.Target.Path)
-		}
-		for _, s := range r.Target.Sites {
-			if !slices.Contains(m.Target.Sites, s) {
-				m.Target.Sites = append(m.Target.Sites, s)
+		if !same {
+			if r.Target.Path != "" && !slices.Contains(m.Target.Sites, r.Target.Path) {
+				m.Target.Sites = append(m.Target.Sites, r.Target.Path)
+			}
+			for _, s := range r.Target.Sites {
+				if !slices.Contains(m.Target.Sites, s) {
+					m.Target.Sites = append(m.Target.Sites, s)
+				}
 			}
 		}
-		m.Updates = append(m.Updates, r.Updates...)
+		ups := r.Updates
+		if !same && inRepo {
+			ups = inRepoRoot(ups, report.TargetRepoPath(r.Target))
+		}
+		m.Updates = append(m.Updates, ups...)
 		m.NotChecked = append(m.NotChecked, r.NotChecked...)
 		m.Warnings = append(m.Warnings, r.Warnings...)
 		m.Errors = append(m.Errors, r.Errors...)
@@ -231,4 +257,21 @@ func trustedKeys(files []string, configFile string) ([][]byte, error) {
 		}
 	}
 	return keys, nil
+}
+
+// inRepoRoot returns copies of ups whose installed path and lockfile,
+// relative to a target at repoPath, are relative to the repository root
+// instead.
+func inRepoRoot(ups []core.Update, repoPath string) []core.Update {
+	out := slices.Clone(ups)
+	for i := range out {
+		in := &out[i].Installed
+		if in.Path != "" && !path.IsAbs(filepath.ToSlash(in.Path)) {
+			in.Path = path.Join(repoPath, filepath.ToSlash(in.Path))
+		}
+		if in.Lockfile != "" && !path.IsAbs(filepath.ToSlash(in.Lockfile)) {
+			in.Lockfile = path.Join(repoPath, filepath.ToSlash(in.Lockfile))
+		}
+	}
+	return out
 }

@@ -131,7 +131,7 @@ func reportFromJSON(env *readEnvelope, d *jsonReview) (*core.Report, error) {
 	s := env.Summary
 	r := &core.Report{
 		Kind:          core.KindReview,
-		Target:        core.Target{Path: text(d.Target.Path), Kind: text(d.Target.Kind), WordPress: text(d.Target.WordPress), Sites: nilIfEmpty(texts(d.Target.Sites))},
+		Target:        core.Target{Path: text(d.Target.Path), RepoPath: cleanRepoPath(text(d.Target.RepoPath)), Kind: text(d.Target.Kind), WordPress: text(d.Target.WordPress), Sites: nilIfEmpty(texts(d.Target.Sites))},
 		Started:       started,
 		Duration:      time.Duration(d.DurationMS) * time.Millisecond,
 		StoppedBy:     text(d.StoppedBy),

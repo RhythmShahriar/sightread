@@ -294,6 +294,39 @@ func TestReportMerges(t *testing.T) {
 	}
 }
 
+// TestMergeKeepsLocations: merged reports keep what SARIF needs to
+// find their files. One target is kept as it is; targets in one
+// repository get paths relative to its root; a target outside a
+// repository leaves the paths alone.
+func TestMergeKeepsLocations(t *testing.T) {
+	up := func(path, lock string) []core.Update {
+		return []core.Update{{Name: "x", Installed: core.InstalledInfo{Path: path, Lockfile: lock}}}
+	}
+	site := core.Target{Path: ".", RepoPath: "projects/wp", Kind: "mixed"}
+	m := mergeReports([]*core.Report{{Target: site, Updates: up("wp-content/plugins/a", "")}, {Target: site, Updates: up("", "composer.lock")}})
+	if m.Target.Path != "." || m.Target.RepoPath != "projects/wp" || m.Target.Kind != "mixed" ||
+		m.Updates[0].Installed.Path != "wp-content/plugins/a" || m.Updates[1].Installed.Lockfile != "composer.lock" {
+		t.Errorf("one target: %+v %+v", m.Target, m.Updates)
+	}
+
+	m = mergeReports([]*core.Report{
+		{Target: core.Target{Path: ".", RepoPath: "projects/wp"}, Updates: up("wp-content/plugins/a", "")},
+		{Target: core.Target{Path: ".", RepoPath: "."}, Updates: up("", "web/package-lock.json")},
+	})
+	if m.Target.RepoPath != "." || m.Target.Kind != "merged" ||
+		m.Updates[0].Installed.Path != "projects/wp/wp-content/plugins/a" || m.Updates[1].Installed.Lockfile != "web/package-lock.json" {
+		t.Errorf("one repository: %+v %+v", m.Target, m.Updates)
+	}
+
+	m = mergeReports([]*core.Report{
+		{Target: core.Target{Path: ".", RepoPath: "projects/wp"}, Updates: up("wp-content/plugins/a", "")},
+		{Target: core.Target{Path: "/srv/b"}, Updates: up("", "composer.lock")},
+	})
+	if m.Target.RepoPath != "" || m.Updates[0].Installed.Path != "wp-content/plugins/a" || m.Updates[1].Installed.Lockfile != "composer.lock" {
+		t.Errorf("outside a repository: %+v %+v", m.Target, m.Updates)
+	}
+}
+
 // keySigner verifies like FakeSigner and also wants "trusted-key"
 // among the trusted keys.
 type keySigner struct{ coretest.FakeSigner }

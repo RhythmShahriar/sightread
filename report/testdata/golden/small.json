@@ -27,6 +27,7 @@
   "data": {
     "target": {
       "path": "/srv/site",
+      "repo_path": "",
       "kind": "npm",
       "wordpress": "",
       "sites": []

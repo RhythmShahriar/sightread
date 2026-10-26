@@ -183,7 +183,7 @@ func summaryJSON(s core.Summary) jsonSummary {
 
 func reviewJSON(r *core.Report, p paths) jsonReview {
 	d := jsonReview{
-		Target: jsonTarget{Path: text(p.path(r.Target.Path)), Kind: text(r.Target.Kind), WordPress: text(r.Target.WordPress),
+		Target: jsonTarget{Path: text(p.path(r.Target.Path)), RepoPath: text(TargetRepoPath(r.Target)), Kind: text(r.Target.Kind), WordPress: text(r.Target.WordPress),
 			Sites: list(texts(r.Target.Sites))},
 		Started:       timeText(r.Started),
 		DurationMS:    r.Duration.Milliseconds(),

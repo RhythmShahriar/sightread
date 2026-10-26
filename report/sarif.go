@@ -156,7 +156,7 @@ func (SARIFWriter) Write(w io.Writer, r *core.Report, o core.WriteOptions) error
 			Rules: []sarifRule{}}},
 		Results: []sarifResult{},
 	}
-	loc := newLocator(r.Target.Path)
+	loc := newLocator(r.Target)
 	seen := map[string]bool{}
 	for i := range r.Updates {
 		u := &r.Updates[i]
@@ -329,19 +329,76 @@ type locator struct {
 	target string // absolute target folder, "" for a remote target
 	base   string // repository root, or target
 	inRepo bool
+	// prefix is the target's path inside the repository when the
+	// folder itself is not on this machine (a redacted or merged report
+	// read elsewhere): URIs are prefix joined with the path.
+	prefix string
 }
 
-func newLocator(target string) locator {
+// newLocator finds the target's files. An absolute Path is read as it
+// is. A report whose Path was redacted or merged away still carries the
+// target's RepoPath: when the working folder is inside a repository
+// that holds that folder (report runs in the same checkout), the files
+// are read there; else every URI is RepoPath joined with the path.
+func newLocator(t core.Target) locator {
 	l := locator{}
-	if target == "" || !filepath.IsAbs(target) {
+	if t.Path != "" && filepath.IsAbs(t.Path) {
+		l.target = filepath.Clean(t.Path)
+		l.base = l.target
+		if root := repoRoot(l.target); root != "" {
+			l.base, l.inRepo = root, true
+		}
 		return l
 	}
-	l.target = filepath.Clean(target)
-	l.base = l.target
-	if root := repoRoot(l.target); root != "" {
-		l.base, l.inRepo = root, true
+	rp := cleanRepoPath(t.RepoPath)
+	if rp == "" {
+		return l
 	}
-	return l
+	if wd, err := os.Getwd(); err == nil {
+		if root := repoRoot(wd); root != "" {
+			if dir := filepath.Join(root, filepath.FromSlash(rp)); isDir(dir) {
+				return locator{target: dir, base: root, inRepo: true}
+			}
+		}
+	}
+	return locator{prefix: rp}
+}
+
+// TargetRepoPath is t's RepoPath, worked out from an absolute Path
+// when the report doesn't carry one yet.
+func TargetRepoPath(t core.Target) string {
+	if t.RepoPath != "" || t.Path == "" || !filepath.IsAbs(t.Path) {
+		return cleanRepoPath(t.RepoPath)
+	}
+	dir := filepath.Clean(t.Path)
+	root := repoRoot(dir)
+	if root == "" {
+		return ""
+	}
+	rel, err := filepath.Rel(root, dir)
+	if err != nil {
+		return ""
+	}
+	return cleanRepoPath(filepath.ToSlash(rel))
+}
+
+// cleanRepoPath keeps a repository path that stays inside the
+// repository: relative, forward slashes, no "..". Anything else is ""
+// so a crafted report can't point SARIF outside the repository.
+func cleanRepoPath(p string) string {
+	if p == "" || strings.Contains(p, `\`) {
+		return ""
+	}
+	c := path.Clean(p)
+	if path.IsAbs(c) || c == ".." || strings.HasPrefix(c, "../") {
+		return ""
+	}
+	return c
+}
+
+func isDir(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && fi.IsDir()
 }
 
 // repoRoot is the nearest folder from dir upwards that holds .git.
@@ -378,6 +435,13 @@ func (l locator) locate(u *core.Update) sarifPhysical {
 			}
 		}
 	}
+	if l.prefix != "" && (u.Eco == core.WPPlugin || u.Eco == core.WPTheme) && u.Installed.Path != "" {
+		// The folder isn't here to find its main file in: point at the
+		// plugin or theme folder, which is still the right place.
+		if uri, ok := l.uri(u.Installed.Path); ok {
+			return sarifPhysical{ArtifactLocation: sarifArtifactLocation{URI: uri, URIBaseID: srcRoot}}
+		}
+	}
 	uri, _ := l.uri(".")
 	return sarifPhysical{ArtifactLocation: sarifArtifactLocation{URI: uri, URIBaseID: srcRoot}}
 }
@@ -392,7 +456,8 @@ func (l locator) uri(rel string) (string, bool) {
 		switch {
 		case rel == "" || path.IsAbs(c) || c == ".." || strings.HasPrefix(c, "../"):
 			return ".", false
-		case c == ".":
+		}
+		if c = path.Join(cmp.Or(l.prefix, "."), c); c == "." {
 			return ".", true
 		}
 		return escapeURI(c), true
