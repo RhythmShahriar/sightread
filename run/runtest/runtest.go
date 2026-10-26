@@ -223,7 +223,26 @@ func (s *Source) VerifyLocal(ctx context.Context, ref core.Ref, local *core.Tree
 type Detector struct {
 	mu     sync.Mutex
 	ByName map[string][]core.Finding
-	seen   []*core.Subject
+	// ConfigErr, when set, is what CheckConfig returns.
+	ConfigErr error
+	seen      []*core.Subject
+	checked   [][]string
+}
+
+// CheckConfig records the config's --signals folders and returns
+// ConfigErr.
+func (d *Detector) CheckConfig(c *core.Config) error {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	d.checked = append(d.checked, slices.Clone(c.Signals.Dirs))
+	return d.ConfigErr
+}
+
+// Checked returns the --signals folders of every CheckConfig call.
+func (d *Detector) Checked() [][]string {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return slices.Clone(d.checked)
 }
 
 // Info names the detector.

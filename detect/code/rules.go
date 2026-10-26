@@ -623,6 +623,14 @@ func LoadRuleDirs(dirs []string) ([]*Rule, error) {
 		seen[r.ID] = r.File
 	}
 	for _, dir := range dirs {
+		// fs.Glob ignores a folder it can't read, so a missing or
+		// mistyped folder is checked here; else it would add no rules
+		// without a word.
+		if fi, err := os.Stat(dir); err != nil || !fi.IsDir() {
+			e := ruleConfigError(&RuleError{File: dir, Problem: "not a folder Sightread can read"}).(*core.Error)
+			e.Hint = []string{"check the folder given to --signals"}
+			return nil, e
+		}
 		rs, err := LoadRules(os.DirFS(dir), dir)
 		if err != nil {
 			return nil, ruleConfigError(err)
@@ -654,6 +662,13 @@ type ruleDetector struct{}
 // ruleSignals are the signals the shipped rules fire. Extra rules may
 // fire any detect signal; their findings pass through the same emitter.
 var ruleSignals = []string{SigDecodeExec, SigEvalDynamic, SigAdminUserHidden, SigRemoteFetchExec}
+
+// CheckConfig reads the --signals folders of c, so run reports a bad
+// one (E12) before any download.
+func (ruleDetector) CheckConfig(c *core.Config) error {
+	_, err := LoadRuleDirs(c.Signals.Dirs)
+	return err
+}
 
 func (ruleDetector) Info() core.DetectorInfo {
 	return core.DetectorInfo{Name: "code-rules", Signals: ruleSignals}

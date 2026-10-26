@@ -120,6 +120,45 @@ func TestLoadRuleDirsE12(t *testing.T) {
 	}
 }
 
+// A --signals folder that doesn't exist, or a file given as one, is
+// E12 too: it would otherwise add no rules without a word.
+func TestLoadRuleDirsMissing(t *testing.T) {
+	file := filepath.Join(t.TempDir(), "rule.yaml")
+	writeRule(t, filepath.Dir(file), "rule.yaml", "id: x\n")
+	for _, dir := range []string{filepath.Join(t.TempDir(), "nope"), file} {
+		_, err := LoadRuleDirs([]string{dir})
+		var e *core.Error
+		if !errors.As(err, &e) || e.Code != core.EBadConfig || e.What != dir+": not a folder Sightread can read" ||
+			e.Hint[0] != "check the folder given to --signals" {
+			t.Errorf("%s: %v", dir, err)
+		}
+	}
+	// An empty folder is fine: it adds no rules.
+	if rs, err := LoadRuleDirs([]string{t.TempDir()}); err != nil || len(rs) != 0 {
+		t.Errorf("empty folder: %d rules, %v", len(rs), err)
+	}
+}
+
+// CheckConfig reports a bad file among good ones, so one broken rule
+// can't switch off the folder's other rules unseen; a good folder passes.
+func TestCheckConfig(t *testing.T) {
+	good := "id: beacon2\nname: Beacon call\nsignal: outbound-new-domain\nseverity: high\nfiles: ['**/*.js']\nmatch: {regex: ['beacon\\(']}\n"
+	ok := t.TempDir()
+	writeRule(t, ok, "beacon.yaml", good)
+	c := &core.Config{}
+	c.Signals.Dirs = []string{ok}
+	if err := (ruleDetector{}).CheckConfig(c); err != nil {
+		t.Fatalf("good folder: %v", err)
+	}
+	bad := t.TempDir()
+	writeRule(t, bad, "beacon.yaml", good)
+	writeRule(t, bad, "z.yaml", "id: bad\n")
+	c.Signals.Dirs = []string{bad}
+	if err := (ruleDetector{}).CheckConfig(c); core.CodeOf(err) != core.EBadConfig || !strings.Contains(err.Error(), "z.yaml") {
+		t.Errorf("bad file: %v", err)
+	}
+}
+
 // An extra rule from --signals fires through the subject's config; its
 // test fixtures (*_test.yaml) are not rules.
 func TestExtraRuleFires(t *testing.T) {

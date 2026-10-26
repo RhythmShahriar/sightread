@@ -214,6 +214,16 @@ func (r *reviewer) setup() error {
 		}
 	}
 
+	// After UseEmbedded, so extra rules are checked against the rules
+	// this run uses.
+	for _, d := range core.Detectors() {
+		if cc, ok := d.(core.ConfigChecker); ok {
+			if err := cc.CheckConfig(r.cfg); err != nil {
+				return err
+			}
+		}
+	}
+
 	if r.req.NoAllow {
 		r.allow = noAllow{}
 	} else if r.allow, err = policy.LoadAllow(r.cfg, r.cfgPath, baseRef); err != nil {

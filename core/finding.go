@@ -84,6 +84,14 @@ type Detector interface {
 	Detect(ctx context.Context, s *Subject, emit func(Finding))
 }
 
+// ConfigChecker is a Detector that reads files the config names (the
+// --signals rule folders). run calls CheckConfig once before any
+// download, so a missing folder or a bad file stops the run with its
+// error (E12) instead of switching rules off without a word.
+type ConfigChecker interface {
+	CheckConfig(c *Config) error
+}
+
 // Explain is a signal's explain text (PRD 6.5).
 type Explain struct {
 	Why, HowToReview, FalseAlarms, Incidents, Advice, More string

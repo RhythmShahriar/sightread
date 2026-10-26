@@ -344,6 +344,29 @@ func TestSVNCheckSkipsTLSCache(t *testing.T) {
 	}
 }
 
+// TestSignalDirsCheckedFirst: the --signals folders reach the detectors'
+// config check, and its error stops the run before any download.
+func TestSignalDirsCheckedFirst(t *testing.T) {
+	w := runtest.Install(t)
+	w.Publish(core.WPPlugin, "akismet", "5.3.3", "5.3.5")
+	w.Install(core.WPPlugin, "akismet", "5.3.3")
+	req := request(t, "all")
+	req.SignalDirs = []string{"/rules"}
+	review(t, req)
+	if got := w.Detector.Checked(); len(got) != 1 || !slices.Equal(got[0], []string{"/rules"}) {
+		t.Fatalf("checked %q", got)
+	}
+	w.Detector.ConfigErr = &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage, What: "bad rule"}
+	before := w.Sources[core.WPPlugin].Fetches()
+	_, err := run.Review(context.Background(), req)
+	if core.CodeOf(err) != core.EBadConfig {
+		t.Fatalf("error %v, want E12", err)
+	}
+	if n := w.Sources[core.WPPlugin].Fetches(); n != before {
+		t.Errorf("%d fetches after a bad --signals folder", n-before)
+	}
+}
+
 // TestTreeMetaFromCache: what a source reads from the release's files
 // is filled again for a cached tree, so a second run reports the same;
 // the changelog keeps only the entries newer than the installed side.
