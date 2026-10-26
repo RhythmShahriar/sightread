@@ -1,0 +1,78 @@
+<?php
+/**
+ * Settings helpers, generated benchmark input.
+ *
+ * @package Sample_Forms___N__
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Returns one setting with a default.
+ *
+ * @param string $key     Setting name.
+ * @param mixed  $default Default value.
+ * @return mixed
+ */
+function sample_forms___N___get( $key, $default = null ) {
+	$all = maybe_unserialize( get_option( 'sample_forms___N___settings', array() ) );
+	return isset( $all[ $key ] ) ? $all[ $key ] : $default;
+}
+
+/**
+ * Saves the import file the admin uploaded.
+ */
+function sample_forms___N___import() {
+	check_admin_referer( 'sample_forms_import' );
+	if ( ! current_user_can( 'manage_options' ) || empty( $_FILES['import']['tmp_name'] ) ) {
+		wp_die( esc_html__( 'Not allowed.', 'sample-forms' ) );
+	}
+	$raw  = file_get_contents( sanitize_text_field( $_FILES['import']['tmp_name'] ) );
+	$data = json_decode( $raw, true );
+	if ( ! is_array( $data ) ) {
+		wp_die( esc_html__( 'Bad file.', 'sample-forms' ) );
+	}
+	update_option( 'sample_forms___N___settings', array_map( 'sanitize_text_field', $data ) );
+	wp_safe_redirect( admin_url( 'options-general.php?page=sample-forms&imported=1' ) );
+	exit;
+}
+add_action( 'admin_post_sample_forms_import', 'sample_forms___N___import' );
+
+/**
+ * Writes the cache file in the uploads folder.
+ *
+ * @param array $rows Rows to cache.
+ */
+function sample_forms___N___cache( $rows ) {
+	$dir = wp_upload_dir();
+	$file = trailingslashit( $dir['basedir'] ) . 'sample-forms/cache-__N__.json';
+	wp_mkdir_p( dirname( $file ) );
+	file_put_contents( $file, wp_json_encode( $rows ) );
+}
+
+/**
+ * Loads a template part from the plugin.
+ *
+ * @param string $name Template name.
+ */
+function sample_forms___N___template( $name ) {
+	$allowed = array( 'form', 'list', 'empty' );
+	if ( in_array( $name, $allowed, true ) ) {
+		include __DIR__ . '/templates/' . $name . '.php';
+	}
+}
+
+/**
+ * Schedules the daily cleanup.
+ */
+function sample_forms___N___schedule() {
+	if ( ! wp_next_scheduled( 'sample_forms___N___cleanup' ) ) {
+		wp_schedule_event( time(), 'daily', 'sample_forms___N___cleanup' );
+	}
+}
+register_activation_hook( __FILE__, 'sample_forms___N___schedule' );
+
+$sample_forms___N___css = <<<'CSS'
+.sample-form { display: grid; gap: 8px; }
+.sample-form textarea { min-height: 120px; }
+CSS;

@@ -1,0 +1,29 @@
+<?php
+/**
+ * Entry list view, generated benchmark input.
+ *
+ * @package Sample_Forms___N__
+ */
+
+defined( 'ABSPATH' ) || exit;
+$entries = get_posts( array( 'post_type' => 'sample_entry', 'numberposts' => 10 ) );
+?>
+<table class="widefat striped">
+	<thead>
+		<tr><th><?php esc_html_e( 'Title', 'sample-forms' ); ?></th><th><?php esc_html_e( 'Date', 'sample-forms' ); ?></th></tr>
+	</thead>
+	<tbody>
+	<?php foreach ( $entries as $entry ) : ?>
+		<tr>
+			<td><a href="<?php echo esc_url( get_edit_post_link( $entry ) ); ?>"><?php echo esc_html( get_the_title( $entry ) ); ?></a></td>
+			<td><?php echo esc_html( get_the_date( '', $entry ) ); ?></td>
+		</tr>
+	<?php endforeach; ?>
+	<?php if ( empty( $entries ) ) : ?>
+		<tr><td colspan="2"><?php esc_html_e( 'No entries yet.', 'sample-forms' ); ?> <a href="https://sample-forms.io/docs/__N__">Docs</a></td></tr>
+	<?php endif; ?>
+	</tbody>
+</table>
+<script type="text/template" id="sample-row-__N__">
+	<tr><td>{{ data.title }}</td><td>{{ data.date }}</td></tr>
+</script>

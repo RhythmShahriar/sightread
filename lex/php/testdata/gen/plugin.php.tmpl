@@ -1,0 +1,137 @@
+<?php
+/**
+ * Plugin Name: Sample Gallery __N__
+ * Description: Generated benchmark input. Not real plugin code.
+ * Version: 1.__N__.0
+ *
+ * @package Sample_Gallery___N__
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+define( 'SAMPLE_GALLERY___N___VERSION', '1.__N__.0' );
+
+/**
+ * Main plugin class.
+ */
+final class Sample_Gallery___N__ {
+
+	/**
+	 * Option name.
+	 *
+	 * @var string
+	 */
+	private $option = 'sample_gallery___N___settings';
+
+	/**
+	 * Hooks everything up.
+	 */
+	public function __construct() {
+		add_action( 'init', array( $this, 'register_post_type' ) );
+		add_action( 'admin_menu', array( $this, 'menu' ) );
+		add_filter( 'the_content', array( $this, 'append_gallery' ), 20 );
+		add_shortcode( 'sample_gallery___N__', array( $this, 'shortcode' ) );
+	}
+
+	/**
+	 * Registers the gallery post type.
+	 */
+	public function register_post_type() {
+		$labels = array(
+			'name'          => __( 'Galleries', 'sample-gallery' ),
+			'singular_name' => __( 'Gallery', 'sample-gallery' ),
+			'add_new_item'  => __( 'Add New Gallery', 'sample-gallery' ),
+		);
+		register_post_type(
+			'sample_gallery',
+			array(
+				'labels'       => $labels,
+				'public'       => true,
+				'show_in_rest' => true,
+				'supports'     => array( 'title', 'editor', 'thumbnail' ),
+			)
+		);
+	}
+
+	/**
+	 * Shortcode output.
+	 *
+	 * @param array $atts Attributes.
+	 * @return string
+	 */
+	public function shortcode( $atts ) {
+		$atts  = shortcode_atts( array( 'id' => 0, 'columns' => 3 ), $atts, 'sample_gallery' );
+		$id    = absint( $atts['id'] );
+		$cols  = max( 1, min( 6, (int) $atts['columns'] ) );
+		$items = get_post_meta( $id, '_gallery_items', true );
+		if ( ! is_array( $items ) || empty( $items ) ) {
+			return '';
+		}
+		$html = <<<HTML
+<div class="sample-gallery cols-{$cols}" data-id="$id">
+	<h3>{$this->title( $id )}</h3>
+HTML;
+		foreach ( $items as $i => $item ) {
+			$url   = esc_url( wp_get_attachment_image_url( $item['id'], 'medium' ) );
+			$alt   = esc_attr( $item['alt'] ?? '' );
+			$html .= "\t<figure class=\"item item-$i\"><img src=\"{$url}\" alt=\"$alt\"></figure>\n";
+		}
+		return $html . '</div>';
+	}
+
+	/**
+	 * Title of a gallery.
+	 *
+	 * @param int $id Post ID.
+	 * @return string
+	 */
+	private function title( $id ) {
+		return esc_html( get_the_title( $id ) );
+	}
+
+	/**
+	 * Adds the gallery below single posts.
+	 *
+	 * @param string $content Post content.
+	 * @return string
+	 */
+	public function append_gallery( $content ) {
+		if ( ! is_singular( 'post' ) || ! in_the_loop() ) {
+			return $content;
+		}
+		$opts = get_option( $this->option, array() );
+		if ( empty( $opts['auto'] ) ) {
+			return $content;
+		}
+		return $content . do_shortcode( sprintf( '[sample_gallery___N__ id="%d"]', (int) $opts['auto'] ) );
+	}
+
+	/**
+	 * Settings page.
+	 */
+	public function menu() {
+		add_options_page( 'Gallery', 'Gallery', 'manage_options', 'sample-gallery-__N__', array( $this, 'page' ) );
+	}
+
+	/**
+	 * Renders the settings page.
+	 */
+	public function page() {
+		$opts = get_option( $this->option, array() );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Gallery settings', 'sample-gallery' ); ?></h1>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'sample_gallery' ); ?>
+				<label>
+					<input type="checkbox" name="<?php echo esc_attr( $this->option ); ?>[auto]" value="1" <?php checked( ! empty( $opts['auto'] ) ); ?> />
+					<?= esc_html__( 'Append to posts', 'sample-gallery' ) ?>
+				</label>
+				<?php submit_button(); ?>
+			</form>
+		</div>
+		<?php
+	}
+}
+
+new Sample_Gallery___N__();
