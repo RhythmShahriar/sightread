@@ -471,3 +471,36 @@ func TestTimesAreUTC(t *testing.T) {
 		t.Errorf("started not in UTC:\n%s", doc)
 	}
 }
+
+// TestJSONSoundcheckNotCompared: a --soundcheck run that stopped before
+// the comparison writes summary null and its error, and reads back the
+// same; a finished one keeps its zero counts.
+func TestJSONSoundcheckNotCompared(t *testing.T) {
+	r := coretest.SampleReport()
+	r.Updates[0].Soundcheck = &core.SoundcheckResult{Staging: "https://staging.example", NotCompared: true,
+		Error: "rhythm-soundcheck compare couldn't run"}
+	doc := writeWith(t, core.FormatJSON, r, testOpts)
+	for _, want := range []string{`"summary": null`, `"error": "rhythm-soundcheck compare couldn't run"`} {
+		if !bytes.Contains(doc, []byte(want)) {
+			t.Errorf("missing %s in\n%s", want, doc)
+		}
+	}
+	if errs := validateStrict(loadSchema(t, schemaPath), doc); len(errs) > 0 {
+		t.Errorf("schema: %v", errs)
+	}
+	back, err := ReadReport(bytes.NewReader(doc))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sc := back.Updates[0].Soundcheck; sc == nil || !sc.NotCompared || sc.Error != "rhythm-soundcheck compare couldn't run" {
+		t.Errorf("read back %+v", sc)
+	}
+	r.Updates[0].Soundcheck = &core.SoundcheckResult{Staging: "https://staging.example"}
+	doc = writeWith(t, core.FormatJSON, r, testOpts)
+	if !bytes.Contains(doc, []byte(`"broke": 0`)) || !bytes.Contains(doc, []byte(`"error": ""`)) {
+		t.Errorf("a finished comparison lost its counts:\n%s", doc)
+	}
+	if errs := validateStrict(loadSchema(t, schemaPath), doc); len(errs) > 0 {
+		t.Errorf("schema: %v", errs)
+	}
+}

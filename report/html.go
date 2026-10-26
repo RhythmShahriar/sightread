@@ -152,8 +152,8 @@ type htmlLine struct {
 }
 
 type htmlSoundcheck struct {
-	Name, Staging, Applied, Report, Counts string
-	RolledBack                             bool
+	Name, Staging, Applied, Report, Counts, Error string
+	RolledBack, NotCompared                       bool
 }
 
 func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
@@ -201,7 +201,7 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 		if sc := u.Soundcheck; sc != nil {
 			v.Soundcheck = append(v.Soundcheck, htmlSoundcheck{Name: text(u.Name) + " " + text(u.To.Version), Staging: text(sc.Staging),
 				Applied: text(sc.Applied), Report: text(p.path(sc.Report)), RolledBack: sc.RolledBack,
-				Counts: fmt.Sprintf("%d broke, %d new, %d changed", sc.Broke, sc.New, sc.Changed)})
+				Counts: text(soundcheckCounts(sc)), Error: text(sc.Error), NotCompared: sc.NotCompared})
 		}
 	}
 	codes, rest := r.PairErrors()

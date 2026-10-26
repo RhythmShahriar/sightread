@@ -238,8 +238,10 @@ func updateFromJSON(j *jsonUpdate) (core.Update, error) {
 	}
 	if sc := j.Soundcheck; sc != nil {
 		u.Soundcheck = &core.SoundcheckResult{Staging: text(sc.Staging), RoadieVerify: text(sc.RoadieVerify), Snapshot: text(sc.Snapshot),
-			Report: text(sc.Report), Applied: text(sc.Applied), Broke: sc.Summary.Broke, New: sc.Summary.New, Changed: sc.Summary.Changed,
-			RolledBack: sc.RolledBack}
+			Report: text(sc.Report), Applied: text(sc.Applied), RolledBack: sc.RolledBack, Error: text(sc.Error), NotCompared: sc.Summary == nil}
+		if s := sc.Summary; s != nil {
+			u.Soundcheck.Broke, u.Soundcheck.New, u.Soundcheck.Changed = s.Broke, s.New, s.Changed
+		}
 	}
 	return u, nil
 }

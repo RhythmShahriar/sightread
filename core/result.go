@@ -57,6 +57,12 @@ type SoundcheckResult struct {
 	Staging, RoadieVerify, Snapshot, Report, Applied string
 	Broke, New, Changed                              int
 	RolledBack                                       bool
+	// Error is why --soundcheck stopped after it touched the staging
+	// copy; "" when it finished. NotCompared is true when it stopped
+	// before the comparison, so Broke, New and Changed mean nothing and
+	// the report shows no summary.
+	Error       string
+	NotCompared bool
 }
 
 // ErrorEntry is an error the report records for one package.

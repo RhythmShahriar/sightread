@@ -592,6 +592,36 @@ func TestSoundcheckFailures(t *testing.T) {
 	}
 }
 
+// TestSoundcheckFailureRecorded: a compare that prints something else
+// than a comparison leaves the report incomplete with the reason in
+// the Soundcheck block and the report errors, and no counts.
+func TestSoundcheckFailureRecorded(t *testing.T) {
+	w := newWorld(t)
+	w.rep.Complete = true
+	p := filepath.Join(t.TempDir(), "compare.json")
+	if err := os.WriteFile(p, []byte(`{"schema":"rhythm-soundcheck/v1","kind":"snapshot"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("STUB_SOUNDCHECK_COMPARE_OUT", p)
+	if _, err := w.run(); core.CodeOf(err) != core.ESoundcheckMissing {
+		t.Fatalf("err %v", err)
+	}
+	sc := w.rep.Updates[0].Soundcheck
+	if w.rep.Complete || sc == nil || !sc.NotCompared || !strings.Contains(sc.Error, "rhythm-soundcheck compare couldn't run") {
+		t.Errorf("complete %v soundcheck %+v", w.rep.Complete, sc)
+	}
+	if len(w.rep.Errors) != 1 || w.rep.Errors[0].Code != core.ESoundcheckMissing || w.rep.Errors[0].Name != "akismet" ||
+		!strings.HasPrefix(w.rep.Errors[0].Message, "--soundcheck: ") {
+		t.Errorf("errors %+v", w.rep.Errors)
+	}
+	// A finished run leaves the report as it was.
+	w = newWorld(t)
+	w.rep.Complete = true
+	if _, err := w.run(); err != nil || !w.rep.Complete || len(w.rep.Errors) != 0 || w.rep.Updates[0].Soundcheck.NotCompared {
+		t.Errorf("finished run: %v complete %v errors %v", err, w.rep.Complete, w.rep.Errors)
+	}
+}
+
 // TestVerboseLog: -v lists every program with its purpose and the
 // helpers' stderr after a failure.
 func TestVerboseLog(t *testing.T) {

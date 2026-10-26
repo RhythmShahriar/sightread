@@ -6,6 +6,7 @@ package stage
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -150,12 +151,41 @@ func Run(ctx context.Context, p Plan, rep *core.Report) (tripped bool, err error
 			Hint: []string{"--soundcheck applies the update to the site; point it at a staging copy (rhythm roadie copy makes one)"}}
 	}
 
+	// From here on the staging copy is touched: a failure is recorded in
+	// the report, so a saved report never shows a comparison that did
+	// not happen.
+	sc.NotCompared = true
+	u.Soundcheck = sc
+	tripped, err = s.onStaging(ctx, rep, sc, ref)
+	if err != nil {
+		recordFailure(rep, u, err)
+	}
+	return tripped, err
+}
+
+// recordFailure marks rep incomplete and notes why --soundcheck stopped,
+// in the update's Soundcheck block and in the report errors.
+func recordFailure(rep *core.Report, u *core.Update, err error) {
+	msg := err.Error()
+	if e := (*core.Error)(nil); errors.As(err, &e) && e.What != "" {
+		msg = e.What
+	}
+	if u.Soundcheck != nil {
+		u.Soundcheck.Error = msg
+	}
+	rep.Complete = false
+	rep.Errors = append(rep.Errors, core.ErrorEntry{Eco: u.Eco, Name: u.Name, Code: core.CodeOf(err), Message: "--soundcheck: " + msg})
+}
+
+// onStaging is PRD 15 steps 4 to 7: snapshot, apply, compare and roll
+// back on the staging copy.
+func (s *stager) onStaging(ctx context.Context, rep *core.Report, sc *core.SoundcheckResult, ref core.Ref) (tripped bool, err error) {
+	p, u := s.p, s.u
 	// 4. Snapshot.
 	sc.Snapshot = snapshotName(u.Name, u.From.Version)
 	if err := s.snapshot(ctx, sc.Snapshot); err != nil {
 		return false, err
 	}
-	u.Soundcheck = sc
 	// 5. Apply.
 	if len(p.Apply) > 0 {
 		if err := s.runApply(ctx, p.Apply, proc.PurposeApply, ref); err != nil {
@@ -177,6 +207,7 @@ func Run(ctx context.Context, p Plan, rep *core.Report) (tripped bool, err error
 		return false, err
 	}
 	sc.Broke, sc.New, sc.Changed, sc.Report = c.Summary.Broke, c.Summary.New, c.Summary.Changed, c.After.Dir
+	sc.NotCompared = false
 	tripped = c.trips(cmp.Or(p.FailOn, ClassBroke))
 	// 7. Rollback.
 	if tripped && p.Rollback {

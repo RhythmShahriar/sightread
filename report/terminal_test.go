@@ -673,6 +673,27 @@ func TestTerminalSoundcheckFacts(t *testing.T) {
 	}
 }
 
+// TestTerminalSoundcheckFailed: a --soundcheck run that stopped before
+// the comparison shows why, never zero counts; one that failed later
+// keeps its counts and says what failed.
+func TestTerminalSoundcheckFailed(t *testing.T) {
+	o := termOpts(160)
+	o.Plain = true
+	r := oneUpdate()
+	r.Updates[0].Soundcheck = &core.SoundcheckResult{Staging: "https://staging.example", RoadieVerify: "ok",
+		Applied: "verified archive 0123456789ab", NotCompared: true, Error: "rhythm-soundcheck compare couldn't run"}
+	out := writeTerm(t, r, o)
+	if !strings.Contains(out, "Soundcheck: https://staging.example: not compared: rhythm-soundcheck compare couldn't run\n") ||
+		strings.Contains(out, "0 broke") {
+		t.Errorf("a failed compare reads as a result:\n%s", out)
+	}
+	r.Updates[0].Soundcheck = &core.SoundcheckResult{Staging: "https://staging.example", Broke: 1, Error: "couldn't install akismet 5.3.3"}
+	out = writeTerm(t, r, o)
+	if !strings.Contains(out, "1 broke, 0 new, 0 changed") || !strings.Contains(out, "failed: couldn't install akismet 5.3.3") {
+		t.Errorf("a failed rollback hides the failure:\n%s", out)
+	}
+}
+
 // TestFetchFailureListedOnce: a package that failed to download is one
 // Not checked line carrying its error's code in every format; the
 // incomplete line counts it once.

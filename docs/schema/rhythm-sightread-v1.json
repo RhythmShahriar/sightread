@@ -505,7 +505,8 @@
         "applied",
         "summary",
         "report",
-        "rolled_back"
+        "rolled_back",
+        "error"
       ],
       "properties": {
         "staging": {
@@ -521,32 +522,44 @@
           "type": "string"
         },
         "summary": {
-          "type": "object",
-          "required": [
-            "broke",
-            "new",
-            "changed"
-          ],
-          "properties": {
-            "broke": {
-              "type": "integer",
-              "minimum": 0
+          "anyOf": [
+            {
+              "type": "null"
             },
-            "new": {
-              "type": "integer",
-              "minimum": 0
-            },
-            "changed": {
-              "type": "integer",
-              "minimum": 0
+            {
+              "type": "object",
+              "required": [
+                "broke",
+                "new",
+                "changed"
+              ],
+              "properties": {
+                "broke": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "new": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "changed": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
             }
-          }
+          ],
+          "description": "null when --soundcheck stopped before the comparison"
         },
         "report": {
           "type": "string"
         },
         "rolled_back": {
           "type": "boolean"
+        },
+        "error": {
+          "type": "string",
+          "description": "Why --soundcheck stopped after it touched the staging copy; empty when it finished"
         }
       }
     },

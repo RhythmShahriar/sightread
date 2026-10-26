@@ -316,7 +316,7 @@ func (t *termView) facts(u *core.Update) {
 		t.fact("Sites", tt(strings.Join(u.Sites, ", ")))
 	}
 	if s := u.Soundcheck; s != nil {
-		v := fmt.Sprintf("%d broke, %d new, %d changed", s.Broke, s.New, s.Changed)
+		v := tt(soundcheckCounts(s))
 		if s.Staging != "" {
 			v = tt(s.Staging) + ": " + v
 		}
@@ -325,6 +325,9 @@ func (t *termView) facts(u *core.Update) {
 		}
 		if s.Report != "" {
 			v += t.dot() + tt(s.Report)
+		}
+		if s.Error != "" && !s.NotCompared {
+			v += t.dot() + "failed: " + tt(s.Error)
 		}
 		if s.Applied != "" {
 			t.fact("Applied", tt(s.Applied))
@@ -1510,4 +1513,16 @@ func wrapHard(s string, n int) []string {
 		out = append(out, cutCells(l, n)...)
 	}
 	return out
+}
+
+// soundcheckCounts is the result of a --soundcheck run: its counts, or
+// why it has none when it stopped before the comparison.
+func soundcheckCounts(s *core.SoundcheckResult) string {
+	if s.NotCompared {
+		if s.Error == "" {
+			return "not compared"
+		}
+		return "not compared: " + s.Error
+	}
+	return fmt.Sprintf("%d broke, %d new, %d changed", s.Broke, s.New, s.Changed)
 }

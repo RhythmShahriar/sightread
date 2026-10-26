@@ -153,9 +153,10 @@ type jsonSoundcheck struct {
 	RoadieVerify string                `json:"roadie_verify"`
 	Snapshot     string                `json:"snapshot"`
 	Applied      string                `json:"applied"`
-	Summary      jsonSoundcheckSummary `json:"summary"`
-	Report       string                `json:"report"`
-	RolledBack   bool                  `json:"rolled_back"`
+	Summary      *jsonSoundcheckSummary `json:"summary"` // null when it stopped before the comparison
+	Report       string                 `json:"report"`
+	RolledBack   bool                   `json:"rolled_back"`
+	Error        string                 `json:"error"` // why it stopped; "" when it finished
 }
 
 type jsonError struct {

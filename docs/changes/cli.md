@@ -266,7 +266,9 @@ when compare has changes at `--soundcheck-fail-on`.
   1`.
 - Report: `soundcheck` block `staging`, `roadie_verify` (`ok` or `skipped`), `snapshot`,
   `applied` (`verified archive <12 hex>` or `your command`), `broke`, `new`, `changed`, `report`,
-  `rolled_back`. Notes: `the staging site ran the update; Sightread did not`;
+  `rolled_back`, `error`. When Soundcheck stops after it touched the staging copy, the report is
+  incomplete, `error` says why, `data.errors` has a `--soundcheck: ...` entry and `summary` is
+  null if the comparison never ran; the terminal line reads `<staging>: not compared: <why>`. Notes: `the staging site ran the update; Sightread did not`;
   `--skip-roadie-verify was used: the staging copy wasn't checked by rhythm roadie verify, so
   outbound mail is not known to be sealed`; `applied by your command; the applied bytes were not
   checked against the reviewed ones`; `--rollback reinstalls only a version Sightread installed

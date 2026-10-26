@@ -259,8 +259,10 @@ func updateJSON(u *core.Update, p paths) jsonUpdate {
 	}
 	if sc := u.Soundcheck; sc != nil {
 		j.Soundcheck = &jsonSoundcheck{Staging: text(sc.Staging), RoadieVerify: text(sc.RoadieVerify), Snapshot: text(sc.Snapshot),
-			Applied: text(sc.Applied), Summary: jsonSoundcheckSummary{Broke: sc.Broke, New: sc.New, Changed: sc.Changed},
-			Report: text(p.path(sc.Report)), RolledBack: sc.RolledBack}
+			Applied: text(sc.Applied), Report: text(p.path(sc.Report)), RolledBack: sc.RolledBack, Error: text(sc.Error)}
+		if !sc.NotCompared {
+			j.Soundcheck.Summary = &jsonSoundcheckSummary{Broke: sc.Broke, New: sc.New, Changed: sc.Changed}
+		}
 	}
 	return j
 }

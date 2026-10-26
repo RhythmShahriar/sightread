@@ -255,7 +255,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
 <thead><tr><th>Update</th><th>Staging</th><th>Result</th><th>Report</th></tr></thead>
 <tbody>
 {{- range .Soundcheck}}
-<tr><td>{{.Name}}</td><td>{{.Staging}}</td><td>{{.Counts}}{{if .RolledBack}}; rolled back{{end}}{{if .Applied}}<br><span class="muted">applied with {{.Applied}}</span>{{end}}</td><td><code>{{.Report}}</code></td></tr>
+<tr><td>{{.Name}}</td><td>{{.Staging}}</td><td>{{.Counts}}{{if .RolledBack}}; rolled back{{end}}{{if and .Error (not .NotCompared)}}; failed: {{.Error}}{{end}}{{if .Applied}}<br><span class="muted">applied with {{.Applied}}</span>{{end}}</td><td><code>{{.Report}}</code></td></tr>
 {{- end}}
 </tbody>
 </table>
