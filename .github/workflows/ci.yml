@@ -46,6 +46,18 @@ jobs:
           docker run --rm --network none -v "$PWD:/repo:ro" -w /repo \
             koalaman/shellcheck@sha256:2097951f02e735b613f4a34de20c40f937a6c8f18ecb170612c88c34517221fb "${files[@]}"
 
+  # The Action's install and comment scripts and the release check, each
+  # against local fixtures (bash, jq, sha256sum and tar; no network).
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: scripts/action-test.sh
+      - run: scripts/comment-test.sh
+      - run: scripts/verify-release-test.sh
+
   # Every parser has a fuzz target; each runs for 30 seconds.
   fuzz:
     runs-on: ubuntu-latest
