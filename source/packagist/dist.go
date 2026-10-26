@@ -17,6 +17,7 @@ import (
 	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/fetch"
+	"github.com/RhythmShahriar/sightread/source/changelog"
 )
 
 // The Integrity.Method texts of a Composer package (PRD 18 item 4).
@@ -41,7 +42,7 @@ const maxComposerJSON = 1 << 20
 // GitHub zipball, whose bytes GitHub does not keep stable), against the
 // commit dist.reference pins. It fills Type, ComposerScripts,
 // AutoloadFiles, License, Deps and RequiresPHP from the composer.json
-// inside.
+// inside; Changelog comes from its CHANGELOG.md or the like.
 func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Integrity, error) {
 	name, v := m.Ref.Name, m.Ref.Version
 	pk := fetch.Package{Command: command, Name: name, Version: v, Archive: "zip"}
@@ -62,6 +63,7 @@ func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 	}
 	in := verify(m.Archive, d, tree)
 	s.readComposerJSON(tree, m)
+	m.Changelog = changelog.FromTree(tree)
 	return tree, in, nil
 }
 

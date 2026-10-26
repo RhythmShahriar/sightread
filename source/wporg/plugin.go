@@ -9,6 +9,7 @@ import (
 	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/fetch"
+	"github.com/RhythmShahriar/sightread/source/changelog"
 )
 
 func init() {
@@ -70,7 +71,7 @@ func (p *Plugin) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 }
 
 // download fetches and indexes m's zip, stripping the slug's folder,
-// and gives the tree its manifest hash.
+// gives the tree its manifest hash and reads the changelog into m.
 func (s *site) download(ctx context.Context, m *core.Meta) (*core.Tree, error) {
 	slug, v := m.Ref.Name, m.Ref.Version
 	d, err := s.env.Get.Download(ctx, m.Archive.URL, s.lim.Download, s.env.Blobs)
@@ -83,6 +84,7 @@ func (s *site) download(ctx context.Context, m *core.Meta) (*core.Tree, error) {
 	}
 	tree.HashKind = core.HashManifest
 	tree.SHA256 = core.ManifestHash(tree.Files)
+	m.Changelog = changelog.FromTree(tree)
 	return tree, nil
 }
 

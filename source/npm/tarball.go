@@ -14,6 +14,7 @@ import (
 	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/fetch"
+	"github.com/RhythmShahriar/sightread/source/changelog"
 )
 
 // The Integrity.Method texts of an npm package (PRD 18 item 4).
@@ -31,7 +32,8 @@ const (
 
 // Fetch downloads the tarball (hashed with SHA-512 while it streams),
 // indexes it under package/, checks the hash against dist.integrity and
-// the registry signature against the pinned keys.
+// the registry signature against the pinned keys. Changelog comes from
+// the package's CHANGELOG.md or the like.
 func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Integrity, error) {
 	name, v := m.Ref.Name, m.Ref.Version
 	pk := fetch.Package{Command: command, Name: name, Version: v, Archive: "tarball"}
@@ -53,6 +55,7 @@ func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 		}
 		return nil, core.Integrity{}, pk.Wrap(err)
 	}
+	m.Changelog = changelog.FromTree(tree)
 	// npm runs node-gyp for a binding.gyp when no install script is set.
 	if f, ok := tree.Lookup("binding.gyp"); ok && f.Mode.IsRegular() {
 		m.HasInstallScript = true

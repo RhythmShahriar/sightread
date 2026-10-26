@@ -68,6 +68,7 @@ var monologFiles = map[string]string{
 	"src/Monolog/Logger.php": "<?php namespace Monolog; class Logger {}",
 	"src/functions.php":      "<?php // helpers",
 	"README.md":              "# Monolog",
+	"CHANGELOG.md":           "### 3.8.1 (2024-12-05)\n\n  * Fixed unsupported operand error\n\n### 3.8.0 (2024-11-12)\n\n  * Added PHP 8.4 support\n",
 }
 
 // monolog serves monolog/monolog on pub with the 3.8.1 zip under top.
@@ -260,6 +261,9 @@ func TestFetchCommit(t *testing.T) {
 		!slices.Equal(m.ComposerScripts["post-install-cmd"], []string{"@test", "echo done"}) ||
 		!slices.Equal(m.ComposerScripts["test"], []string{"phpunit"}) || m.DevDeps["phpunit/phpunit"] == "" {
 		t.Errorf("composer.json not read into Meta: %+v", m)
+	}
+	if len(m.Changelog) != 2 || m.Changelog[0].Version != "3.8.1" || m.Changelog[0].Text != "* Fixed unsupported operand error" {
+		t.Errorf("Changelog = %+v", m.Changelog)
 	}
 	// The zipball went through the GitHub API and its redirect.
 	log := strings.Join(pub.requests(), "\n")

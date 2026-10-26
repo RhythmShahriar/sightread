@@ -143,6 +143,9 @@ func TestPluginVerified(t *testing.T) {
 		tree.SHA256 != core.ManifestHash(tree.Files) {
 		t.Errorf("tree root %q, %d files, hash %s", tree.Root, len(tree.Files), tree.HashKind)
 	}
+	if len(m.Changelog) != 1 || m.Changelog[0].Version != "5.3.5" || m.Changelog[0].Text != "* Fix" {
+		t.Errorf("changelog from changelog.txt: %+v", m.Changelog)
+	}
 	if got := coretest.Read(tree, "akismet.php"); got != akismetFiles["akismet.php"] {
 		t.Errorf("akismet.php = %q", got)
 	}

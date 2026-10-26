@@ -55,7 +55,8 @@ func (f *fixture) serve(t *testing.T, r *registry) {
 // signature). It returns the fixture and the 1.3.0 tarball.
 func leftPad(t *testing.T, r *registry, sg *signer) (*fixture, []byte) {
 	t.Helper()
-	tgz := makeTgz(t, map[string]string{"package.json": `{"name":"left-pad","version":"1.3.0"}`, "index.js": "module.exports = leftPad;"})
+	tgz := makeTgz(t, map[string]string{"package.json": `{"name":"left-pad","version":"1.3.0"}`, "index.js": "module.exports = leftPad;",
+		"CHANGELOG.md": "## 1.3.0\n- Use String.prototype.padStart when it exists\n\n## 1.2.0\n- Bug fixes\n"})
 	f := &fixture{name: "left-pad", tags: map[string]string{"latest": "1.3.0"}, docs: map[string]map[string]any{},
 		times: map[string]string{"1.2.0": "2017-11-01T00:00:00.000Z", "1.3.0": "2018-04-09T01:31:58.402Z"}}
 	for _, v := range []string{"1.2.0", "1.3.0"} {
@@ -117,6 +118,9 @@ func TestSignatureValid(t *testing.T) {
 	}
 	if len(m.History) != 1 || m.History[0].Version != "1.2.0" || m.History[0].Published.IsZero() {
 		t.Errorf("History = %+v", m.History)
+	}
+	if len(m.Changelog) != 2 || m.Changelog[0].Version != "1.3.0" || m.Changelog[0].Generic || !m.Changelog[1].Generic {
+		t.Errorf("Changelog = %+v", m.Changelog)
 	}
 	if tree.Root != "package/" || tree.HashKind != core.HashArchive {
 		t.Errorf("tree root %q", tree.Root)
