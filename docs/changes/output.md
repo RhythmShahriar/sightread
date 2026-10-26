@@ -82,6 +82,22 @@ allowed:
   holds the same entry (package, version, sha256, hash, signals and
   until). One the change adds is shown and not counted:
   `npm:sharp@1.1.0: allowed in this change, not counted (--trust-pr-allow counts it)`.
+- The "record a review" allow line in the terminal, Markdown and HTML
+  shell quotes the package when its name or version needs it, so a
+  hostile name can't add a command to the copied line:
+  `rhythm sightread allow 'wp-plugin:x;id@1.0' --reason "..."`.
+- An entry is compared only with a hash of its own kind (`hash: archive`
+  or `hash: manifest`), so a manifest entry never conflicts with an
+  archive hash of the same release.
+- The pull request rule covers the config too. What the change relaxes
+  in its own config is put back to the base ref and noted: an ignore
+  entry the base lacks (or a later `until`), a lower `signals.severity`
+  (or a raise the change removed), a new `signals.domains_ok` host,
+  `min_confidence: confirmed` and a weaker or removed `fail_on`. Each
+  gives a header note such as
+  `ignore remote-fetch-exec: relaxed in this change, not counted (--trust-pr-allow counts it)`.
+  A `--baseline` report inside the repository counts only for the
+  fingerprints it also holds at the base ref.
 
 Entry errors are E12, for example:
 
@@ -96,6 +112,9 @@ Findings with those fingerprints are set aside (`baselined: true`) and
 don't count; unignorable signals are never baselined. A file that is not
 a review report is E12 with the hint
 `--baseline takes the JSON a review wrote, such as -o sightread.json`.
+
+When `signals.severity.unanalysed` is below high the header says so and
+names the config file in use: `unanalysed lowered to medium by .sightread/config.yaml`.
 
 ## Verdicts and context rules
 
@@ -225,7 +244,9 @@ Envelope fields in order: `schema` (`rhythm-sightread/v1`), `kind`,
 `tool`, `version`, `complete`, `summary` (every count always present),
 `verdict` (`ok`, `findings` or `error`), `data`. Lists are `[]`, never
 `null`. JSONL writes one `{"kind":"update", ...}` line per update, then
-the envelope without `data.updates`. The schema ships as
+the envelope without `data.updates`. With `--redact-paths` a JSONL
+update line makes paths inside the target relative, as JSON does. The
+schema ships as
 `docs/schema/rhythm-sightread-v1.json`.
 
 ```json
