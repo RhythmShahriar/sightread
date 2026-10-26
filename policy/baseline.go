@@ -4,11 +4,14 @@
 package policy
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
@@ -53,8 +56,14 @@ func (s *Store) LoadBaseline(path string) (map[string]bool, error) {
 	if fi, err := f.Stat(); err == nil && fi.IsDir() {
 		return nil, badFile(path, errors.New("is a folder, not a file"))
 	}
+	return parseBaseline(io.LimitReader(f, maxBaselineBytes), path)
+}
+
+// parseBaseline decodes a baseline report read from r. path names the
+// file in errors.
+func parseBaseline(r io.Reader, path string) (map[string]bool, error) {
 	var doc baselineDoc
-	dec := json.NewDecoder(io.LimitReader(f, maxBaselineBytes))
+	dec := json.NewDecoder(r)
 	if err := dec.Decode(&doc); err != nil {
 		if errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, io.EOF) {
 			err = errors.New("the file ends early")
@@ -78,6 +87,46 @@ func (s *Store) LoadBaseline(path string) (map[string]bool, error) {
 		}
 	}
 	return set, nil
+}
+
+// BaselineAtBase applies the pull request rule to a --baseline report
+// that lives in the project's git repository: a change could otherwise
+// swap in a report that holds its own findings. Only the fingerprints
+// the report also has at baseRef stay in set; the others are removed and
+// counted in the returned number. A report the ref can't show or parse
+// keeps none. With baseRef empty, or a report outside the repository (a
+// saved artifact of an earlier run, say), set is returned unchanged.
+func (s *Store) BaselineAtBase(set map[string]bool, path, baseRef string) (map[string]bool, int, error) {
+	if baseRef == "" || len(set) == 0 {
+		return set, 0, nil
+	}
+	gitShow := core.GetGitShow()
+	if gitShow == nil {
+		return nil, 0, fmt.Errorf("reading the baseline at %s: git show %w", baseRef, core.ErrNotLinked)
+	}
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return set, 0, nil
+	}
+	repo := gitRoot(filepath.Dir(abs))
+	if repo == "" {
+		return set, 0, nil
+	}
+	rel, ok := inside(repo, abs)
+	if !ok {
+		return set, 0, nil
+	}
+	var base map[string]bool
+	if data, err := gitShow(context.Background(), repo, baseRef, rel); err == nil {
+		base, _ = parseBaseline(io.LimitReader(bytes.NewReader(data), maxBaselineBytes), rel)
+	}
+	kept := make(map[string]bool, len(set))
+	for fp := range set {
+		if base[fp] {
+			kept[fp] = true
+		}
+	}
+	return kept, len(set) - len(kept), nil
 }
 
 func notAReport(path, what string) *core.Error {
