@@ -517,6 +517,7 @@ func (r *reviewer) tagCheck(ctx context.Context, t *target, m *core.Meta, findin
 	if tc == nil {
 		return false
 	}
+	r.expectGitHub(githubRequestsPerTagCheck)
 	ok, err := tc.TagExists(ctx, m.Repository, m.Ref.Version, t.name)
 	if err != nil {
 		r.logf("%s: git tag check: %v", m.Ref, err)

@@ -57,6 +57,25 @@ type reviewer struct {
 	warnings []string
 	onUpdate sync.Mutex
 	stopped  atomic.Bool // the hard stop came: no more --jsonl lines
+	ghPlan   atomic.Int64 // api.github.com requests the run plans
+}
+
+// githubRequestsPerArchive is what a Composer archive on GitHub costs
+// from api.github.com: the zipball request (codeload is not counted).
+const githubRequestsPerArchive = 1
+
+// githubRequestsPerTagCheck is the most a git tag check sends: one
+// request for each tag form it tries.
+const githubRequestsPerTagCheck = 3
+
+// expectGitHub adds n api.github.com requests to the run's plan and
+// tells the Getter, so an anonymous run that can't finish stops before
+// it spends GitHub's hourly allowance (E16).
+func (r *reviewer) expectGitHub(n int) {
+	total := r.ghPlan.Add(int64(n))
+	if g, ok := r.env.Get.(interface{ ExpectGitHub(int) }); ok {
+		g.ExpectGitHub(int(total))
+	}
 }
 
 // Review runs one review (PRD section 13): it loads config and allow
@@ -111,6 +130,16 @@ func Review(ctx context.Context, req Request) (*core.Report, error) {
 		return nil, err
 	}
 	r.advisories(work, picked, rep)
+	composer := 0
+	for _, t := range picked {
+		if t.eco == core.Composer && t.failed == nil && t.picked {
+			composer++
+		}
+	}
+	if composer > 0 {
+		// Both sides of each update may be a GitHub zipball.
+		r.expectGitHub(2 * githubRequestsPerArchive * composer)
+	}
 	results := r.reviewAll(ctx, work, hard, picked)
 
 	for i, res := range results {

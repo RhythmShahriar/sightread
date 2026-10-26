@@ -5,10 +5,13 @@ package run_test
 
 import (
 	"context"
+	"slices"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/core/coretest"
 	"github.com/RhythmShahriar/sightread/run/runtest"
 )
 
@@ -129,5 +132,48 @@ func (gitTagDetector) Info() core.DetectorInfo {
 func (gitTagDetector) Detect(_ context.Context, s *core.Subject, emit func(core.Finding)) {
 	if s.New.GitTag != nil && !*s.New.GitTag {
 		emit(core.Finding{ID: "git-tag-missing", Evidence: core.NewSnippet("no tag v1.1.0")})
+	}
+}
+
+// planGetter records the api.github.com plan run hands the Getter.
+type planGetter struct {
+	*coretest.FakeGetter
+	mu    sync.Mutex
+	plans []int
+}
+
+func (g *planGetter) ExpectGitHub(n int) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.plans = append(g.plans, n)
+}
+
+// TestGitHubPlan: Composer updates (both sides may be GitHub zipballs)
+// and each git tag check are added to the plan; an update that needs
+// neither plans nothing.
+func TestGitHubPlan(t *testing.T) {
+	w := runtest.Install(t)
+	g := &planGetter{FakeGetter: w.Getter}
+	t.Cleanup(core.SwapGetter(func(core.GetterConfig) (core.Getter, error) { return g, nil }))
+	w.Publish(core.Composer, "monolog/monolog", "3.0.0", "3.1.0")
+	w.Install(core.Composer, "monolog/monolog", "3.0.0")
+	w.Publish(core.NPM, "pkg", "1.0.0", "1.1.0")
+	w.Sources[core.NPM].Metas[core.Ref{Eco: core.NPM, Name: "pkg", Version: "1.1.0"}] = &core.Meta{Repository: "https://github.com/acme/pkg"}
+	w.Install(core.NPM, "pkg", "1.0.0")
+	w.Detector.Set("pkg", "owner-change")
+	t.Cleanup(core.SwapTagChecker(func(*core.Env) core.TagChecker { return &tagChecker{} }))
+	review(t, request(t, "all"))
+	if !slices.Equal(g.plans, []int{2, 5}) {
+		t.Errorf("plans %v, want [2 5]", g.plans)
+	}
+
+	w = runtest.Install(t)
+	g = &planGetter{FakeGetter: w.Getter}
+	t.Cleanup(core.SwapGetter(func(core.GetterConfig) (core.Getter, error) { return g, nil }))
+	w.Publish(core.WPPlugin, "akismet", "5.3.3", "5.3.5")
+	w.Install(core.WPPlugin, "akismet", "5.3.3")
+	review(t, request(t, "all"))
+	if len(g.plans) != 0 {
+		t.Errorf("a WordPress update planned %v", g.plans)
 	}
 }
