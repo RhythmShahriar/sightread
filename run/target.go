@@ -68,6 +68,11 @@ func (t *target) installed() *core.Installed {
 }
 
 func (r *reviewer) resolve(ctx context.Context, rep *core.Report) ([]*target, error) {
+	if r.req.To == ToInstalled && (r.req.Changes != nil || len(r.req.Names) == 0) {
+		return nil, &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: r.req.Command,
+			What: "--to installed reviews one named package against --from",
+			Hint: []string{fmt.Sprintf("name it: %s plugin <slug> --to installed --from <version>", cli.Name())}}
+	}
 	switch {
 	case r.req.Changes != nil:
 		return r.resolveChanges(ctx, rep)
@@ -110,9 +115,13 @@ func (r *reviewer) resolveNamed(ctx context.Context, rep *core.Report) ([]*targe
 				What: strings.TrimPrefix(err.Error(), "package ")}
 		}
 	}
+	installedTo := q.To == ToInstalled
+	if installedTo && (q.From == "" || q.FromFile != "" || q.ToFile != "") {
+		return nil, toInstalledNeedsFrom(q.Command, q.Eco, q.Names[0])
+	}
 	var site *core.Site
 	root := ""
-	if q.From == "" && q.FromFile == "" {
+	if installedTo || (q.From == "" && q.FromFile == "") {
 		ir := q.Inventory
 		ir.Ecosystems = []core.Ecosystem{q.Eco}
 		ir.Transitive = true // a named package may be a transitive one
@@ -127,6 +136,26 @@ func (r *reviewer) resolveNamed(ctx context.Context, rep *core.Report) ([]*targe
 	for _, name := range q.Names {
 		t := &target{eco: q.Eco, name: name, explicit: true, toFile: q.ToFile, fromFile: q.FromFile}
 		switch {
+		case installedTo:
+			// The installed version is the candidate and --from the
+			// older side: "is what I run already suspicious?" (PRD 5.3).
+			inst := findInstalled(site, q.Eco, name)
+			if inst == nil {
+				if nc, listed := findNotChecked(site, q.Eco, name); listed {
+					rep.NotChecked = append(rep.NotChecked, nc)
+					continue
+				}
+				return nil, notInstalled(q.Command, q.Eco, name, root)
+			}
+			if inst.Private && !r.routable(inst) {
+				rep.NotChecked = append(rep.NotChecked, r.privateEntry(ctx, inst))
+				continue
+			}
+			if err := fromOlderThanInstalled(q.Command, q.Eco, q.From, inst.Ref.Version); err != nil {
+				return nil, err
+			}
+			t.fromVersion, t.toFixed = q.From, inst.Ref.Version
+			t.constraint, t.private = inst.Constraint, inst.Private
 		case q.FromFile != "":
 			t.fromVersion = cmp.Or(q.From, core.LocalVersion)
 		case q.From != "":
@@ -487,6 +516,30 @@ func wpFolder(eco core.Ecosystem) string {
 }
 
 // notInstalled is E1 for a named package the inventory doesn't list.
+// toInstalledNeedsFrom is the usage error of --to installed without
+// --from: the installed version has nothing to be compared with.
+func toInstalledNeedsFrom(command string, eco core.Ecosystem, name string) error {
+	return &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: command,
+		What: "--to installed reviews the installed version against an older one, so it needs --from",
+		Hint: []string{fmt.Sprintf("give the older version: %s %s %s --to installed --from <version>", cli.Name(), ecoCommand(eco), name)}}
+}
+
+// fromOlderThanInstalled refuses --to installed when --from is not an
+// older version than the one installed (E19): the review would compare
+// nothing or run backwards.
+func fromOlderThanInstalled(command string, eco core.Ecosystem, from, installed string) error {
+	vs := core.Versions(eco)
+	if vs == nil {
+		return fmt.Errorf("%s version scheme %w", eco, core.ErrNotLinked)
+	}
+	if vs.Valid(from) && vs.Valid(installed) && vs.Compare(from, installed) < 0 {
+		return nil
+	}
+	return &core.Error{Code: core.EDowngrade, Exit: cli.ExitUsage, Command: command,
+		What: fmt.Sprintf("--from %s is not older than the installed %s", from, installed),
+		Hint: []string{"--to installed reviews the installed version against an older one: give that with --from"}}
+}
+
 func notInstalled(command string, eco core.Ecosystem, name, root string) error {
 	e := &core.Error{Code: core.ENothingInstalled, Exit: cli.ExitUsage, Command: command,
 		What: fmt.Sprintf("no installed %s under %s", name, root)}

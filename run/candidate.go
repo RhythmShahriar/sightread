@@ -106,7 +106,9 @@ func pickCandidate(ctx context.Context, src core.Source, in pickInput) (pickResu
 	case ToWanted:
 		c.Version = c.Wanted
 	case ToInstalled:
-		c.Version = in.From
+		// resolveNamed fixes the candidate to the installed version, so
+		// a run only gets here without one to name.
+		return pickResult{}, toInstalledNeedsFrom(in.Command, in.Eco, in.Name)
 	default:
 		switch {
 		case published(to):

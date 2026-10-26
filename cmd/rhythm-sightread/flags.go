@@ -142,7 +142,7 @@ func (f *reviewFlags) short(fs *flag.FlagSet, letter, long string) {
 
 // versionFlags registers the Versions group.
 func (f *reviewFlags) versionFlags(fs *flag.FlagSet) {
-	fs.StringVar(&f.to, f.add("to"), "", "the candidate `version`: latest (plugins, themes), wanted (composer, npm), installed, x.y.z, an npm dist-tag, or list to print the published versions")
+	fs.StringVar(&f.to, f.add("to"), "", "the candidate `version`: latest (plugins, themes), wanted (composer, npm), installed (against an older --from), x.y.z, an npm dist-tag, or list to print the published versions")
 	fs.StringVar(&f.from, f.add("from"), "", "the installed `version` (default: read from --path, --wp, --from-tuner or the lockfile)")
 	fs.StringVar(&f.toFile, f.add("to-file"), "", "the candidate from a local zip, tgz or folder at this `path` (premium plugins, vendor downloads); marked unverified")
 	fs.StringVar(&f.fromFile, f.add("from-file"), "", "the installed version from a local zip, tgz or folder at this `path`")

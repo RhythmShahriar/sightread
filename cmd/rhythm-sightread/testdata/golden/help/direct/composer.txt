@@ -7,9 +7,10 @@ the code or any Composer script.
 
 Versions:
   --to <version>                 the candidate version: latest (plugins,
-                                 themes), wanted (composer, npm), installed,
-                                 x.y.z, an npm dist-tag, or list to print the
-                                 published versions
+                                 themes), wanted (composer, npm), installed
+                                 (against an older --from), x.y.z, an npm
+                                 dist-tag, or list to print the published
+                                 versions
   --from <version>               the installed version (default: read from
                                  --path, --wp, --from-tuner or the lockfile)
   --to-file <path>               the candidate from a local zip, tgz or folder

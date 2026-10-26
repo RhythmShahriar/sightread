@@ -4,6 +4,7 @@
 package run_test
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"math/rand/v2"
@@ -92,7 +93,8 @@ func TestCandidateSelection(t *testing.T) {
 		{name: "dist-tag", eco: "npm", from: "1.0.0", to: "next", tags: map[string]string{"next": "3.0.0-beta.1"}, want: "3.0.0-beta.1"},
 		{name: "exact", eco: "wp-plugin", from: "1.0.0", to: "1.2.0", want: "1.2.0"},
 		{name: "pre lets latest pick a prerelease", eco: "wp-plugin", from: "1.0.0", pre: true, want: "3.0.0-beta.1"},
-		{name: "installed", eco: "wp-plugin", from: "1.2.0", to: "installed", want: "up to date"},
+		{name: "installed needs --from", eco: "wp-plugin", from: "1.2.0", to: "installed",
+			err: "rhythm sightread plugin: --to installed reviews the installed version against an older one, so it needs --from\n  give the older version: rhythm sightread plugin pkg --to installed --from <version>"},
 		{name: "same version", eco: "wp-plugin", from: "2.1.0", want: "up to date"},
 		{name: "unknown version is E3", eco: "wp-plugin", from: "1.0.0", to: "9.9.9",
 			err: "rhythm sightread plugin: pkg has no version 9.9.9 on wordpress.org\n  newest: 2.1.0 · see them all: rhythm sightread plugin pkg --to list"},
@@ -133,6 +135,61 @@ func TestCandidateSelection(t *testing.T) {
 				t.Fatalf("updates %v, want → %s", names(rep), c.want)
 			}
 		})
+	}
+}
+
+// TestToInstalled is PRD 5.3's --to installed: the installed version
+// is the candidate and --from the older side, whatever is newer on the
+// source. --from must name an older version.
+func TestToInstalled(t *testing.T) {
+	cases := []struct {
+		name, from, pkg, want, err string
+	}{
+		{name: "reviews installed against --from", from: "1.0.0", want: "pkg 1.0.0→1.2.0"},
+		{name: "same as installed is E19", from: "1.2.0",
+			err: "rhythm sightread plugin: --from 1.2.0 is not older than the installed 1.2.0\n  --to installed reviews the installed version against an older one: give that with --from"},
+		{name: "newer than installed is E19", from: "2.0.0",
+			err: "rhythm sightread plugin: --from 2.0.0 is not older than the installed 1.2.0\n  --to installed reviews the installed version against an older one: give that with --from"},
+		{name: "not installed is E1", from: "1.0.0", pkg: "other",
+			err: "rhythm sightread plugin: no installed other under {root}\n  name the site with --path /var/www/site, read it with --wp \"wp --path=...\" or give the version: --from <version>"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			w := runtest.Install(t)
+			w.Publish(core.WPPlugin, "pkg", "1.0.0", "1.2.0", "2.0.0", "2.1.0")
+			w.Publish(core.WPPlugin, "other", "1.0.0", "1.2.0")
+			w.Install(core.WPPlugin, "pkg", "1.2.0")
+			req := request(t, "plugin")
+			req.Eco, req.Names, req.To, req.From = core.WPPlugin, []string{cmp.Or(c.pkg, "pkg")}, run.ToInstalled, c.from
+			rep, err := run.Review(context.Background(), req)
+			if c.err != "" {
+				want := strings.ReplaceAll(c.err, "{root}", req.Inventory.Root)
+				if err == nil || err.Error() != want {
+					t.Fatalf("error %v, want %q", err, want)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(rep.Updates) != 1 {
+				t.Fatalf("updates %v notes %q", names(rep), rep.Notes)
+			}
+			u := rep.Updates[0]
+			if got := u.Name + " " + u.From.Version + "→" + u.To.Version; got != c.want {
+				t.Errorf("update %q, want %q", got, c.want)
+			}
+		})
+	}
+	for _, args := range [][]string{nil, {"pkg"}} {
+		w := runtest.Install(t)
+		w.Publish(core.WPPlugin, "pkg", "1.0.0", "1.2.0")
+		w.Install(core.WPPlugin, "pkg", "1.2.0")
+		req := request(t, "plugin")
+		req.Eco, req.Names, req.To = core.WPPlugin, args, run.ToInstalled
+		if _, err := run.Review(context.Background(), req); err == nil || !strings.Contains(err.Error(), "--to installed") {
+			t.Errorf("names %q without --from: error %v", args, err)
+		}
 	}
 }
 
