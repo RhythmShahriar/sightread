@@ -62,8 +62,8 @@ reproduce: ## run the benchmark twice and fail if any outcome differs
 	cd .. && $(GO) run -tags testbed ./testbed/bench -tools "$(TOOLS)" -work testbed/$(WORK)/second -results testbed/$(WORK)/second.json -out testbed/$(WORK)/second.md $(BENCH) || true
 	cd .. && $(GO) run -tags testbed ./testbed/bench -diff testbed/$(WORK)/first.json testbed/$(WORK)/second.json
 
-corpus: ## owner only, needs network: fetch the pinned real releases and write the real-release section
-	cd .. && $(GO) run -tags corpus ./testbed/corpus fetch
+corpus: ## owner only, needs network: fetch the pinned real releases and write the real-release section (PIN=1 the first time)
+	cd .. && $(GO) run -tags corpus ./testbed/corpus fetch $(if $(PIN),-pin)
 	cd .. && $(GO) run -tags corpus ./testbed/corpus run
 
 toggle: ## set one scenario's state: make toggle ID=b01 STATE=good

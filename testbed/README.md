@@ -210,3 +210,6 @@ CA, the npm keys, the request log) is ignored by git.
 50 WordPress.org plugins and 50 npm packages pinned by hash in
 `corpus/corpus.lock`, reviews each pair and writes the real-release
 section of docs/benchmark.md. It is never part of `make bench` or CI.
+The lock ships with the versions and no hashes yet: the first
+`make -C testbed corpus PIN=1` records the SHA-256 of each archive, the
+owner commits the lock; every later fetch must match it.
