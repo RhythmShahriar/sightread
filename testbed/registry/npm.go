@@ -92,8 +92,8 @@ func (r *Registry) packument(w http.ResponseWriter, req *http.Request, p *builtP
 	if lv == nil || len(versions) == 0 {
 		// Nothing is served in this state: a package that is only a
 		// withheld candidate. npm answers 404 for a name with no
-		// version, and Sightread reports it as unknown, not as a
-		// network error.
+		// version; Sightread reports it as unknown, not as a network
+		// error.
 		writeJSON(w, http.StatusNotFound, map[string]any{"error": "Not found"})
 		return
 	}

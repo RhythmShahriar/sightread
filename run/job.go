@@ -49,7 +49,7 @@ func (r *reviewer) pick(ctx context.Context, t *target) error {
 	t.cand, t.versions = res.cand, res.versions
 	switch {
 	case res.upToDate && r.sameWorthChecking(t):
-		// Nothing to diff, but the source may serve other bytes under
+		// Nothing to diff. The source may still serve other bytes under
 		// the installed version now: reviewSame checks that.
 		t.picked, t.same = true, true
 	case res.upToDate:
@@ -139,7 +139,7 @@ var archiveSignals = map[string]bool{"unanalysed": true, "archive-path-escape": 
 var sameSignals = map[string]bool{"version-republished": true, "integrity-mismatch": true}
 
 // reviewSame checks an installed version that is already the candidate.
-// There is nothing to diff, but the source must still serve what was
+// There is nothing to diff. The source must still serve what was
 // recorded for it: a lock integrity or commit other than the source's is
 // version-republished (PRD 11) and other bytes under an allowed version
 // are approved-version-changed (SR-9). The archive is fetched only when
@@ -353,9 +353,9 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 					Hint: []string{UnverifiedHint}})
 			}
 		}
-		// Not diffed, but what the archive itself showed still counts:
-		// a limit hit makes the package unanalysed, never clean (PRD
-		// 18), and hostile entries are named whatever the diff says.
+		// Not diffed. What the archive itself showed still counts: a
+		// limit hit makes the package unanalysed, never clean (PRD 18);
+		// hostile entries are named whatever the diff says.
 		s := &core.Subject{Update: core.Ref{Eco: t.eco, Name: t.name, Version: cur.info.Version}, New: cur.meta,
 			NewTree: cur.tree, NewIntegrity: cur.in, Config: r.cfg, Now: r.req.now()}
 		if old != nil {

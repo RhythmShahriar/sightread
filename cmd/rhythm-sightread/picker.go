@@ -107,7 +107,7 @@ const defaultPickWidth = 80
 
 // pickWidth is the terminal's width, or defaultPickWidth when out is not
 // a terminal or reports a width of 0. A pty with no window size would
-// leave huh's input a negative width, and it panics drawing it.
+// leave huh's input a negative width; it panics drawing it.
 func pickWidth(out io.Writer) int {
 	if f, ok := out.(*os.File); ok {
 		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {

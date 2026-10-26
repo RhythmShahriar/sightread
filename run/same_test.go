@@ -27,8 +27,8 @@ func sameRequest(t *testing.T, w *runtest.World) (run.Request, *core.Installed) 
 }
 
 // TestSameVersionRepublished: a lock entry with an integrity is checked
-// against the source even when it is already the latest, and only the
-// byte signals of that check are reported (PRD 11).
+// against the source even when it is already the latest; only the byte
+// signals of that check are reported (PRD 11).
 func TestSameVersionRepublished(t *testing.T) {
 	w := runtest.Install(t)
 	req, inst := sameRequest(t, w)

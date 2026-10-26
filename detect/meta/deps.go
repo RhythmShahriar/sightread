@@ -57,7 +57,7 @@ func (depsDetector) Detect(_ context.Context, s *core.Subject, emit func(core.Fi
 		names = slices.Concat(runtime, dev)
 	} else {
 		// An added package (a lockfile gained it) is itself the new
-		// dependency, and its own name is the one to check. Its own
+		// dependency; its own name is the one to check. Its own
 		// dependencies are new to no one yet, so they are not listed.
 		out.send(addedFinding(s))
 		names = []string{s.Update.Name}

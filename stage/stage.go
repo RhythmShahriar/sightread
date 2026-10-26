@@ -191,7 +191,7 @@ func Run(ctx context.Context, p Plan, rep *core.Report) (tripped bool, err error
 // staging URL that isn't one, a Composer or npm package without the
 // --apply command that installs it and a plugin or theme whose --wp
 // command wp runs on another machine (E21). The last must come first:
-// the review itself runs wp to read the site, and a remote prefix would
+// the review itself runs wp to read the site; a remote prefix would
 // reach the staging host before the refusal.
 // name is the package the run installs, for the E21 hint; the version
 // is not picked yet.

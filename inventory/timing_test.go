@@ -9,8 +9,8 @@ import (
 )
 
 // timeLimit scales a wall-clock bound for the machine: by the race
-// detector's slowdown, and twice on macOS and Windows, whose CI runners
-// are slower. The bounds catch a missing limit or a quadratic scan, not
+// detector's slowdown and twice more on macOS and Windows, whose CI
+// runners are slower. The bounds catch a missing limit or a quadratic scan, not
 // speed; make perf holds the speed targets.
 func timeLimit(d time.Duration) time.Duration {
 	d *= time.Duration(raceSlowdown)
@@ -20,7 +20,7 @@ func timeLimit(d time.Duration) time.Duration {
 	return d
 }
 
-// fasterOfTwo runs f, which returns how long its timed part took, and runs it
+// fasterOfTwo runs f (which returns how long its timed part took) and runs it
 // once more when that is over limit: a machine busy with other jobs for
 // a moment must not fail the bound. It returns the faster time.
 func fasterOfTwo(limit time.Duration, f func() time.Duration) time.Duration {

@@ -158,7 +158,7 @@ func verifyTree(tree *core.Tree, want sums) core.Integrity {
 			Detail: fmt.Sprintf("%d %s differ from WordPress.org's checksums", len(bad), plural(len(bad), "file", "files"))}
 	case cut:
 		// The checksums were there: the archive's limit is why nothing
-		// is verified, and the Integrity fact must say so.
+		// is verified. The Integrity fact must say so.
 		return core.Integrity{By: core.ByNone, Method: MethodChecksumsCut,
 			Detail: "the archive hit a limit, so not every file could be checked"}
 	}

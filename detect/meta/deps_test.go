@@ -131,7 +131,7 @@ func TestTyposquatSharedMaintainer(t *testing.T) {
 }
 
 // An added package is the new dependency: high with an install script,
-// info as a development entry, and its own dependencies are not listed.
+// info as a development entry; its own dependencies are not listed.
 func TestAddedPackageIsNew(t *testing.T) {
 	s := subject(core.NPM)
 	s.Old = nil
