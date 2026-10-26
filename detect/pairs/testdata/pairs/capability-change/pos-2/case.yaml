@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a new user_has_cap filter whose callback grants
+features_old: []
+features_new:
+- kind: cap
+  key: cap:filter:user_has_cap
+  path: inc/access.php
+  line: 15
+  attrs: {grants: 'true'}
+expect:
+- {id: capability-change, min_severity: high}

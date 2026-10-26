@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: set_role('administrator') on a looked-up user
+features_old: []
+features_new:
+- kind: call
+  key: set_role
+  path: inc/support.php
+  line: 14
+  attrs: {arg: '''administrator'''}
+expect:
+- {id: admin-user-create, min_severity: high}

@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'Display Widgets 2017 shape: logged-out visitors get decoded content'
+features_old: []
+features_new:
+- kind: ua-check
+  key: is_user_logged_in
+  path: geolocation.php
+  line: 60
+  attrs: {prints: encoded}
+expect:
+- {id: bot-cloaking, min_severity: high}

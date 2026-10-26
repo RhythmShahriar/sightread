@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: a filter on the users list that only adds a column
+lookalike: true
+features_old: []
+features_new:
+- {kind: hook, key: manage_users_columns, path: admin/columns.php, line: 4}
+- {kind: hook, key: manage_users_custom_column, path: admin/columns.php, line: 9}
+forbid: [admin-user-hidden]

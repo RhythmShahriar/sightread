@@ -1,0 +1,7 @@
+eco: npm
+note: an npm script appending to ~/.npmrc (critical)
+features_old: []
+features_new:
+- {kind: write, key: .npmrc, path: scripts/setup.js, line: 8}
+expect:
+- {id: write-outside-package, min_severity: critical}

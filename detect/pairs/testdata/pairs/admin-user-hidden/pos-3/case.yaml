@@ -1,0 +1,7 @@
+eco: wp-theme
+note: users_list_table_query_args excluding an ID, in a theme
+features_old: []
+features_new:
+- {kind: user-hide, key: users_list_table_query_args, path: functions.php, line: 77}
+expect:
+- {id: admin-user-hidden, min_severity: critical}

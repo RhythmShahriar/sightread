@@ -1,0 +1,13 @@
+eco: wp-theme
+note: an open route in a file that also writes wp-config.php
+features_old: []
+features_new:
+- kind: route
+  key: theme/v1/setup
+  path: inc/api.php
+  line: 5
+  attrs: {permission: open}
+- {kind: write, key: wp-config, path: inc/api.php, line: 30}
+expect:
+- {id: rest-open-route, min_severity: high}
+- {id: write-outside-package, min_severity: critical}

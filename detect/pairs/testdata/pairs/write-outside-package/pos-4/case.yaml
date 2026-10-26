@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: drops a file into mu-plugins (critical)
+features_old: []
+features_new:
+- {kind: write, key: mu-plugins, path: inc/loader.php, line: 21}
+expect:
+- {id: write-outside-package, min_severity: critical}

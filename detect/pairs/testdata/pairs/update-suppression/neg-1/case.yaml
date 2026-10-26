@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a plugin removing only its own entry (its basename) from the update list
+lookalike: true
+features_old: []
+features_new:
+- kind: update-filter
+  key: site_transient_update_plugins
+  path: inc/updater.php
+  line: 40
+  attrs: {scope: own}
+forbid: [update-suppression]

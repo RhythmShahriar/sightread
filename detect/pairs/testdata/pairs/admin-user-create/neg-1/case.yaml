@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: a membership plugin registering customers with the subscriber role
+lookalike: true
+features_old: []
+features_new:
+- kind: user-create
+  key: wp_insert_user
+  path: inc/signup.php
+  line: 30
+  attrs: {role: subscriber}
+- kind: call
+  key: set_role
+  path: inc/signup.php
+  line: 31
+  attrs: {arg: '''customer'''}
+forbid: [admin-user-create]

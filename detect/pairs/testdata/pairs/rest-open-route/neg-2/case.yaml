@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: the open route was already there
+features_old:
+- kind: route
+  key: acme/v1/stats
+  path: inc/rest.php
+  line: 12
+  attrs: {permission: open}
+features_new:
+- kind: route
+  key: acme/v1/stats
+  path: inc/rest.php
+  line: 14
+  attrs: {permission: open}
+forbid: [rest-open-route]

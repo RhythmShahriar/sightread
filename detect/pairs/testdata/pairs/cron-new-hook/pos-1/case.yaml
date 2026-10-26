@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: a documented daily cleanup stays low
+features_old: []
+features_new:
+- {kind: cron, key: acme_daily_cleanup, path: inc/cron.php, line: 5}
+- {kind: hook, key: acme_daily_cleanup, path: inc/cron.php, line: 6}
+expect:
+- {id: cron-new-hook, min_severity: low, max_severity: low}

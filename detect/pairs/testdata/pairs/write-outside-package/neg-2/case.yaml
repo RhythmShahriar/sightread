@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: writes its own cache file and a temp file
+lookalike: true
+features_old: []
+features_new:
+- {kind: write, key: own, path: inc/cache.php, line: 10}
+- {kind: write, key: temp, path: inc/zip.php, line: 20}
+forbid: [write-outside-package]

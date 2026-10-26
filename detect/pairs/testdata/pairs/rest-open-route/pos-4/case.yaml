@@ -1,0 +1,17 @@
+eco: wp-plugin
+note: an open read-only route next to exec code in another file stays medium
+features_old: []
+features_new:
+- kind: route
+  key: acme/v1/public
+  path: inc/rest.php
+  line: 12
+  attrs: {permission: open}
+- kind: eval
+  key: eval
+  path: inc/other.php
+  line: 3
+  attrs: {source: request}
+expect:
+- {id: rest-open-route, max_severity: medium}
+- {id: eval-dynamic}

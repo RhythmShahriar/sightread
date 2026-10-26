@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: the same write was already in the installed version
+features_old:
+- {kind: write, key: content-dir, path: inc/a.php, line: 3}
+features_new:
+- {kind: write, key: content-dir, path: inc/a.php, line: 9}
+forbid: [write-outside-package]

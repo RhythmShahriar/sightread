@@ -1,0 +1,10 @@
+eco: npm
+note: an npm package is not a WordPress plugin; the signal is for wp only
+features_old: []
+features_new:
+- kind: user-create
+  key: wp_insert_user
+  path: php/bridge.php
+  line: 3
+  attrs: {role: administrator}
+forbid: [admin-user-create]

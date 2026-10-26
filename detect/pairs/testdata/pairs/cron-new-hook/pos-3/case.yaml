@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: Action Scheduler job in a file that gains an eval
+features_old: []
+features_new:
+- {kind: cron, key: 'as_schedule_recurring_action:acme_tick', path: inc/jobs.php, line: 9}
+- kind: eval
+  key: eval
+  path: inc/jobs.php
+  line: 30
+  attrs: {source: variable}
+expect:
+- {id: cron-new-hook, min_severity: medium}

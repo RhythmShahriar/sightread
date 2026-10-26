@@ -70,42 +70,17 @@ func (execDetector) Detect(ctx context.Context, s *core.Subject, emit func(core.
 		if ctx.Err() != nil {
 			return
 		}
-		switch f.Kind {
-		case core.FFlow:
-			src, sink, _ := strings.Cut(f.Key, "->")
-			switch {
-			case src == SrcRemote && execSinks[sink]:
-				critical = append(critical, newFinding(SigRemoteFetchExec, f))
-			case src == SrcDecode && execSinks[sink]:
-				critical = append(critical, newFinding(SigDecodeExec, f))
-			case sink == "dyn-call" && (src == SrcRequest || src == SrcRemote):
-				dynamic = append(dynamic, newFinding(SigEvalDynamic, f))
-			}
-		case core.FEval:
-			if bundlerHelper(f) {
-				continue
-			}
-			if hasDecode(f.Attrs[AttrArg]) || f.Attrs[AttrSource] == SrcDecode {
-				critical = append(critical, newFinding(SigDecodeExec, f))
-			} else if alwaysEval[f.Key] || f.Attrs[AttrSource] != SrcLiteral {
-				dynamic = append(dynamic, newFinding(SigEvalDynamic, f))
-			}
-		case core.FDynCall:
-			if bundlerHelper(f) {
-				continue
-			}
-			callee := strings.ToLower(f.Attrs[AttrCallee])
-			built := f.Attrs[AttrBuilt] == "true" && callee != ""
-			switch {
-			case sensitiveCallees[callee] && hasDecode(f.Attrs[AttrArg]):
-				critical = append(critical, newFinding(SigDecodeExec, f))
-			case built, f.Attrs[AttrSource] == SrcRequest, f.Attrs[AttrSource] == SrcRemote, f.Attrs[AttrSource] == SrcDecode:
-				dynamic = append(dynamic, newFinding(SigEvalDynamic, f))
-			}
-		case core.FBlob:
+		if f.Kind == core.FBlob {
 			if fd, ok := blobFinding(s, f); ok {
 				out.send(fd)
 			}
+			continue
+		}
+		switch id := execSignal(f); id {
+		case SigRemoteFetchExec, SigDecodeExec:
+			critical = append(critical, newFinding(id, f))
+		case SigEvalDynamic:
+			dynamic = append(dynamic, newFinding(id, f))
 		}
 	}
 	for _, f := range critical {
@@ -121,6 +96,43 @@ func (execDetector) Detect(ctx context.Context, s *core.Subject, emit func(core.
 	for _, f := range entropyFindings(ctx, s) {
 		out.send(f)
 	}
+}
+
+// execSignal returns the execution signal a new feature raises, or "".
+// It is shared with the detectors that raise on "the same file runs
+// code" (rest-open-route).
+func execSignal(f core.Feature) string {
+	switch f.Kind {
+	case core.FFlow:
+		src, sink, _ := strings.Cut(f.Key, "->")
+		switch {
+		case src == SrcRemote && execSinks[sink]:
+			return SigRemoteFetchExec
+		case src == SrcDecode && execSinks[sink]:
+			return SigDecodeExec
+		case sink == "dyn-call" && (src == SrcRequest || src == SrcRemote):
+			return SigEvalDynamic
+		}
+	case core.FEval:
+		switch {
+		case bundlerHelper(f):
+		case hasDecode(f.Attrs[AttrArg]) || f.Attrs[AttrSource] == SrcDecode:
+			return SigDecodeExec
+		case alwaysEval[f.Key] || f.Attrs[AttrSource] != SrcLiteral:
+			return SigEvalDynamic
+		}
+	case core.FDynCall:
+		callee := strings.ToLower(f.Attrs[AttrCallee])
+		src := f.Attrs[AttrSource]
+		switch {
+		case bundlerHelper(f):
+		case sensitiveCallees[callee] && hasDecode(f.Attrs[AttrArg]):
+			return SigDecodeExec
+		case f.Attrs[AttrBuilt] == "true" && callee != "", src == SrcRequest, src == SrcRemote, src == SrcDecode:
+			return SigEvalDynamic
+		}
+	}
+	return ""
 }
 
 // covers reports whether c spans f's line in the same file.

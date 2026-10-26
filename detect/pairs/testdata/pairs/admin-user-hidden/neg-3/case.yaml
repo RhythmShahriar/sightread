@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: a documentation snippet in docs/
+features_old: []
+features_new:
+- {kind: user-hide, key: pre_user_query, path: docs/hooks.md, line: 12, context: doc}
+forbid: [admin-user-hidden]

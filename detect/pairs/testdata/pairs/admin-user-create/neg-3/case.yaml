@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: the installed version already created this administrator (a setup wizard)
+features_old:
+- kind: user-create
+  key: wp_insert_user
+  path: setup.php
+  line: 10
+  attrs: {role: administrator}
+features_new:
+- kind: user-create
+  key: wp_insert_user
+  path: admin/setup.php
+  line: 12
+  attrs: {role: administrator}
+forbid: [admin-user-create]

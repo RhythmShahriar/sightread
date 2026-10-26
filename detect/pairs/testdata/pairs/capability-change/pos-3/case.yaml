@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: a new role created with unfiltered_html and install_plugins
+features_old: []
+features_new:
+- {kind: cap, key: 'add_role:shop_helper:install_plugins', path: inc/setup.php, line: 22}
+- {kind: cap, key: 'add_role:shop_helper:read', path: inc/setup.php, line: 22}
+expect:
+- {id: capability-change, min_severity: high}

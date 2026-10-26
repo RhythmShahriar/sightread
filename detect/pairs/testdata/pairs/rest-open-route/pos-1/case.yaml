@@ -1,0 +1,28 @@
+eco: wp-plugin
+note: 'Essential Plugin 2.6.7: open route, remote unserialize and @$clean(...) in one file'
+new:
+  includes/class-update.php: |
+    <?php
+    // fetch_ver_info(), version_info_clean() and an open route
+features_old: []
+features_new:
+- kind: route
+  key: acme/v1/info
+  path: includes/class-update.php
+  line: 40
+  attrs: {permission: open}
+  snippet: register_rest_route( 'acme/v1', '/info', array( 'permission_callback' => '__return_true' )
+    )
+- {kind: flow, key: remote->unserialize, path: includes/class-update.php, line: 88, end_line: 90, snippet: '@unserialize(
+    wp_remote_retrieve_body( $r ) )', func: fetch_ver_info}
+- kind: dyn-call
+  key: $clean
+  path: includes/class-update.php
+  line: 118
+  attrs: {source: remote}
+  snippet: '@$clean( $this->version_cache, $this->changelog );'
+  func: version_info_clean
+expect:
+- {id: rest-open-route, min_severity: high}
+- {id: input-unserialize, min_severity: high}
+- {id: eval-dynamic, min_severity: high}

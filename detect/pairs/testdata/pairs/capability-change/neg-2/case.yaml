@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: custom capability for editors and a map_meta_cap filter that only maps its own caps
+lookalike: true
+features_old: []
+features_new:
+- {kind: cap, key: 'add_cap:editor:edit_acme_forms', path: inc/install.php, line: 12}
+- kind: cap
+  key: cap:filter:map_meta_cap
+  path: inc/caps.php
+  line: 3
+  attrs: {grants: 'false'}
+forbid: [capability-change]

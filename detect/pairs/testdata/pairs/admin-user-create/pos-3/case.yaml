@@ -1,0 +1,9 @@
+eco: wp-theme
+note: grant_super_admin on multisite and a direct wp_capabilities write
+features_old: []
+features_new:
+- {kind: call, key: grant_super_admin, path: functions.php, line: 40}
+- {kind: user-create, key: wp_capabilities, path: functions.php, line: 52, snippet: 'update_user_meta(
+    $id, $wpdb->prefix . ''capabilities'', $caps )'}
+expect:
+- {id: admin-user-create, min_severity: high}

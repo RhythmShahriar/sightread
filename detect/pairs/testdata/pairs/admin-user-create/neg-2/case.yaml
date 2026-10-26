@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: the admin-creating call is in the plugin's tests
+features_old: []
+features_new:
+- kind: user-create
+  key: wp_insert_user
+  path: tests/test-users.php
+  line: 8
+  context: test
+  attrs: {role: administrator}
+forbid: [admin-user-create]

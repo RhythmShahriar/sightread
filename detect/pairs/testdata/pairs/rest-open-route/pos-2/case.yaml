@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: an open route alone stays medium
+features_old: []
+features_new:
+- kind: route
+  key: acme/v1/stats
+  path: inc/rest.php
+  line: 12
+  attrs: {permission: open}
+expect:
+- {id: rest-open-route, min_severity: medium, max_severity: medium}

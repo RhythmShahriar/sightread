@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'Gravity Forms 2025 shape: site_transient_update_plugins filter that empties the list'
+features_old: []
+features_new:
+- kind: update-filter
+  key: site_transient_update_plugins
+  path: common.php
+  line: 300
+  attrs: {scope: all}
+expect:
+- {id: update-suppression, min_severity: high}

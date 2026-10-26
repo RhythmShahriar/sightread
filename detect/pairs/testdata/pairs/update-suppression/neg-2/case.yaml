@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: the filter existed before
+features_old:
+- kind: update-filter
+  key: auto_update_plugin
+  path: a.php
+  line: 3
+  attrs: {scope: all}
+features_new:
+- kind: update-filter
+  key: auto_update_plugin
+  path: a.php
+  line: 4
+  attrs: {scope: all}
+forbid: [update-suppression]

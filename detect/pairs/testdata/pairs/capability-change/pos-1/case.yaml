@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: add_cap('subscriber', 'manage_options')
+features_old: []
+features_new:
+- {kind: cap, key: 'add_cap:subscriber:manage_options', path: inc/roles.php, line: 8}
+expect:
+- {id: capability-change, min_severity: high}
