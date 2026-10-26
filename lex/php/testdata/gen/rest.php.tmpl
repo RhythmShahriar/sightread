@@ -1,0 +1,73 @@
+<?php
+/**
+ * REST endpoints, generated benchmark input __N__.
+ *
+ * @package Sample_Gallery
+ */
+
+namespace Sample\Gallery__N__\Rest;
+
+use WP_REST_Request;
+use WP_REST_Response;
+
+/**
+ * Registers the routes.
+ */
+function register_routes() {
+	register_rest_route(
+		'sample-gallery/v__N__',
+		'/items/(?P<id>\d+)',
+		array(
+			'methods'             => 'GET',
+			'callback'            => __NAMESPACE__ . '\get_items',
+			'permission_callback' => static fn () => current_user_can( 'edit_posts' ),
+			'args'                => array(
+				'id' => array(
+					'validate_callback' => static function ( $value ) {
+						return is_numeric( $value ) && $value > 0;
+					},
+				),
+			),
+		)
+	);
+}
+add_action( 'rest_api_init', __NAMESPACE__ . '\register_routes' );
+
+/**
+ * Lists gallery items.
+ *
+ * @param WP_REST_Request $request Request.
+ * @return WP_REST_Response
+ */
+function get_items( WP_REST_Request $request ) {
+	global $wpdb;
+	$id   = (int) $request['id'];
+	$rows = $wpdb->get_results(
+		$wpdb->prepare( "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s", $id, '_gallery_items' )
+	);
+	$out = [];
+	foreach ( $rows as $row ) {
+		$data = json_decode( $row->meta_value, true );
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			continue; // Skip broken rows.
+		}
+		$out[] = [
+			'id'    => $data['id'] ?? 0,
+			'ratio' => isset( $data['w'], $data['h'] ) && $data['h'] ? round( $data['w'] / $data['h'], 3 ) : 1.0,
+			'tags'  => array_map( 'sanitize_key', (array) ( $data['tags'] ?? [] ) ),
+		];
+	}
+	$sql = <<<'SQL'
+SELECT ID, post_title FROM wp_posts WHERE post_type = 'sample_gallery' AND post_status = 'publish'
+SQL;
+	# Cached for an hour.
+	set_transient( 'sample_gallery_items_' . $id, $out, HOUR_IN_SECONDS );
+	return new WP_REST_Response( [ 'items' => $out, 'count' => count( $out ), 'query' => md5( $sql ) ], 200 );
+}
+
+/**
+ * Number helpers.
+ */
+function numbers() {
+	return [ 0x1F, 0b1010, 0o17, 1_000_000, 3.14e-2, .5, PHP_INT_MAX ];
+}
