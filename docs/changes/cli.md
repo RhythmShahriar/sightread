@@ -124,7 +124,8 @@ Shared by `plugin`, `theme`, `composer`, `npm`, `all` and `changes`.
 
 ### Review behaviour
 
-- Same version: `akismet 5.3.5 is already the latest: nothing to compare` (exit 0); also
+- Same version: `akismet 5.3.5 is already the latest: nothing to compare` (exit 0; every `-o`
+  file and `--json`/`--jsonl` stdout still get the report with that note); also
   `<name> <v> is already the newest <constraint> allows: nothing to compare` and `<name> <v> is
   the installed version: nothing to compare`. `--to list` prints the published versions newest
   first (a `<name>:` line before each list when several names are given).
@@ -182,7 +183,8 @@ Every error is `<prog> <command>: <what happened>` with indented hint lines.
   pick one, or write the other with -o <file>`; `--open opens the HTML report, so write one with
   -o <file>.html`; `--sign signs the JSON report, so write one with -o <file>.json`; `--config
   and --no-config can't be used together`; `--soundcheck-fail-on "all": want broke, new or
-  changed`; `--proxy "proxy.example": want a URL such as http://proxy.example:3128`; `--wp "wp
+  changed`; `--proxy "proxy.example": want a URL such as http://proxy.example:3128` (the value is
+shown without its user info: `scheme://host`, else `***@host`); `--wp "wp
   'x": a quote is not closed`; `--only or --skip "wordpress": want an ecosystem (wp-plugin,
   wp-theme, composer, npm) or <eco>:<name>, globs allowed`; `no signal "eval-dynamik" (did you
   mean eval-dynamic?)` / `  list them: <prog> signals`; `--before and --after go together: the
@@ -303,7 +305,8 @@ when compare has changes at `--soundcheck-fail-on`.
   `rhythm sightread all`, `rhythm sightread init ci`).
 - `init ci [--fail-on high] [--sarif] [--comment] [--force]` writes
   `.github/workflows/sightread.yml` at the repository root (PRD 16's file, actions pinned by
-  commit; a dev build pins `RhythmShahriar/sightread@v1 # pin this to a commit SHA`). Output:
+  commit with `version: <x.y.z>` under `with:`; a dev build writes
+  `RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below`). Output:
 
   ```
   Wrote .github/workflows/sightread.yml: reviews lockfile changes on pull requests and everything each Monday, fails on high or worse.
@@ -377,7 +380,11 @@ report it`.
 
 ## GitHub Action
 
-`RhythmShahriar/sightread@v1`, composite, every action pinned by commit.
+`RhythmShahriar/sightread@v1`, composite, every action pinned by commit. Linux and macOS runners
+only: on Windows install fails with `::error::the Sightread Action runs on Linux and macOS runners,
+not Windows: use runs-on: ubuntu-latest or macos-latest`. A commit ref without the `version` input
+installs the latest release and warns `Sightread's version isn't pinned: the action is pinned to
+commit <sha> but a commit doesn't name a release, ...`.
 
 | Input | Default |
 |---|---|
