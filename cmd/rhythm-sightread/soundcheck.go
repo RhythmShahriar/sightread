@@ -62,7 +62,10 @@ func (c *reviewCommand) runSoundcheck(ctx context.Context, p *plan, rep *core.Re
 		return false, err
 	}
 	plan := stage.Plan{Command: c.name, Staging: sc.Staging, WP: wp, Apply: sc.ApplyArgv, FailOn: failOn, Rollback: sc.Rollback,
-		Anyway: sc.Anyway, SkipRoadie: sc.Skip, Args: args, Production: cfg.Soundcheck.Production, Dir: ".",
+		Anyway: sc.Anyway, SkipRoadie: sc.Skip, Args: args, Production: cfg.Soundcheck.Production,
+		// The site's own .soundcheck/config.yaml, not the working folder's:
+		// a run from elsewhere with --path must still see its production list.
+		Dir:   cmp.Or(p.req.Inventory.Root, "."),
 		Tree:  func(ref core.Ref) (*core.Tree, bool) { return run.CachedTree(cache, ref, blobs) },
 		Blobs: blobs, Log: p.req.Log}
 	tripped, err = stage.Run(ctx, plan, rep)

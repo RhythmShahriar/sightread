@@ -412,3 +412,24 @@ func TestNamedErrors(t *testing.T) {
 		t.Errorf("E1: exit %d %q", code, errOut)
 	}
 }
+
+// TestSoundcheckProductionUnderPath: the production list of the site's
+// .soundcheck/config.yaml applies when the run starts outside the site
+// and names it with --path.
+func TestSoundcheckProductionUnderPath(t *testing.T) {
+	w := world(t)
+	site := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(site, ".soundcheck"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(site, ".soundcheck", "config.yaml"), []byte("production:\n  - shop.example.com\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	chdir(t, t.TempDir())
+	args := append(soundcheckUpdate(w, "https://shop.example.com", "wp --path=/srv/staging"), "--path", site)
+	code, _, errOut := execute(t, args...)
+	if code != cli.ExitUsage || !strings.Contains(errOut, "shop.example.com is listed as production in ") ||
+		!strings.Contains(errOut, ".soundcheck/config.yaml") {
+		t.Errorf("exit %d stderr %q", code, errOut)
+	}
+}
