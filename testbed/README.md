@@ -131,7 +131,7 @@ never be checked.
 | b09 | bad | theme serves fetched SEO spam to bots only | REVIEW: bot-cloaking, outbound-new-domain |
 | b10 | bad | new postinstall that downloads and runs a script | HOLD: npm-install-script-new, remote-fetch-exec |
 | b11 | bad | postinstall bundle reads .npmrc and the token | HOLD: npm-install-script-new, credential-access |
-| b12 | bad | all maintainers replaced, a patch adds network code | REVIEW: owner-change, outbound-new-domain |
+| b12 | bad | all maintainers replaced, a patch adds network code | HOLD: owner-change, outbound-new-domain |
 | b13 | bad | lock gains a typosquat with an install script | HOLD: typosquat, dependency-new, npm-install-script-new |
 | b14 | bad | lock resolved moved off the registry | REVIEW: lockfile-source-change |
 | b15 | bad | new autoload.files that fetches and runs remote code | HOLD: composer-autoload-files, remote-fetch-exec |

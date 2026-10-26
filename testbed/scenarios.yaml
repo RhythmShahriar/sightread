@@ -132,7 +132,9 @@ scenarios:
     package: b12-dateutil
     command: ["npm", "dateutil", "--path", "projects/wp"]
     expect:
-      verdict: REVIEW
+      # The new host is a raw (TEST-NET) address, high on its own, and
+      # owner-change raises it to critical (PRD 12.1 and 12.2).
+      verdict: HOLD
       exit: 1
       signals:
         - {id: owner-change, min_severity: high}
