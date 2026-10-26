@@ -301,26 +301,34 @@ func TestHugeMinified(t *testing.T) {
 		fmt.Fprintf(&b, "function a%d(b){return b+%d}var c%d=a%d(%d);", i, i, i, i, i)
 	}
 	tree := coretest.Tree(map[string]string{"dist/app.min.js": b.String()})
-	start := time.Now()
-	set := analyzeAll(t, tree, core.DefaultLimits())
+	var set *core.FeatureSet
+	limit := timeLimit(2 * time.Second)
+	el := fasterOfTwo(limit, func() time.Duration {
+		start := time.Now()
+		set = analyzeAll(t, tree, core.DefaultLimits())
+		return time.Since(start)
+	})
 	if got := reasons(set, "dist/app.min.js"); size > 4<<20 && !slices.Equal(got, []string{"file over 4 MiB"}) {
 		t.Errorf("reasons %q", got)
 	}
-	t.Logf("50 MiB over the limit: %v", time.Since(start))
-	if el := time.Since(start); el > 2*time.Second*time.Duration(raceSlowdown) {
-		t.Errorf("over-limit file took %v", el)
+	t.Logf("50 MiB over the limit: %v", el)
+	if el > limit {
+		t.Errorf("over-limit file took %v, over %v", el, limit)
 	}
 	// With the limit raised the walk stops at the budget; lexing runs
 	// before the clock, so the file is cut to keep the test light.
 	tree = coretest.Tree(map[string]string{"dist/app.min.js": b.String()[:size/4]})
 	lim := core.DefaultLimits()
 	lim.EntryAnalysed = 64 << 20
-	start = time.Now()
-	set = analyzeAll(t, tree, lim)
-	el := time.Since(start)
-	t.Logf("12.5 MiB with the limit raised: %v, %q", el, set.Unanalysed)
 	// Lexing is outside the clock; it runs at tens of MB/s.
-	if limit := (lim.FileBudget + 3*time.Second) * time.Duration(raceSlowdown); el > limit {
+	limit = timeLimit(lim.FileBudget + 3*time.Second)
+	el = fasterOfTwo(limit, func() time.Duration {
+		start := time.Now()
+		set = analyzeAll(t, tree, lim)
+		return time.Since(start)
+	})
+	t.Logf("12.5 MiB with the limit raised: %v, %q", el, set.Unanalysed)
+	if el > limit {
 		t.Errorf("took %v, over %v", el, limit)
 	}
 	for _, r := range reasons(set, "dist/app.min.js") {

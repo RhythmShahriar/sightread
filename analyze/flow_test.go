@@ -235,7 +235,7 @@ func FuzzFlow(f *testing.F) {
 		}
 		start := time.Now()
 		fs := flowFeatures(streamFor(l, string(src)), src, "f", core.CtxCode)
-		if d := time.Since(start); d > 2*time.Second*raceSlowdown {
+		if d := time.Since(start); d > timeLimit(2*time.Second) {
 			t.Fatalf("analysing %d bytes took %v", len(src), d)
 		}
 		for _, ft := range fs {
@@ -257,7 +257,7 @@ func TestFlowBlowup(t *testing.T) {
 	b.WriteString("$f59($_GET['x']);\n")
 	start := time.Now()
 	_ = flows(langPHP, b.String())
-	if d := time.Since(start); d > 2*time.Second*raceSlowdown {
+	if d := time.Since(start); d > timeLimit(2*time.Second) {
 		t.Errorf("took %v", d)
 	}
 	deep := strings.Repeat("(", 5000) + "x" + strings.Repeat(")", 5000)

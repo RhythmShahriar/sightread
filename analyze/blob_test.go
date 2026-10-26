@@ -235,7 +235,7 @@ func TestDecodeBomb(t *testing.T) {
 	if len(un) != 1 || un[0].Reason != reasonDecodeLimit || un[0].Path != "bomb.php" {
 		t.Errorf("unanalysed %v, want decode limit reached", un)
 	}
-	if d := time.Since(start); d > 5*time.Second*raceSlowdown {
+	if d := time.Since(start); d > timeLimit(5*time.Second) {
 		t.Errorf("took %v", d)
 	}
 	if left := budget.left.Load(); left < -1 {

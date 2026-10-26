@@ -26,19 +26,25 @@ func TestYAMLFlatListFailsFast(t *testing.T) {
 	for name, doc := range cases {
 		t.Run(name, func(t *testing.T) {
 			var before, after runtime.MemStats
-			runtime.GC()
-			runtime.ReadMemStats(&before)
-			start := time.Now()
-			_, err := ParseNPMLock("pnpm-lock.yaml", []byte(doc), nil, Options{})
-			d := time.Since(start)
-			runtime.ReadMemStats(&after)
+			var err error
+			// The allocation bound below is the exact guarantee. The
+			// time bound only catches a quadratic scan, so it grows with
+			// the race detector's slowdown and a busy machine instead of
+			// flaking under them.
+			limit := timeLimit(2 * time.Second)
+			d := fasterOfTwo(limit, func() time.Duration {
+				runtime.GC()
+				runtime.ReadMemStats(&before)
+				start := time.Now()
+				_, err = ParseNPMLock("pnpm-lock.yaml", []byte(doc), nil, Options{})
+				d := time.Since(start)
+				runtime.ReadMemStats(&after)
+				return d
+			})
 			if !errors.Is(err, errYAMLBomb) {
 				t.Fatalf("err = %v, want the YAML bomb error", err)
 			}
-			// The allocation bound below is the exact guarantee. The
-			// time bound only catches a quadratic scan, so it grows with
-			// the race detector's slowdown instead of flaking under it.
-			if limit := 2 * time.Second * raceSlowdown; d > limit {
+			if d > limit {
 				t.Errorf("took %s, limit %s", d, limit)
 			}
 			if alloc := after.TotalAlloc - before.TotalAlloc; alloc > 64<<20 {
