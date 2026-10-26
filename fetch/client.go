@@ -309,6 +309,11 @@ func (c *Client) Download(ctx context.Context, rawURL string, limit int64, blobs
 	h256, h512, h1 := sha256.New(), sha512.New(), sha1.New() //nolint:gosec // see the import
 	src := &idleReader{r: resp.Body, i: idle}
 	sum, n, err := blobs.Put(ctx, io.TeeReader(src, io.MultiWriter(h256, h512, h1)), limit)
+	if err == nil && ctx.Err() != nil {
+		// A body cut short by the idle stop can still end in a clean EOF
+		// (seen under load), so a canceled download is never complete.
+		err = ctx.Err()
+	}
 	switch {
 	case errors.Is(err, core.ErrTooLarge):
 		return core.Download{}, tooLargeError(archiveName(u), &SizeError{Limit: limit})
