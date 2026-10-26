@@ -111,7 +111,7 @@ func pickFinding(rep *core.Report, path, sel string) (*core.Update, *core.Findin
 // either archive is no longer cached; the renderer then says so.
 func findingHunks(ctx context.Context, u *core.Update, f *core.Finding) []core.Hunk {
 	differ := core.GetDiffer()
-	if differ == nil || f.File == "" {
+	if differ == nil || f.File == "" || f.InLockfile() {
 		return nil
 	}
 	cache, err := run.CacheDir("")

@@ -407,3 +407,23 @@ func TestFindingCounted(t *testing.T) {
 		t.Error("a plain finding doesn't count")
 	}
 }
+
+// TestInLockfile: only the lockfile signals on a lockfile path are
+// outside the package; a package that ships a lockfile keeps its diff.
+func TestInLockfile(t *testing.T) {
+	for _, c := range []struct {
+		f    core.Finding
+		want bool
+	}{
+		{core.Finding{ID: "dependency-new", File: "package-lock.json"}, true},
+		{core.Finding{ID: "version-republished", File: "api/composer.lock"}, true},
+		{core.Finding{ID: "lockfile-source-change", File: "yarn.lock"}, true},
+		{core.Finding{ID: "dependency-new", File: "package.json"}, false},
+		{core.Finding{ID: "eval-dynamic", File: "package-lock.json"}, false},
+		{core.Finding{ID: "dependency-new"}, false},
+	} {
+		if got := c.f.InLockfile(); got != c.want {
+			t.Errorf("%s %q: %v, want %v", c.f.ID, c.f.File, got, c.want)
+		}
+	}
+}

@@ -357,3 +357,29 @@ func validateDocument(t *testing.T, doc []byte) {
 		t.Errorf("%s\n%s", strings.Join(errs, "\n"), doc)
 	}
 }
+
+// TestExplainFindingInLockfile: a finding in the project's lockfile says
+// it is outside the package, never that the archive is missing, and its
+// JSON is complete.
+func TestExplainFindingInLockfile(t *testing.T) {
+	withStandIns(t)
+	r := coretest.SampleReport()
+	u := &r.Updates[0]
+	u.Findings = append(u.Findings, core.Finding{ID: "dependency-new", Title: "New dependency", Severity: cli.SeverityMedium,
+		Confidence: core.Confirmed, File: "web/package-lock.json", Line: 9, Fingerprint: "lockfp"})
+	var b bytes.Buffer
+	if err := explainer(t).RenderFinding(&b, r, "lockfp", nil, testOpts, false); err != nil {
+		t.Fatal(err)
+	}
+	out := b.String()
+	if strings.Contains(out, archiveMissing) || !strings.Contains(strings.Join(strings.Fields(out), " "), "web/package-lock.json:9"+inLockfile) {
+		t.Errorf("lockfile finding:\n%s", out)
+	}
+	b.Reset()
+	if err := explainer(t).RenderFinding(&b, r, "lockfp", nil, testOpts, true); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(b.String(), `"complete": true`) {
+		t.Errorf("lockfile finding JSON is not complete:\n%s", b.String())
+	}
+}

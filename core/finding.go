@@ -32,7 +32,7 @@ type Finding struct {
 	Title       string
 	Severity    cli.Severity
 	Confidence  Confidence
-	File        string // path inside the package
+	File        string // path inside the package, or the project's lockfile (InLockfile)
 	Line        int
 	EndLine     int
 	Evidence    Snippet
@@ -55,6 +55,21 @@ type Finding struct {
 // Counted reports whether f counts for the verdict and the gate.
 func (f *Finding) Counted() bool {
 	return f.Allowed == nil && !f.Ignored && !f.Baselined && !f.BelowConfidence
+}
+
+// lockfileSignals are the signals that point at the project's lockfile
+// (the entry of the package) rather than at a file in the package.
+var lockfileSignals = map[string]bool{"dependency-new": true, "version-republished": true, "lockfile-source-change": true}
+
+// lockfileNames are the lockfiles inventory reads.
+var lockfileNames = map[string]bool{"composer.lock": true, "npm-shrinkwrap.json": true, "package-lock.json": true,
+	"pnpm-lock.yaml": true, "yarn.lock": true, "bun.lock": true}
+
+// InLockfile reports whether f points at the project's lockfile, which
+// is outside the package: no archive holds it, so there is no package
+// diff to show for it.
+func (f *Finding) InLockfile() bool {
+	return lockfileSignals[f.ID] && lockfileNames[path.Base(f.File)]
 }
 
 // Subject is everything detectors look at for one update.

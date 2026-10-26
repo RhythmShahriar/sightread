@@ -29,6 +29,9 @@ const (
 	// archiveMissing is printed when the cached archives of a finding's
 	// update are gone, so its hunk can't be shown (PRD 6.5).
 	archiveMissing = "archive not in cache: run the review again (it is cached for 30 days)"
+	// inLockfile follows the lockfile path of a finding there: it is
+	// not in the package, so no archive has a diff of it.
+	inLockfile = " is the project's lockfile, not a file in the package, so there is no package diff to show"
 	// explainMissing is printed for a catalogue signal with no explain
 	// text linked. A release never shows it: a test of the linked binary
 	// fails on it.
@@ -57,7 +60,8 @@ func (Explainer) RenderSignal(w io.Writer, id string, o core.WriteOptions, asJSO
 // signal's explain text. sel is the finding's 1-based number in report
 // order (updates as listed, then their findings) or its fingerprint.
 // hunks are the changed file's hunks with 6 lines of context, read from
-// the cached archives; nil means the archives are no longer cached.
+// the cached archives; nil means the archives are no longer cached. A
+// finding in the project's lockfile has no hunks and says so.
 func (Explainer) RenderFinding(w io.Writer, r *core.Report, sel string, hunks []core.Hunk, o core.WriteOptions, asJSON bool) error {
 	u, f, n, total, err := selectFinding(r, sel)
 	if err != nil {
@@ -72,12 +76,14 @@ func (Explainer) RenderFinding(w io.Writer, r *core.Report, sel string, hunks []
 	shown := findingHunks(f, hunks)
 	if asJSON {
 		d := core.ExplainData{Signal: s, Explain: e, Finding: f, Hunks: shown}
-		return writeExplainJSON(w, d, has && (f.File == "" || hunks != nil), o)
+		return writeExplainJSON(w, d, has && (f.File == "" || f.InLockfile() || hunks != nil), o)
 	}
 	ew := newExplainWriter(o)
 	ew.finding(u, f, n, total)
 	switch {
 	case f.File == "":
+	case f.InLockfile():
+		ew.section("Diff", where(f)+inLockfile)
 	case hunks == nil:
 		ew.section("Diff", archiveMissing)
 	case len(shown) == 0:
