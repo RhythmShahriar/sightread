@@ -16,7 +16,7 @@ const lockfileHint = "run your package manager once to write one; Sightread comp
 // noLockfileError is E4: dir holds none of the lockfiles looked for.
 // command is the Sightread command ("npm", "composer"), or empty for
 // the caller to fill in.
-func noLockfileError(command, dir string, looked []string) error {
+func noLockfileError(command, dir string, looked []string) *core.Error {
 	return &core.Error{
 		Code:    core.ENoLockfile,
 		Exit:    2,

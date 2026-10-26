@@ -353,6 +353,11 @@ func ReadNPM(dir string, opt Options) (*Packages, error) {
 	if err != nil {
 		return nil, err
 	}
+	return readNPMFile(dir, name, opt)
+}
+
+// readNPMFile is ReadNPM for the lockfile name in dir.
+func readNPMFile(dir, name string, opt Options) (*Packages, error) {
 	data, err := readAll(filepath.Join(dir, name), maxLockBytes)
 	if err != nil {
 		return nil, err
