@@ -205,6 +205,12 @@ func tooLargeError(what string, e *SizeError) *core.Error {
 	}
 }
 
+// OverSize is E11 for what (a file the user named, say) being over
+// limit bytes.
+func OverSize(what string, limit int64) *core.Error {
+	return tooLargeError(what, &SizeError{Limit: limit})
+}
+
 // TooLarge is E11 for an archive whose entries add up to more than limit
 // (package archive returns it; Package.Wrap names the package).
 func TooLarge(limit int64) *core.Error {
