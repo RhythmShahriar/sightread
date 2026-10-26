@@ -133,12 +133,28 @@ type flowHooks struct {
 	sums    []*summary       // per body; nil until computed
 	cur     *summary         // the summary being computed, or nil
 	out     map[string]core.Feature
+	obs     observer // sees the last pass over each body, or nil
+	observe bool     // the current pass is the one obs sees
+}
+
+// observer is what feature extraction (extract.go) plugs into the flow
+// pass: it sees every call and include of the last pass over each body,
+// with folded values and taint, so extraction needs no walk of its own.
+type observer interface {
+	begin(h *flowHooks)
+	call(s *scope, c *callSite)
+	include(s *scope, r res, sp [2]int, line int, kind string)
 }
 
 // flowFeatures returns the FFlow features of one file's stream. src is
 // the file text, for snippets.
 func flowFeatures(st *stream, src []byte, path, ctx string) []core.Feature {
-	h := &flowHooks{st: st, lines: newLineIndex(src), path: path, ctx: ctx,
+	return runFlow(st, newLineIndex(src), path, ctx, nil)
+}
+
+// runFlow is flowFeatures with an observer.
+func runFlow(st *stream, lines lineIndex, path, ctx string, obs observer) []core.Feature {
+	h := &flowHooks{st: st, lines: lines, path: path, ctx: ctx, obs: obs,
 		funcs: map[string][]int{}, methods: map[string][]int{}, out: map[string]core.Feature{}}
 	bodies, skip := splitBodies(st)
 	h.bodies = bodies
@@ -155,6 +171,9 @@ func flowFeatures(st *stream, src []byte, path, ctx string) []core.Feature {
 		} else {
 			h.funcs[b.key] = append(h.funcs[b.key], i)
 		}
+	}
+	if obs != nil {
+		obs.begin(h)
 	}
 	budget := func() int { return 8*len(st.toks) + 4096 }
 	// Phase 1: summaries, parameters marked.
@@ -182,7 +201,8 @@ func flowFeatures(st *stream, src []byte, path, ctx string) []core.Feature {
 	// a sink read earlier.
 	for _, b := range bodies {
 		s := newScope(f, b.name)
-		for range 2 {
+		for pass := range 2 {
+			h.observe = pass == 1
 			f.budget = budget()
 			s.env = map[string]value{}
 			s.walk(b.start, b.end)
@@ -230,11 +250,17 @@ func (h *flowHooks) read(s *scope, name string, line int) taint {
 	return t
 }
 
-func (h *flowHooks) include(s *scope, r res, line int, kind string) {
+func (h *flowHooks) include(s *scope, r res, sp [2]int, line int, kind string) {
 	h.sink(s, sinkInclude, kind, line, r.t)
+	if h.observe && h.obs != nil {
+		h.obs.include(s, r, sp, line, kind)
+	}
 }
 
 func (h *flowHooks) call(s *scope, c *callSite) taint {
+	if h.observe && h.obs != nil && h.cur == nil {
+		h.obs.call(s, c)
+	}
 	if s.lang == langPHP {
 		return h.callPHP(s, c)
 	}

@@ -108,6 +108,7 @@ type callSite struct {
 	spans   [][2]int // each argument's token range
 	isNew   bool
 	line    int
+	pos     int // token index where the callee expression starts
 }
 
 // arg returns argument i or an empty result.
@@ -133,8 +134,9 @@ type hooks interface {
 	// call sees every call and returns the taint its result gets
 	// beyond plain propagation (a source, a summary).
 	call(s *scope, c *callSite) taint
-	// include sees a PHP include or require of an expression.
-	include(s *scope, r res, line int, kind string)
+	// include sees a PHP include or require of an expression; sp is
+	// the expression's token range.
+	include(s *scope, r res, sp [2]int, line int, kind string)
 	// read returns the taint of reading a name: a PHP superglobal
 	// ($_GET) or a JS path (process.env).
 	read(s *scope, name string, line int) taint
@@ -517,7 +519,7 @@ func (s *scope) unary(i, end int) (res, int) {
 			if s.lang == langPHP {
 				r, j := s.exprArg(i+1, end)
 				s.settle(&r)
-				s.f.h.include(s, r, t.line, t.text)
+				s.f.h.include(s, r, [2]int{i + 1, j}, t.line, t.text)
 				return res{}, j
 			}
 		}
@@ -552,7 +554,7 @@ func (s *scope) postfix(i, end int, isNew bool) (res, int) {
 		case t.punct("("):
 			k := s.closeAt(j, end)
 			args, spans := s.args(j+1, k)
-			r = s.call(r, recv, method, args, spans, plain, isNew, s.toks[start].line)
+			r = s.call(r, recv, method, args, spans, plain, isNew, start)
 			isNew = false
 			recv, method, lv = nil, "", ""
 			// require("m") gives the module, as plain as its name.
@@ -702,6 +704,9 @@ func (s *scope) args(i, k int) ([]res, [][2]int) {
 		if j == i {
 			j = i + 1
 		}
+		// An unclosed bracket inside the argument lets the expression
+		// run one past k.
+		j = min(j, k)
 		out = append(out, r)
 		spans = append(spans, [2]int{i, j})
 		for j < k && !s.toks[j].punct(",") {
@@ -723,8 +728,9 @@ var phpCallbacks = map[string]int{
 }
 
 // call evaluates a call once its callee and arguments are known.
-func (s *scope) call(callee res, recv *res, method string, args []res, spans [][2]int, plain, isNew bool, line int) res {
-	c := &callSite{callee: callee, recv: recv, method: method, args: args, spans: spans, isNew: isNew, line: line}
+func (s *scope) call(callee res, recv *res, method string, args []res, spans [][2]int, plain, isNew bool, pos int) res {
+	line := s.toks[pos].line
+	c := &callSite{callee: callee, recv: recv, method: method, args: args, spans: spans, isNew: isNew, line: line, pos: pos}
 	switch callee.v.kind {
 	case vName:
 		c.name = callee.v.s
@@ -811,7 +817,7 @@ func (s *scope) call(callee res, recv *res, method string, args []res, spans [][
 		}
 	} else if recv != nil && (method == "call" || method == "apply") && recv.v.kind == vName {
 		d := &callSite{name: trimRoot(recv.v.s), folded: c.folded, dynamic: c.dynamic, via: method,
-			callee: *recv, line: line}
+			callee: *recv, line: line, pos: pos}
 		if len(args) > 1 {
 			d.args, d.spans = args[1:], spans[1:]
 		}
@@ -837,7 +843,7 @@ func (s *scope) call(callee res, recv *res, method string, args []res, spans [][
 // tainted data is a dynamic call of that data.
 func (s *scope) callback(c *callSite, pos int) taint {
 	cb := c.args[pos]
-	d := &callSite{via: c.name, callee: cb, line: c.line, dynamic: true}
+	d := &callSite{via: c.name, callee: cb, line: c.line, pos: c.pos, dynamic: true}
 	rest := 0
 	if c.name == "call_user_func" || c.name == "call_user_func_array" || c.name == "forward_static_call" || c.name == "forward_static_call_array" {
 		rest = pos + 1

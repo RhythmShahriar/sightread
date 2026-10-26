@@ -12,10 +12,10 @@ import (
 // recHooks records every call the evaluator resolves.
 type recHooks struct{ calls []*callSite }
 
-func (r *recHooks) call(_ *scope, c *callSite) taint { r.calls = append(r.calls, c); return taint{} }
-func (r *recHooks) include(*scope, res, int, string) {}
-func (r *recHooks) read(*scope, string, int) taint   { return taint{} }
-func (r *recHooks) propagates(string) bool           { return false }
+func (r *recHooks) call(_ *scope, c *callSite) taint         { r.calls = append(r.calls, c); return taint{} }
+func (r *recHooks) include(*scope, res, [2]int, int, string) {}
+func (r *recHooks) read(*scope, string, int) taint           { return taint{} }
+func (r *recHooks) propagates(string) bool                   { return false }
 
 func streamFor(l lang, src string) *stream {
 	if l == langPHP {
