@@ -1,0 +1,35 @@
+lockfileVersion: 5.4
+
+specifiers:
+  '@babel/runtime': ^7.20.0
+  react-dom: ^17.0.2
+
+dependencies:
+  '@babel/runtime': 7.20.13
+  react-dom: 17.0.2_react@17.0.2
+
+packages:
+
+  /@babel/runtime/7.20.13:
+    resolution: {integrity: sha512-gt3PKXs0DBoL9xCvOIIZ2NEqAGZqHjAnmVbfQtB620V0uReIQutpel14KcneZuer7UioY8ALKZ7iocavvzTNFA==}
+    engines: {node: '>=6.9.0'}
+    dependencies:
+      regenerator-runtime: 0.13.11
+    dev: false
+
+  /react-dom/17.0.2_react@17.0.2:
+    resolution: {integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==}
+    peerDependencies:
+      react: 17.0.2
+    dependencies:
+      react: 17.0.2
+    dev: false
+
+  /react/17.0.2:
+    resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
+    engines: {node: '>=0.10.0'}
+    dev: false
+
+  /regenerator-runtime/0.13.11:
+    resolution: {integrity: sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==}
+    dev: false

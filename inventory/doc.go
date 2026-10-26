@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: MIT
 
 // Package inventory finds what a folder has installed: WordPress plugins
-// and themes, composer.lock and npm lockfiles. It reads lockfile changes
-// for `changes` and installed folders as trees. It registers with
+// and themes (from disk, the user's wp command or a Tuner report),
+// composer.lock and npm lockfiles. It reads lockfile changes for
+// `changes` and installed folders as trees. Reader registers with
 // core.SetInventory.
 //
-// The skeleton created this package empty; the inventory lane builds it.
+// It only reads files: nothing it finds is run. wp-config.php, .env
+// and other secrets files are never opened.
 package inventory

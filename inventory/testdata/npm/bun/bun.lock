@@ -1,0 +1,36 @@
+{
+  // Bun writes this file; it is JSON with comments and trailing commas.
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "app-bun",
+      "dependencies": {
+        "react": "^18.3.1",
+        "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.1.0",
+      },
+    },
+    "packages/ui": {
+      "name": "ui",
+      "dependencies": {
+        "clsx": "^2.1.0",
+      },
+    },
+  },
+  "packages": {
+    "@types/bun": ["@types/bun@1.1.13", "", { "dependencies": { "bun-types": "1.1.34" } }, "sha512-KmQxSBgVWCl6RSuerlLGZlIWfdxkKqat0nxN61+qu4y1KDn0Ll3j7v1Pl8GnaL3a/U6GGWVTJh75ap62kR1E8Q=="],
+    "bun-types": ["bun-types@1.1.34", "", { "dependencies": { "@types/node": "~20.12.8" } }, "sha512-br5QygTEL/TwB4uQOb96Ky22j4Gq2WxWH/8Oqv20fk5HagwKXo/akB+LiYgSfzexCt6kkcUaVm+bKiPl71xPvw=="],
+    "@types/node": ["@types/node@20.12.14", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-scnD59RpYD91xngrQQLGkE+6UrHUPzeKZWhhjBSa3HSkwjbQc38+q3RoIVEwxQGRw3M+j5hpNAM+lgV0cSn60Q=="],
+    /* clsx is used by the ui workspace */
+    "clsx": ["clsx@2.1.1", "", {}, "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="],
+    "js-tokens": ["js-tokens@4.0.0", "", {}, "sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ=="],
+    "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
+    "react": ["react@18.3.1", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ=="],
+    "ui": ["ui@workspace:packages/ui"],
+    "undici-types": ["undici-types@5.26.5", "", {}, "sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h3XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA=="],
+    "xlsx": ["xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz", {}],
+    "bun-types/@types/node": ["@types/node@20.12.8", "", { "dependencies": { "undici-types": "~5.26.4" } }, "sha512-NU0rJLJnshZWdE/097cdCBbyW1h4hEg0xpovcoAQYHl8dnEyp/NAOiE45pvc+Bd1Dt+2r94v2eGFpQJhb6fAmA=="],
+  }
+}

@@ -1,0 +1,138 @@
+{
+  "Root": "",
+  "Kind": "wordpress",
+  "WordPress": "6.6.2",
+  "Installed": [
+    {
+      "Ref": {
+        "Eco": "wp-plugin",
+        "Name": "contact-form-7",
+        "Version": "5.9.8"
+      },
+      "Path": "",
+      "Lockfile": "",
+      "LockLine": 0,
+      "Integrity": "",
+      "Reference": "",
+      "Resolved": "",
+      "ResolvedKind": "",
+      "Constraint": "",
+      "Direct": false,
+      "Dev": false,
+      "UpdateURI": "",
+      "AutoUpdate": false,
+      "Private": false
+    },
+    {
+      "Ref": {
+        "Eco": "wp-plugin",
+        "Name": "woocommerce",
+        "Version": "9.3.3"
+      },
+      "Path": "",
+      "Lockfile": "",
+      "LockLine": 0,
+      "Integrity": "",
+      "Reference": "",
+      "Resolved": "",
+      "ResolvedKind": "",
+      "Constraint": "",
+      "Direct": false,
+      "Dev": false,
+      "UpdateURI": "",
+      "AutoUpdate": false,
+      "Private": false
+    },
+    {
+      "Ref": {
+        "Eco": "wp-plugin",
+        "Name": "elementor",
+        "Version": "3.24.5"
+      },
+      "Path": "",
+      "Lockfile": "",
+      "LockLine": 0,
+      "Integrity": "",
+      "Reference": "",
+      "Resolved": "",
+      "ResolvedKind": "",
+      "Constraint": "",
+      "Direct": false,
+      "Dev": false,
+      "UpdateURI": "",
+      "AutoUpdate": false,
+      "Private": false
+    },
+    {
+      "Ref": {
+        "Eco": "wp-plugin",
+        "Name": "acme+pro",
+        "Version": "1.0.0"
+      },
+      "Path": "",
+      "Lockfile": "",
+      "LockLine": 0,
+      "Integrity": "",
+      "Reference": "",
+      "Resolved": "",
+      "ResolvedKind": "",
+      "Constraint": "",
+      "Direct": false,
+      "Dev": false,
+      "UpdateURI": "",
+      "AutoUpdate": false,
+      "Private": true
+    },
+    {
+      "Ref": {
+        "Eco": "wp-theme",
+        "Name": "storefront",
+        "Version": "4.6.0"
+      },
+      "Path": "",
+      "Lockfile": "",
+      "LockLine": 0,
+      "Integrity": "",
+      "Reference": "",
+      "Resolved": "",
+      "ResolvedKind": "",
+      "Constraint": "",
+      "Direct": false,
+      "Dev": false,
+      "UpdateURI": "",
+      "AutoUpdate": false,
+      "Private": false
+    }
+  ],
+  "NotChecked": [
+    {
+      "Eco": "",
+      "Name": "wordpress",
+      "Version": "6.6.2",
+      "Reason": "core",
+      "Text": "WordPress core is out of scope in v1",
+      "Hint": "WordPress core updates come signed from WordPress.org"
+    },
+    {
+      "Eco": "wp-plugin",
+      "Name": "wordfence",
+      "Version": "",
+      "Reason": "fetch-failed",
+      "Text": "the Tuner report has no version for it",
+      "Hint": "give the version with --from \u003cversion\u003e, or read the site with --path or --wp"
+    },
+    {
+      "Eco": "wp-plugin",
+      "Name": "acme+pro",
+      "Version": "1.0.0",
+      "Reason": "not-wporg",
+      "Text": "not on WordPress.org",
+      "Hint": "give the vendor's zip with --to-file"
+    }
+  ],
+  "Warnings": [
+    "the Tuner report found plugin elementor 3.24.5 from a weak hint only, so the version may be wrong",
+    "skipped a Tuner component of type \"widget\": want plugin or theme",
+    "skipped a Tuner plugin entry with a name or version Sightread can't use: \"../etc\" \"1.0\""
+  ]
+}

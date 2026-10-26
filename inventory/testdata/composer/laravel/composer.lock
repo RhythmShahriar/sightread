@@ -1,0 +1,2797 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "f3c1d2e0a9b8c7d6e5f4a3b2c1d0e9f8",
+    "packages": [
+        {
+            "name": "brick/math",
+            "version": "v1.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/brick/math.git",
+                "reference": "921a607b9599ddb5eeaaf9dc350e84053fe40bff"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/brick/math/zipball/921a607b9599ddb5eeaaf9dc350e84053fe40bff",
+                "reference": "921a607b9599ddb5eeaaf9dc350e84053fe40bff",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package brick/math",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "carbonphp/carbon-doctrine-types",
+            "version": "v7.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/carbonphp/carbon-doctrine-types.git",
+                "reference": "603117b8c226b2689a57ca2cfa57078518b5f815"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/carbonphp/carbon-doctrine-types/zipball/603117b8c226b2689a57ca2cfa57078518b5f815",
+                "reference": "603117b8c226b2689a57ca2cfa57078518b5f815",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package carbonphp/carbon-doctrine-types",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "dflydev/dot-access-data",
+            "version": "v3.3.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dflydev/dot-access-data.git",
+                "reference": "b3121b9b2cacd39619bb0b5c81792167be72d5bf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dflydev/dot-access-data/zipball/b3121b9b2cacd39619bb0b5c81792167be72d5bf",
+                "reference": "b3121b9b2cacd39619bb0b5c81792167be72d5bf",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package dflydev/dot-access-data",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "doctrine/inflector",
+            "version": "v4.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/inflector.git",
+                "reference": "32259d24bc9e33c86bdd86a7944bdcf41c092f29"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/inflector/zipball/32259d24bc9e33c86bdd86a7944bdcf41c092f29",
+                "reference": "32259d24bc9e33c86bdd86a7944bdcf41c092f29",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package doctrine/inflector",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "doctrine/lexer",
+            "version": "v6.4.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/doctrine/lexer.git",
+                "reference": "54b237a746f14b0ea146103e049ae5cf3ae26ca7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/lexer/zipball/54b237a746f14b0ea146103e049ae5cf3ae26ca7",
+                "reference": "54b237a746f14b0ea146103e049ae5cf3ae26ca7",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package doctrine/lexer",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "dragonmantank/cron-expression",
+            "version": "v7.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dragonmantank/cron-expression.git",
+                "reference": "f9039c2d640f587f18b7aad75e9ea9640140e8fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/dragonmantank/cron-expression/zipball/f9039c2d640f587f18b7aad75e9ea9640140e8fe",
+                "reference": "f9039c2d640f587f18b7aad75e9ea9640140e8fe",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package dragonmantank/cron-expression",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "egulias/email-validator",
+            "version": "v5.10.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/egulias/email-validator.git",
+                "reference": "4aef3d6dfc0acdbd355fd4bb310353b617bc41e5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/egulias/email-validator/zipball/4aef3d6dfc0acdbd355fd4bb310353b617bc41e5",
+                "reference": "4aef3d6dfc0acdbd355fd4bb310353b617bc41e5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package egulias/email-validator",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "fruitcake/php-cors",
+            "version": "v1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fruitcake/php-cors.git",
+                "reference": "012d4004c4d958859a7643039c27a5fdcad18a37"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fruitcake/php-cors/zipball/012d4004c4d958859a7643039c27a5fdcad18a37",
+                "reference": "012d4004c4d958859a7643039c27a5fdcad18a37",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package fruitcake/php-cors",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "graham-campbell/result-type",
+            "version": "v3.3.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/graham-campbell/result-type.git",
+                "reference": "b3c7e02b28c85584c4b7e57f6e0fa1e248f33c4c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/graham-campbell/result-type/zipball/b3c7e02b28c85584c4b7e57f6e0fa1e248f33c4c",
+                "reference": "b3c7e02b28c85584c4b7e57f6e0fa1e248f33c4c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package graham-campbell/result-type",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "guzzlehttp/guzzle",
+            "version": "v4.4.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzlehttp/guzzle.git",
+                "reference": "34f1efda3045f0b5bd780b96f89c417df15dfce2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzlehttp/guzzle/zipball/34f1efda3045f0b5bd780b96f89c417df15dfce2",
+                "reference": "34f1efda3045f0b5bd780b96f89c417df15dfce2",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package guzzlehttp/guzzle",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "guzzlehttp/promises",
+            "version": "v1.6.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzlehttp/promises.git",
+                "reference": "062c5f7c5ac96158e1224fd85753432301c1c4d6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzlehttp/promises/zipball/062c5f7c5ac96158e1224fd85753432301c1c4d6",
+                "reference": "062c5f7c5ac96158e1224fd85753432301c1c4d6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package guzzlehttp/promises",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "guzzlehttp/psr7",
+            "version": "v5.13.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzlehttp/psr7.git",
+                "reference": "4d48743dd03e7c28660e782ae68bb811deb71ddc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzlehttp/psr7/zipball/4d48743dd03e7c28660e782ae68bb811deb71ddc",
+                "reference": "4d48743dd03e7c28660e782ae68bb811deb71ddc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package guzzlehttp/psr7",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "guzzlehttp/uri-template",
+            "version": "v6.1.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzlehttp/uri-template.git",
+                "reference": "517fab5d6af430ade25c0f5fb60f3f90476481bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzlehttp/uri-template/zipball/517fab5d6af430ade25c0f5fb60f3f90476481bb",
+                "reference": "517fab5d6af430ade25c0f5fb60f3f90476481bb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package guzzlehttp/uri-template",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/framework",
+            "version": "v6.13.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/framework.git",
+                "reference": "ede760fd71075a2afe6986e7c1e69b2abdda7e1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/ede760fd71075a2afe6986e7c1e69b2abdda7e1b",
+                "reference": "ede760fd71075a2afe6986e7c1e69b2abdda7e1b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/framework",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/prompts",
+            "version": "v2.1.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/prompts.git",
+                "reference": "a147e5465428520e8e6aa5e8152cc668222cf4c3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/prompts/zipball/a147e5465428520e8e6aa5e8152cc668222cf4c3",
+                "reference": "a147e5465428520e8e6aa5e8152cc668222cf4c3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/prompts",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/serializable-closure",
+            "version": "v2.9.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/serializable-closure.git",
+                "reference": "a945bf3529f792ac0e27132e4619e55305a09244"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/serializable-closure/zipball/a945bf3529f792ac0e27132e4619e55305a09244",
+                "reference": "a945bf3529f792ac0e27132e4619e55305a09244",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/serializable-closure",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/tinker",
+            "version": "v5.9.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/tinker.git",
+                "reference": "d9efc619fbd8b8080f87f8da3f2c91168565f04e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/tinker/zipball/d9efc619fbd8b8080f87f8da3f2c91168565f04e",
+                "reference": "d9efc619fbd8b8080f87f8da3f2c91168565f04e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/tinker",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/commonmark",
+            "version": "v3.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/commonmark.git",
+                "reference": "270c1be3223acca3cc81854c5b7b92252c736414"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/commonmark/zipball/270c1be3223acca3cc81854c5b7b92252c736414",
+                "reference": "270c1be3223acca3cc81854c5b7b92252c736414",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/commonmark",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/config",
+            "version": "v2.8.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/config.git",
+                "reference": "a8894fae2ca16a564667d3d802e818ee8334267b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/config/zipball/a8894fae2ca16a564667d3d802e818ee8334267b",
+                "reference": "a8894fae2ca16a564667d3d802e818ee8334267b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/config",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/flysystem",
+            "version": "v3.7.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/flysystem.git",
+                "reference": "b7b7d7855edf66b4a786b85dcc23bde7565c2b4f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/flysystem/zipball/b7b7d7855edf66b4a786b85dcc23bde7565c2b4f",
+                "reference": "b7b7d7855edf66b4a786b85dcc23bde7565c2b4f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/flysystem",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/flysystem-local",
+            "version": "v1.12.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/flysystem-local.git",
+                "reference": "9cebe893d017a940fe4c6bb0dbb10105f2fdfb7f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/flysystem-local/zipball/9cebe893d017a940fe4c6bb0dbb10105f2fdfb7f",
+                "reference": "9cebe893d017a940fe4c6bb0dbb10105f2fdfb7f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/flysystem-local",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/mime-type-detection",
+            "version": "v4.14.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/mime-type-detection.git",
+                "reference": "ce27d9b6d2771e4b8f78af4cf37d4e5b3d9d20a1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/mime-type-detection/zipball/ce27d9b6d2771e4b8f78af4cf37d4e5b3d9d20a1",
+                "reference": "ce27d9b6d2771e4b8f78af4cf37d4e5b3d9d20a1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/mime-type-detection",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/uri",
+            "version": "v5.11.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/uri.git",
+                "reference": "4b75029a00c7c1fa0cfde37eb1bc1fcdacb161d9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/uri/zipball/4b75029a00c7c1fa0cfde37eb1bc1fcdacb161d9",
+                "reference": "4b75029a00c7c1fa0cfde37eb1bc1fcdacb161d9",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/uri",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "league/uri-interfaces",
+            "version": "v2.6.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/league/uri-interfaces.git",
+                "reference": "a6d08db057ec251b4a65f26fa1aec6754a87ef99"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/league/uri-interfaces/zipball/a6d08db057ec251b4a65f26fa1aec6754a87ef99",
+                "reference": "a6d08db057ec251b4a65f26fa1aec6754a87ef99",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package league/uri-interfaces",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "monolog/monolog",
+            "version": "v7.2.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/monolog/monolog.git",
+                "reference": "f2ddd99b797a2496337b5413b08e00153cd8c85a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/monolog/monolog/zipball/f2ddd99b797a2496337b5413b08e00153cd8c85a",
+                "reference": "f2ddd99b797a2496337b5413b08e00153cd8c85a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package monolog/monolog",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "nesbot/carbon",
+            "version": "v1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nesbot/carbon.git",
+                "reference": "97007549cd9bc77dd84a1b22f4c48365984bdee0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nesbot/carbon/zipball/97007549cd9bc77dd84a1b22f4c48365984bdee0",
+                "reference": "97007549cd9bc77dd84a1b22f4c48365984bdee0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package nesbot/carbon",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "nette/schema",
+            "version": "v1.11.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nette/schema.git",
+                "reference": "0baf9b0bc4ab2e509ec1ac8ca08484b29108aef6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nette/schema/zipball/0baf9b0bc4ab2e509ec1ac8ca08484b29108aef6",
+                "reference": "0baf9b0bc4ab2e509ec1ac8ca08484b29108aef6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package nette/schema",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "nette/utils",
+            "version": "v7.4.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nette/utils.git",
+                "reference": "641edf1ee5db76415ad43b1fca025011ffe4c9d5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nette/utils/zipball/641edf1ee5db76415ad43b1fca025011ffe4c9d5",
+                "reference": "641edf1ee5db76415ad43b1fca025011ffe4c9d5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package nette/utils",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "nikic/php-parser",
+            "version": "v4.2.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nikic/php-parser.git",
+                "reference": "32e97f56580429ae526927da783fede5bc7c8011"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nikic/php-parser/zipball/32e97f56580429ae526927da783fede5bc7c8011",
+                "reference": "32e97f56580429ae526927da783fede5bc7c8011",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package nikic/php-parser",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "nunomaduro/termwind",
+            "version": "v4.10.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nunomaduro/termwind.git",
+                "reference": "ca5810623396041a2c5908676a9d82fca68c7be6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nunomaduro/termwind/zipball/ca5810623396041a2c5908676a9d82fca68c7be6",
+                "reference": "ca5810623396041a2c5908676a9d82fca68c7be6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package nunomaduro/termwind",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpoption/phpoption",
+            "version": "v5.5.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpoption/phpoption.git",
+                "reference": "d5e6ee36ca92b8064b9a70b873451cfc62c48076"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpoption/phpoption/zipball/d5e6ee36ca92b8064b9a70b873451cfc62c48076",
+                "reference": "d5e6ee36ca92b8064b9a70b873451cfc62c48076",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpoption/phpoption",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/clock",
+            "version": "v5.1.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/clock.git",
+                "reference": "418c4488b4f97b62c8de996ceaee629e24e7cdde"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/clock/zipball/418c4488b4f97b62c8de996ceaee629e24e7cdde",
+                "reference": "418c4488b4f97b62c8de996ceaee629e24e7cdde",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/clock",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/container",
+            "version": "v5.11.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/container.git",
+                "reference": "4baf9dfc5a5578a9b5a7ba16748e2afa9ebd5c7f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/container/zipball/4baf9dfc5a5578a9b5a7ba16748e2afa9ebd5c7f",
+                "reference": "4baf9dfc5a5578a9b5a7ba16748e2afa9ebd5c7f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/container",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/event-dispatcher",
+            "version": "v6.6.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/event-dispatcher.git",
+                "reference": "56b20cc1c0a3801a6c5126be3f4efccce47268ce"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/event-dispatcher/zipball/56b20cc1c0a3801a6c5126be3f4efccce47268ce",
+                "reference": "56b20cc1c0a3801a6c5126be3f4efccce47268ce",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/event-dispatcher",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/http-client",
+            "version": "v7.11.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/http-client.git",
+                "reference": "fbc0573ea0f246616783a4a40f5a5f52767f24c5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/http-client/zipball/fbc0573ea0f246616783a4a40f5a5f52767f24c5",
+                "reference": "fbc0573ea0f246616783a4a40f5a5f52767f24c5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/http-client",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/http-factory",
+            "version": "v4.1.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/http-factory.git",
+                "reference": "31f64ce099d73a4530fab6bd519ff345db9d0b84"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/http-factory/zipball/31f64ce099d73a4530fab6bd519ff345db9d0b84",
+                "reference": "31f64ce099d73a4530fab6bd519ff345db9d0b84",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/http-factory",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/http-message",
+            "version": "v2.1.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/http-message.git",
+                "reference": "a1c3d6d3bcb176f1af4be2cebf8e312f9e17ec68"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/http-message/zipball/a1c3d6d3bcb176f1af4be2cebf8e312f9e17ec68",
+                "reference": "a1c3d6d3bcb176f1af4be2cebf8e312f9e17ec68",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/http-message",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/log",
+            "version": "v7.1.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/log.git",
+                "reference": "617ed754cf71da6f72af45000be0cd463d895944"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/log/zipball/617ed754cf71da6f72af45000be0cd463d895944",
+                "reference": "617ed754cf71da6f72af45000be0cd463d895944",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/log",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psr/simple-cache",
+            "version": "v4.14.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psr/simple-cache.git",
+                "reference": "3e5eec55914eec6aad749de3ed6c82bcfbc24acb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psr/simple-cache/zipball/3e5eec55914eec6aad749de3ed6c82bcfbc24acb",
+                "reference": "3e5eec55914eec6aad749de3ed6c82bcfbc24acb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psr/simple-cache",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "psy/psysh",
+            "version": "v1.12.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/psy/psysh.git",
+                "reference": "9cc94c4026496d1e776154d4aa008d15847b880b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/psy/psysh/zipball/9cc94c4026496d1e776154d4aa008d15847b880b",
+                "reference": "9cc94c4026496d1e776154d4aa008d15847b880b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package psy/psysh",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "ralouphie/getallheaders",
+            "version": "v6.12.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ralouphie/getallheaders.git",
+                "reference": "ec579db14378256869a364df0f525af1e2ad3fbe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ralouphie/getallheaders/zipball/ec579db14378256869a364df0f525af1e2ad3fbe",
+                "reference": "ec579db14378256869a364df0f525af1e2ad3fbe",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package ralouphie/getallheaders",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "ramsey/collection",
+            "version": "v7.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ramsey/collection.git",
+                "reference": "f16b6c58f87a145801a5465be82f6142cd9a6d2e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ramsey/collection/zipball/f16b6c58f87a145801a5465be82f6142cd9a6d2e",
+                "reference": "f16b6c58f87a145801a5465be82f6142cd9a6d2e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package ramsey/collection",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "ramsey/uuid",
+            "version": "v3.8.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ramsey/uuid.git",
+                "reference": "28952c0111390634fdda7939ed274323c65a1580"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ramsey/uuid/zipball/28952c0111390634fdda7939ed274323c65a1580",
+                "reference": "28952c0111390634fdda7939ed274323c65a1580",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package ramsey/uuid",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "spatie/laravel-package-tools",
+            "version": "v2.12.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/spatie/laravel-package-tools.git",
+                "reference": "1cdde0fdda84ad4a25f7f88c83a9b035d3e40cfd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/spatie/laravel-package-tools/zipball/1cdde0fdda84ad4a25f7f88c83a9b035d3e40cfd",
+                "reference": "1cdde0fdda84ad4a25f7f88c83a9b035d3e40cfd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package spatie/laravel-package-tools",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/clock",
+            "version": "v1.9.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/clock.git",
+                "reference": "097aad22ab2afa8cdacb4b223babae92914a4ffa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/clock/zipball/097aad22ab2afa8cdacb4b223babae92914a4ffa",
+                "reference": "097aad22ab2afa8cdacb4b223babae92914a4ffa",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/clock",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/console",
+            "version": "v2.6.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/console.git",
+                "reference": "16b22c165166897f6d26c25d331eaca386bda7af"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/console/zipball/16b22c165166897f6d26c25d331eaca386bda7af",
+                "reference": "16b22c165166897f6d26c25d331eaca386bda7af",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/console",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/css-selector",
+            "version": "v1.4.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/css-selector.git",
+                "reference": "944ebaf93d0a5f36ed86df19b9352683b3b6504d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/css-selector/zipball/944ebaf93d0a5f36ed86df19b9352683b3b6504d",
+                "reference": "944ebaf93d0a5f36ed86df19b9352683b3b6504d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/css-selector",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/deprecation-contracts",
+            "version": "v1.2.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/deprecation-contracts.git",
+                "reference": "02db0e5664248d107af44afb2d68fd5a0f80d1ea"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/02db0e5664248d107af44afb2d68fd5a0f80d1ea",
+                "reference": "02db0e5664248d107af44afb2d68fd5a0f80d1ea",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/deprecation-contracts",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/error-handler",
+            "version": "v7.15.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/error-handler.git",
+                "reference": "6ffcc04944db5fca7c59cb2a9f4a2838768b6e2c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/error-handler/zipball/6ffcc04944db5fca7c59cb2a9f4a2838768b6e2c",
+                "reference": "6ffcc04944db5fca7c59cb2a9f4a2838768b6e2c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/error-handler",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/event-dispatcher",
+            "version": "v1.5.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/event-dispatcher.git",
+                "reference": "95d1531f7f833f083679ba879ebbbc61a6647dab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/95d1531f7f833f083679ba879ebbbc61a6647dab",
+                "reference": "95d1531f7f833f083679ba879ebbbc61a6647dab",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/event-dispatcher",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/event-dispatcher-contracts",
+            "version": "v7.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/event-dispatcher-contracts.git",
+                "reference": "fa08b0525d13821bec302b42df8711602a0c03f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher-contracts/zipball/fa08b0525d13821bec302b42df8711602a0c03f5",
+                "reference": "fa08b0525d13821bec302b42df8711602a0c03f5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/event-dispatcher-contracts",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/finder",
+            "version": "v3.12.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/finder.git",
+                "reference": "bc2e0d28a1bab92d589411c4c6ba8a58774ee968"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/bc2e0d28a1bab92d589411c4c6ba8a58774ee968",
+                "reference": "bc2e0d28a1bab92d589411c4c6ba8a58774ee968",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/finder",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/http-foundation",
+            "version": "v2.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/http-foundation.git",
+                "reference": "aa0b341ee20883a2bbb8882aad43dcdc97afd126"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/aa0b341ee20883a2bbb8882aad43dcdc97afd126",
+                "reference": "aa0b341ee20883a2bbb8882aad43dcdc97afd126",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/http-foundation",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/http-kernel",
+            "version": "v3.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/http-kernel.git",
+                "reference": "b636c05cd2b3c3eb98d0a405504fb1b15cdb9437"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/http-kernel/zipball/b636c05cd2b3c3eb98d0a405504fb1b15cdb9437",
+                "reference": "b636c05cd2b3c3eb98d0a405504fb1b15cdb9437",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/http-kernel",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/mailer",
+            "version": "v3.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/mailer.git",
+                "reference": "2634307d231db23cbd064d9c2d796de66255174f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/mailer/zipball/2634307d231db23cbd064d9c2d796de66255174f",
+                "reference": "2634307d231db23cbd064d9c2d796de66255174f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/mailer",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/mime",
+            "version": "v7.9.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/mime.git",
+                "reference": "69533483e4bce97c5011d2bfb2d70f025b5c1e14"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/69533483e4bce97c5011d2bfb2d70f025b5c1e14",
+                "reference": "69533483e4bce97c5011d2bfb2d70f025b5c1e14",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/mime",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-ctype",
+            "version": "v7.2.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-ctype.git",
+                "reference": "62afeab2b34370a65c2da1af3f471c06c1421531"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/62afeab2b34370a65c2da1af3f471c06c1421531",
+                "reference": "62afeab2b34370a65c2da1af3f471c06c1421531",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-ctype",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-intl-grapheme",
+            "version": "v7.9.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-intl-grapheme.git",
+                "reference": "69ff1b3dff9debdfa6d0a4bc606db217aaa2ffe5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-grapheme/zipball/69ff1b3dff9debdfa6d0a4bc606db217aaa2ffe5",
+                "reference": "69ff1b3dff9debdfa6d0a4bc606db217aaa2ffe5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-intl-grapheme",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-intl-idn",
+            "version": "v2.9.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-intl-idn.git",
+                "reference": "a98d14ba3f05d6ab115bdb7d07054b826fa0c81a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-idn/zipball/a98d14ba3f05d6ab115bdb7d07054b826fa0c81a",
+                "reference": "a98d14ba3f05d6ab115bdb7d07054b826fa0c81a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-intl-idn",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-intl-normalizer",
+            "version": "v6.7.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-intl-normalizer.git",
+                "reference": "e79513ea9148649b63b0b390a977763294e3ad99"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-intl-normalizer/zipball/e79513ea9148649b63b0b390a977763294e3ad99",
+                "reference": "e79513ea9148649b63b0b390a977763294e3ad99",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-intl-normalizer",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-mbstring",
+            "version": "v5.12.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-mbstring.git",
+                "reference": "dcdf5ec255040fe8e80992d23406edda66ce7137"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/dcdf5ec255040fe8e80992d23406edda66ce7137",
+                "reference": "dcdf5ec255040fe8e80992d23406edda66ce7137",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-mbstring",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php80",
+            "version": "v6.14.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php80.git",
+                "reference": "ee3594a0dd619d60f2749e512bfd9812abaf525c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/ee3594a0dd619d60f2749e512bfd9812abaf525c",
+                "reference": "ee3594a0dd619d60f2749e512bfd9812abaf525c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-php80",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php83",
+            "version": "v1.13.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php83.git",
+                "reference": "0d5b6f250ad2928ce0b2d2178b68199433009ba3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php83/zipball/0d5b6f250ad2928ce0b2d2178b68199433009ba3",
+                "reference": "0d5b6f250ad2928ce0b2d2178b68199433009ba3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-php83",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/polyfill-uuid",
+            "version": "v2.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-uuid.git",
+                "reference": "122911def5ba01901104d1faa34af383a3c680ee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-uuid/zipball/122911def5ba01901104d1faa34af383a3c680ee",
+                "reference": "122911def5ba01901104d1faa34af383a3c680ee",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/polyfill-uuid",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/process",
+            "version": "v4.14.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/process.git",
+                "reference": "ce13854b273cbf5f05a74b9213d989994d09e79f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/process/zipball/ce13854b273cbf5f05a74b9213d989994d09e79f",
+                "reference": "ce13854b273cbf5f05a74b9213d989994d09e79f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/process",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/routing",
+            "version": "v2.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/routing.git",
+                "reference": "a6082ea8f388873efaf2b326b824fabff606888c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/routing/zipball/a6082ea8f388873efaf2b326b824fabff606888c",
+                "reference": "a6082ea8f388873efaf2b326b824fabff606888c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/routing",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/service-contracts",
+            "version": "v1.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/service-contracts.git",
+                "reference": "012a060a9036996a05fabfedb493f6dda00bb13b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/012a060a9036996a05fabfedb493f6dda00bb13b",
+                "reference": "012a060a9036996a05fabfedb493f6dda00bb13b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/service-contracts",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/string",
+            "version": "v2.11.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/string.git",
+                "reference": "1bd521a226f14cb240d375390265b98fb66be22f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/string/zipball/1bd521a226f14cb240d375390265b98fb66be22f",
+                "reference": "1bd521a226f14cb240d375390265b98fb66be22f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/string",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/translation",
+            "version": "v7.3.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/translation.git",
+                "reference": "f3fe24b622cb7bf249ef2cd89e6d6774a4345ecd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/f3fe24b622cb7bf249ef2cd89e6d6774a4345ecd",
+                "reference": "f3fe24b622cb7bf249ef2cd89e6d6774a4345ecd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/translation",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/translation-contracts",
+            "version": "v2.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/translation-contracts.git",
+                "reference": "16359cd27db92dae2211ce60236f4a07a0d0f2cc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/16359cd27db92dae2211ce60236f4a07a0d0f2cc",
+                "reference": "16359cd27db92dae2211ce60236f4a07a0d0f2cc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/translation-contracts",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/uid",
+            "version": "v1.14.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/uid.git",
+                "reference": "9ef851856275792ea3552ed8781add3be8494e60"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/uid/zipball/9ef851856275792ea3552ed8781add3be8494e60",
+                "reference": "9ef851856275792ea3552ed8781add3be8494e60",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/uid",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/var-dumper",
+            "version": "v2.7.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/var-dumper.git",
+                "reference": "a7bbe1db2c4d2561a108065adfc191eef36812d0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/var-dumper/zipball/a7bbe1db2c4d2561a108065adfc191eef36812d0",
+                "reference": "a7bbe1db2c4d2561a108065adfc191eef36812d0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/var-dumper",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "tijsverkoyen/css-to-inline-styles",
+            "version": "v4.11.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tijsverkoyen/css-to-inline-styles.git",
+                "reference": "cb3b411365bcd75bdf89c23f2e699a1c72a621fb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tijsverkoyen/css-to-inline-styles/zipball/cb3b411365bcd75bdf89c23f2e699a1c72a621fb",
+                "reference": "cb3b411365bcd75bdf89c23f2e699a1c72a621fb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package tijsverkoyen/css-to-inline-styles",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "vlucas/phpdotenv",
+            "version": "v7.1.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vlucas/phpdotenv.git",
+                "reference": "619a0f2a6c70aa54eeb1543e89db30fbfacacea1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vlucas/phpdotenv/zipball/619a0f2a6c70aa54eeb1543e89db30fbfacacea1",
+                "reference": "619a0f2a6c70aa54eeb1543e89db30fbfacacea1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package vlucas/phpdotenv",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "voku/portable-ascii",
+            "version": "v2.14.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/voku/portable-ascii.git",
+                "reference": "1e2554d48124c235b890285753550163e7b8b30a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/voku/portable-ascii/zipball/1e2554d48124c235b890285753550163e7b8b30a",
+                "reference": "1e2554d48124c235b890285753550163e7b8b30a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package voku/portable-ascii",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "webmozart/assert",
+            "version": "v4.7.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webmozart/assert.git",
+                "reference": "37320dabbd8382462376275b7d23d90e70c340c8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webmozart/assert/zipball/37320dabbd8382462376275b7d23d90e70c340c8",
+                "reference": "37320dabbd8382462376275b7d23d90e70c340c8",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package webmozart/assert",
+            "time": "2026-09-01T10:00:00+00:00"
+        }
+    ],
+    "packages-dev": [
+        {
+            "name": "fakerphp/faker",
+            "version": "v5.14.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fakerphp/faker.git",
+                "reference": "4efc30420af9462cd35f309598f5379d05583ea6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fakerphp/faker/zipball/4efc30420af9462cd35f309598f5379d05583ea6",
+                "reference": "4efc30420af9462cd35f309598f5379d05583ea6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package fakerphp/faker",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "filp/whoops",
+            "version": "v8.12.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/filp/whoops.git",
+                "reference": "7c551d8d8abaafdef41e3b94170a5fe32516b2bd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/filp/whoops/zipball/7c551d8d8abaafdef41e3b94170a5fe32516b2bd",
+                "reference": "7c551d8d8abaafdef41e3b94170a5fe32516b2bd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package filp/whoops",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "hamcrest/hamcrest-php",
+            "version": "v5.9.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/hamcrest/hamcrest-php.git",
+                "reference": "d92f1a3e0077f0ca0b44de4a40064e015db7a15b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/hamcrest/hamcrest-php/zipball/d92f1a3e0077f0ca0b44de4a40064e015db7a15b",
+                "reference": "d92f1a3e0077f0ca0b44de4a40064e015db7a15b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package hamcrest/hamcrest-php",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/pail",
+            "version": "v1.8.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pail.git",
+                "reference": "08e6c561289afd58c4655a0b7e240c8296b9f554"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pail/zipball/08e6c561289afd58c4655a0b7e240c8296b9f554",
+                "reference": "08e6c561289afd58c4655a0b7e240c8296b9f554",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/pail",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/pint",
+            "version": "v4.10.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pint.git",
+                "reference": "caf1e03b4198f90101cae38ad0aeb302c5aedd97"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/caf1e03b4198f90101cae38ad0aeb302c5aedd97",
+                "reference": "caf1e03b4198f90101cae38ad0aeb302c5aedd97",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/pint",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "laravel/sail",
+            "version": "v3.9.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/sail.git",
+                "reference": "298cb432845daccac0b71c6569025a46851ec8dd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/sail/zipball/298cb432845daccac0b71c6569025a46851ec8dd",
+                "reference": "298cb432845daccac0b71c6569025a46851ec8dd",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package laravel/sail",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "mockery/mockery",
+            "version": "v6.3.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mockery/mockery.git",
+                "reference": "e3c1dec3a5008266227bf48ad102d3de692930a6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mockery/mockery/zipball/e3c1dec3a5008266227bf48ad102d3de692930a6",
+                "reference": "e3c1dec3a5008266227bf48ad102d3de692930a6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package mockery/mockery",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "myclabs/deep-copy",
+            "version": "v6.10.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/myclabs/deep-copy.git",
+                "reference": "5ab40d484f9d1717e725e10ef5d57f9e82d9c08f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/myclabs/deep-copy/zipball/5ab40d484f9d1717e725e10ef5d57f9e82d9c08f",
+                "reference": "5ab40d484f9d1717e725e10ef5d57f9e82d9c08f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package myclabs/deep-copy",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "nunomaduro/collision",
+            "version": "v5.9.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nunomaduro/collision.git",
+                "reference": "49498b5ec189c18f122fee168e5c5f45417f1e1f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nunomaduro/collision/zipball/49498b5ec189c18f122fee168e5c5f45417f1e1f",
+                "reference": "49498b5ec189c18f122fee168e5c5f45417f1e1f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package nunomaduro/collision",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phar-io/manifest",
+            "version": "v6.15.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phar-io/manifest.git",
+                "reference": "5f50d2d855a35b3eeb44d017b4c36fbb1f6127ee"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phar-io/manifest/zipball/5f50d2d855a35b3eeb44d017b4c36fbb1f6127ee",
+                "reference": "5f50d2d855a35b3eeb44d017b4c36fbb1f6127ee",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phar-io/manifest",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phar-io/version",
+            "version": "v4.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phar-io/version.git",
+                "reference": "3041647e09e35d8afa3a3fabad77f8151c24875f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phar-io/version/zipball/3041647e09e35d8afa3a3fabad77f8151c24875f",
+                "reference": "3041647e09e35d8afa3a3fabad77f8151c24875f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phar-io/version",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpunit/php-code-coverage",
+            "version": "v1.14.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpunit/php-code-coverage.git",
+                "reference": "9e91346ad9c186dbe76fc69d05bab728a3f3abaf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpunit/php-code-coverage/zipball/9e91346ad9c186dbe76fc69d05bab728a3f3abaf",
+                "reference": "9e91346ad9c186dbe76fc69d05bab728a3f3abaf",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpunit/php-code-coverage",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpunit/php-file-iterator",
+            "version": "v1.7.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpunit/php-file-iterator.git",
+                "reference": "9786b19a8f818fc805c8b73238322c65279de427"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpunit/php-file-iterator/zipball/9786b19a8f818fc805c8b73238322c65279de427",
+                "reference": "9786b19a8f818fc805c8b73238322c65279de427",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpunit/php-file-iterator",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpunit/php-invoker",
+            "version": "v3.2.15",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpunit/php-invoker.git",
+                "reference": "b2f1741b5b3bf640fb69b3809244506e0e41e2f9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpunit/php-invoker/zipball/b2f1741b5b3bf640fb69b3809244506e0e41e2f9",
+                "reference": "b2f1741b5b3bf640fb69b3809244506e0e41e2f9",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpunit/php-invoker",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpunit/php-text-template",
+            "version": "v6.14.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpunit/php-text-template.git",
+                "reference": "ee99f8635d1752e789dac686aac6473b1e2f838b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpunit/php-text-template/zipball/ee99f8635d1752e789dac686aac6473b1e2f838b",
+                "reference": "ee99f8635d1752e789dac686aac6473b1e2f838b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpunit/php-text-template",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpunit/php-timer",
+            "version": "v5.10.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpunit/php-timer.git",
+                "reference": "da54511c0844c242b338a5aefa58626ba98cff6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpunit/php-timer/zipball/da54511c0844c242b338a5aefa58626ba98cff6a",
+                "reference": "da54511c0844c242b338a5aefa58626ba98cff6a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpunit/php-timer",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "phpunit/phpunit",
+            "version": "v6.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpunit/phpunit.git",
+                "reference": "e804349eb450d1e6029f7d2153f252c4d0a8a8b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpunit/phpunit/zipball/e804349eb450d1e6029f7d2153f252c4d0a8a8b5",
+                "reference": "e804349eb450d1e6029f7d2153f252c4d0a8a8b5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package phpunit/phpunit",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/cli-parser",
+            "version": "v4.14.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/cli-parser.git",
+                "reference": "3ec98d522dd353ac5e687f395260aa53df4d251c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/cli-parser/zipball/3ec98d522dd353ac5e687f395260aa53df4d251c",
+                "reference": "3ec98d522dd353ac5e687f395260aa53df4d251c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/cli-parser",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/code-unit",
+            "version": "v5.14.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/code-unit.git",
+                "reference": "dec734ffd67622616ec8096e6b30a75dcf350b86"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/code-unit/zipball/dec734ffd67622616ec8096e6b30a75dcf350b86",
+                "reference": "dec734ffd67622616ec8096e6b30a75dcf350b86",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/code-unit",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/code-unit-reverse-lookup",
+            "version": "v1.11.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/code-unit-reverse-lookup.git",
+                "reference": "9b7debad1c04f681e63aaaff953c70aca0cf3a7a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/code-unit-reverse-lookup/zipball/9b7debad1c04f681e63aaaff953c70aca0cf3a7a",
+                "reference": "9b7debad1c04f681e63aaaff953c70aca0cf3a7a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/code-unit-reverse-lookup",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/comparator",
+            "version": "v4.6.9",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/comparator.git",
+                "reference": "369caf53cb9ef7d34956766c453f93d1f25cfebb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/comparator/zipball/369caf53cb9ef7d34956766c453f93d1f25cfebb",
+                "reference": "369caf53cb9ef7d34956766c453f93d1f25cfebb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/comparator",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/complexity",
+            "version": "v8.15.11",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/complexity.git",
+                "reference": "7fb77f80dd72ecf08543f524749ec9316dbfcb61"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/complexity/zipball/7fb77f80dd72ecf08543f524749ec9316dbfcb61",
+                "reference": "7fb77f80dd72ecf08543f524749ec9316dbfcb61",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/complexity",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/diff",
+            "version": "v8.12.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/diff.git",
+                "reference": "7cc44bef1fe20c0fea756962d937a09925a7af13"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/diff/zipball/7cc44bef1fe20c0fea756962d937a09925a7af13",
+                "reference": "7cc44bef1fe20c0fea756962d937a09925a7af13",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/diff",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/environment",
+            "version": "v6.7.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/environment.git",
+                "reference": "e7d9fd4233553361fe301e9577e175ac8a7d52ec"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/environment/zipball/e7d9fd4233553361fe301e9577e175ac8a7d52ec",
+                "reference": "e7d9fd4233553361fe301e9577e175ac8a7d52ec",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/environment",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/exporter",
+            "version": "v5.11.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/exporter.git",
+                "reference": "4b265edc7a4015757a7c142057fcba1d6e12f81e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/exporter/zipball/4b265edc7a4015757a7c142057fcba1d6e12f81e",
+                "reference": "4b265edc7a4015757a7c142057fcba1d6e12f81e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/exporter",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/global-state",
+            "version": "v5.7.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/global-state.git",
+                "reference": "474dda42ae85eb8ab28c0704059b01417da2c4fe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/global-state/zipball/474dda42ae85eb8ab28c0704059b01417da2c4fe",
+                "reference": "474dda42ae85eb8ab28c0704059b01417da2c4fe",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/global-state",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/lines-of-code",
+            "version": "v5.10.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/lines-of-code.git",
+                "reference": "4a16d5e4eb8b147e58b38d490349bf80bd9844b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/lines-of-code/zipball/4a16d5e4eb8b147e58b38d490349bf80bd9844b5",
+                "reference": "4a16d5e4eb8b147e58b38d490349bf80bd9844b5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/lines-of-code",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/object-enumerator",
+            "version": "v3.14.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/object-enumerator.git",
+                "reference": "be7699c62cdcb6a0318204556e5bf1052f6b79f3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/object-enumerator/zipball/be7699c62cdcb6a0318204556e5bf1052f6b79f3",
+                "reference": "be7699c62cdcb6a0318204556e5bf1052f6b79f3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/object-enumerator",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/object-reflector",
+            "version": "v6.5.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/object-reflector.git",
+                "reference": "555b42dea5ea2f80fb75c1166ef6ebba65f92e96"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/object-reflector/zipball/555b42dea5ea2f80fb75c1166ef6ebba65f92e96",
+                "reference": "555b42dea5ea2f80fb75c1166ef6ebba65f92e96",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/object-reflector",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/recursion-context",
+            "version": "v7.6.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/recursion-context.git",
+                "reference": "f63b95782e21a4dcefbd8603b918c996296d0561"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/recursion-context/zipball/f63b95782e21a4dcefbd8603b918c996296d0561",
+                "reference": "f63b95782e21a4dcefbd8603b918c996296d0561",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/recursion-context",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/type",
+            "version": "v5.7.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/type.git",
+                "reference": "471435f10c2b13f012bf523486aca0d04d79cdf6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/type/zipball/471435f10c2b13f012bf523486aca0d04d79cdf6",
+                "reference": "471435f10c2b13f012bf523486aca0d04d79cdf6",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/type",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "sebastian/version",
+            "version": "v5.2.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sebastian/version.git",
+                "reference": "4268b2952b4d6c2a53c1054fb0538176be1f7e3e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sebastian/version/zipball/4268b2952b4d6c2a53c1054fb0538176be1f7e3e",
+                "reference": "4268b2952b4d6c2a53c1054fb0538176be1f7e3e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package sebastian/version",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "staabm/side-effects-detector",
+            "version": "v7.7.10",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/staabm/side-effects-detector.git",
+                "reference": "67acff93fde489c1fe02552c9aacf6e19d9ec9b1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/staabm/side-effects-detector/zipball/67acff93fde489c1fe02552c9aacf6e19d9ec9b1",
+                "reference": "67acff93fde489c1fe02552c9aacf6e19d9ec9b1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package staabm/side-effects-detector",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "symfony/yaml",
+            "version": "v8.5.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/yaml.git",
+                "reference": "7514cdcb3ce9815162c20514c9f510eecbad173f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/7514cdcb3ce9815162c20514c9f510eecbad173f",
+                "reference": "7514cdcb3ce9815162c20514c9f510eecbad173f",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package symfony/yaml",
+            "time": "2026-09-01T10:00:00+00:00"
+        },
+        {
+            "name": "theseer/tokenizer",
+            "version": "v6.3.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/theseer/tokenizer.git",
+                "reference": "e3d12247cf66cec8df0baa4a90fedac0bd7d5648"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/theseer/tokenizer/zipball/e3d12247cf66cec8df0baa4a90fedac0bd7d5648",
+                "reference": "e3d12247cf66cec8df0baa4a90fedac0bd7d5648",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Fixture package theseer/tokenizer",
+            "time": "2026-09-01T10:00:00+00:00"
+        }
+    ],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {
+        "php": "^8.2"
+    },
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
+}

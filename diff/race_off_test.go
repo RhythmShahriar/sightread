@@ -1,0 +1,9 @@
+// Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+// SPDX-License-Identifier: MIT
+
+//go:build !race
+
+package diff
+
+// raceOn is true when the tests run with the race detector.
+const raceOn = false

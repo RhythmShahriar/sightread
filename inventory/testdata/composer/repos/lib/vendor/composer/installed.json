@@ -1,0 +1,9 @@
+{
+    "packages": [
+        {"name": "monolog/monolog", "version": "3.9.0", "install-path": "../monolog/monolog"},
+        {"name": "acme/utils", "version": "dev-main", "install-path": "../../../../packages/utils"},
+        {"name": "phpunit/phpunit", "version": "11.5.3", "install-path": "../phpunit/phpunit"}
+    ],
+    "dev": true,
+    "dev-package-names": ["phpunit/phpunit"]
+}
