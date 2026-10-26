@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of known-malicious (rhythm-sightread explain known-malicious).
+why: >-
+  OSV lists a MAL- record for this version: a security team found code
+  in it that was published to harm the people who install it. These
+  records come from the OpenSSF malicious packages feed and from
+  registry takedowns.
+how_to_review:
+  - "Open the OSV record linked in the finding."
+  - "Find every machine that already installed this version, CI runners included."
+  - "Rotate the credentials those machines hold."
+  - "Pin the last version before it."
+false_alarms: >-
+  A record that turns out wrong is withdrawn; the OSV page shows when
+  that happened.
+incidents:
+  - name: "Shai-Hulud"
+    line: "Hundreds of republished npm packages were listed as MAL- records within days."
+advice: "Don't install it. Rotate the credentials of any machine that already did."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#known-malicious

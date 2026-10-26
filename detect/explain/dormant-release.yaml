@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of dormant-release (rhythm-sightread explain dormant-release).
+why: >-
+  The previous release came out more than a year before this one. A
+  package that wakes up after a long silence often has a new owner or a
+  hijacked account behind it.
+how_to_review:
+  - "Check this update for owner and publisher signals."
+  - "Look for an announcement."
+  - "Read the whole diff."
+false_alarms: >-
+  None: stable packages release rarely too. The signal only asks for a
+  look.
+incidents:
+  - name: "phpass 2022"
+    line: "An abandoned package got a new release from a hijacked account."
+advice: "Check who is behind the first release in a year."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dormant-release

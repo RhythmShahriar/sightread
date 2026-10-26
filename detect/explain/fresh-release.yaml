@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of fresh-release (rhythm-sightread explain fresh-release).
+why: >-
+  The version was published less than min_age ago (72 hours by default).
+  Most harmful releases are found and pulled within days, so waiting
+  costs little.
+how_to_review:
+  - "Wait until the release is older than min_age."
+  - "Run the review again."
+  - "Install sooner only when it fixes something you need now."
+false_alarms: >-
+  None: it is a quarantine hint.
+incidents:
+  - name: "Shai-Hulud"
+    line: "The waves were caught within days."
+  - name: "intercom-php 2026"
+    line: "Version 5.0.2 was live for 1 hour 44 minutes."
+advice: "Wait a few days before installing it."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#fresh-release

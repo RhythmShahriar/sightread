@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of input-unserialize (rhythm-sightread explain input-unserialize).
+why: >-
+  New code passes request data or a remote response to unserialize or
+  maybe_unserialize without allowed_classes => false. Unserializing
+  outside data lets whoever controls it build objects from classes the
+  site already loads. That is a well known way to run code on a PHP
+  site.
+how_to_review:
+  - "Find the source of the data in the hunk."
+  - "Check for allowed_classes => false."
+  - "Ask the maintainers why json_decode would not do."
+false_alarms: >-
+  maybe_unserialize(get_option(...)) of the plugin's own option does not
+  fire.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "fetch_ver_info() passed a remote response to @unserialize()."
+advice: "Hold the update. Unserializing outside data can run code through classes already loaded."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#input-unserialize

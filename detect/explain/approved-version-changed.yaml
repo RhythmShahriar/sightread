@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of approved-version-changed (rhythm-sightread explain approved-version-changed).
+why: >-
+  Your allow file records a reviewed archive for this version by its
+  sha256. The archive the source serves now has a different hash. The
+  review you recorded does not cover these bytes.
+how_to_review:
+  - "Check who added the allow entry and when (git log on .sightread/allowed.yaml)."
+  - "Review the new archive as if it had never been allowed."
+  - "Replace the entry only after that review."
+false_alarms: >-
+  WordPress.org rebuilds zips without changing the files. Allow entries
+  for WordPress.org use the manifest hash, so a rebuild does not fire.
+incidents: []
+advice: "Review it again. The allow entry covers other bytes than these."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#approved-version-changed

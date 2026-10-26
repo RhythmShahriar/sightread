@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of changelog-mismatch (rhythm-sightread explain changelog-mismatch).
+why: >-
+  The changelog entry for this version is missing or generic
+  ("compatibility", "tested up to", "bug fixes") while the code adds
+  network, execution, file write, user or install-time behaviour. A
+  release that adds such things without a word about them deserves a
+  question.
+how_to_review:
+  - "Read the changelog entry next to the findings it does not explain."
+  - "Look at the repository's commits for the release."
+  - "Ask the maintainers."
+false_alarms: >-
+  An entry that names the capability (the domain, telemetry,
+  auto-update, license check) does not fire.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "The changed release said only \"Check compatibility with WordPress version 6.8.2\"."
+advice: "Hold the update. Nothing in the changelog explains this."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#changelog-mismatch

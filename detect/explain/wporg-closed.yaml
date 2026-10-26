@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of wporg-closed (rhythm-sightread explain wporg-closed).
+why: >-
+  WordPress.org closed this plugin or theme, so it gets no more updates
+  from there. Closures follow security reports, guideline breaks or the
+  author's own request.
+how_to_review:
+  - "Read the closure reason in the finding and on the WordPress.org page."
+  - "Look for a security advisory about the slug."
+  - "Plan a replacement if it stays closed."
+false_alarms: >-
+  A closure at the author's request is high instead of critical: the
+  author stopped, nothing was found.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "WordPress.org closed the portfolio's plugins once the changed code was found and pushed a cleaned release."
+advice: "Hold the update and find out why it was closed."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#wporg-closed

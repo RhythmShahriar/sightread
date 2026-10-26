@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of size-jump (rhythm-sightread explain size-jump).
+why: >-
+  The package's code grew far more than its history explains, or a
+  minified or binary file appeared in a package that had none. Large
+  payloads hide in large files.
+how_to_review:
+  - "Look at the largest added files."
+  - "Check whether they are vendored libraries or build output."
+  - "Compare with the repository."
+false_alarms: >-
+  New languages/, vendor/ or dist/ folders lower it to info.
+incidents:
+  - name: "Display Widgets 2017"
+    line: "A release added a 38 MB GeoIP download."
+  - name: "Shai-Hulud 2025"
+    line: "The second wave shipped a 9.7 MB obfuscated file."
+advice: "Find out what the new bulk is."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#size-jump

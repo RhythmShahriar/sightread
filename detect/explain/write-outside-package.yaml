@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of write-outside-package (rhythm-sightread explain write-outside-package).
+why: >-
+  New code writes files outside its own folder: under ABSPATH,
+  wp-content, mu-plugins, other plugins, the home folder or a parent
+  path. Writing wp-config.php, .htaccess, mu-plugins, .npmrc, .ssh, .git
+  or CI files makes it critical. A package rarely needs more than its
+  own folder, uploads and the temp folder.
+how_to_review:
+  - "Read the target in the finding."
+  - "Check what is written and when."
+  - "Look for the change in the changelog."
+false_alarms: >-
+  Writes under wp_upload_dir(), the package's own folder and the OS temp
+  folder do not fire.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "Eight months after the release the code wrote about 6 KB into wp-config.php."
+advice: "Hold the update. Find out what it writes there and why."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#write-outside-package

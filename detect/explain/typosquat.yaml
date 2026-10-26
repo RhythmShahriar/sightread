@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of typosquat (rhythm-sightread explain typosquat).
+why: >-
+  A new dependency is named like a popular package with a letter
+  swapped, a separator changed, a scope dropped or a look-alike
+  character. Such names count on nobody reading them closely.
+how_to_review:
+  - "Compare the name with the popular one in the evidence."
+  - "Check who publishes it and when it first appeared."
+  - "Ask why the package needs it."
+false_alarms: >-
+  Names that are popular themselves (preact, react-dom, lodash.merge)
+  and packages that share a maintainer with the popular one do not fire.
+incidents:
+  - name: "axios 2026"
+    line: "plain-crypto-js, named like crypto-js, was published hours before axios added it."
+advice: "Check the dependency's name letter by letter."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#typosquat

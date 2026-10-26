@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of abandoned (rhythm-sightread explain abandoned).
+why: >-
+  Packagist marks the package abandoned, or WordPress.org shows no
+  update in two years. Abandoned packages get no security fixes. Their
+  names and accounts also attract takeovers.
+how_to_review:
+  - "Look for the suggested replacement."
+  - "Plan the move."
+false_alarms: >-
+  None.
+incidents:
+  - name: "phpass 2022"
+    line: "An abandoned package was taken over through its maintainer's expired email domain."
+advice: "Plan a replacement."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#abandoned

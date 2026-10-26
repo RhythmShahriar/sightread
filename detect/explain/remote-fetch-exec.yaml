@@ -1,0 +1,24 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of remote-fetch-exec (rhythm-sightread explain remote-fetch-exec).
+why: >-
+  New code downloads something and runs it in the same function: the
+  response reaches eval, include, a child process or a code file that is
+  then loaded. What runs can change at any time without a new release.
+  Reviewing this version tells you nothing about what it will run
+  tomorrow.
+how_to_review:
+  - "Open the finding with explain and read the hunk."
+  - "Find the URL the code fetches and who runs that host."
+  - "Check whether the changelog mentions it."
+  - "Ask the maintainers before installing."
+false_alarms: >-
+  Fetching JSON and decoding it with json_decode does not fire. The
+  fetch and the run must be in one function body.
+incidents:
+  - name: "intercom-php 2026"
+    line: "Version 5.0.2 downloaded Bun during composer install and ran an obfuscated script with it."
+  - name: "Gravity Forms 2025"
+    line: "The altered build fetched payloads from gravityapi.org and ran them."
+advice: "Hold the update. Nothing local can tell you what the downloaded code will do."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec

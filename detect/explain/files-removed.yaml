@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of files-removed (rhythm-sightread explain files-removed).
+why: >-
+  The update deletes files that held security checks: nonces,
+  sanitisers, escaping, capability checks, .htaccess deny rules or
+  index.php silence guards. Removing them can open paths that were
+  closed.
+how_to_review:
+  - "Check whether the checks moved to another file."
+  - "Read the changelog."
+  - "Test the affected screens."
+false_alarms: >-
+  A refactor that moves the checks still lists the removed file; the
+  info level reflects that.
+incidents: []
+advice: "Check that the removed checks moved somewhere else."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#files-removed

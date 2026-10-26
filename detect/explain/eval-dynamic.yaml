@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of eval-dynamic (rhythm-sightread explain eval-dynamic).
+why: >-
+  New code runs text built at run time: eval, assert with a string,
+  create_function, preg_replace with /e, new Function, vm, or a function
+  whose name is built from strings or taken from request data. Such code
+  does whatever its input says.
+how_to_review:
+  - "Read the hunk with explain."
+  - "Find where the evaluated text or the function name comes from."
+  - "If it comes from a request, a remote response or a decoded string, treat it as remote control of the site."
+false_alarms: >-
+  eval in a comment or a string, assert() with a boolean and the webpack
+  and esbuild runtime helpers (__webpack_require__, new Function("return
+  this")) do not fire. Minifying a file does not hide a new eval.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "version_info_clean() called @$clean(...), a function name taken from fetched data."
+advice: "Hold the update until you know where the evaluated text comes from."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#eval-dynamic

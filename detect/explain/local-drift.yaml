@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of local-drift (rhythm-sightread explain local-drift).
+why: >-
+  The installed copy differs from the official copy of the installed
+  version. Someone may have edited files on the server, or something
+  else changed them. Updating will overwrite them.
+how_to_review:
+  - "Compare the files in the finding with the official copy."
+  - "Decide whether the changes are edits you made."
+  - "Keep a copy of edits you want before updating."
+false_alarms: >-
+  Changes to readme.txt and languages files are not counted.
+incidents: []
+advice: "Updating will overwrite these files. Keep a copy of edits you want."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#local-drift

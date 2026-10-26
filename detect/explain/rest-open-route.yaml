@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of rest-open-route (rhythm-sightread explain rest-open-route).
+why: >-
+  The update adds a REST route whose permission_callback is
+  __return_true or missing, so anyone on the internet can call it. It is
+  high when the same file also gains code execution, unserialize, file
+  writes or user changes.
+how_to_review:
+  - "Read the route's callback."
+  - "Check what it returns or changes."
+  - "Call it on a staging copy without logging in."
+false_alarms: >-
+  Read-only routes that return public data stay medium.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "Version 2.6.7 added a REST route with permission_callback __return_true."
+advice: "Check what this route does for someone who isn't logged in."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#rest-open-route

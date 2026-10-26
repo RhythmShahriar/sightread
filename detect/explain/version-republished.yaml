@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of version-republished (rhythm-sightread explain version-republished).
+why: >-
+  Your lockfile recorded one integrity hash or commit for this exact
+  version. The registry now serves different bytes under the same
+  version number. A published version should never change, so this
+  points to a moved tag, a rewritten Composer reference or a registry
+  problem.
+how_to_review:
+  - "Compare the integrity or reference in the lockfile with what the registry reports now."
+  - "For Composer, look at the repository's tag history for a tag that moved."
+  - "Keep the bytes you installed until the maintainers explain the change."
+false_alarms: >-
+  Very rare. A private registry that rebuilds tarballs can cause it; fix
+  the registry instead of accepting the new bytes.
+incidents: []
+advice: "Keep the copy you have. The same version should never change its bytes."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#version-republished

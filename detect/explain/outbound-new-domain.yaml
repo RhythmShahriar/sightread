@@ -1,0 +1,25 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of outbound-new-domain (rhythm-sightread explain outbound-new-domain).
+why: >-
+  New code names a host the old version never did. Raw IP addresses,
+  blockchain RPC endpoints, paste sites, URL shorteners, dynamic DNS and
+  raw GitHub content are high. Sightread lists hosts and never contacts
+  them.
+how_to_review:
+  - "Find out who runs the host."
+  - "Look for it in the changelog."
+  - "Read what the code sends there and what it does with the answer."
+false_alarms: >-
+  Hosts already in the old version, the package's own homepage and
+  repository, your domains_ok and the shipped list of well-known hosts
+  are info. So are URLs in readmes, comments and docs folders.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "The code found its server through an Ethereum contract over public RPC hosts."
+  - name: "Social Warfare 2024"
+    line: "Data went to the raw IP address 94.156.79.8."
+  - name: "Gravity Forms 2025"
+    line: "The altered build called gravityapi.org."
+advice: "Find out who runs this host before updating."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#outbound-new-domain
