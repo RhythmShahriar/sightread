@@ -1,0 +1,13 @@
+eco: npm
+note: no tag for the candidate
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  git_tag: false
+  repository: https://github.com/acme/fixture
+expect:
+- id: git-tag-missing
+  min_severity: medium

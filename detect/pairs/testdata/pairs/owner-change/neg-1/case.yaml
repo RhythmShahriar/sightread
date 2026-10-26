@@ -1,0 +1,20 @@
+eco: npm
+note: the team grew and an old maintainer published
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+  maintainers:
+  - name: alice
+  publisher:
+    name: alice
+meta_new:
+  ref:
+    version: 2.0.0
+  maintainers:
+  - name: alice
+  - name: bob
+  publisher:
+    name: alice
+forbid:
+- owner-change

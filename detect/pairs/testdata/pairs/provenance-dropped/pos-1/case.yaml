@@ -1,0 +1,12 @@
+eco: npm
+note: 'axios 2026: provenance lost'
+meta_old:
+  ref:
+    version: 1.0.0
+  provenance: slsa
+meta_new:
+  ref:
+    version: 2.0.0
+expect:
+- id: provenance-dropped
+  min_severity: high

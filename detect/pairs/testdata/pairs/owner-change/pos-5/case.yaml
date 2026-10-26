@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: all contributors replaced, SVN creator unknown
+meta_old:
+  ref:
+    version: 1.0.0
+  contributors:
+  - oldauthor
+meta_new:
+  ref:
+    version: 2.0.0
+  contributors:
+  - newowner
+expect:
+- id: owner-change
+  min_severity: high

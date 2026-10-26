@@ -1,0 +1,22 @@
+eco: npm
+note: 'one maintainer replaced and the new one published: medium'
+meta_old:
+  ref:
+    version: 1.0.0
+  maintainers:
+  - name: alice
+  - name: bob
+  publisher:
+    name: alice
+meta_new:
+  ref:
+    version: 2.0.0
+  maintainers:
+  - name: alice
+  - name: carol
+  publisher:
+    name: carol
+expect:
+- id: owner-change
+  min_severity: medium
+  max_severity: medium

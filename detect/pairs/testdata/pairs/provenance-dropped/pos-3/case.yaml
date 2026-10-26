@@ -1,0 +1,20 @@
+eco: npm
+note: lost together with a new publisher
+meta_old:
+  ref:
+    version: 1.0.0
+  provenance: slsa
+  maintainers:
+  - name: a
+meta_new:
+  ref:
+    version: 2.0.0
+  maintainers:
+  - name: a
+  publisher:
+    name: z
+expect:
+- id: provenance-dropped
+  min_severity: high
+- id: owner-change
+  min_severity: high

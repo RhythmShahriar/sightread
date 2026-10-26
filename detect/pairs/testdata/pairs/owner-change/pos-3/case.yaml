@@ -1,0 +1,19 @@
+eco: wp-plugin
+note: 'g15: WordPress.org took the plugin over'
+meta_old:
+  ref:
+    version: 1.0.0
+  contributors:
+  - elliotcondon
+  - deliciousbrains
+  author_profile: https://profiles.wordpress.org/deliciousbrains/
+meta_new:
+  ref:
+    version: 2.0.0
+  contributors:
+  - wordpressdotorg
+  publisher:
+    login: wordpressdotorg
+expect:
+- id: owner-change
+  min_severity: high
