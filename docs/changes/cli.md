@@ -83,13 +83,13 @@ Soundcheck pages end with `Arguments after -- go to rhythm-soundcheck snapshot.`
 Shared by `plugin`, `theme`, `composer`, `npm`, `all` and `changes`.
 
 - **Versions:** `--to <version>` (plugins and themes `latest`, composer and npm `wanted`; also
-  `installed`, `x.y.z`, an npm dist-tag or `list`), `--from <version>`, `--to-file <file>`,
-  `--from-file <file>`, `--path <folder>` (default `.`), `--wp <command>`,
+  `installed`, `x.y.z`, an npm dist-tag or `list`), `--from <version>`, `--to-file <path>`,
+  `--from-file <path>`, `--path <folder>` (default `.`), `--wp <command>`,
   `--from-tuner <report>`, `--allow-downgrade`, `--pre`, `--transitive`, `--only <packages>`,
   `--skip <packages>` (comma lists, repeatable; an ecosystem ID including the `plugin` and `theme`
   shorthands, or `<eco>:<glob>`).
 - **Lockfile change** (`changes`): `--base <ref>` (default `origin/$GITHUB_BASE_REF` when set,
-  else the merge base with origin/HEAD), `--before <file>`, `--after <file>`, `--lockfile <file>`
+  else the merge base with origin/HEAD), `--before <lockfile>`, `--after <lockfile>`, `--lockfile <lockfile>`
   (repeatable).
 - **Fleet** (`all`): `--sites <file>`, `--rereview` (`review each installed version against the
   release before it, so new signals reach what you already run (watch does this after a signal

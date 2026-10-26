@@ -144,8 +144,8 @@ func (f *reviewFlags) short(fs *flag.FlagSet, letter, long string) {
 func (f *reviewFlags) versionFlags(fs *flag.FlagSet) {
 	fs.StringVar(&f.to, f.add("to"), "", "the candidate `version`: latest (plugins, themes), wanted (composer, npm), installed, x.y.z, an npm dist-tag, or list to print the published versions")
 	fs.StringVar(&f.from, f.add("from"), "", "the installed `version` (default: read from --path, --wp, --from-tuner or the lockfile)")
-	fs.StringVar(&f.toFile, f.add("to-file"), "", "the candidate from a local zip, tgz or folder (`file`; premium plugins, vendor downloads); marked unverified")
-	fs.StringVar(&f.fromFile, f.add("from-file"), "", "the installed version from a local zip, tgz or folder (`file`)")
+	fs.StringVar(&f.toFile, f.add("to-file"), "", "the candidate from a local zip, tgz or folder at this `path` (premium plugins, vendor downloads); marked unverified")
+	fs.StringVar(&f.fromFile, f.add("from-file"), "", "the installed version from a local zip, tgz or folder at this `path`")
 	fs.StringVar(&f.path, f.add("path"), ".", "the site or project `folder`: a WordPress root or a folder with lockfiles")
 	fs.StringVar(&f.wp, f.add("wp"), "", "read installed WordPress versions with this WP-CLI `command`, e.g. \"ssh deploy@host -- wp --path=/srv/www\"")
 	fs.StringVar(&f.fromTuner, f.add("from-tuner"), "", "read installed plugin and theme versions from a rhythm-tuner JSON `report`")
@@ -232,9 +232,9 @@ func (f *reviewFlags) soundcheckFlags(fs *flag.FlagSet) {
 // changesFlags registers the flags only changes takes.
 func (f *reviewFlags) changesFlags(fs *flag.FlagSet) {
 	fs.StringVar(&f.base, f.add("base"), "", "compare the lockfiles at this git `ref` (default: GITHUB_BASE_REF in Actions, else the merge base with origin/HEAD)")
-	fs.StringVar(&f.before, f.add("before"), "", "the old lockfile `file` (with --after; no git needed)")
-	fs.StringVar(&f.after, f.add("after"), "", "the new lockfile `file`")
-	fs.Var(&f.lockfiles, f.add("lockfile"), "a lockfile to compare (repeatable; default: every one found)")
+	fs.StringVar(&f.before, f.add("before"), "", "the old `lockfile` (with --after; no git needed)")
+	fs.StringVar(&f.after, f.add("after"), "", "the new `lockfile`")
+	fs.Var(&f.lockfiles, f.add("lockfile"), "a `lockfile` to compare (repeatable; default: every one found)")
 }
 
 // fleetFlags registers the flags only all takes.

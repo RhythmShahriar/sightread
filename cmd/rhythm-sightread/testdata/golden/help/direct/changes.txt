@@ -12,11 +12,11 @@ Versions:
                                  published versions
   --from <version>               the installed version (default: read from
                                  --path, --wp, --from-tuner or the lockfile)
-  --to-file <file>               the candidate from a local zip, tgz or folder
-                                 (file; premium plugins, vendor downloads);
-                                 marked unverified
-  --from-file <file>             the installed version from a local zip, tgz or
-                                 folder (file)
+  --to-file <path>               the candidate from a local zip, tgz or folder
+                                 at this path (premium plugins, vendor
+                                 downloads); marked unverified
+  --from-file <path>             the installed version from a local zip, tgz or
+                                 folder at this path
   --path <folder>                the site or project folder: a WordPress root or
                                  a folder with lockfiles (default .)
   --wp <command>                 read installed WordPress versions with this
@@ -37,10 +37,9 @@ Lockfile change:
   --base <ref>                   compare the lockfiles at this git ref (default:
                                  GITHUB_BASE_REF in Actions, else the merge base
                                  with origin/HEAD)
-  --before <file>                the old lockfile file (with --after; no git
-                                 needed)
-  --after <file>                 the new lockfile file
-  --lockfile <value>             a lockfile to compare (repeatable; default:
+  --before <lockfile>            the old lockfile (with --after; no git needed)
+  --after <lockfile>             the new lockfile
+  --lockfile <lockfile>          a lockfile to compare (repeatable; default:
                                  every one found)
 
 Sources and integrity:
