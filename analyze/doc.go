@@ -14,5 +14,6 @@
 // observer. Hosts are read from literals, comments, JSON and docs
 // without resolving any (hosts.go, hostcat.go). Encoded literals are
 // decoded within fixed limits and their payloads analysed again
-// (blob.go).
+// (blob.go). Minified bundles, Unicode tricks in code and code hidden in
+// images, fonts and text files are told apart in kinds.go.
 package analyze

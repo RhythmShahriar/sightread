@@ -45,6 +45,7 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	} else {
 		ex.jsHosts(jtoks)
 	}
+	unicodeFeatures(col, src, ptoks, jtoks, l == langPHP)
 	bs := &blobScan{col: col, st: st, path: path, env: env}
 	bs.scan()
 	out = append(out, col.out...)
