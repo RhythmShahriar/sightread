@@ -11,6 +11,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/charmbracelet/lipgloss"
+
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
 )
@@ -57,6 +59,22 @@ var formatChecks = map[string]func(t *testing.T, out []byte){
 	},
 	core.FormatHTML: func(t *testing.T, out []byte) {
 		checkHTML(t, out)
+	},
+	core.FormatTerminal: func(t *testing.T, out []byte) {
+		if !bytes.Contains(out, []byte(intentLine)) {
+			t.Error("terminal: no intent line in the verdict box")
+		}
+		// Package text can't break the box: every box line is as wide as
+		// its top border.
+		top := -1
+		for _, l := range strings.Split(string(out), "\n") {
+			if strings.HasPrefix(l, " ╭") {
+				top = lipgloss.Width(l)
+			}
+			if (strings.HasPrefix(l, " │") || strings.HasPrefix(l, " ╰")) && lipgloss.Width(l) != top {
+				t.Errorf("terminal: box line %q is %d wide, the box %d", l, lipgloss.Width(l), top)
+			}
+		}
 	},
 	core.FormatJSONL: func(t *testing.T, out []byte) {
 		for i, line := range bytes.Split(bytes.TrimSpace(out), []byte("\n")) {
