@@ -84,6 +84,16 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
+      # The e15 case that applies the update runs the real Soundcheck;
+      # Chrome is already on the runner. A pinned release, so a new
+      # Soundcheck never changes the benchmark on its own.
+      - name: Install rhythm-soundcheck for e15
+        env:
+          GOWORK: "off"
+          GOTOOLCHAIN: auto
+        run: |
+          go install github.com/RhythmShahriar/soundcheck/cmd/rhythm-soundcheck@v1.2.2
+          rhythm-soundcheck --version
       - name: Start the Docker WordPress for e15
         run: make -C testbed up-wp
       # The tagged bench tests: the canary stays silent, nothing reaches

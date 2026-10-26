@@ -35,6 +35,8 @@ type runOpts struct {
 	env map[string]string
 	// noStub leaves the Roadie stub off PATH.
 	noStub bool
+	// pathFirst is put at the front of PATH (the Soundcheck wrapper).
+	pathFirst string
 	// interruptAfter sends Ctrl-C (SIGINT) that long after the start.
 	interruptAfter time.Duration
 	// noWatch skips the outside-write walk (a run that is meant to write
@@ -104,6 +106,9 @@ func (h *harness) environ(o runOpts) ([]string, error) {
 		path = h.stubBin + string(os.PathListSeparator) + path
 	} else {
 		path = withoutRoadie(path)
+	}
+	if o.pathFirst != "" {
+		path = o.pathFirst + string(os.PathListSeparator) + path
 	}
 	env["PATH"] = path
 

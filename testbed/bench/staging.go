@@ -7,16 +7,19 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec" //nolint:depguard // the benchmark drives WP-CLI in the testbed container
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/RhythmShahriar/sightread/testbed/benchdoc"
 	"github.com/RhythmShahriar/sightread/testbed/fsnap"
+	"github.com/RhythmShahriar/sightread/testbed/probes"
 	"github.com/RhythmShahriar/sightread/testbed/scenario"
 	"github.com/RhythmShahriar/sightread/testbed/staging"
 )
@@ -84,7 +87,13 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 		}
 		return out
 	}
-	_, scErr := exec.LookPath("rhythm-soundcheck")
+	scPath, scErr := exec.LookPath("rhythm-soundcheck")
+	var sc *soundcheckJail
+	if scErr == nil {
+		if sc, scErr = h.jailSoundcheck(scPath); scErr == nil {
+			defer func() { _ = sc.guard.Close() }()
+		}
+	}
 	wrapper := filepath.Join(h.tb, "bin", "wp")
 	if strings.ContainsAny(wrapper, " \t'\"") {
 		wrapper = "'" + wrapper + "'"
@@ -96,7 +105,7 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 			break
 		}
 		if c.NeedsSoundcheck && scErr != nil {
-			out = append(out, notRun(c, "rhythm-soundcheck is not on PATH"))
+			out = append(out, notRun(c, "rhythm-soundcheck is not ready: "+scErr.Error()))
 			continue
 		}
 		start := time.Now()
@@ -118,7 +127,12 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 
 		before := h.pluginVersion(ctx, c.Slug)
 		hostBefore, _ := fsnap.Take(projects)
-		ex := h.run(ctx, c.Args(wrapper), runOpts{id: "e15-" + c.Name, noStub: c.Roadie == ""})
+		o := runOpts{id: "e15-" + c.Name, noStub: c.Roadie == ""}
+		var browserMark int
+		if sc != nil {
+			o.pathFirst, browserMark = sc.bin, sc.guard.Count()
+		}
+		ex := h.run(ctx, c.Args(wrapper), o)
 		after := h.pluginVersion(ctx, c.Slug)
 		hostAfter, _ := fsnap.Take(projects)
 		var changed []string
@@ -134,6 +148,11 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 		r.Seconds = time.Since(start).Seconds()
 		r.Result = benchdoc.ResultPass
 		r.Notes = []string{fmt.Sprintf("exit %d, %s %s to %s", ex.exit, c.Slug, before, after)}
+		if sc != nil {
+			if n := sc.guard.Count() - browserMark; n > 0 {
+				r.Notes = append(r.Notes, fmt.Sprintf("Soundcheck's Chrome tried %d outside calls; its own proxy guard refused every one (not counted as Sightread egress)", n))
+			}
+		}
 		if len(problems) > 0 {
 			r.Result = benchdoc.ResultFail
 			r.Notes = append(r.Notes, problems...)
@@ -144,6 +163,67 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 	_ = h.seed(ctx)
 	return out
 }
+
+// soundcheckJail runs the real rhythm-soundcheck through a wrapper that
+// gives it, and the Chrome it starts, a HOME and caches in the work
+// folder and a proxy guard of their own. Chrome calls Google services
+// and writes font and dconf caches whatever Soundcheck asks; those are
+// Soundcheck's, so they must not count as Sightread's egress or outside
+// writes, and they must still go nowhere.
+type soundcheckJail struct {
+	bin   string // the folder holding the wrapper, for the front of PATH
+	guard *probes.Guard
+}
+
+// jailSoundcheck writes the wrapper around real and starts its guard on
+// a free loopback port. The wrapper is a POSIX shell script: e15 drives
+// the Docker WordPress through testbed/bin/wp, a shell script too.
+func (h *harness) jailSoundcheck(real string) (*soundcheckJail, error) {
+	if runtime.GOOS == "windows" {
+		return nil, errors.New("the Soundcheck wrapper needs a POSIX shell")
+	}
+	g, err := probes.StartGuard(0)
+	if err != nil {
+		return nil, err
+	}
+	root := filepath.Join(h.work, "soundcheck")
+	bin, home := filepath.Join(root, "bin"), filepath.Join(root, "home")
+	for _, d := range []string{bin, home} {
+		if err := os.MkdirAll(d, 0o750); err != nil {
+			_ = g.Close()
+			return nil, err
+		}
+	}
+	if err := os.WriteFile(filepath.Join(bin, "rhythm-soundcheck"), []byte(soundcheckWrapper(real, home, g.Port())), 0o750); err != nil { //nolint:gosec // an executable wrapper in the work folder
+		_ = g.Close()
+		return nil, err
+	}
+	return &soundcheckJail{bin: bin, guard: g}, nil
+}
+
+// soundcheckWrapper is the wrapper script: Soundcheck's own HOME and XDG
+// folders under home and every proxy variable on the guard at port.
+// Loopback stays direct, so the staging site is still reached.
+func soundcheckWrapper(real, home string, port int) string {
+	guard := fmt.Sprintf("http://127.0.0.1:%d", port)
+	var b strings.Builder
+	b.WriteString("#!/bin/sh\n# Written by the benchmark: Soundcheck and its Chrome in the work folder.\n")
+	vars := [][2]string{
+		{"HOME", home}, {"XDG_CACHE_HOME", filepath.Join(home, ".cache")},
+		{"XDG_CONFIG_HOME", filepath.Join(home, ".config")}, {"XDG_DATA_HOME", filepath.Join(home, ".local", "share")},
+	}
+	for _, k := range []string{"HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy", "ALL_PROXY", "all_proxy"} {
+		vars = append(vars, [2]string{k, guard})
+	}
+	for _, v := range vars {
+		fmt.Fprintf(&b, "%s=%s\nexport %s\n", v[0], shellQuote(v[1]), v[0])
+	}
+	fmt.Fprintf(&b, "exec %s \"$@\"\n", shellQuote(real))
+	return b.String()
+}
+
+// shellQuote quotes s for a POSIX shell.
+func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
 
 // packageFor finds the scenario folder that publishes a plugin slug.
 func (h *harness) packageFor(slug string) []string {

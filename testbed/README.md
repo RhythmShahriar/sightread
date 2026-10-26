@@ -183,6 +183,13 @@ stub (`testbed/stubs/roadie`) answers the contract of
 [docs/roadie-contract.md](../docs/roadie-contract.md) with the outcome
 written to `state/roadie`.
 
+The benchmark runs the real `rhythm-soundcheck` through a wrapper in its
+work folder: Soundcheck and the Chrome it starts get their own HOME and
+XDG folders there and a proxy guard of their own. Chrome calls Google
+services in the background whatever its flags say; that guard refuses
+those calls and the e15 notes count them, apart from Sightread's egress.
+The nightly bench job installs Soundcheck v1.2.2 (Chrome is on the runner).
+
 ## Add a scenario
 
 1. Make `packages/<id>-<name>/` with `meta.yaml` (ecosystem, name, the

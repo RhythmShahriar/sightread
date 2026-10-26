@@ -31,6 +31,8 @@ func TestNightly(t *testing.T) {
 		// The tagged bench tests (canary, egress and the sealed Docker
 		// check) and e13 on Windows run nowhere else.
 		"make -C testbed test-bench", "runs-on: windows-latest", "-only e13", "-plain-http",
+		// e15's applying case needs the real Soundcheck, pinned.
+		"soundcheck/cmd/rhythm-soundcheck@v1.2.2",
 	} {
 		if !bytes.Contains(raw, []byte(want)) {
 			t.Errorf("nightly.yml lacks %q", want)
