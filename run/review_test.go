@@ -383,6 +383,28 @@ func TestOfflineNote(t *testing.T) {
 	}
 }
 
+// pluginErrSource answers Meta with the error a real source gives, which
+// names the review command of its ecosystem.
+type pluginErrSource struct{ *runtest.Source }
+
+func (pluginErrSource) Meta(context.Context, core.Ref) (*core.Meta, error) {
+	return nil, &core.Error{Code: core.EVersionMissing, Exit: cli.ExitUsage, Command: "plugin", What: "pkg has no version 2.9.0 on wordpress.org"}
+}
+
+// TestVerifyNamesItsCommand: an error a source raises while allow
+// verifies a version names allow, not the review command the source
+// belongs to; a tool-wide error stays tool-wide.
+func TestVerifyNamesItsCommand(t *testing.T) {
+	w := runtest.Install(t)
+	src := pluginErrSource{w.Sources[core.WPPlugin]}
+	t.Cleanup(core.SwapSource(core.WPPlugin, func(*core.Env) core.Source { return src }))
+	req := request(t, "allow")
+	_, err := run.Verify(context.Background(), req, core.Ref{Eco: core.WPPlugin, Name: "pkg", Version: "2.9.0"})
+	if err == nil || err.Error() != "rhythm sightread allow: pkg has no version 2.9.0 on wordpress.org" {
+		t.Errorf("error %v", err)
+	}
+}
+
 // TestTreeMetaFromCache: what a source reads from the release's files
 // is filled again for a cached tree, so a second run reports the same;
 // the changelog keeps only the entries newer than the installed side.

@@ -113,11 +113,11 @@ func Verify(ctx context.Context, req Request, ref core.Ref) (core.Side, error) {
 	}
 	m, err := src.Meta(ctx, ref)
 	if err != nil {
-		return core.Side{}, withCommand(err, req.Command)
+		return core.Side{}, asCommand(err, req.Command)
 	}
 	tree, in, _, err := r.fetch(ctx, src, m)
 	if err != nil {
-		return core.Side{}, err
+		return core.Side{}, asCommand(err, req.Command)
 	}
 	if len(in.Mismatch) > 0 && in.By != core.ByFailed {
 		// A mismatch is a failed check whatever the source called it.

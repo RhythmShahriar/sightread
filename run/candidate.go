@@ -202,6 +202,19 @@ func withCommand(err error, command string) error {
 	return err
 }
 
+// asCommand gives a command's error to command: a source names the
+// review command its ecosystem belongs to ("plugin"), which is wrong
+// when another command, such as allow, asked. A tool-wide error (no
+// command) stays tool-wide.
+func asCommand(err error, command string) error {
+	if e, ok := err.(*core.Error); ok && e.Command != "" { //nolint:errorlint // only a bare *core.Error is adjusted; a wrapped one keeps its wrapper
+		c := *e
+		c.Command = command
+		return &c
+	}
+	return withCommand(err, command)
+}
+
 // VersionList is one package's published versions, newest first, for
 // --to list.
 type VersionList struct {

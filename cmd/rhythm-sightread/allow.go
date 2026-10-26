@@ -272,6 +272,10 @@ func parseAllowRef(raw string, needVersion bool) (core.Ref, error) {
 	if needVersion && ref.Version == "" {
 		return core.Ref{}, cli.Usagef("%s needs a version: %s@<version>", raw, ref)
 	}
+	if needVersion && ref.Version == core.LocalVersion {
+		// A local copy has no published archive to bind the entry to.
+		return core.Ref{}, cli.Usagef("%s is a local copy, which can't be allowed; allow records a published version: %s@<version>", raw, ref.Unversioned())
+	}
 	return ref, nil
 }
 
