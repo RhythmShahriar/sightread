@@ -136,6 +136,14 @@ type Inventory interface {
 	LocalTree(ctx context.Context, dir string, blobs BlobStore, lim Limits) (*Tree, error)
 }
 
+// TreeVersioner is an Inventory that reads the version a package's own
+// files declare: a plugin's main file or a theme's style.css header,
+// package.json or composer.json. run names a --to-file or --from-file
+// side by it when --to or --from names none. "" when none is declared.
+type TreeVersioner interface {
+	TreeVersion(eco Ecosystem, name string, t *Tree) string
+}
+
 // GitShow returns the contents of path at ref in repo, as
 // `git show <ref>:<path>` prints them (inventory/gitref).
 type GitShow func(ctx context.Context, repo, ref, path string) ([]byte, error)

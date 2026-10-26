@@ -5,9 +5,11 @@ package run_test
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/RhythmShahriar/sightread/core"
@@ -71,5 +73,70 @@ func TestLocalChangelogNoEntry(t *testing.T) {
 	u := localPair(t, "= 1.0.0 =\n* First.\n", "= 1.0.0 =\n* First.\n")
 	if len(u.Changelog) != 0 {
 		t.Errorf("changelog %+v", u.Changelog)
+	}
+}
+
+// versionInventory is the fake inventory that reads a local copy's
+// declared version from its VERSION file, as the real one reads a
+// plugin header.
+type versionInventory struct{ *coretest.FakeInventory }
+
+func (versionInventory) TreeVersion(_ core.Ecosystem, _ string, t *core.Tree) string {
+	for _, f := range t.Files {
+		if f.Path == "VERSION" {
+			rc, err := t.Blobs.Open(f.SHA256)
+			if err != nil {
+				return ""
+			}
+			defer func() { _ = rc.Close() }()
+			b, _ := io.ReadAll(rc)
+			return strings.TrimSpace(string(b))
+		}
+	}
+	return ""
+}
+
+// TestLocalDeclaredVersion: a --from-file or --to-file side with no
+// --from or --to is named by the version its files declare; one that
+// declares none stays "local", and changelog-mismatch evidence then
+// speaks of the local copy. An explicit --to still wins.
+func TestLocalDeclaredVersion(t *testing.T) {
+	cases := []struct {
+		name, oldV, newV, to, wantFrom, wantTo string
+	}{
+		{"both declare", "2.8.0", "2.8.1", "", "2.8.0", "2.8.1"},
+		{"new declares none", "2.8.0", "", "", "2.8.0", core.LocalVersion},
+		{"--to wins", "2.8.0", "2.8.1", "2.9.0", "2.8.0", "2.9.0"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			w := runtest.Install(t)
+			t.Cleanup(core.SwapInventory(versionInventory{w.Inventory}))
+			dir := t.TempDir()
+			versions := map[string]string{"old.zip": c.oldV, "new.zip": c.newV}
+			for name := range versions {
+				if err := os.WriteFile(filepath.Join(dir, name), nil, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			t.Cleanup(core.SwapLocalArchive(func(_ context.Context, path string, _ core.BlobStore, _ core.Limits) (*core.Tree, error) {
+				files := map[string]string{"p.php": "<?php\n" + filepath.Base(path)}
+				if v := versions[filepath.Base(path)]; v != "" {
+					files["VERSION"] = v
+				}
+				return coretest.Tree(files), nil
+			}))
+			req := request(t, "plugin")
+			req.Eco, req.Names, req.To = core.WPPlugin, []string{"p"}, c.to
+			req.FromFile, req.ToFile = filepath.Join(dir, "old.zip"), filepath.Join(dir, "new.zip")
+			req.AllowUnverified = true
+			rep := review(t, req)
+			if len(rep.Updates) != 1 {
+				t.Fatalf("updates %+v", rep.Updates)
+			}
+			if u := rep.Updates[0]; u.From.Version != c.wantFrom || u.To.Version != c.wantTo {
+				t.Errorf("%s → %s, want %s → %s", u.From.Version, u.To.Version, c.wantFrom, c.wantTo)
+			}
+		})
 	}
 }

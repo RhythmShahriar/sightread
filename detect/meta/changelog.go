@@ -217,8 +217,12 @@ func serious(ctx context.Context, s *core.Subject, caps []capability) bool {
 // or `no changelog entry for 2.0.0; the update adds ...`.
 func mismatchEvidence(s *core.Subject, entries []core.ChangelogEntry, caps []capability) string {
 	var head string
+	v := s.New.Ref.Version
+	if v == core.LocalVersion {
+		v = "the local copy"
+	}
 	if len(entries) == 0 {
-		head = "no changelog entry for " + s.New.Ref.Version
+		head = "no changelog entry for " + v
 	} else {
 		q := strings.Join(strings.Fields(entries[0].Text), " ")
 		if len(q) > changelogQuote {
@@ -228,7 +232,7 @@ func mismatchEvidence(s *core.Subject, entries []core.ChangelogEntry, caps []cap
 			}
 			q = q[:cut] + "…"
 		}
-		head = "changelog for " + s.New.Ref.Version + " says only \"" + q + "\""
+		head = "changelog for " + v + " says only \"" + q + "\""
 	}
 	var parts []string
 	for _, c := range caps {

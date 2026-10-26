@@ -36,6 +36,13 @@ func TestChangelogWording(t *testing.T) {
 	if want := "no changelog entry for 2.0.0; the update adds scheduled tasks (inc/cron.php:5)"; f.Evidence.String() != want || f.Severity != cli.SeverityMedium {
 		t.Errorf("finding = %s %q", f.Severity, f.Evidence)
 	}
+	// A local copy that declares no version is named as such.
+	s = changelogSubject("", false, cron)
+	s.New.Ref.Version = core.LocalVersion
+	f = only(t, run(t, changelogDetector{}, s), SigChangelogMismatch)
+	if want := "no changelog entry for the local copy; the update adds scheduled tasks (inc/cron.php:5)"; f.Evidence.String() != want {
+		t.Errorf("local copy: %q", f.Evidence)
+	}
 	s = changelogSubject(strings.Repeat("Compatibility ", 20), true, cron)
 	f = only(t, run(t, changelogDetector{}, s), SigChangelogMismatch)
 	if !strings.Contains(f.Evidence.String(), `Compatibility Compat`) {

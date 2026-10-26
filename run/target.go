@@ -128,7 +128,7 @@ func (r *reviewer) resolveNamed(ctx context.Context, rep *core.Report) ([]*targe
 		t := &target{eco: q.Eco, name: name, explicit: true, toFile: q.ToFile, fromFile: q.FromFile}
 		switch {
 		case q.FromFile != "":
-			t.fromVersion = cmp.Or(q.From, "local")
+			t.fromVersion = cmp.Or(q.From, core.LocalVersion)
 		case q.From != "":
 			t.fromVersion = q.From
 		default:
@@ -444,11 +444,11 @@ func globQuote(s string) string {
 }
 
 // localVersion is how a --to-file side is named: the --to value when
-// it names a version, else "local".
+// it names a version, else core.LocalVersion until its files are read.
 func localVersion(to string) string {
 	switch to {
 	case "", ToLatest, ToWanted, ToInstalled, ToList:
-		return "local"
+		return core.LocalVersion
 	}
 	return to
 }

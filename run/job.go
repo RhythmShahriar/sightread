@@ -330,7 +330,7 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 		if old != nil {
 			from = old.info.Version
 			if !scheme.Valid(from) {
-				// A local file has no version ("local"): the newest one
+				// A local file may have no version (core.LocalVersion): the newest one
 				// its own changelog lists is where the update starts.
 				from = newestEntry(old.meta.Changelog, scheme)
 			}
@@ -500,6 +500,11 @@ func (r *reviewer) side(ctx context.Context, src core.Source, t *target, isNew b
 		tree, err := r.readLocal(ctx, cmp.Or(file, dir), dir != "")
 		if err != nil {
 			return nil, err
+		}
+		if tv, ok := r.inv.(core.TreeVersioner); ok && ref.Version == core.LocalVersion {
+			// --to or --from named no version: the one the files
+			// declare names the side, as on the site after an install.
+			ref.Version = cmp.Or(tv.TreeVersion(t.eco, t.name, tree), core.LocalVersion)
 		}
 		what := "local file"
 		if dir != "" {

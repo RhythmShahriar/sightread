@@ -60,6 +60,10 @@ type ArchiveRef struct {
 // NPMSignature is one entry of an npm version's dist.signatures.
 type NPMSignature struct{ KeyID, Sig string }
 
+// LocalVersion is the version of a --to-file or --from-file side whose
+// files declare none and whose --to or --from names none.
+const LocalVersion = "local"
+
 // Meta is everything a source says about one version.
 type Meta struct {
 	Ref              Ref
