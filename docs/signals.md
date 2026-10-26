@@ -845,7 +845,7 @@ A new dependency is named like a popular package with a letter swapped, a separa
 
 ### False alarms
 
-Names that are popular themselves (preact, react-dom, lodash.merge, colors next to color) do not fire, nor do names under the popular package's own npm scope or Composer vendor, which only its owner can publish to.
+Names that are popular themselves (preact, react-dom, lodash.merge, colors next to color) do not fire, nor do names under the popular package's own npm scope or Composer vendor, which only its owner can publish to, nor packages that share a maintainer with the popular one.
 
 ### How to review
 

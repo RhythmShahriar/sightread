@@ -159,6 +159,40 @@ func ago(d time.Duration) string {
 	return plural(int(d/(24*time.Hour)), "day", "days") + " ago"
 }
 
+// depMaintainers are the maintainers run found for a new name: its
+// DepInfo, or the candidate's own for an added package.
+func depMaintainers(s *core.Subject, name string) []core.Person {
+	if info := s.New.DepInfo[name]; info != nil && len(info.Maintainers) > 0 {
+		return info.Maintainers
+	}
+	if s.Old == nil && name == s.Update.Name {
+		return s.New.Maintainers
+	}
+	return nil
+}
+
+// shareMaintainer reports whether a and b name a person in common, by
+// login, name or e-mail.
+func shareMaintainer(a, b []core.Person) bool {
+	for _, x := range a {
+		if personIdent(x).in(identsOf(b)) {
+			return true
+		}
+	}
+	return false
+}
+
+// identsOf makes the idents of people.
+func identsOf(people []core.Person) []ident {
+	out := make([]ident, 0, len(people))
+	for _, p := range people {
+		if id := personIdent(p); len(id.keys) > 0 {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
 // typosquatFinding checks one new name against the popular names pack.
 // A popular name and one run found popular (DepInfo.Popular) are never
 // typosquats.
@@ -176,6 +210,13 @@ func typosquatFinding(s *core.Subject, name string) (core.Finding, bool) {
 		return core.Finding{}, false
 	}
 	near := idx.Near(eco, name)
+	// A package the popular one's own maintainers publish is a sibling,
+	// not a lookalike (PRD 12.1 guard).
+	own := depMaintainers(s, name)
+	near = slices.DeleteFunc(near, func(p string) bool {
+		info := s.New.DepInfo[p]
+		return info != nil && shareMaintainer(own, info.Maintainers)
+	})
 	if len(near) == 0 {
 		return core.Finding{}, false
 	}

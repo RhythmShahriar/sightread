@@ -97,3 +97,33 @@ func TestTyposquatWithoutPacksIsQuiet(t *testing.T) {
 		}
 	}
 }
+
+// Negative: a new dependency the popular package's own maintainers
+// publish is a sibling, not a typosquat; the same holds for an added
+// package. Positive: the same name from someone else still fires.
+func TestTyposquatSharedMaintainer(t *testing.T) {
+	installTypoPacks(t)
+	ann := []core.Person{{Name: "Ann", Login: "ann", Email: "ann@example.test"}}
+	s := subject(core.NPM)
+	s.New.Deps = map[string]string{"plain-crypto-js": "^4.2.1"}
+	s.New.DepInfo = map[string]*core.DepInfo{
+		"plain-crypto-js": {Maintainers: []core.Person{{Login: "ANN"}}},
+		"crypto-js":       {Popular: true, Maintainers: ann},
+	}
+	for _, f := range run(t, depsDetector{}, s) {
+		if f.ID == SigTyposquat {
+			t.Errorf("sibling package fired: %+v", f)
+		}
+	}
+	s.New.DepInfo["plain-crypto-js"].Maintainers = []core.Person{{Login: "mallory"}}
+	only(t, run(t, depsDetector{}, s), SigTyposquat)
+
+	s = subject(core.Composer)
+	s.Old = nil
+	s.Update.Name, s.New.Ref.Name = "laravell/framework", "laravell/framework"
+	s.New.Maintainers = []core.Person{{Email: "ann@example.test"}}
+	s.New.DepInfo = map[string]*core.DepInfo{"laravel/framework": {Popular: true, Maintainers: ann}}
+	if fs := run(t, depsDetector{}, s); len(fs) != 0 {
+		t.Errorf("added sibling package fired: %+v", fs)
+	}
+}

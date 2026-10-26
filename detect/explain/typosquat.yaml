@@ -14,7 +14,8 @@ false_alarms: >-
   Names that are popular themselves (preact, react-dom, lodash.merge,
   colors next to color) do not fire, nor do names under the popular
   package's own npm scope or Composer vendor, which only its owner can
-  publish to.
+  publish to, nor packages that share a maintainer with the popular
+  one.
 incidents:
   - name: "axios 2026"
     line: "plain-crypto-js, named like crypto-js, was published hours before axios added it."
