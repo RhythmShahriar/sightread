@@ -335,13 +335,48 @@ func FuzzComposerConstraint(f *testing.F) {
 		_, _ = Composer.Satisfies(a, c)
 		Composer.Prerelease(b)
 		if n, err := normalize(a); err == nil {
-			// A normal form is a fixed point.
-			if again, err := normalize(n); err != nil || again != n && !strings.HasPrefix(n, "dev-") {
-				t.Fatalf("normalize(%q) = %q; normalize(%q) = %q, %v", a, n, n, again, err)
+			again, err := normalize(n)
+			if err != nil {
+				t.Fatalf("normalize(%q) = %q, which doesn't normalize: %v", a, n, err)
+			}
+			// A normal form is a fixed point, except a date version: like
+			// Composer's VersionParser, "2010-01-02" becomes "2010.01.02",
+			// which reads again as a classical "2010.01.02.0". That one
+			// must then hold.
+			if again != n && !strings.HasPrefix(n, "dev-") {
+				if !dated(n) {
+					t.Fatalf("normalize(%q) = %q; normalize(%q) = %q", a, n, n, again)
+				}
+				if third, err := normalize(again); err != nil || third != again {
+					t.Fatalf("date %q: normalize(%q) = %q, %v", a, again, third, err)
+				}
 			}
 		}
 		if sets, err := parseComposer(c); err == nil && len(sets) == 0 {
 			t.Fatalf("constraint %q parsed to nothing", c)
 		}
 	})
+}
+
+// dated reports whether n, a normal form, starts with a year of four or
+// more digits, the shape only a date version normalizes to.
+func dated(n string) bool {
+	i := strings.IndexFunc(n, func(r rune) bool { return r < '0' || r > '9' })
+	return i >= 4 || i < 0 && len(n) >= 4
+}
+
+func TestNormalizeDateVersion(t *testing.T) {
+	for in, want := range map[string]string{
+		"0000-00":    "0000.00",
+		"2010-01-02": "2010.01.02",
+		"2010.01.02": "2010.01.02.0",
+		"1.2":        "1.2.0.0",
+	} {
+		if got, err := normalize(in); err != nil || got != want {
+			t.Errorf("normalize(%q) = %q, %v; want %q", in, got, err, want)
+		}
+	}
+	if dated("1.2.0.0") || !dated("2010.01.02") {
+		t.Error("dated misreads a year")
+	}
 }
