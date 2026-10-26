@@ -489,7 +489,8 @@ scenarios:
     command: ["npm", "offlinelib", "--offline", "--path", "projects/wp"]
     env:
       exit: 0
-      says: ["offline"]
+      # The exact note, so the check can't pass on the package name.
+      says: ["Offline: only cached data and archives were used."]
       note: "works and says it is offline"
   - id: e10
     kind: env

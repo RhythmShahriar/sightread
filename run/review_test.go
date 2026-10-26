@@ -367,6 +367,22 @@ func TestSignalDirsCheckedFirst(t *testing.T) {
 	}
 }
 
+// TestOfflineNote: an --offline run says so in its notes, whatever it
+// reviews; an online run doesn't.
+func TestOfflineNote(t *testing.T) {
+	for _, offline := range []bool{false, true} {
+		w := runtest.Install(t)
+		w.Publish(core.WPPlugin, "akismet", "5.3.3", "5.3.5")
+		w.Install(core.WPPlugin, "akismet", "5.3.3")
+		req := request(t, "all")
+		req.Getter.Offline = offline
+		rep := review(t, req)
+		if got := slices.Contains(rep.Notes, run.OfflineNote); got != offline {
+			t.Errorf("offline %v: notes %q", offline, rep.Notes)
+		}
+	}
+}
+
 // TestTreeMetaFromCache: what a source reads from the release's files
 // is filled again for a cached tree, so a second run reports the same;
 // the changelog keeps only the entries newer than the installed side.

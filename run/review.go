@@ -30,6 +30,10 @@ import (
 // nothing else prints these notes instead of a report.
 const NothingToCompare = ": nothing to compare"
 
+// OfflineNote is the report note of every --offline run (or one with
+// RHYTHM_OFFLINE set), so a reader knows nothing was asked of a registry.
+const OfflineNote = "Offline: only cached data and archives were used."
+
 // Stop reasons of core.Report.StoppedBy.
 const (
 	StoppedInterrupted = "interrupted"
@@ -99,6 +103,9 @@ func Review(ctx context.Context, req Request) (*core.Report, error) {
 	r.pinBase(ctx)
 	if err := r.setup(); err != nil {
 		return nil, err
+	}
+	if r.env.Offline {
+		r.note(OfflineNote)
 	}
 
 	work, cancel := context.WithCancel(context.WithoutCancel(ctx))
