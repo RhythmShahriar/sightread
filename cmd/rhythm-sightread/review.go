@@ -23,6 +23,7 @@ import (
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/rhythm/kit/config"
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/fetch"
 	"github.com/RhythmShahriar/sightread/run"
 )
 
@@ -285,9 +286,17 @@ func (p *problems) print(w io.Writer, rep *core.Report) {
 	var lines []string
 	for _, e := range p.errs {
 		c := *e
-		if c.Code == core.ERateLimited && len(c.Hint) > 0 {
+		reviewed, total := len(rep.Updates), len(rep.Updates)+failed
+		var budget *fetch.ErrGitHubBudget
+		switch {
+		case c.Code == core.ERateLimited && len(c.Hint) > 0:
 			c.Hint = slices.Clone(c.Hint)
-			c.Hint[0] = fmt.Sprintf("reviewed %d of %d updates; %s", len(rep.Updates), len(rep.Updates)+failed, c.Hint[0])
+			c.Hint[0] = fmt.Sprintf("reviewed %d of %d updates; %s", reviewed, total, c.Hint[0])
+		case c.Code == core.EGitHubLimit && errors.As(c.Err, &budget):
+			c = *fetch.GitHubLimitError(c.Command, budget.Limit, budget.Needed, reviewed, total)
+		case fetch.IsOffline(&c) && failed > 0:
+			c.Hint = slices.Clone(c.Hint)
+			c.Hint[0] = fetch.OfflineHint(failed, total)
 		}
 		if text := c.Error(); !seen[text] {
 			seen[text] = true

@@ -15,6 +15,7 @@ import (
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/rhythm/kit/config"
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/fetch"
 	"github.com/RhythmShahriar/sightread/run/runtest"
 )
 
@@ -296,6 +297,42 @@ func TestErrorMessages(t *testing.T) {
 		if code := core.ErrorCode("E" + strconv.Itoa(i)); !seen[code] {
 			t.Errorf("no case for %s", code)
 		}
+	}
+}
+
+// TestRunCounts: E16 and an offline E7 from fetch get the run's counts
+// (PRD section 10); without fetch's cause they print as they came.
+func TestRunCounts(t *testing.T) {
+	const partial = "rhythm-sightread: the run is partial, so --fail-on high can't pass it\n"
+	for _, c := range []struct {
+		name string
+		err  *core.Error
+		want string
+	}{
+		{"github budget", &core.Error{Code: core.EGitHubLimit, Exit: cli.ExitUnavailable, What: "x", Err: &fetch.ErrGitHubBudget{Limit: 60, Needed: 111}},
+			"rhythm-sightread composer: api.github.com allows 60 requests an hour without a token and this run needs about 111\n" +
+				"  set GITHUB_TOKEN (sent only to api.github.com); 1 of 2 packages were reviewed\n" + partial},
+		{"offline", stageErr(core.ENetwork, cli.ExitUnavailable, "", "can't reach repo.packagist.org (offline and not cached)",
+			"with --offline only cached data and archives are used; run once without it to fill the cache"),
+			"rhythm-sightread: can't reach repo.packagist.org (offline and not cached)\n" +
+				"  with --offline only cached data and archives are used and 1 of 2 aren't cached; run once without it to fill the cache\n" + partial},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			w := world(t)
+			w.Publish(core.Composer, "monolog/monolog", "3.0.0", "3.1.0")
+			w.Publish(core.Composer, "psr/log", "3.0.0", "3.0.1")
+			w.Install(core.Composer, "monolog/monolog", "3.0.0")
+			w.Install(core.Composer, "psr/log", "3.0.0")
+			e := *c.err
+			if e.Code == core.EGitHubLimit {
+				e.Command = "composer"
+			}
+			failFetch(t, w, core.Composer, "monolog/monolog", &e)
+			code, _, errOut := mainRun(t, "rhythm-sightread", "all", "--fail-on", "high")
+			if code != cli.ExitUnavailable || errOut != c.want {
+				t.Errorf("exit %d stderr\n%q\nwant\n%q", code, errOut, c.want)
+			}
+		})
 	}
 }
 
