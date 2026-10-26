@@ -335,7 +335,7 @@ func jsAliases(st *stream) map[string]string {
 			case lhs.k == tName:
 				out[lhs.text] = path
 			case lhs.punct("}") && i-2 < len(st.match) && st.match[i-2] >= 0:
-				bindImports(toks, st.match[i-2]+1, i-2, path, ":", out)
+				bindImports(toks, int(st.match[i-2])+1, i-2, path, ":", out)
 			}
 		case t.is(tName, "import") && !at(toks, i+1).punct("(") && !at(toks, i+1).punct("."):
 			from := -1

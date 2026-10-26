@@ -99,6 +99,7 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 			un = append(un, core.Unanalysed{Path: path, Reason: reasonUnterminated(t.Construct(), t.Line)})
 		}
 		st = newStream(langPHP, normPHP(ptoks))
+		ptoks = keepPHP(ptoks)
 	} else {
 		jtoks = js.Lex(src)
 		if t, ok := jsError(jtoks, len(src)); ok && ctx != core.CtxDecoded {
@@ -106,6 +107,7 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 		}
 		st = newStream(langJS, normJS(jtoks))
 		amb = ambiguousRegexps(jtoks)
+		jtoks = keepJS(jtoks)
 	}
 	timeUp := func(out []core.Feature) ([]core.Feature, []core.Unanalysed) {
 		sortFeatures(out)
@@ -151,6 +153,50 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	return out, un
 }
 
+// keepPHP returns the PHP tokens the scans after the walk read (hosts
+// in comments, HTML and strings; Unicode in any token) in a new slice,
+// so the full token slice can be freed while the walk runs.
+func keepPHP(toks []php.Token) []php.Token {
+	var out []php.Token
+	for _, t := range toks {
+		switch t.Kind {
+		case php.Comment, php.InlineHTML, php.String:
+			out = append(out, t)
+		default:
+			if highByte(t.Text) {
+				out = append(out, t)
+			}
+		}
+	}
+	return out
+}
+
+// keepJS is keepPHP for JavaScript: comments, literals and any token
+// with a byte over 0x7f.
+func keepJS(toks []js.Token) []js.Token {
+	var out []js.Token
+	for _, t := range toks {
+		switch t.Kind {
+		case js.Comment, js.String, js.Template, js.RegExp:
+			out = append(out, t)
+		default:
+			if highByte(t.Text) {
+				out = append(out, t)
+			}
+		}
+	}
+	return out
+}
+
+func highByte(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return true
+		}
+	}
+	return false
+}
+
 // ambiguousRegexps returns the offsets of the regular expressions that
 // follow a closing brace. Whether such a slash divides depends on what
 // the brace closed: after a block statement it starts a regular
@@ -189,6 +235,7 @@ func rereadJS(path string, src []byte, ctx string, lines lineIndex, amb []int, c
 	toks := js.Lex(patched)
 	st := newStream(langJS, normJS(toks))
 	st.clk = clk
+	toks = keepJS(toks)
 	col := newCollector(path, ctx, lines)
 	ex := newExtractor(st, col)
 	out := runFlow(st, lines, path, ctx, ex)

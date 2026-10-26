@@ -260,7 +260,7 @@ func (e *extractor) jsEnv(i, j int, alias map[string]bool) int {
 	switch {
 	case p.punct("=") && at(toks, i-2).punct("}"):
 		// const { NPM_TOKEN, HOME } = process.env
-		open := e.st.match[i-2]
+		open := int(e.st.match[i-2])
 		if open < 0 || open >= i-2 {
 			break
 		}

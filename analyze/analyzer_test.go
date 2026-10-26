@@ -8,8 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"runtime"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 	"unicode/utf8"
@@ -508,6 +510,67 @@ func TestLexerBypasses(t *testing.T) {
 				t.Errorf("%s:%s present = %v, want %v\n%s", tc.kind, tc.key, got, tc.want, dump(set))
 			}
 		})
+	}
+}
+
+// denseBundle is webpack-shaped minified JavaScript of about size
+// bytes: call-heavy, close to one token per byte, the analyzer's most
+// memory-hungry input.
+func denseBundle(size, seed int) string {
+	var b strings.Builder
+	b.Grow(size + 128)
+	for i := 0; b.Len() < size; i++ {
+		fmt.Fprintf(&b, "n[%d]=function(e,t,r){var o=r(%d),a=o.f(e.x,t[%d]);e.exports={a:a,b:o.g(\"s%d\")}},", i, i+seed, i, i)
+	}
+	return b.String()
+}
+
+// Workers share a budget of bytes in analysis, so many large bundles
+// cost about what four MiB of them cost, not one bundle per core.
+func TestMemoryBound(t *testing.T) {
+	if testing.Short() || raceSlowdown > 1 {
+		t.Skip("16 MiB of dense bundles")
+	}
+	files := map[string]string{}
+	for i := range 16 {
+		files[fmt.Sprintf("dist/b%02d.js", i)] = denseBundle(1<<20, i)
+	}
+	tree := coretest.Tree(files)
+	runtime.GC()
+	var base runtime.MemStats
+	runtime.ReadMemStats(&base)
+	var peak atomic.Uint64
+	done := make(chan struct{})
+	sampled := make(chan struct{})
+	go func() {
+		defer close(sampled)
+		var m runtime.MemStats
+		for {
+			runtime.ReadMemStats(&m)
+			peak.Store(max(peak.Load(), m.HeapInuse))
+			select {
+			case <-done:
+				return
+			case <-time.After(2 * time.Millisecond):
+			}
+		}
+	}()
+	lim := core.DefaultLimits()
+	lim.FileBudget = time.Minute // memory is under test, not time
+	set := analyzeAll(t, tree, lim)
+	close(done)
+	<-sampled
+	if len(set.Unanalysed) != 0 {
+		t.Errorf("unanalysed %q", set.Unanalysed)
+	}
+	// One MiB of this input peaks near 170 MiB of heap; with four in
+	// analysis at once that is under 700 MiB. Without the budget a
+	// 16-core machine reached several GiB.
+	const ceiling = 1 << 30
+	used := peak.Load() - min(peak.Load(), base.HeapInuse)
+	t.Logf("peak heap %d MiB over a %d MiB base", used>>20, base.HeapInuse>>20)
+	if used > ceiling {
+		t.Errorf("peak heap %d MiB, over %d MiB", used>>20, ceiling>>20)
 	}
 }
 

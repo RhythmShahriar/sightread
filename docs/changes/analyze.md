@@ -140,6 +140,10 @@ padding or a broken construct can never hide code silently.
   package. The package budget is counted in path order, so the same
   files pass it on every run.
 - Folding: 16 steps and 64 KiB of result per expression.
+- Memory: the workers hold at most 4 MiB of source in analysis at once
+  (a file counts its size, at most the whole 4 MiB). Many small files
+  run side by side; large bundles run one after another, so peak memory
+  stays near that of one 4 MiB file whatever the CPU count.
 - Results are the same on every run: files are analysed on one worker
   per CPU and merged sorted by path, line, kind and key.
 - Arguments: FCall attributes `arg0` to `arg3` hold folded text

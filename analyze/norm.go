@@ -37,14 +37,17 @@ const (
 // concatenation they mean: "a{$b}c" becomes ( "a" . ( $b ) . "c" ) and
 // `a${b}c` becomes ( "a" + ( b ) + "c" ), so folding and taint tracking
 // need no string special case.
+//
+// A 4 MiB minified file has millions of tokens, so the fields are
+// ordered to pack: the two one-byte fields share the last word.
 type tok struct {
-	k     tkind
 	text  string // source text; for a PHP name lower case without a leading \
 	raw   string // a name as written, for display
 	val   string // a tStr's value
-	known bool   // a tStr's value is exact
 	line  int
 	off   int
+	k     tkind
+	known bool // a tStr's value is exact
 }
 
 func (t tok) is(k tkind, text string) bool { return t.k == k && t.text == text }
@@ -55,12 +58,12 @@ func (t tok) punct(text string) bool { return t.k == tPunct && t.text == text }
 type stream struct {
 	lang  lang
 	toks  []tok
-	match []int  // index of the matching bracket, or len(toks) when unbalanced
-	clk   *clock // the file's time budget, ticked by the walk
+	match []int32 // index of the matching bracket, or len(toks) when unbalanced; int32 halves it
+	clk   *clock  // the file's time budget, ticked by the walk
 }
 
 func newStream(l lang, toks []tok) *stream {
-	s := &stream{lang: l, toks: toks, match: make([]int, len(toks))}
+	s := &stream{lang: l, toks: toks, match: make([]int32, len(toks))}
 	var stack []int
 	for i, t := range toks {
 		s.match[i] = -1
@@ -76,8 +79,8 @@ func newStream(l lang, toks []tok) *stream {
 			open := opener(t.text)
 			for k := len(stack) - 1; k >= 0; k-- {
 				if toks[stack[k]].text == open {
-					s.match[stack[k]] = i
-					s.match[i] = stack[k]
+					s.match[stack[k]] = int32(i) // #nosec G115 -- a token index is far below 2^31
+					s.match[i] = int32(stack[k]) // #nosec G115 -- as above
 					stack = stack[:k]
 					break
 				}
@@ -85,7 +88,7 @@ func newStream(l lang, toks []tok) *stream {
 		}
 	}
 	for _, i := range stack {
-		s.match[i] = len(toks)
+		s.match[i] = int32(len(toks)) // #nosec G115 -- input is capped far below 2^31 tokens
 	}
 	return s
 }
@@ -103,8 +106,8 @@ func opener(closer string) string {
 // close returns the index of the bracket that closes the one at i, or
 // len(toks) when it never closes.
 func (s *stream) close(i int) int {
-	if i < len(s.match) && s.match[i] > i {
-		return s.match[i]
+	if i < len(s.match) && int(s.match[i]) > i {
+		return int(s.match[i])
 	}
 	return len(s.toks)
 }

@@ -74,9 +74,11 @@ type lexer struct {
 // "\u00a0eval(y)" both show the eval.
 func Lex(src []byte) []Token {
 	l := &lexer{src: string(src), line: 1}
-	// Minified bundles run near one token per two bytes; reserving that
-	// up front avoids copying a large slice as it grows.
-	l.toks = make([]Token, 0, len(src)/2+4)
+	// Hand-written code runs near one token per four bytes and dense
+	// minified code near one per two. Reserving for the first keeps
+	// memory close to the need; a dense bundle grows the slice a few
+	// times.
+	l.toks = make([]Token, 0, len(src)/4+4)
 	l.run()
 	return l.toks
 }

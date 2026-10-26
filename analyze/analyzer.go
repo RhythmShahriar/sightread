@@ -17,6 +17,7 @@ import (
 	"sync"
 
 	"github.com/RhythmShahriar/rhythm/kit/secrets"
+	"golang.org/x/sync/semaphore"
 
 	"github.com/RhythmShahriar/sightread/core"
 )
@@ -31,6 +32,14 @@ func init() { core.SetAnalyzer(Analyzer{}) }
 // tailMax is how much of the end of an oversized asset is kept to look
 // for code appended after the image data.
 const tailMax = 1 << 20
+
+// inflight is how many bytes of source the workers analyse at once.
+// Analysis holds about a hundred times a file's size at its peak (the
+// lexer's tokens, the normalised stream, the walk's values), so the
+// workers share this budget rather than each taking a file of up to
+// 4 MiB: many small files still run side by side, while large bundles
+// run one after another and peak memory stays that of one file.
+const inflight = 4 << 20
 
 // ownDirs returns the folder names a WordPress install could give the
 // package: the archive's stripped top folder ("akismet/" gives
@@ -50,6 +59,11 @@ func ownDirs(t *core.Tree) []string {
 	return out
 }
 
+// memWeight is what a file of size bytes holds from the inflight
+// budget: at least 1 so empty files take turns too, at most the whole
+// budget so a file over it (with a raised limit) still runs.
+func memWeight(size int64) int64 { return min(max(size, 1), inflight) }
+
 // fileResult is what one file gave.
 type fileResult struct {
 	feats    []core.Feature
@@ -66,7 +80,8 @@ type fileResult struct {
 // closed: a code file over lim.EntryAnalysed, one whose analysis takes
 // longer than lim.FileBudget, one with an unterminated construct and
 // one whose blobs hit a decode limit are listed in Unanalysed with the
-// reason. Files are analysed on GOMAXPROCS workers and the result is
+// reason. Files are analysed on GOMAXPROCS workers that together hold
+// at most 4 MiB of source in analysis to bound memory. The result is
 // the same on every run: features sorted by path, line, kind and key.
 // Only a done ctx is an error.
 func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim core.Limits) (*core.FeatureSet, error) {
@@ -81,6 +96,7 @@ func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim c
 	paths = slices.Compact(paths)
 	results := make([]fileResult, len(paths))
 	jobs := make(chan int)
+	mem := semaphore.NewWeighted(inflight)
 	var wg sync.WaitGroup
 	for range max(1, min(runtime.GOMAXPROCS(0), len(paths))) {
 		wg.Add(1)
@@ -88,7 +104,7 @@ func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim c
 			defer wg.Done()
 			for i := range jobs {
 				if ctx.Err() == nil {
-					results[i] = analyzeFile(ctx, t, paths[i], lim, own)
+					results[i] = analyzeFile(ctx, t, paths[i], lim, mem, own)
 				}
 			}
 		}()
@@ -173,8 +189,10 @@ func manifest(p string) bool {
 // styleExts are the style sheets read for data URIs.
 var styleExts = map[string]bool{".css": true, ".scss": true, ".sass": true, ".less": true}
 
-// analyzeFile analyses one file of t within its time budget.
-func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, own []string) fileResult {
+// analyzeFile analyses one file of t within its time budget, holding
+// its size in bytes (at most the whole budget) from mem while it reads
+// and analyses it. The time budget starts after any wait.
+func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, mem *semaphore.Weighted, own []string) fileResult {
 	f, ok := t.Lookup(p)
 	if !ok || f.Mode&fs.ModeType != 0 {
 		return fileResult{} // removed, or a link: the archive issues cover links
@@ -197,7 +215,25 @@ func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, o
 	if !code && !asset && !style && !doc && f.Kind != core.KindJSON && !secretText(p, f.Kind) {
 		return fileResult{}
 	}
+	// The read and the analysis hold the file's size from mem. The size
+	// an archive claims sets the first hold, so a worker waits before it
+	// reads; the bytes actually read can only raise it.
+	weight := memWeight(f.Size)
+	if err := mem.Acquire(ctx, weight); err != nil {
+		return fileResult{} // canceled: Analyze returns ctx's error
+	}
+	defer func() { mem.Release(weight) }()
 	src, tail, over, err := readFile(t, f, lim.EntryAnalysed, asset)
+	if w := memWeight(int64(len(src) + len(tail))); err == nil && w > weight {
+		// Let go before asking for more, so two workers never each
+		// hold part of the budget while waiting for the rest.
+		mem.Release(weight)
+		weight = 0
+		if err := mem.Acquire(ctx, w); err != nil {
+			return fileResult{}
+		}
+		weight = w
+	}
 	if err != nil {
 		return fileResult{un: []core.Unanalysed{{Path: p, Reason: reasonUnread}}}
 	}
