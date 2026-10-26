@@ -4,6 +4,8 @@
 package policy
 
 import (
+	"crypto/ed25519"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -159,6 +161,13 @@ func (s *Store) ParseConfig(data []byte, name string) (*core.Config, error) {
 		if strings.TrimSpace(p) == "" {
 			return nil, bad("allow_from: a path is empty")
 		}
+	}
+	for i, k := range c.TrustedKeys {
+		k = strings.TrimSpace(k)
+		if !trustedKey(k) {
+			return nil, bad("trusted_keys %d: %s is not a key such as ed25519:<base64>; %s verify-report prints a report's key", i+1, show(k), cli.Name())
+		}
+		c.TrustedKeys[i] = k
 	}
 	if err := checkSignals(&c.Signals); err != nil {
 		return nil, bad("%s", err)
@@ -408,6 +417,13 @@ func display(p string) string {
 
 // show quotes a value from a file for a message: secrets masked and
 // control characters made visible.
+// trustedKey reports whether k is a key ID as report/sign.go writes it:
+// "ed25519:" and the base64 of a 32-byte public key.
+func trustedKey(k string) bool {
+	raw, err := base64.StdEncoding.DecodeString(strings.TrimPrefix(k, "ed25519:"))
+	return strings.HasPrefix(k, "ed25519:") && err == nil && len(raw) == ed25519.PublicKeySize
+}
+
 func show(v string) string { return fmt.Sprintf("%q", sanitize(v)) }
 
 func sanitize(v string) string { return term.Sanitize(secrets.Redact(v)) }

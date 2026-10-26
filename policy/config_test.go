@@ -93,6 +93,8 @@ func TestConfigRules(t *testing.T) {
 		{"production URL", "soundcheck:\n  production: [shop.example.com]\n", `soundcheck.production 1: "shop.example.com" is not a site URL such as https://shop.example.com`},
 		{"local_files empty", "local_files:\n  gravityforms: \"\"\n", "local_files.gravityforms: needs a path such as ~/vendor-zips/gravityforms-{version}.zip"},
 		{"allow_from empty", "allow_from: [\"\"]\n", "allow_from: a path is empty"},
+		{"trusted key no prefix", "trusted_keys: [abc]\n", `trusted_keys 1: "abc" is not a key such as ed25519:<base64>; rhythm sightread verify-report prints a report's key`},
+		{"trusted key short", "trusted_keys: [\"ed25519:AAAA\"]\n", `trusted_keys 1: "ed25519:AAAA" is not a key such as ed25519:<base64>; rhythm sightread verify-report prints a report's key`},
 		{"syntax", "fail_on: \"high\n", "line 2: found unexpected end of stream"},
 	}
 	for _, tc := range cases {
@@ -140,6 +142,7 @@ local_files:
   gravityforms: ~/vendor-zips/gravityforms-{version}.zip
 allow_file: .sightread/allowed.yaml
 allow_from: [../agency-reviews/allowed.yaml]
+trusted_keys: [" ed25519:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= "]
 signals:
   severity:
     fresh-release: LOW
@@ -178,6 +181,9 @@ soundcheck:
 	}
 	if len(cfg.Ignore) != 1 || cfg.Ignore[0].Reason != "WooCommerce inbox notes, reviewed" {
 		t.Errorf("ignore %+v", cfg.Ignore)
+	}
+	if len(cfg.TrustedKeys) != 1 || cfg.TrustedKeys[0] != "ed25519:"+strings.Repeat("A", 43)+"=" {
+		t.Errorf("trusted keys %q", cfg.TrustedKeys)
 	}
 	if got := cfg.Soundcheck.Args; len(got) != 2 || got[1] != "100" {
 		t.Errorf("soundcheck args %v", got)
