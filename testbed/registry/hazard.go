@@ -31,7 +31,7 @@ func buildHazard(top, kind string) ([]byte, error) {
 
 // zipBomb builds a zip that trips the uncompressed ratio and the entry
 // count: one highly compressible 8 MiB entry (ratio well over 200:1) and
-// 120,000 empty entries (over the 100,000 cap).
+// 101,000 empty entries (over the 100,000 cap).
 func zipBomb(top string) ([]byte, error) {
 	var buf bytes.Buffer
 	zw := zip.NewWriter(&buf)
@@ -45,7 +45,7 @@ func zipBomb(top string) ([]byte, error) {
 			return nil, err
 		}
 	}
-	for i := 0; i < 120000; i++ {
+	for i := 0; i < 101000; i++ {
 		if _, err := zipEntry(zw, fmt.Sprintf("%s/pad/%06d", top, i)); err != nil {
 			return nil, err
 		}
