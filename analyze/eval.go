@@ -47,8 +47,6 @@ type taint struct {
 
 func (t taint) has(s source) bool { return t.bits&(1<<s) != 0 }
 
-func (t taint) real() bool { return t.bits&realMask != 0 }
-
 func (t taint) any() bool { return t.bits != 0 }
 
 func (t *taint) add(s source, line int, name string) {
@@ -563,7 +561,7 @@ func (s *scope) postfix(i, end int, isNew bool) (res, int) {
 		case t.punct("["):
 			k := s.closeAt(j, end)
 			idx, _ := s.expr(j+1, k)
-			r = s.index(r, idx)
+			r = s.index(r, idx, t.line)
 			weak = true
 			recv, method, plain = nil, "", false
 			j = k + 1
@@ -668,8 +666,8 @@ func (s *scope) member(r res, name string, line int) res {
 	return out
 }
 
-// index reads r[idx].
-func (s *scope) index(r, idx res) res {
+// index reads r[idx] on line.
+func (s *scope) index(r, idx res, line int) res {
 	out := res{t: r.t}
 	switch r.v.kind {
 	case vArr:
@@ -687,7 +685,7 @@ func (s *scope) index(r, idx res) res {
 			out.v = value{kind: vName, s: key}
 		case ok && s.lang == langJS:
 			out.v = value{kind: vName, s: r.v.s + "." + key}
-			out.t = out.t.union(s.f.h.read(s, out.v.s, 0))
+			out.t = out.t.union(s.f.h.read(s, out.v.s, line))
 		case jsRoots[r.v.s] || r.v.s == "this":
 			// window[name] with a name from data: the callee is that data.
 			out.t = out.t.union(idx.t)
