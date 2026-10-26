@@ -316,7 +316,11 @@ func parseNPMLock(lockName string, data, manifest []byte, src *npmSources, out *
 }
 
 // bunLockbError is E8: Bun's binary lockfile.
-func bunLockbError() error {
+func bunLockbError() error { return bunLockbCoreError() }
+
+// bunLockbCoreError is bunLockbError as a *core.Error, for callers that
+// adjust it or copy its text.
+func bunLockbCoreError() *core.Error {
 	return &core.Error{
 		Code:    core.EUnsupportedLock,
 		Exit:    2,
