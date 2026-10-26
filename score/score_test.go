@@ -428,6 +428,44 @@ func TestApprovedVersionChanged(t *testing.T) {
 	}
 }
 
+// TestAllowHashKind checks an entry is compared only with a hash of its
+// own kind: an archive hash never equals a manifest hash of the same
+// release, so a mixed pair is no evidence of a change.
+func TestAllowHashKind(t *testing.T) {
+	entry := func(sha, hash string) core.AllowEntry {
+		return core.AllowEntry{Package: "wp-plugin:wordfence", Version: "1.1.0", SHA256: sha, Hash: hash, Reason: "checked", By: "Ann Reviewer", Date: "2026-10-20"}
+	}
+	cases := []struct {
+		name     string
+		e        core.AllowEntry
+		kind     string
+		conflict bool
+		allowed  bool
+	}{
+		{"pos: manifest entry, manifest changed", entry(shaB, core.HashManifest), core.HashManifest, true, false},
+		{"pos: archive entry, archive changed", entry(shaB, ""), core.HashArchive, true, false},
+		{"pos: manifest entry, same manifest", entry(shaA, core.HashManifest), core.HashManifest, false, true},
+		{"neg: archive entry, manifest side", entry(shaB, core.HashArchive), core.HashManifest, false, false},
+		{"neg: manifest entry, archive side", entry(shaB, core.HashManifest), core.HashArchive, false, false},
+		{"neg: archive entry, same sha but manifest side", entry(shaA, core.HashArchive), core.HashManifest, false, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			set := allowFile(t, tc.e)
+			u := upd(core.WPPlugin, "wordfence", fd("license-change", "", 0))
+			u.To.HashKind = tc.kind
+			score(u, nil, set, nil)
+			got := slices.ContainsFunc(u.Findings, func(f core.Finding) bool { return f.ID == "approved-version-changed" })
+			if got != tc.conflict {
+				t.Errorf("approved-version-changed %v, want %v", got, tc.conflict)
+			}
+			if allowed := find(t, u, "license-change").Allowed != nil; allowed != tc.allowed {
+				t.Errorf("allowed %v, want %v", allowed, tc.allowed)
+			}
+		})
+	}
+}
+
 func TestBaselineAndConfidence(t *testing.T) {
 	u := upd(core.NPM, "x", fd("bot-cloaking", "a.js", 1), fd("eval-dynamic", "b.js", 2), fd("integrity-mismatch", "", 0))
 	probe := upd(core.NPM, "x", fd("bot-cloaking", "a.js", 1), fd("eval-dynamic", "b.js", 2), fd("integrity-mismatch", "", 0))

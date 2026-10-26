@@ -584,3 +584,30 @@ func FuzzAllowFile(f *testing.F) {
 		}
 	})
 }
+
+func TestAllowMatchKind(t *testing.T) {
+	dir := inProject(t)
+	man := entry("wp-plugin:akismet", "5.3.1", shaA)
+	man.Hash = core.HashManifest
+	writeFile(t, filepath.Join(dir, Dir, AllowName), mustAllowYAML(t, man))
+	set, err := testStore(nil).LoadAllow(&core.Config{}, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := set.(*AllowSet)
+	if m, counted, _ := a.MatchKind(core.WPPlugin, "akismet", "5.3.1", shaA, core.HashManifest); m == nil || !counted {
+		t.Error("same kind and hash must match")
+	}
+	if _, _, c := a.MatchKind(core.WPPlugin, "akismet", "5.3.1", shaB, core.HashManifest); c == nil {
+		t.Error("same kind with another hash must conflict")
+	}
+	for _, sha := range []string{shaA, shaB} {
+		if m, _, c := a.MatchKind(core.WPPlugin, "akismet", "5.3.1", sha, core.HashArchive); m != nil || c != nil {
+			t.Errorf("an archive hash was compared with a manifest entry: %v %v", m, c)
+		}
+	}
+	// Match compares every kind, as core.AllowSet has none.
+	if _, _, c := a.Match(core.WPPlugin, "akismet", "5.3.1", shaB); c == nil {
+		t.Error("Match must still report the conflict")
+	}
+}

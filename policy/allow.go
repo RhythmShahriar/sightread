@@ -58,7 +58,17 @@ type AllowSet struct {
 // another sha256 for that version is returned as the conflict, which
 // the scorer turns into approved-version-changed. A conflicting entry
 // added by the change itself is no evidence of anything and is skipped.
+// Match compares entries of either hash kind; MatchKind narrows that.
 func (a *AllowSet) Match(eco core.Ecosystem, name, version, sha256 string) (*core.AllowEntry, bool, *core.AllowEntry) {
+	return a.MatchKind(eco, name, version, sha256, "")
+}
+
+// MatchKind is Match for a hash of the given kind (core.HashArchive or
+// core.HashManifest). An entry that records the other kind is skipped:
+// an archive hash and a manifest hash of the same release always
+// differ, so comparing them would raise approved-version-changed for
+// bytes that never changed. An empty kind compares every entry.
+func (a *AllowSet) MatchKind(eco core.Ecosystem, name, version, sha256, kind string) (*core.AllowEntry, bool, *core.AllowEntry) {
 	if a == nil {
 		return nil, false, nil
 	}
@@ -70,6 +80,9 @@ func (a *AllowSet) Match(eco core.Ecosystem, name, version, sha256 string) (*cor
 			continue
 		}
 		if r.entry.Until != "" && r.entry.Until < today {
+			continue
+		}
+		if kind != "" && hashKind(r.entry.Hash) != kind {
 			continue
 		}
 		if strings.EqualFold(r.entry.SHA256, sha256) && sha256 != "" {

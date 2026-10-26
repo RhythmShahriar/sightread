@@ -205,6 +205,13 @@ func matchPath(pattern, file string) bool {
 	return false
 }
 
+// kindMatcher is an allow set that can compare only entries recording
+// the same hash kind as the update (policy.AllowSet). core.AllowSet has
+// no kind, so the scorer asks for it.
+type kindMatcher interface {
+	MatchKind(eco core.Ecosystem, name, version, sha256, kind string) (*core.AllowEntry, bool, *core.AllowEntry)
+}
+
 // allow applies the allow entry for this exact archive, or adds
 // approved-version-changed when an entry records another hash for the
 // same version.
@@ -214,7 +221,13 @@ func (s *Scorer) allow(u *core.Update, allow core.AllowSet) {
 		// unverified update is never allowed.
 		return
 	}
-	match, counted, conflict := allow.Match(u.Eco, u.Name, u.To.Version, u.To.SHA256)
+	var match, conflict *core.AllowEntry
+	var counted bool
+	if k, ok := allow.(kindMatcher); ok && u.To.HashKind != "" {
+		match, counted, conflict = k.MatchKind(u.Eco, u.Name, u.To.Version, u.To.SHA256, u.To.HashKind)
+	} else {
+		match, counted, conflict = allow.Match(u.Eco, u.Name, u.To.Version, u.To.SHA256)
+	}
 	if match != nil && !counted {
 		// Shown, never applied: a change can't approve its own update.
 		s.note(u, fmt.Sprintf(inChangeNote, core.Ref{Eco: u.Eco, Name: u.Name, Version: u.To.Version}))
