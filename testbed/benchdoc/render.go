@@ -32,7 +32,7 @@ var KnownGaps = []string{
 	"Owner changes that keep the same account; sales WordPress.org does not show (PRD 18 point 6).",
 	"Typosquats of niche packages that are not on the popular-names list.",
 	"Case and Unicode collisions on macOS and Windows file systems: e05 runs on Linux, where only the report is checked.",
-	"Windows-only behaviour (e13) unless the benchmark runs on Windows.",
+	"Windows-only behaviour (e13) on this board: a Linux run reports it not run; the nightly bench-windows job runs it on windows-latest.",
 	"SARIF fingerprint stability, HTML escaping in a real browser and watch alert dedupe: covered by golden and unit tests, not by this board.",
 	"Lockfiles Sightread does not read (yarn.lock, bun.lockb): checked by unit tests for the E4 and E8 messages only.",
 	"Real releases: the fixtures are not real packages; the owner-run real-release section below is the only measure of noise beyond them.",
@@ -147,16 +147,17 @@ func renderFalseAlarms(w func(string, ...any), r *Results) {
 
 func renderSafety(w func(string, ...any), r *Results) {
 	s := r.Safety
-	w("## Safety\n\nEvery bad payload targets the canary: it would connect to 127.0.0.1:18905 and write a file under testbed/state/canary if it ever ran. HTTPS_PROXY and HTTP_PROXY point at the proxy guard on 127.0.0.1:23399, which closes every connection, so a forgotten base URL fails and is counted. HOME and the project fixtures are walked before and after every run.\n\n")
+	w("## Safety\n\nEvery bad payload targets the canary: it would connect to 127.0.0.1:18905 and write a file under testbed/state/canary if it ever ran. HTTPS_PROXY and HTTP_PROXY point at the proxy guard on 127.0.0.1:23399, which closes every connection, so a forgotten base URL fails and is counted. HOME and the project fixtures are walked before and after every run. Fixtures carry fake keys built at run time; every output and report is searched for them in full.\n\n")
 	w("| Counter | Count | Must be |\n|---|---|---|\n")
 	w("| Canary connections | %d | 0 |\n", s.CanaryConnections)
 	w("| Canary files | %d | 0 |\n", len(s.CanaryFiles))
 	w("| Egress attempts | %d | 0 |\n", len(s.Egress))
-	w("| Files written outside the work folders | %d | 0 |\n\n", len(s.OutsideWrites))
+	w("| Files written outside the work folders | %d | 0 |\n", len(s.OutsideWrites))
+	w("| Fake keys printed or written unmasked | %d | 0 |\n\n", len(s.Unmasked))
 	for _, list := range []struct {
 		name  string
 		items []string
-	}{{"Canary files", s.CanaryFiles}, {"Egress attempts", s.Egress}, {"Outside writes", s.OutsideWrites}} {
+	}{{"Canary files", s.CanaryFiles}, {"Egress attempts", s.Egress}, {"Outside writes", s.OutsideWrites}, {"Unmasked fake keys", s.Unmasked}} {
 		if len(list.items) == 0 {
 			continue
 		}

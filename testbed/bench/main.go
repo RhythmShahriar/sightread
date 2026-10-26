@@ -16,6 +16,11 @@
 //
 //	go run -tags testbed ./testbed/bench [-only b01,g05,env] [-tools auto|none|all|"npm composer guarddog soundcheck"]
 //	go run -tags testbed ./testbed/bench -diff first.json second.json
+//	go run -tags testbed ./testbed/bench -only e13 -plain-http   (Windows)
+//
+// Go reads SSL_CERT_FILE only on Unix, so on Windows the registry
+// serves plain HTTP on loopback (-plain-http, the default there), which
+// Sightread accepts for a loopback mirror only.
 //
 // The e15 cases and the Soundcheck column need the Docker WordPress
 // (make -C testbed up-wp); without it they are reported as not run.
@@ -29,6 +34,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -44,6 +50,8 @@ type options struct {
 	rounds                  int
 	timeout                 time.Duration
 	large                   bool
+	// plainHTTP serves the registry and the fronts without TLS.
+	plainHTTP bool
 }
 
 func main() {
@@ -59,6 +67,7 @@ func main() {
 	flag.IntVar(&o.rounds, "rounds", 10, "control pass rounds over the good scenarios")
 	flag.DurationVar(&o.timeout, "timeout", 2*time.Minute, "time limit for each command")
 	flag.BoolVar(&o.large, "large", true, "run the p01-large performance check")
+	flag.BoolVar(&o.plainHTTP, "plain-http", runtime.GOOS == "windows", "serve the registry over plain HTTP on loopback (no compared tools); the default on Windows, where Go ignores SSL_CERT_FILE")
 	flag.StringVar(&diff, "diff", "", "compare the outcomes of two results.json files (this flag and one argument); exit 1 if they differ")
 	flag.Parse()
 
@@ -90,6 +99,16 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "bench:", err)
 		os.Exit(2)
+	}
+	if res.Partial {
+		// A partial run never claims the targets; it passes when every
+		// scenario that ran did.
+		if failed := res.PartialFailures(); len(failed) > 0 {
+			fmt.Fprintf(os.Stderr, "bench: partial run (-only): failed: %s\n", strings.Join(failed, ", "))
+			os.Exit(1)
+		}
+		fmt.Println("bench: partial run (-only): every scenario that ran passed; the 1.0 targets are not claimed")
+		return
 	}
 	if !res.Met() {
 		for _, t := range res.Targets() {

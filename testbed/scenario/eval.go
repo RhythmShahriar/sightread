@@ -26,6 +26,10 @@ const (
 	StatusFalseAlarm Status = "false-alarm"
 	// StatusPending: a scenario whose detector or stage is not merged yet.
 	StatusPending Status = "pending"
+	// StatusNoReport: the run wrote no report (a crash, a usage error, a
+	// timeout), so it can be neither caught nor clean. Shown apart from
+	// misses and false alarms so a crash is not read as one.
+	StatusNoReport Status = "no-report"
 )
 
 // Outcome is the result of evaluating one scenario against a review.

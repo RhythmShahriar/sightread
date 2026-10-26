@@ -231,6 +231,36 @@ func TestScoreboard(t *testing.T) {
 	}
 }
 
+// TestScoreboardNoReport shows a run without a report apart: not a miss,
+// not a false alarm and never a pass.
+func TestScoreboardNoReport(t *testing.T) {
+	outcomes := []Outcome{
+		{Scenario: Scenario{ID: "b01", Kind: KindBad, Title: "backdoor"}, Status: StatusNoReport},
+		{Scenario: Scenario{ID: "g01", Kind: KindGood, Title: "feature"}, Status: StatusNoReport},
+	}
+	tally := TallyOf(outcomes)
+	if tally.NoReport != 2 || tally.Missed != 0 || tally.FalseAlarm != 0 {
+		t.Errorf("tally: %+v", tally)
+	}
+	if tally.Pass() {
+		t.Error("runs without a report must not pass")
+	}
+	md := Scoreboard(outcomes)
+	for _, want := range []string{"no report 2", "NO REPORT", "### No report"} {
+		if !strings.Contains(md, want) {
+			t.Errorf("scoreboard missing %q\n%s", want, md)
+		}
+	}
+	if strings.Contains(md, "FALSE ALARM") || strings.Contains(md, "MISSED") {
+		t.Errorf("a missing report was shown as a miss or a false alarm\n%s", md)
+	}
+
+	clean := TallyOf([]Outcome{{Scenario: Scenario{ID: "g01", Kind: KindGood}, Status: StatusClean}})
+	if !clean.Pass() || strings.Contains(Scoreboard([]Outcome{{Scenario: Scenario{ID: "g01", Kind: KindGood}, Status: StatusClean}}), "### No report") {
+		t.Error("a clean run shows a no-report section or fails")
+	}
+}
+
 // TestREADMEListsEveryScenario keeps the README scenario table in step
 // with the manifest.
 func TestREADMEListsEveryScenario(t *testing.T) {

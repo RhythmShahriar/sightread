@@ -10,7 +10,7 @@ import (
 
 // Tally counts outcomes by status.
 type Tally struct {
-	Caught, FoundOther, Missed, Clean, FalseAlarm, Pending int
+	Caught, FoundOther, Missed, Clean, FalseAlarm, Pending, NoReport int
 }
 
 // TallyOf counts a set of outcomes.
@@ -30,15 +30,18 @@ func TallyOf(outcomes []Outcome) Tally {
 			t.FalseAlarm++
 		case StatusPending:
 			t.Pending++
+		case StatusNoReport:
+			t.NoReport++
 		}
 	}
 	return t
 }
 
 // Pass reports whether the 1.0 detection targets are met: every
-// non-pending bad scenario caught and no good scenario a false alarm.
+// non-pending bad scenario caught, no good scenario a false alarm and
+// every run wrote a report.
 func (t Tally) Pass() bool {
-	return t.FoundOther == 0 && t.Missed == 0 && t.FalseAlarm == 0
+	return t.FoundOther == 0 && t.Missed == 0 && t.FalseAlarm == 0 && t.NoReport == 0
 }
 
 // Scoreboard renders the detection scoreboard as Markdown. The benchmark
@@ -50,8 +53,8 @@ func Scoreboard(outcomes []Outcome) string {
 	w := func(format string, a ...any) { fmt.Fprintf(&b, format, a...) }
 
 	w("## Scoreboard\n\n")
-	w("Caught %d, found as something else %d, missed %d, false alarms %d, pending %d.\n\n",
-		t.Caught, t.FoundOther, t.Missed, t.FalseAlarm, t.Pending)
+	w("Caught %d, found as something else %d, missed %d, false alarms %d, no report %d, pending %d.\n\n",
+		t.Caught, t.FoundOther, t.Missed, t.FalseAlarm, t.NoReport, t.Pending)
 
 	w("### Bad scenarios\n\n")
 	w("| Scenario | Title | Result | Signals |\n")
@@ -71,6 +74,16 @@ func Scoreboard(outcomes []Outcome) string {
 			continue
 		}
 		w("| %s | %s | %s | %s |\n", o.Scenario.ID, o.Scenario.Title, result(o), joinOrDash(o.FalseAlarms))
+	}
+
+	if t.NoReport > 0 {
+		w("\n### No report (shown apart: neither caught nor clean)\n\n")
+		w("The run crashed, timed out or stopped with a usage error before writing its report; the problems table says why.\n\n")
+		for _, o := range outcomes {
+			if o.Status == StatusNoReport {
+				w("- %s %s\n", o.Scenario.ID, o.Scenario.Title)
+			}
+		}
 	}
 
 	if t.Pending > 0 {
@@ -99,6 +112,8 @@ func result(o Outcome) string {
 		return "FALSE ALARM"
 	case StatusPending:
 		return "pending"
+	case StatusNoReport:
+		return "NO REPORT"
 	}
 	return string(o.Status)
 }

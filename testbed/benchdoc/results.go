@@ -148,11 +148,16 @@ type Safety struct {
 	// OutsideWrites lists files written outside the work folders, as
 	// "<scenario>: added: <path>".
 	OutsideWrites []string `json:"outside_writes,omitempty"`
+	// Unmasked lists the places a fixture's fake key appeared in full
+	// (terminal output or a written report), as "<scenario>: <where>".
+	Unmasked []string `json:"unmasked,omitempty"`
 }
 
-// Zero reports whether nothing fired, escaped or was written outside.
+// Zero reports whether nothing fired, escaped, was written outside or
+// was printed unmasked.
 func (s Safety) Zero() bool {
-	return s.CanaryConnections == 0 && len(s.CanaryFiles) == 0 && len(s.Egress) == 0 && len(s.OutsideWrites) == 0
+	return s.CanaryConnections == 0 && len(s.CanaryFiles) == 0 && len(s.Egress) == 0 && len(s.OutsideWrites) == 0 &&
+		len(s.Unmasked) == 0
 }
 
 // Large is the p01-large performance check.

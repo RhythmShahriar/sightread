@@ -55,9 +55,10 @@ type execResult struct {
 // output is stdout and stderr together, for text assertions.
 func (r execResult) output() string { return string(r.stdout) + "\n" + string(r.stderr) }
 
-// bases are the SIGHTREAD_* variables of PRD 8.4, all on the registry.
-func bases() map[string]string {
-	at := func(port int, path string) string { return fmt.Sprintf("https://127.0.0.1:%d%s", port, path) }
+// bases are the SIGHTREAD_* variables of PRD 8.4, all on the registry,
+// with scheme http or https.
+func bases(scheme string) map[string]string {
+	at := func(port int, path string) string { return fmt.Sprintf("%s://127.0.0.1:%d%s", scheme, port, path) }
 	return map[string]string{
 		"SIGHTREAD_WPORG_API":       at(ports.WPOrg, ""),
 		"SIGHTREAD_WPDL_API":        at(ports.WPOrg, ""),
@@ -128,11 +129,13 @@ func (h *harness) environ(o runOpts) ([]string, error) {
 	env["RHYTHM_CONFIG_DIR"] = filepath.Join(h.work, "config")
 	env["RHYTHM_NO_UPDATE_CHECK"] = "1"
 	env["NO_COLOR"] = "1"
-	env["SSL_CERT_FILE"] = filepath.Join(h.state, "ca.pem")
+	if !h.plain {
+		env["SSL_CERT_FILE"] = filepath.Join(h.state, "ca.pem")
+	}
 	env["SIGHTREAD_NPM_EXTRA_KEYS"] = filepath.Join(h.state, "npm-keys.json")
 	env["SIGHTREAD_CANARY_DIR"] = filepath.Join(h.state, "canary")
 	env["TESTBED_STATE"] = h.state
-	for k, v := range bases() {
+	for k, v := range bases(h.scheme()) {
 		env[k] = v
 	}
 	for k, v := range proxyEnv() {
@@ -217,6 +220,8 @@ func (h *harness) run(ctx context.Context, args []string, o runOpts) execResult 
 	if before != nil {
 		h.noteOutside(o.id, before)
 	}
+	h.checkMasked(o.id, "stdout", r.stdout)
+	h.checkMasked(o.id, "stderr", r.stderr)
 	for _, a := range h.guard.Attempts()[mark:] {
 		h.egress = append(h.egress, o.id+": proxy guard: "+a)
 	}

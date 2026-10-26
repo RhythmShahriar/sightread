@@ -66,6 +66,7 @@ func TestEachFailureBreaksATarget(t *testing.T) {
 		"canary file":  func(r *Results) { r.Safety.CanaryFiles = []string{"b10"} },
 		"egress":       func(r *Results) { r.Safety.Egress = []string{"CONNECT registry.npmjs.org:443 HTTP/1.1"} },
 		"outside":      func(r *Results) { r.Safety.OutsideWrites = []string{"b01: added: .config/x"} },
+		"unmasked":     func(r *Results) { r.Safety.Unmasked = []string{"b11: report"} },
 		"env":          func(r *Results) { r.Env[0].Result = ResultFail },
 		"staging":      func(r *Results) { r.Staging[0].Result = ResultFail },
 		"cold != warm": func(r *Results) { r.Scenarios[0].WarmStatus = "missed" },
@@ -75,6 +76,7 @@ func TestEachFailureBreaksATarget(t *testing.T) {
 		"large absent": func(r *Results) { r.Large = Large{Note: "binary missing"} },
 		"slow bench":   func(r *Results) { r.Seconds = 601 },
 		"no binary":    func(r *Results) { r.BinErr = "go build failed" },
+		"no report":    func(r *Results) { r.Scenarios[1].Status, r.Scenarios[1].WarmStatus = "no-report", "no-report" },
 	}
 	for name, breakIt := range cases {
 		r := passing()
@@ -191,5 +193,50 @@ func TestDiffAndReadWrite(t *testing.T) {
 	}
 	if _, err := Read(path); err == nil {
 		t.Error("Read accepted a foreign schema")
+	}
+}
+
+// TestPartialFailures decides a partial run's exit: clean when what ran
+// passed, failing on any scenario, environment or safety problem.
+func TestPartialFailures(t *testing.T) {
+	r := passing()
+	r.Partial = true
+	if got := r.PartialFailures(); len(got) != 0 {
+		t.Fatalf("a passing partial run lists failures: %v", got)
+	}
+	// e13 not run on this machine is not a failure of a partial run.
+	cases := map[string]func(r *Results){
+		"missed":    func(r *Results) { r.Scenarios[0].Status = "missed" },
+		"no report": func(r *Results) { r.Scenarios[1].Status = "no-report" },
+		"exit":      func(r *Results) { r.Scenarios[0].Exit = 3 },
+		"env":       func(r *Results) { r.Env[0].Result = ResultFail },
+		"staging":   func(r *Results) { r.Staging[0].Result = ResultFail },
+		"canary":    func(r *Results) { r.Safety.CanaryConnections = 1 },
+		"binary":    func(r *Results) { r.BinErr = "go build failed" },
+	}
+	for name, breakIt := range cases {
+		r := passing()
+		r.Partial = true
+		breakIt(r)
+		if len(r.PartialFailures()) == 0 {
+			t.Errorf("%s: no failure listed", name)
+		}
+	}
+	r = passing()
+	r.Partial = true
+	r.Scenarios[0].Status, r.Scenarios[0].Pending = "missed", "detector not merged"
+	if got := r.PartialFailures(); len(got) != 0 {
+		t.Errorf("a pending scenario failed a partial run: %v", got)
+	}
+}
+
+// TestNoReportNotCheckedMessage: a run without a report that expects no
+// Not checked reason is not told one is missing.
+func TestNoReportNotCheckedMessage(t *testing.T) {
+	s := ScenarioResult{ID: "g01", Kind: "good", Status: "no-report", Exit: 2, WantExit: 0, NotCheckedOK: true}
+	for _, m := range s.Mismatch() {
+		if strings.Contains(m, "Not checked") {
+			t.Errorf("unexpected %q", m)
+		}
 	}
 }

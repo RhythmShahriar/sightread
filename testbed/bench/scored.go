@@ -7,6 +7,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -39,10 +40,10 @@ func (h *harness) review(ctx context.Context, s scenario.Scenario, o runOpts, ta
 	args = append(args, extra...)
 	rv := reviewed{exec: h.run(ctx, args, o)}
 
-	f, err := os.Open(out) //nolint:gosec // the report this run wrote
+	raw, err := os.ReadFile(out) //nolint:gosec // the report this run wrote
 	if err == nil {
-		rv.report, err = scenario.ReadReport(f)
-		_ = f.Close()
+		h.checkMasked(s.ID, "report "+filepath.Base(out), raw)
+		rv.report, err = scenario.ReadReport(bytes.NewReader(raw))
 	}
 	if rv.report != nil {
 		rv.outcome = scenario.Evaluate(s, rv.report)
@@ -55,11 +56,9 @@ func (h *harness) review(ctx context.Context, s scenario.Scenario, o runOpts, ta
 	if rv.exec.timedOut {
 		rv.problem = "timed out after " + h.timeout.String()
 	}
-	// Without a report nothing can be counted as caught or clean.
-	rv.outcome = scenario.Outcome{Scenario: s, Status: scenario.StatusMissed}
-	if s.Kind == scenario.KindGood {
-		rv.outcome.Status = scenario.StatusFalseAlarm
-	}
+	// Without a report nothing can be counted as caught or clean. A
+	// crash is neither a miss nor a false alarm either.
+	rv.outcome = scenario.Outcome{Scenario: s, Status: scenario.StatusNoReport}
 	if s.Pending != "" {
 		rv.outcome.Status = scenario.StatusPending
 	}
@@ -69,7 +68,8 @@ func (h *harness) review(ctx context.Context, s scenario.Scenario, o runOpts, ta
 // scored runs a bad or good scenario cold, then warm on the same cache.
 func (h *harness) scored(ctx context.Context, s scenario.Scenario) benchdoc.ScenarioResult {
 	if err := h.setStates(s.Packages()); err != nil {
-		return benchdoc.ScenarioResult{ID: s.ID, Kind: s.Kind, Title: s.Title, Status: string(scenario.StatusMissed), Problem: err.Error()}
+		return benchdoc.ScenarioResult{ID: s.ID, Kind: s.Kind, Title: s.Title, Status: string(scenario.StatusNoReport), Problem: err.Error(),
+			NotCheckedOK: len(s.Expect.NotCheckedReasons) == 0}
 	}
 	o := runOpts{id: s.ID}
 	_ = os.RemoveAll(filepath.Join(h.work, "cache", s.ID))
@@ -92,6 +92,9 @@ func (h *harness) scored(ctx context.Context, s scenario.Scenario) benchdoc.Scen
 		WarmStatus:  string(warm.outcome.Status),
 		WarmExit:    warm.exec.exit,
 	}
+	// Without a report only an expectation of no reasons is met; the
+	// missing report itself is the problem shown.
+	res.NotCheckedOK = len(s.Expect.NotCheckedReasons) == 0
 	if cold.report != nil {
 		res.Verdict = cold.report.OverallVerdict()
 		res.NotCheckedOK = cold.report.NotCheckedOK(s.Expect.NotCheckedReasons)
@@ -170,6 +173,7 @@ func (h *harness) safety() benchdoc.Safety {
 	}
 	s.Egress = append(append(s.Egress, h.egress...), h.foreignRequests()...)
 	s.OutsideWrites = h.outside
+	s.Unmasked = h.unmasked
 	return s
 }
 
@@ -208,4 +212,15 @@ func loopbackHost(hostport string) bool {
 	}
 	ip := net.ParseIP(host)
 	return ip != nil && ip.IsLoopback()
+}
+
+// checkMasked records where a fixture's fake key appears in full in b:
+// Sightread masks secrets in every output, so one found is a leak.
+func (h *harness) checkMasked(id, where string, b []byte) {
+	for _, k := range h.fakeKeys {
+		if bytes.Contains(b, []byte(k)) {
+			h.unmasked = append(h.unmasked, id+": "+where)
+			return
+		}
+	}
 }

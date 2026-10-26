@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/RhythmShahriar/sightread/testbed/scenario"
 )
 
 // Target is one 1.0 target of PRD 19 and qa.md section 9.
@@ -28,12 +30,15 @@ func (r *Results) Targets() []Target {
 		add("The binary builds and runs", false, "%s", r.BinErr)
 	}
 
-	var bad, caught, pending, good, clean int
+	var bad, caught, pending, good, clean, noReport int
 	var mismatched, unstable []string
 	for _, s := range r.Scenarios {
 		if s.Pending != "" {
 			pending++
 			continue
+		}
+		if s.Status == string(scenario.StatusNoReport) {
+			noReport++
 		}
 		switch s.Kind {
 		case "bad":
@@ -56,13 +61,14 @@ func (r *Results) Targets() []Target {
 	}
 	add("Every non-pending bad scenario caught", caught == bad, "%d of %d caught, %d pending shown apart", caught, bad, pending)
 	add("Zero false alarms on good scenarios", clean == good, "%d of %d clean", clean, good)
+	add("Every run wrote a report", noReport == 0, "%d without a report", noReport)
 	add("Exit codes, verdicts and Not checked as expected", len(mismatched) == 0, "%s", listOrNone(mismatched))
 	c := r.Control
 	add("Zero false alarms in the control pass", c.Rounds > 0 && c.FalseAlarms == 0 && len(c.Unstable) == 0,
 		"%d rounds, %d runs, %d false alarms, unstable: %s", c.Rounds, c.Runs, c.FalseAlarms, listOrNone(c.Unstable))
 	s := r.Safety
-	add("Zero canary, egress and outside-write events", s.Zero(), "canary %d connections and %d files, egress %d, outside writes %d",
-		s.CanaryConnections, len(s.CanaryFiles), len(s.Egress), len(s.OutsideWrites))
+	add("Zero canary, egress, outside-write and unmasked-key events", s.Zero(), "canary %d connections and %d files, egress %d, outside writes %d, unmasked keys %d",
+		s.CanaryConnections, len(s.CanaryFiles), len(s.Egress), len(s.OutsideWrites), len(s.Unmasked))
 
 	var failed, notRun []string
 	for _, e := range append(append([]EnvResult(nil), r.Env...), r.Staging...) {
@@ -106,4 +112,33 @@ func listOrNone(ss []string) string {
 		return "none"
 	}
 	return strings.Join(ss, ", ")
+}
+
+// PartialFailures lists what failed in a partial run (-only): a scenario
+// that ran and was not caught or clean or gave the wrong exit, verdict
+// or Not checked reasons, a failed environment or e15 case and any
+// safety event. The 1.0 targets are never claimed for a partial run;
+// this is what decides its exit code.
+func (r *Results) PartialFailures() []string {
+	var out []string
+	if r.BinErr != "" {
+		out = append(out, "binary: "+r.BinErr)
+	}
+	for _, s := range r.Scenarios {
+		if s.Pending != "" {
+			continue
+		}
+		if (s.Kind == "bad" && s.Status != "caught") || (s.Kind == "good" && s.Status != "clean") || len(s.Mismatch()) > 0 {
+			out = append(out, s.ID)
+		}
+	}
+	for _, e := range append(append([]EnvResult(nil), r.Env...), r.Staging...) {
+		if e.Result == ResultFail {
+			out = append(out, e.ID)
+		}
+	}
+	if !r.Safety.Zero() {
+		out = append(out, "safety counters")
+	}
+	return out
 }

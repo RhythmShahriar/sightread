@@ -132,12 +132,12 @@ func (h *harness) envScenario(ctx context.Context, s scenario.Scenario, c *envCh
 	o := runOpts{id: s.ID}
 	_ = os.RemoveAll(filepath.Join(h.work, "cache", s.ID))
 	front := func(port int) map[string]string {
-		return map[string]string{"SIGHTREAD_NPM_REGISTRY": fmt.Sprintf("https://127.0.0.1:%d", port)}
+		return map[string]string{"SIGHTREAD_NPM_REGISTRY": fmt.Sprintf("%s://127.0.0.1:%d", h.scheme(), port)}
 	}
 
 	switch s.ID {
 	case "e01": // registry down: the npm base names a port where nothing listens
-		o.env = map[string]string{"SIGHTREAD_NPM_REGISTRY": fmt.Sprintf("https://127.0.0.1:%d", ports.ProbeUnconfigured)}
+		o.env = map[string]string{"SIGHTREAD_NPM_REGISTRY": fmt.Sprintf("%s://127.0.0.1:%d", h.scheme(), ports.ProbeUnconfigured)}
 		args, out := h.envArgs(s, "run")
 		h.assertEnv(s, h.run(ctx, args, o), out, c)
 
@@ -308,7 +308,7 @@ func (h *harness) envScenario(ctx context.Context, s scenario.Scenario, c *envCh
 
 	case "e13": // Windows run catches b10
 		if runtime.GOOS != "windows" {
-			c.notRun = "Windows only; the nightly runs it on windows-latest"
+			c.notRun = "Windows only; the nightly bench-windows job runs it on windows-latest with -only e13 -plain-http"
 			return
 		}
 		b10, ok := h.scenarioByID("b10")

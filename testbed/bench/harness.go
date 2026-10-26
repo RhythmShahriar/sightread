@@ -36,6 +36,8 @@ type harness struct {
 	home                  string
 	timeout               time.Duration
 	tools                 string
+	// plain serves the registry and the fronts over plain HTTP.
+	plain bool
 
 	manifest *scenario.Manifest
 	reg      *registry.Registry
@@ -48,6 +50,10 @@ type harness struct {
 
 	res     *benchdoc.Results
 	outside []string
+	// unmasked are the places a fake key appeared in full; fakeKeys
+	// are the keys the fixtures carry.
+	unmasked []string
+	fakeKeys []string
 	// egress are the proxy guard lines seen while Sightread ran. The
 	// compared tools reach the guard too (a browser's background calls),
 	// which is not counted against Sightread.
@@ -65,7 +71,10 @@ func newHarness(ctx context.Context, root string, o options) (*harness, error) {
 		state:   filepath.Join(root, "testbed", "state"),
 		timeout: o.timeout,
 		tools:   o.tools,
-		res:     &benchdoc.Results{Schema: benchdoc.Schema, Started: time.Now().UTC(), Machine: machine()},
+		plain:   o.plainHTTP,
+		// Assembled at run time like the fixtures' own, never literal.
+		fakeKeys: registry.FakeKeys(),
+		res:      &benchdoc.Results{Schema: benchdoc.Schema, Started: time.Now().UTC(), Machine: machine()},
 	}
 	h.work = o.work
 	if h.work == "" {
@@ -83,6 +92,10 @@ func newHarness(ctx context.Context, root string, o options) (*harness, error) {
 		if err := os.MkdirAll(d, 0o750); err != nil {
 			return nil, err
 		}
+	}
+	if h.plain {
+		// The compared tools are set up for the testbed CA only.
+		h.tools = "none"
 	}
 	if h.manifest, err = scenario.Load(filepath.Join(h.tb, "scenarios.yaml")); err != nil {
 		return nil, err
@@ -137,8 +150,10 @@ func (h *harness) start() error {
 	_ = os.Remove(filepath.Join(h.state, "canary.log"))
 	_ = os.Remove(filepath.Join(h.state, "roadie"))
 	_ = os.Remove(filepath.Join(h.state, "roadie.log"))
+	// A plain HTTP run writes no CA; never leave an old one to trust.
+	_ = os.Remove(filepath.Join(h.state, "ca.pem"))
 	var err error
-	if h.reg, err = registry.New(registry.Options{PackagesDir: filepath.Join(h.tb, "packages"), StateDir: h.state, Now: h.res.Started}); err != nil {
+	if h.reg, err = registry.New(registry.Options{PackagesDir: filepath.Join(h.tb, "packages"), StateDir: h.state, Now: h.res.Started, PlainHTTP: h.plain}); err != nil {
 		return err
 	}
 	if err := h.reg.Start(); err != nil {
@@ -161,7 +176,7 @@ func (h *harness) start() error {
 		return err
 	}
 	h.closers = append(h.closers, h.probes.Close)
-	npm := fmt.Sprintf("https://127.0.0.1:%d", ports.NPM)
+	npm := fmt.Sprintf("%s://127.0.0.1:%d", h.scheme(), ports.NPM)
 	ca := h.reg.CACertPEM()
 	if h.retry, err = probes.StartFront(ports.FrontRetry, probes.FrontModeRetry, npm, h.reg.TLSConfig(), ca); err != nil {
 		return err
@@ -176,6 +191,14 @@ func (h *harness) start() error {
 	}
 	h.closers = append(h.closers, h.guard.Close)
 	return nil
+}
+
+// scheme is the registry's URL scheme: http with -plain-http, else https.
+func (h *harness) scheme() string {
+	if h.plain {
+		return "http"
+	}
+	return "https"
 }
 
 // Close stops every server that started, last first; errors are
