@@ -122,6 +122,23 @@ func TestLexKinds(t *testing.T) {
 		{"no open tag", "just html <? ", []string{"InlineHTML:just html ", "OpenTag:<?"}},
 		{"backtick", "<?php `ls $d`;", []string{"OpenTag:<?php ", "String:`ls $d`", "Punct:;"}},
 		{"stray bytes", "<?php \\ \x01", []string{"OpenTag:<?php ", `Punct:\`, "Punct:\x01"}},
+		// PHP ends a line at a bare \r too: the label after it closes the
+		// heredoc and the code after it is code.
+		{"heredoc closed after a bare CR", "<?php\n$a = <<<EOT\nx\rEOT;\reval($_POST[\"x\"]);\r$b = 1; // \nEOT;\n", []string{
+			"OpenTag:<?php\n", "Variable:$a", "Operator:=", "String:<<<EOT\nx\rEOT", "Punct:;",
+			"Keyword:eval", "Punct:(", "Variable:$_POST", "Punct:[", "String:\"x\"", "Punct:]", "Punct:)", "Punct:;",
+			"Variable:$b", "Operator:=", "Number:1", "Punct:;", "Identifier:EOT", "Punct:;"}},
+		{"nowdoc closed after a bare CR", "<?php $a = <<<'EOT'\nx\rEOT;\reval($x);", []string{
+			"OpenTag:<?php ", "Variable:$a", "Operator:=", "String:<<<'EOT'\nx\rEOT", "Punct:;",
+			"Keyword:eval", "Punct:(", "Variable:$x", "Punct:)", "Punct:;"}},
+		{"heredoc header ends at a bare CR", "<?php $a = <<<EOT\rx\rEOT;\reval($x);", []string{
+			"OpenTag:<?php ", "Variable:$a", "Operator:=", "String:<<<EOT\rx\rEOT", "Punct:;",
+			"Keyword:eval", "Punct:(", "Variable:$x", "Punct:)", "Punct:;"}},
+		{"heredoc with CRLF lines", "<?php $a = <<<EOT\r\nx\r\n  EOT;\r\neval($x);", []string{
+			"OpenTag:<?php ", "Variable:$a", "Operator:=", "String:<<<EOT\r\nx\r\n  EOT", "Punct:;",
+			"Keyword:eval", "Punct:(", "Variable:$x", "Punct:)", "Punct:;"}},
+		{"heredoc label needs a line start", "<?php $a = <<<EOT\nx EOT;\rEOTX;\nEOT;", []string{
+			"OpenTag:<?php ", "Variable:$a", "Operator:=", "String:<<<EOT\nx EOT;\rEOTX;\nEOT", "Punct:;"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -151,6 +168,10 @@ func TestLexStrings(t *testing.T) {
 		{"empty heredoc", "<?php $s = <<<EOT\nEOT;\n", "", true, nil},
 		{"heredoc label prefix is not the end", "<?php $s = <<<EOT\nEOTX\nEOT;\n", "EOTX", true, nil},
 		{"nested interpolation", `<?php "{$a["{$b}"]}";`, "", false, []string{`C:$a["{$b}"]`}},
+		{"heredoc with CR lines", "<?php $s = <<<EOT\ra\rb\rEOT;", "a\rb", true, nil},
+		{"nowdoc with mixed lines", "<?php $s = <<<'EOT'\r\na\nb\rEOT;", "a\nb", true, nil},
+		{"indented heredoc with CRLF", "<?php $s = <<<EOT\r\n  a\r\n    b\r\n  EOT;", "a\r\n  b", true, nil},
+		{"heredoc with CR and interpolation", "<?php $s = <<<EOT\rHi $who\rEOT;", "", false, []string{"L:Hi ", "C:$who"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -200,6 +221,7 @@ func TestLexErrors(t *testing.T) {
 	}{
 		{"unterminated heredoc", "<?php\n$a = 1;\n$s = <<<EOT\nbody\n" + strings.Repeat("pad\n", 50) + "eval($x);\n", "heredoc", 3},
 		{"unterminated nowdoc", "<?php $s = <<<'X'\nbody", "nowdoc", 1},
+		{"unterminated heredoc with CR lines", "<?php $s = <<<X\rbody\rXY\r", "heredoc", 1},
 		{"unterminated double quoted", "<?php\n\"abc {$x} eval($y);", "string", 2},
 		{"unterminated single quoted", "<?php 'abc\\'", "string", 1},
 		{"unterminated comment", "<?php\n\n/* eval($x);", "comment", 3},

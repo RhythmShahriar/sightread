@@ -412,8 +412,10 @@ func (l *lexer) interp(start int, set string, q byte, label string) bool {
 		case c == q:
 			j++
 			goto done
-		case c == '\n':
-			j++
+		case c == '\n' || c == '\r':
+			// Only a heredoc stops here. PHP ends a line at \r, \n or
+			// \r\n, so a label after a bare \r closes the heredoc too.
+			j = lineBreakEnd(s, j)
 			if k := closeLabel(s, j, label); k >= 0 {
 				j = k
 				goto done
@@ -421,7 +423,7 @@ func (l *lexer) interp(start int, set string, q byte, label string) bool {
 		case c == '\\':
 			// A backslash escapes the next byte, except that a heredoc
 			// line ending in a backslash still ends at the newline.
-			if j+1 < n && (q != 0 || s[j+1] != '\n') {
+			if j+1 < n && (q != 0 || (s[j+1] != '\n' && s[j+1] != '\r')) {
 				j += 2
 			} else {
 				j++
@@ -593,17 +595,13 @@ func (l *lexer) heredoc() bool {
 		}
 		j++
 	}
-	switch {
-	case strings.HasPrefix(s[j:], "\r\n"):
-		j += 2
-	case j < n && s[j] == '\n':
-		j++
-	default:
+	if j >= n || (s[j] != '\n' && s[j] != '\r') {
 		return false
 	}
+	j = lineBreakEnd(s, j)
 	if quote != '\'' {
 		l.pos = j
-		l.interp(start, "\\${\n", 0, label)
+		l.interp(start, "\\${\n\r", 0, label)
 		return true
 	}
 	line := l.lineOf(start)
@@ -613,13 +611,22 @@ func (l *lexer) heredoc() bool {
 			l.emit(String, start)
 			return true
 		}
-		nl := strings.IndexByte(s[j:], '\n')
+		nl := strings.IndexAny(s[j:], "\n\r")
 		if nl < 0 {
 			l.fail(len(l.toks), start, line)
 			return true
 		}
-		j += nl + 1
+		j = lineBreakEnd(s, j+nl)
 	}
+}
+
+// lineBreakEnd returns the offset after the line break at j: "\r\n",
+// "\n" or a bare "\r", the three line endings PHP's scanner knows.
+func lineBreakEnd(s string, j int) int {
+	if s[j] == '\r' && j+1 < len(s) && s[j+1] == '\n' {
+		return j + 2
+	}
+	return j + 1
 }
 
 func (l *lexer) lineComment(interp bool) {

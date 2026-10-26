@@ -65,11 +65,10 @@ func Segments(t Token) []Segment {
 	case '"', '`':
 		quote = s[0]
 	default:
-		nl := strings.IndexByte(s, '\n')
-		prefix = nl + 1
-		last := strings.LastIndexByte(s, '\n')
-		suffix = len(s) - last
-		indent = leadingSpace(s[last+1:])
+		start, end, label := heredocBounds(s)
+		prefix = start
+		suffix = len(s) - end
+		indent = leadingSpace(s[label:])
 	}
 	var out []Segment
 	parts := t.Parts
@@ -144,17 +143,33 @@ func codeEnd(parts []Token, i int) int {
 // the header line and the newline before the closing label), the
 // closing label's indentation and whether it is a nowdoc.
 func heredocBody(s string) (body, indent string, nowdoc bool) {
-	nl := strings.IndexByte(s, '\n')
-	head := s[:nl]
-	nowdoc = strings.Contains(head, "'")
-	last := strings.LastIndexByte(s, '\n')
-	indent = leadingSpace(s[last+1:])
-	if last <= nl {
+	start, end, label := heredocBounds(s)
+	nowdoc = strings.Contains(s[:start], "'")
+	indent = leadingSpace(s[label:])
+	if end <= start {
 		return "", indent, nowdoc
 	}
-	body = s[nl+1 : last]
-	body = strings.TrimSuffix(body, "\r")
-	return body, indent, nowdoc
+	return s[start:end], indent, nowdoc
+}
+
+// heredocBounds finds the parts of a heredoc or nowdoc token: the body
+// starts after the header's line break and ends before the line break
+// in front of the closing label, which starts at label. Lines end at
+// "\r\n", "\n" or a bare "\r", as in PHP. An empty heredoc has one
+// line break, so end can come before start.
+func heredocBounds(s string) (start, end, label int) {
+	nl := strings.IndexAny(s, "\r\n")
+	start = nl + 1
+	if s[nl] == '\r' && start < len(s) && s[start] == '\n' {
+		start++
+	}
+	last := strings.LastIndexAny(s, "\r\n")
+	label = last + 1
+	end = last
+	if s[last] == '\n' && last > 0 && s[last-1] == '\r' {
+		end--
+	}
+	return start, end, label
 }
 
 func leadingSpace(s string) string {
@@ -187,7 +202,7 @@ func dedent(s, indent string, atStart bool) string {
 		c := s[i]
 		b.WriteByte(c)
 		i++
-		if c == '\n' {
+		if c == '\n' || c == '\r' {
 			lineStart = true
 		}
 	}
