@@ -477,6 +477,37 @@ func TestGitHubBudget(t *testing.T) {
 	}
 }
 
+// A plan larger than what GitHub has left stops the run at the next
+// request; a plan that fits, or no plan, runs on.
+func TestGitHubBudgetPlan(t *testing.T) {
+	t.Setenv("RHYTHM_INVOKED_AS", "rhythm sightread")
+	api := &counter{h: func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("X-RateLimit-Limit", "60")
+		w.Header().Set("X-RateLimit-Remaining", "5")
+		_, _ = io.WriteString(w, `{}`)
+	}}
+	srv := serve(t, api, true)
+	for _, tc := range []struct {
+		plan    int
+		refused bool
+	}{{plan: 10, refused: true}, {plan: 6}, {plan: 0}} {
+		c := client(t, core.GetterConfig{Bases: map[string]string{core.BaseGitHubAPI: srv.URL}}, srv)
+		c.ExpectGitHub(tc.plan)
+		var v any
+		if err := c.JSON(context.Background(), srv.URL+"/repos/o/r/tags/a", &v, KindMeta); err != nil {
+			t.Fatalf("plan %d: first request: %v", tc.plan, err)
+		}
+		err := c.JSON(context.Background(), srv.URL+"/repos/o/r/tags/b", &v, KindMeta)
+		var b *ErrGitHubBudget
+		switch {
+		case tc.refused && (core.CodeOf(err) != core.EGitHubLimit || !errors.As(err, &b) || b.Needed != tc.plan):
+			t.Errorf("plan %d: err %v, want E16 needing %d", tc.plan, err, tc.plan)
+		case !tc.refused && err != nil:
+			t.Errorf("plan %d: %v", tc.plan, err)
+		}
+	}
+}
+
 func TestGitHubBudget403(t *testing.T) {
 	srv := serve(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("X-RateLimit-Limit", "60")
