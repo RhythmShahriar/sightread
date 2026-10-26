@@ -96,6 +96,7 @@ func (r *reviewer) expectGitHub(n int) {
 func Review(ctx context.Context, req Request) (*core.Report, error) {
 	started := req.now()
 	r := &reviewer{req: req}
+	r.pinBase(ctx)
 	if err := r.setup(); err != nil {
 		return nil, err
 	}

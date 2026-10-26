@@ -327,3 +327,61 @@ func TestScorerConfigPath(t *testing.T) {
 		}
 	}
 }
+
+// basePolicy records the ref LoadAllow reads the allow entries at.
+type basePolicy struct {
+	*prPolicy
+	allowRef *string
+}
+
+func (p basePolicy) LoadAllow(c *core.Config, path, ref string) (core.AllowSet, error) {
+	*p.allowRef = ref
+	return p.prPolicy.LoadAllow(c, path, ref)
+}
+
+// baseInventory is the fake inventory with a default base.
+type baseInventory struct {
+	*coretest.FakeInventory
+	base string
+	err  error
+	asks *int
+}
+
+func (b baseInventory) ResolveBase(context.Context, string) (string, error) {
+	*b.asks++
+	return b.base, b.err
+}
+
+// TestChangesBasePinned: without --base, the allow entries are read at
+// the base the inventory picks (the merge base), not at origin/HEAD, and
+// the change set's warnings reach the report. With --base, or when no
+// base can be found, nothing is pinned.
+func TestChangesBasePinned(t *testing.T) {
+	for _, tc := range []struct {
+		name, flag, resolved string
+		err                  error
+		want                 string
+		asks                 int
+	}{
+		{"merge base", "", "0123abcd", nil, "0123abcd", 1},
+		{"--base", "main", "0123abcd", nil, "main", 0},
+		{"none found", "", "", errors.New("no base"), "origin/HEAD", 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w, p, _, req := prWorld(t, &core.Config{}, "")
+			req.Changes.Base = tc.flag
+			w.Inventory.Warnings = []string{"package-lock.json is not at the base, so every package in it counts as added"}
+			var ref string
+			asks := 0
+			t.Cleanup(core.SwapPolicy(basePolicy{p, &ref}))
+			t.Cleanup(core.SwapInventory(baseInventory{w.Inventory, tc.resolved, tc.err, &asks}))
+			rep := review(t, req)
+			if ref != tc.want || asks != tc.asks {
+				t.Errorf("allow read at %q after %d lookups, want %q after %d", ref, asks, tc.want, tc.asks)
+			}
+			if !slices.Contains(rep.Warnings, w.Inventory.Warnings[0]) {
+				t.Errorf("warnings %q", rep.Warnings)
+			}
+		})
+	}
+}

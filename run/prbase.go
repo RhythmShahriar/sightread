@@ -50,6 +50,37 @@ func (r *reviewer) prBaseRef() string {
 	return cmp.Or(c.Base, "origin/HEAD")
 }
 
+// baseResolver is the inventory's default base for changes
+// (inventory.Reader.ResolveBase).
+type baseResolver interface {
+	ResolveBase(ctx context.Context, repo string) (string, error)
+}
+
+// pinBase fills the base of a changes run without --base before setup,
+// so the lockfiles, the allow entries and the config are all read at
+// the one ref the inventory would pick (the merge base with origin/HEAD
+// outside Actions). When it can't be found the base stays empty: the
+// inventory then fails with its own git message.
+func (r *reviewer) pinBase(ctx context.Context) {
+	c := r.req.Changes
+	if c == nil || c.Base != "" || c.Before != "" {
+		return
+	}
+	br, ok := core.GetInventory().(baseResolver)
+	if !ok {
+		return
+	}
+	repo, err := filepath.Abs(cmp.Or(c.Repo, "."))
+	if err != nil {
+		return
+	}
+	if base, err := br.ResolveBase(ctx, repo); err == nil && base != "" {
+		pinned := *c
+		pinned.Base = base
+		r.req.Changes = &pinned
+	}
+}
+
 // configAtBase applies the pull request rule to the config just loaded.
 // The policy restores what it knows; the keys it leaves alone that can
 // still weaken the gate (osv, sources, local_files, trusted_keys,
