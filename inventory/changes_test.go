@@ -339,6 +339,47 @@ func TestChangesBeforeAfterErrors(t *testing.T) {
 	}
 }
 
+func TestChangesBeforeRenamedCopy(t *testing.T) {
+	dir := t.TempDir()
+	deps := map[string]string{"a": "^1"}
+	yarnOld := "a@^1:\n  version \"1.0.0\"\n  resolved \"" + reg("a", "1.0.0") + "\"\n"
+	yarnNew := "a@^1:\n  version \"1.1.0\"\n  resolved \"" + reg("a", "1.1.0") + "\"\n"
+	writeFiles(t, dir, map[string]string{
+		// git show main:package-lock.json > tmp/old-lock.json
+		"tmp/old-lock.json": packageLock(deps, lockPkg{"node_modules/a", "1.0.0", reg("a", "1.0.0"), sri("a1")}),
+		// Some other project's manifest that must not be read.
+		"tmp/package.json":      "not json",
+		"app/package-lock.json": packageLock(deps, lockPkg{"node_modules/a", "1.2.0", reg("a", "1.2.0"), sri("a2")}),
+		"tmp/old.yarn":          yarnOld,
+		"app/yarn.lock":         yarnNew,
+		"tmp/old.lock":          composerLock([3]string{"acme/x", "1.0.0", "aaa"}),
+		"app/composer.lock":     composerLock([3]string{"acme/x", "1.1.0", "bbb"}),
+	})
+	p := func(n string) string { return filepath.Join(dir, filepath.FromSlash(n)) }
+	for _, c := range []struct{ before, after, want string }{
+		{"tmp/old-lock.json", "app/package-lock.json", "a 1.0.0>1.2.0"},
+		{"tmp/old.yarn", "app/yarn.lock", "a 1.0.0>1.1.0"},
+		{"tmp/old.lock", "app/composer.lock", "acme/x 1.0.0>1.1.0"},
+	} {
+		cs, err := ReadChanges(context.Background(), core.ChangesRequest{Before: p(c.before), After: p(c.after)}, noNPMRC)
+		if err != nil {
+			t.Errorf("%s: %v", c.before, err)
+			continue
+		}
+		if got := bumpList(cs.Bumps); !slices.Equal(got, []string{c.want}) {
+			t.Errorf("%s: bumps = %q, want %q", c.before, got, c.want)
+		}
+	}
+
+	// A renamed copy of a different format is read as the --after
+	// format and fails to parse: E8, not a wrong result.
+	_, err := ReadChanges(context.Background(), core.ChangesRequest{Before: p("tmp/old.yarn"), After: p("app/package-lock.json")}, noNPMRC)
+	var ce *core.Error
+	if !errors.As(err, &ce) || ce.Code != core.EUnsupportedLock || !strings.HasPrefix(ce.What, filepath.ToSlash(p("tmp/old.yarn"))+" can't be read: ") {
+		t.Errorf("yarn copy as package-lock: err = %v", err)
+	}
+}
+
 func TestChangesSourceMove(t *testing.T) {
 	deps := map[string]string{"xlsx": "*", "fresh": "*"}
 	before := packageLock(deps, lockPkg{"node_modules/xlsx", "0.18.5", reg("xlsx", "0.18.5"), sri("x1")})

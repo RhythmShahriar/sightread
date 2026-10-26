@@ -83,7 +83,7 @@ A plugin is `not-wporg` when its `Update URI` points anywhere other than WordPre
 - The lockfiles are those named with `--lockfile`, else every `composer.lock` and the first npm lockfile of every folder up to 6 down, skipping `node_modules`, `vendor` and `.git`.
 - Git runs as `git -C <repo> -c core.fsmonitor=false -c core.hooksPath=/dev/null show --no-textconv <ref>:./<path>`, without the caller's `GIT_*` variables, with a 60 second timeout. No hook, filter or textconv driver of the repository can run.
 - A ref must match `[A-Za-z0-9._/@^~-]`, be at most 200 characters, hold no `..` and not start with `-`.
-- `--before <old lock> --after <new lock>` compares two files without git. Both must be the same kind of lockfile.
+- `--before <old lock> --after <new lock>` compares two files without git. The `--after` file must carry a lockfile name (`composer.lock`, `package-lock.json`, `yarn.lock` and so on) and its name sets the format of both. The `--before` file may have any name, so `git show main:package-lock.json > /tmp/old-lock.json` works; when both names are lockfile names of different kinds the run stops with `--before <a> and --after <b> are different kinds of lockfile`. The manifest next to `--before` is read only when that file carries a lockfile name.
 - A bump is any package whose version, integrity, resolved URL or reference changed, plus any added package. Removed packages are not reviewed.
 - A lockfile missing at the base gives the warning `<file> is not at <ref>, so every package in it counts as added`.
 

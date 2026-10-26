@@ -116,26 +116,35 @@ func beforeAfter(req core.ChangesRequest, opt ChangesOptions) (*ChangeSet, error
 		return nil, &core.Error{Code: core.EBadFlag, Exit: 2, What: "--before and --after go together: the old and the new lockfile"}
 	}
 	kb, ka := lockKind(req.Before), lockKind(req.After)
+	// The --after file names the format. --before may be a copy saved
+	// under any name (git show main:package-lock.json > old.json), so
+	// only two known names that disagree are refused.
 	if ka == "" {
 		return nil, unsupportedLock(req.After)
 	}
-	if kb != ka {
+	if kb != "" && kb != ka {
 		return nil, &core.Error{Code: core.EBadFlag, Exit: 2,
 			What: fmt.Sprintf("--before %s and --after %s are different kinds of lockfile", filepath.Base(req.Before), filepath.Base(req.After)),
 			Hint: []string{"give the same lockfile from before and after the change"}}
 	}
 	cs := &ChangeSet{}
+	format := filepath.Base(req.After)
 	read := func(flag, path string) (*Packages, error) {
 		data, err := readAll(path, maxLockBytes)
 		if err != nil {
 			return nil, &core.Error{Code: core.EBadFlag, Exit: 2, What: fmt.Sprintf("%s %s: %s", flag, path, errText(err)), Err: err}
 		}
 		dir := filepath.Dir(path)
-		manifest, err := readAll(filepath.Join(dir, manifestFor(path)), maxLockBytes)
-		if err != nil {
-			manifest = nil
+		var manifest []byte
+		// A file with a lockfile's name sits in its project, so the
+		// manifest next to it is its own. Next to a renamed copy it is
+		// most likely some other project's.
+		if lockKind(path) != "" {
+			if manifest, err = readAll(filepath.Join(dir, manifestFor(req.After)), maxLockBytes); err != nil {
+				manifest = nil
+			}
 		}
-		return parseLock(filepath.ToSlash(path), filepath.Base(req.After), data, manifest, npmrcOptions(opt.Options, dir))
+		return parseLock(filepath.ToSlash(path), format, data, manifest, npmrcOptions(opt.Options, dir))
 	}
 	oldPkgs, err := read("--before", req.Before)
 	if err != nil {
@@ -191,7 +200,7 @@ func parseLock(name, format string, data, manifest []byte, opt Options) (*Packag
 	if format == ComposerLock {
 		p, err = ParseComposer(name, data, manifest, nil, opt)
 	} else {
-		p, err = ParseNPMLock(name, data, manifest, opt)
+		p, err = parseNPMLockAs(name, format, data, manifest, opt)
 	}
 	if err != nil {
 		return nil, lockError(name, err)

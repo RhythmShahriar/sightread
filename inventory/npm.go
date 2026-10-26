@@ -275,16 +275,24 @@ func readNPMRC(files []string, out *Packages) map[string]string {
 // reports show it; its base name picks the format. manifest is the root
 // package.json, or nil.
 func ParseNPMLock(lockName string, data, manifest []byte, opt Options) (*Packages, error) {
+	return parseNPMLockAs(lockName, filepath.Base(filepath.FromSlash(lockName)), data, manifest, opt)
+}
+
+// parseNPMLockAs is ParseNPMLock with the format named apart from the
+// label: format is a lockfile base name such as yarn.lock. `changes
+// --before` takes a copy saved under any name, so its format comes from
+// the --after file.
+func parseNPMLockAs(lockName, format string, data, manifest []byte, opt Options) (*Packages, error) {
 	out := &Packages{}
 	var npmrc map[string]string
 	if opt.NPMRC != nil {
 		npmrc = readNPMRC(opt.NPMRC, out)
 	}
-	return parseNPMLock(lockName, data, manifest, newNPMSources(opt, npmrc), out)
+	return parseNPMLock(lockName, format, data, manifest, newNPMSources(opt, npmrc), out)
 }
 
-// parseNPMLock is ParseNPMLock with the sources already joined.
-func parseNPMLock(lockName string, data, manifest []byte, src *npmSources, out *Packages) (*Packages, error) {
+// parseNPMLock is parseNPMLockAs with the sources already joined.
+func parseNPMLock(lockName, format string, data, manifest []byte, src *npmSources, out *Packages) (*Packages, error) {
 	var m *npmManifest
 	if manifest != nil {
 		var err error
@@ -295,7 +303,7 @@ func parseNPMLock(lockName string, data, manifest []byte, src *npmSources, out *
 	data = trimBOM(data)
 	var entries []npmEntry
 	var err error
-	switch base := filepath.Base(filepath.FromSlash(lockName)); base {
+	switch format {
 	case "npm-shrinkwrap.json", "package-lock.json":
 		entries, err = parsePackageLock(data, m)
 	case "pnpm-lock.yaml":
@@ -374,7 +382,7 @@ func readNPMFile(dir, name string, opt Options) (*Packages, error) {
 			files = append(files, filepath.Join(home, ".npmrc"))
 		}
 	}
-	p, err := parseNPMLock(name, data, manifest, newNPMSources(opt, readNPMRC(files, out)), out)
+	p, err := parseNPMLock(name, name, data, manifest, newNPMSources(opt, readNPMRC(files, out)), out)
 	if err != nil {
 		return nil, err
 	}
