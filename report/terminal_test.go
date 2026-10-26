@@ -453,6 +453,7 @@ func TestTerminalShellArg(t *testing.T) {
 		"it's":            `'it'\''s'`,
 		"$(id)":           "'$(id)'",
 		"monolog/monolog": "monolog/monolog",
+		"wp-plugin:x;id@1.0$(touch${IFS}/tmp/pwn)": `'wp-plugin:x;id@1.0$(touch${IFS}/tmp/pwn)'`,
 	} {
 		if got := shellArg(in); got != want {
 			t.Errorf("shellArg(%q) = %q, want %q", in, got, want)

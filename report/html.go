@@ -360,8 +360,7 @@ func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) ht
 	// HOLD, REVIEW and UNVERIFIED are what someone reviews; ALLOWED is
 	// already on record and ROUTINE has nothing to accept.
 	if (u.Verdict == core.Hold || u.Verdict == core.Review || u.Verdict == core.Unverified) && u.To.Version != "" {
-		ref := core.Ref{Eco: u.Eco, Name: u.Name, Version: u.To.Version}
-		c.Allow = text(programName(o.Program)) + " allow " + defangScheme(text(ref.String())) + ` --reason "..."`
+		c.Allow = allowLine(o.Program, u)
 		if c.Verified {
 			c.AllowSHA = c.SHA256
 		}

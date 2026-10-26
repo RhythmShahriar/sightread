@@ -162,6 +162,43 @@ func TestMarkdownHostileText(t *testing.T) {
 }
 
 // cells counts the cells of a table row, skipping \| escapes.
+// TestAllowCommandHostile checks the copyable allow line quotes a hostile
+// name and version in every format that shows it.
+func TestAllowCommandHostile(t *testing.T) {
+	r := smallReport()
+	u := &r.Updates[0]
+	u.Verdict = core.Review
+	u.Eco = core.WPPlugin
+	u.Name = "x;id"
+	u.To.Version = "1.0$(touch${IFS}/tmp/pwn)"
+	u.To.SHA256 = strings.Repeat("a", 64)
+	want := `rhythm sightread allow 'wp-plugin:x;id@1.0$(touch${IFS}/tmp/pwn)' --reason "..."`
+	bad := `allow wp-plugin:x;id`
+	for name, out := range map[string]string{
+		"markdown": writeMD(t, r),
+		"terminal": writeTerm(t, r, termOpts(100)),
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("%s: allow line not quoted, want %q in:\n%s", name, want, out)
+		}
+		if strings.Contains(out, bad) {
+			t.Errorf("%s: unquoted allow line in:\n%s", name, out)
+		}
+	}
+	html := writeHTML(t, r)
+	if !strings.Contains(html, "allow &#39;wp-plugin:x;id@1.0$(touch${IFS}/tmp/pwn)&#39;") {
+		t.Errorf("html: allow line not quoted:\n%s", html)
+	}
+	if strings.Contains(html, bad) {
+		t.Error("html: unquoted allow line")
+	}
+	// A plain name stays unquoted so the usual line reads cleanly.
+	u.Name, u.To.Version = "akismet", "5.3.1"
+	if out := writeMD(t, r); !strings.Contains(out, "allow wp-plugin:akismet@5.3.1 --reason") {
+		t.Errorf("plain allow line changed:\n%s", out)
+	}
+}
+
 func cells(row string) int {
 	row = strings.ReplaceAll(row, `\|`, "")
 	return strings.Count(row, "|") - 1

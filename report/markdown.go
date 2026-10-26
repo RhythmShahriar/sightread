@@ -430,10 +430,17 @@ func (m mdReport) section(b *strings.Builder, u *core.Update, t mdTrim) {
 
 // allowCommand is the one-line allow for the reviewed version.
 func (m mdReport) allowCommand(u *core.Update) string {
+	return allowLine(m.o.Program, u)
+}
+
+// allowLine is the allow command for u's new version, shared by every
+// format. The ref is shell quoted because a hostile plugin folder, tag or
+// saved report could otherwise add a command to the line users paste.
+func allowLine(program string, u *core.Update) string {
 	ref := core.Ref{Eco: u.Eco, Name: u.Name, Version: u.To.Version}
 	// Only a URL scheme is defanged: a real package name never holds one,
 	// while defanging its dots would break names such as socket.io.
-	return text(programName(m.o.Program)) + " allow " + defangScheme(text(ref.String())) + ` --reason "..."`
+	return text(programName(program)) + " allow " + shellArg(defangScheme(text(ref.String()))) + ` --reason "..."`
 }
 
 // programName is the name commands are shown with: the option, else kit
