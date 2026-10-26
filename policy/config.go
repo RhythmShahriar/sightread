@@ -415,8 +415,6 @@ func display(p string) string {
 	return filepath.ToSlash(p)
 }
 
-// show quotes a value from a file for a message: secrets masked and
-// control characters made visible.
 // trustedKey reports whether k is a key ID as report/sign.go writes it:
 // "ed25519:" and the base64 of a 32-byte public key.
 func trustedKey(k string) bool {
@@ -424,6 +422,8 @@ func trustedKey(k string) bool {
 	return strings.HasPrefix(k, "ed25519:") && err == nil && len(raw) == ed25519.PublicKeySize
 }
 
+// show quotes a value from a file for a message: secrets masked and
+// control characters made visible.
 func show(v string) string { return fmt.Sprintf("%q", sanitize(v)) }
 
 func sanitize(v string) string { return term.Sanitize(secrets.Redact(v)) }
