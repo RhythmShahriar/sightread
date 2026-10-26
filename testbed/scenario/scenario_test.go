@@ -4,6 +4,7 @@
 package scenario
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +32,7 @@ func catalogIDs(t *testing.T) map[string]bool {
 }
 
 // TestManifest checks that every scenario names a package folder that
-// exists, that every expected and forbidden signal is a catalogue id,
+// exists, that every expected and forbidden signal is a catalogue id
 // and that every minimum severity is a real rank.
 func TestManifest(t *testing.T) {
 	m, err := Load(manifestPath)
@@ -227,5 +228,25 @@ func TestScoreboard(t *testing.T) {
 	}
 	if tally.Pass() {
 		t.Error("a tally with a miss and a false alarm must not pass")
+	}
+}
+
+// TestREADMEListsEveryScenario keeps the README scenario table in step
+// with the manifest.
+func TestREADMEListsEveryScenario(t *testing.T) {
+	m, err := Load("../scenarios.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile("../README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	readme := string(b)
+	for _, s := range m.Scenarios {
+		row := fmt.Sprintf("| %s | %s | %s |", s.ID, s.Kind, s.Title)
+		if !strings.Contains(readme, row) {
+			t.Errorf("README has no row starting %q", row)
+		}
 	}
 }
