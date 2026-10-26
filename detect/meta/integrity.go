@@ -246,15 +246,23 @@ func resolvedWhere(kind string) string {
 }
 
 // safeURL drops the user info, query and fragment of a lock URL, where
-// tokens live, before it goes into a finding. Text that does not parse
-// as a URL is passed on for NewSnippet to mask.
+// tokens live, before it goes into a finding. Text with no host to parse
+// ("user:token@host/path", "git@host:owner/repo") loses everything up
+// to its last "@" and from its first "?" or "#" the same way; what is
+// left goes on for NewSnippet to mask.
 func safeURL(raw string) string {
 	u, err := url.Parse(raw)
-	if err != nil || u.Host == "" {
-		return raw
+	if err == nil && u.Host != "" {
+		u.User, u.RawQuery, u.Fragment = nil, "", ""
+		return u.String()
 	}
-	u.User, u.RawQuery, u.Fragment = nil, "", ""
-	return u.String()
+	if i := strings.IndexAny(raw, "?#"); i >= 0 {
+		raw = raw[:i]
+	}
+	if i := strings.LastIndex(raw, "@"); i >= 0 {
+		raw = raw[i+1:]
+	}
+	return raw
 }
 
 // archiveFindings turns the archive reader's issues and the analyzer's

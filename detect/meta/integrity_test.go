@@ -222,3 +222,18 @@ func TestUnanalysedOncePerPath(t *testing.T) {
 		t.Errorf("unanalysed = %q, want %q", got, want)
 	}
 }
+
+func TestSafeURLWithoutHost(t *testing.T) {
+	tok := "ghp_" + strings.Repeat("Cd2", 12)
+	for in, want := range map[string]string{
+		"bot:" + tok + "@cdn.evil.test/x.tgz":     "cdn.evil.test/x.tgz",
+		"git@github.com:acme/x.git#" + tok:        "github.com:acme/x.git",
+		"file:../vendor/x.tgz?k=" + tok:           "file:../vendor/x.tgz",
+		"https://u:" + tok + "@h.test/x?y=" + tok: "https://h.test/x",
+		"github:acme/x":                           "github:acme/x",
+	} {
+		if got := safeURL(in); got != want {
+			t.Errorf("safeURL(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
