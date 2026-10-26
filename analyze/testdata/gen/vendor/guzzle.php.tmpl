@@ -1,0 +1,96 @@
+<?php
+
+namespace SampleHttp__N__\Handler;
+
+use SampleHttp__N__\Psr7\Response;
+
+/**
+ * HTTP handler that sends requests with cURL. Generated benchmark input
+ * shaped like a vendored HTTP client; not copied code.
+ */
+class CurlHandler
+{
+    /** @var array */
+    private $options;
+
+    public function __construct(array $options = [])
+    {
+        $this->options = $options + ['timeout' => 30];
+    }
+
+    public function send(string $method, string $uri, array $headers = [], string $body = ''): Response
+    {
+        $handle = curl_init($uri);
+        curl_setopt_array($handle, [
+            CURLOPT_CUSTOMREQUEST => $method,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => true,
+            CURLOPT_TIMEOUT => $this->options['timeout'],
+            CURLOPT_HTTPHEADER => $this->headerLines($headers),
+            CURLOPT_POSTFIELDS => $body,
+        ]);
+        $raw = curl_exec($handle);
+        if ($raw === false) {
+            $error = curl_error($handle);
+            curl_close($handle);
+            throw new \RuntimeException('cURL error: ' . $error);
+        }
+        $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
+        $size = (int) curl_getinfo($handle, CURLINFO_HEADER_SIZE);
+        curl_close($handle);
+        return new Response($status, $this->parseHeaders(substr($raw, 0, $size)), substr($raw, $size));
+    }
+
+    private function headerLines(array $headers): array
+    {
+        $lines = [];
+        foreach ($headers as $name => $values) {
+            foreach ((array) $values as $value) {
+                $lines[] = $name . ': ' . $value;
+            }
+        }
+        return $lines;
+    }
+
+    private function parseHeaders(string $text): array
+    {
+        $out = [];
+        foreach (preg_split('/\r?\n/', trim($text)) as $line) {
+            if (strpos($line, ':') === false) {
+                continue;
+            }
+            [$name, $value] = explode(':', $line, 2);
+            $out[strtolower(trim($name))][] = trim($value);
+        }
+        return $out;
+    }
+
+    public function json(string $uri)
+    {
+        $response = $this->send('GET', $uri, ['Accept' => 'application/json']);
+        return json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+    }
+}
+
+final class CookieJar__N__ implements \Countable
+{
+    private $cookies = [];
+
+    public function __construct(private string $file)
+    {
+        if (is_file($file)) {
+            $data = json_decode(file_get_contents($file), true);
+            $this->cookies = is_array($data) ? $data : [];
+        }
+    }
+
+    public function save(): void
+    {
+        file_put_contents($this->file, json_encode($this->cookies), LOCK_EX);
+    }
+
+    public function count(): int
+    {
+        return \count($this->cookies);
+    }
+}

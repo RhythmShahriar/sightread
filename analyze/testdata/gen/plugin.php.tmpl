@@ -1,0 +1,200 @@
+<?php
+/**
+ * Plugin Name: Sample Forms __N__
+ * Description: Generated benchmark input. Not real plugin code.
+ * Version: 2.__N__.0
+ *
+ * @package Sample_Forms___N__
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+define( 'SAMPLE_FORMS___N___FILE', __FILE__ );
+define( 'SAMPLE_FORMS___N___API', 'https://api.sample-forms.io/v1/' );
+
+/**
+ * Main plugin class.
+ */
+final class Sample_Forms___N__ {
+
+	/**
+	 * Settings option name.
+	 *
+	 * @var string
+	 */
+	private $option = 'sample_forms___N___settings';
+
+	/**
+	 * Hooks everything up.
+	 */
+	public function __construct() {
+		add_action( 'init', array( $this, 'register' ) );
+		add_action( 'rest_api_init', array( $this, 'routes' ) );
+		add_action( 'admin_menu', array( $this, 'menu' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( $this, 'links' ) );
+		add_shortcode( 'sample_form___N__', array( $this, 'shortcode' ) );
+	}
+
+	/**
+	 * Registers the entry post type.
+	 */
+	public function register() {
+		register_post_type(
+			'sample_entry',
+			array(
+				'public'       => false,
+				'show_ui'      => true,
+				'show_in_rest' => false,
+				'supports'     => array( 'title', 'custom-fields' ),
+			)
+		);
+	}
+
+	/**
+	 * Registers the REST routes.
+	 */
+	public function routes() {
+		register_rest_route(
+			'sample-forms/v1',
+			'/entries',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'entries' ),
+				'permission_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	/**
+	 * Lists entries for the REST route.
+	 *
+	 * @param WP_REST_Request $request The request.
+	 * @return array
+	 */
+	public function entries( $request ) {
+		$page  = max( 1, absint( $request->get_param( 'page' ) ) );
+		$query = new WP_Query(
+			array(
+				'post_type'      => 'sample_entry',
+				'posts_per_page' => 20,
+				'paged'          => $page,
+			)
+		);
+		$out = array();
+		foreach ( $query->posts as $post ) {
+			$out[] = array(
+				'id'    => $post->ID,
+				'title' => get_the_title( $post ),
+				'data'  => maybe_unserialize( get_post_meta( $post->ID, '_sample_data', true ) ),
+			);
+		}
+		return $out;
+	}
+
+	/**
+	 * Fetches the latest notice from the plugin's own API and caches it.
+	 *
+	 * @return string
+	 */
+	public function notice() {
+		$cached = get_transient( 'sample_forms___N___notice' );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+		$response = wp_remote_get( SAMPLE_FORMS___N___API . 'notice', array( 'timeout' => 5 ) );
+		if ( is_wp_error( $response ) ) {
+			return '';
+		}
+		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$text = isset( $body['text'] ) ? sanitize_text_field( $body['text'] ) : '';
+		set_transient( 'sample_forms___N___notice', $text, DAY_IN_SECONDS );
+		return $text;
+	}
+
+	/**
+	 * Adds the settings page.
+	 */
+	public function menu() {
+		add_options_page( 'Sample Forms', 'Sample Forms', 'manage_options', 'sample-forms', array( $this, 'page' ) );
+	}
+
+	/**
+	 * Prints the settings page.
+	 */
+	public function page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$settings = wp_parse_args( get_option( $this->option, array() ), array( 'email' => '', 'limit' => 10 ) );
+		if ( isset( $_POST['sample_forms_nonce'] ) && wp_verify_nonce( sanitize_key( $_POST['sample_forms_nonce'] ), 'sample_forms_save' ) ) {
+			$settings['email'] = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+			$settings['limit'] = isset( $_POST['limit'] ) ? absint( $_POST['limit'] ) : 10;
+			update_option( $this->option, $settings );
+		}
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Sample Forms', 'sample-forms' ); ?></h1>
+			<p class="notice-text"><?php echo esc_html( $this->notice() ); ?></p>
+			<form method="post">
+				<?php wp_nonce_field( 'sample_forms_save', 'sample_forms_nonce' ); ?>
+				<input type="email" name="email" value="<?php echo esc_attr( $settings['email'] ); ?>" />
+				<input type="number" name="limit" value="<?php echo (int) $settings['limit']; ?>" />
+				<?php submit_button(); ?>
+			</form>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Sends the notification email for a new entry.
+	 *
+	 * @param int $entry_id The entry.
+	 */
+	public function notify( $entry_id ) {
+		$title   = get_the_title( $entry_id );
+		$link    = admin_url( 'post.php?post=' . (int) $entry_id . '&action=edit' );
+		$message = <<<EOT
+A new entry arrived: {$title}
+
+Review it here: {$link}
+
+-- Sample Forms __N__
+EOT;
+		wp_mail( get_option( 'admin_email' ), 'New entry', $message );
+	}
+
+	/**
+	 * Renders the form shortcode.
+	 *
+	 * @param array $atts Shortcode attributes.
+	 * @return string
+	 */
+	public function shortcode( $atts ) {
+		$atts = shortcode_atts( array( 'title' => 'Contact' ), $atts, 'sample_form___N__' );
+		ob_start();
+		?>
+		<form class="sample-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+			<h3><?php echo esc_html( $atts['title'] ); ?></h3>
+			<input type="hidden" name="action" value="sample_forms_submit" />
+			<textarea name="message"></textarea>
+			<button type="submit"><?php esc_html_e( 'Send', 'sample-forms' ); ?></button>
+		</form>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Adds the settings link.
+	 *
+	 * @param array $links Action links.
+	 * @return array
+	 */
+	public function links( $links ) {
+		$links[] = '<a href="' . esc_url( admin_url( 'options-general.php?page=sample-forms' ) ) . '">Settings</a>';
+		return $links;
+	}
+}
+
+new Sample_Forms___N__();

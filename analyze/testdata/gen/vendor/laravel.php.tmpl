@@ -1,0 +1,96 @@
+<?php
+
+namespace SampleFramework__N__\Cache;
+
+use Closure;
+
+/**
+ * File cache store. Generated benchmark input shaped like a vendored
+ * framework; not copied code.
+ */
+class FileStore
+{
+    public function __construct(protected Filesystem $files, protected string $directory)
+    {
+    }
+
+    public function get(string $key)
+    {
+        $path = $this->path($key);
+        try {
+            $contents = $this->files->get($path, true);
+        } catch (\Exception $e) {
+            return null;
+        }
+        $expire = (int) substr($contents, 0, 10);
+        if ($expire !== 0 && time() >= $expire) {
+            $this->files->delete($path);
+            return null;
+        }
+        return unserialize(substr($contents, 10));
+    }
+
+    public function put(string $key, $value, int $seconds): bool
+    {
+        $this->files->ensureDirectoryExists(dirname($path = $this->path($key)));
+        return $this->files->put($path, $this->expiration($seconds) . serialize($value), true) !== false;
+    }
+
+    public function remember(string $key, int $seconds, Closure $callback)
+    {
+        $value = $this->get($key);
+        if (! is_null($value)) {
+            return $value;
+        }
+        $this->put($key, $value = $callback(), $seconds);
+        return $value;
+    }
+
+    protected function path(string $key): string
+    {
+        $parts = array_slice(str_split($hash = sha1($key), 2), 0, 2);
+        return $this->directory . '/' . implode('/', $parts) . '/' . $hash;
+    }
+
+    protected function expiration(int $seconds): int
+    {
+        return $seconds === 0 ? 9999999999 : time() + $seconds;
+    }
+}
+
+class QueueJob__N__
+{
+    public function __construct(protected array $payload)
+    {
+    }
+
+    public function fire(Container $container): void
+    {
+        $command = unserialize($this->payload['data']['command']);
+        $container->call([$command, 'handle']);
+    }
+
+    public function displayName(): string
+    {
+        return $this->payload['displayName'] ?? get_class($this);
+    }
+}
+
+class SessionHandler__N__
+{
+    public function read(string $id): string
+    {
+        $row = $this->connection->table('sessions')->find($id);
+        return $row ? base64_decode($row->payload) : '';
+    }
+
+    public function attributes(string $data): array
+    {
+        return $data === '' ? [] : (array) unserialize($data, ['allowed_classes' => false]);
+    }
+
+    public function helper(string $name, array $args)
+    {
+        return array_map(fn ($a) => is_string($a) ? trim($a) : $a, $args);
+    }
+}

@@ -1,0 +1,34 @@
+/* Generated benchmark input. Not real plugin code. */
+( function ( $, settings ) {
+	'use strict';
+
+	const api = settings.root + 'sample-forms/v1/entries';
+
+	function row( entry ) {
+		return `<tr><td>${ entry.title }</td><td>${ entry.id }</td></tr>`;
+	}
+
+	async function load( page = 1 ) {
+		const res = await fetch( `${ api }?page=${ page }`, {
+			headers: { 'X-WP-Nonce': settings.nonce },
+			credentials: 'same-origin',
+		} );
+		if ( ! res.ok ) {
+			return [];
+		}
+		return res.json();
+	}
+
+	$( document ).on( 'click', '.sample-load-__N__', function ( e ) {
+		e.preventDefault();
+		const page = parseInt( $( this ).data( 'page' ), 10 ) || 1;
+		load( page ).then( ( entries ) => {
+			$( '#sample-list-__N__ tbody' ).html( entries.map( row ).join( '' ) );
+		} );
+	} );
+
+	$( '.sample-form' ).on( 'submit', function () {
+		const value = $( this ).find( 'textarea' ).val() || '';
+		return value.trim().length > 0 && value.length / 2 < 5000;
+	} );
+}( jQuery, window.sampleFormsSettings || {} ) );
