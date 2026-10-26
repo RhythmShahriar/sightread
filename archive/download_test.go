@@ -73,7 +73,7 @@ func TestReadZipDownloadCorrupt(t *testing.T) {
 	}
 }
 
-// A blob that went bad on disk fails one read and is deleted, and the
+// A blob that went bad on disk fails one read and is deleted. The
 // next download stores it fresh, so later runs read it again.
 func TestReadZipDownloadRepairs(t *testing.T) {
 	data := makeZip(t, zent{name: "a.php", body: "<?php"})

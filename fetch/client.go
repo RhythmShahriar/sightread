@@ -175,7 +175,7 @@ func newClient(cfg core.GetterConfig, hooks testHooks) (*Client, error) {
 
 // ExpectGitHub tells the client how many api.github.com requests the run
 // is about to make. Once GitHub has said what is left, an anonymous run
-// whose plan would exceed it is refused before the next request, and a
+// whose plan would exceed it is refused before the next request. A
 // run that runs out says how many it needed (E16).
 func (c *Client) ExpectGitHub(n int) { c.gh.expect(n) }
 
@@ -583,10 +583,10 @@ func (g *ghBudget) state() (int, int, bool) {
 	return g.limit, g.remaining, g.anon && g.known
 }
 
-// before refuses an anonymous request GitHub would refuse anyway, and
-// one of a run whose remaining plan (ExpectGitHub less what it sent) is
-// more than GitHub has left: that run would stop part way, having spent
-// the hour's allowance for nothing.
+// before refuses an anonymous request GitHub would refuse anyway. It
+// also refuses one of a run whose remaining plan (ExpectGitHub less
+// what it sent) is more than GitHub has left: that run would stop part
+// way, having spent the hour's allowance for nothing.
 func (g *ghBudget) before(addr string) *ErrGitHubBudget {
 	if !g.anon || !g.addrs[addr] {
 		return nil
