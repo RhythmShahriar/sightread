@@ -57,6 +57,13 @@ func summary(d *core.Diff) []string {
 	return out
 }
 
+func TestRegistered(t *testing.T) {
+	coretest.NeedDiffer(t)
+	if _, ok := core.GetDiffer().(Differ); !ok {
+		t.Fatalf("registered differ is %T, want diff.Differ", core.GetDiffer())
+	}
+}
+
 func TestDiffTable(t *testing.T) {
 	body := numbered("line", 30)
 	edited := strings.Replace(strings.Replace(body, "line 3\n", "line three\n", 1), "line 20\n", "line twenty\n", 1)

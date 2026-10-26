@@ -16,7 +16,9 @@ import (
 	"github.com/RhythmShahriar/sightread/core"
 )
 
-// Differ compares trees for core.Differ. The zero value is ready to use.
+func init() { core.SetDiffer(Differ{}) }
+
+// Differ implements core.Differ. The zero value is ready to use.
 type Differ struct{}
 
 // maxRead is the most of one blob the differ reads. Blob stores keep at
