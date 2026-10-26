@@ -225,6 +225,8 @@ func TestFlagMapping(t *testing.T) {
 		{"redact-paths in CI", []string{"npm"}, map[string]string{"CI": "true"}, func(p *plan) any { return p.write.RedactPaths }, true},
 		{"redact-paths off in CI", []string{"npm", "--redact-paths=false"}, map[string]string{"CI": "true"}, func(p *plan) any { return p.write.RedactPaths }, false},
 		{"redact-paths", []string{"npm", "--redact-paths"}, nil, func(p *plan) any { return p.write.RedactPaths }, true},
+		{"soundcheck off", []string{"plugin", "akismet"}, nil, func(p *plan) any { return p.write.Soundcheck }, false},
+		{"soundcheck on", []string{"plugin", "akismet", "--soundcheck", "https://staging.shop.test", "--wp", "wp --path=/srv/staging"}, nil, func(p *plan) any { return p.write.Soundcheck }, true},
 		{"program", []string{"npm"}, nil, func(p *plan) any { return p.write.Program }, "rhythm-sightread"},
 		{"verbose", []string{"npm", "-v"}, nil, func(p *plan) any { return p.req.Log != nil && p.req.Getter.Debug != nil && p.verbose }, true},
 		{"open and sign", []string{"npm", "--open", "--sign", "-o", "r.html", "-o", "r.json"}, nil, func(p *plan) any { return []bool{p.open, p.sign} }, []bool{true, true}},

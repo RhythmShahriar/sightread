@@ -513,6 +513,9 @@ func (f *reviewFlags) outputPlan(p *plan, env func(string) string, version strin
 		Program:     cli.Name(),
 		Version:     version,
 		RedactPaths: redact,
+		// The terminal writer's read-only line says the staging copy runs
+		// the update when --soundcheck installs it there.
+		Soundcheck: f.soundcheck != "",
 	}
 	return nil
 }
