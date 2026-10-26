@@ -36,6 +36,9 @@ const (
 	AttrCategory = "category"
 	// AttrHost is the host an FSend goes to, when it could be folded.
 	AttrHost = "host"
+	// AttrDomain is the registrable domain (eTLD+1) of AttrHost, the
+	// key an FDomain feature of the same host has.
+	AttrDomain = "domain"
 	// AttrReads is what an FSend's function reads and sends, comma
 	// separated: "users", "admin_email", "options", "env", "files".
 	AttrReads = "reads"
@@ -355,7 +358,7 @@ func exfilFinding(s *core.Subject, f core.Feature) (core.Finding, bool) {
 	if host != "" {
 		fd.Domains = []string{host}
 	}
-	if host == "" || knownHost(s.OldFeatures, host) {
+	if host == "" || knownHost(s.OldFeatures, host) || knownHost(s.OldFeatures, normHost(f.Attrs[AttrDomain])) {
 		fd.Severity = cli.SeverityMedium
 	}
 	fd.Evidence = core.NewSnippet("sends " + reads + " to " + cmp.Or(host, "a host built at run time") + ": " + f.Ev.Snippet.String())
@@ -365,7 +368,7 @@ func exfilFinding(s *core.Subject, f core.Feature) (core.Finding, bool) {
 // knownHost reports whether the installed version already named host,
 // as a domain or as the target of a send.
 func knownHost(old *core.FeatureSet, host string) bool {
-	if old == nil {
+	if old == nil || host == "" {
 		return false
 	}
 	for _, fs := range old.ByKey {

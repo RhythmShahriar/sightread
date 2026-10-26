@@ -257,8 +257,14 @@ func (e *extractor) note(i int, what string) {
 	e.facts[b][what] = true
 }
 
-// send records a network send and returns its attrs.
+// send records a network send and returns its attrs. The host attr is
+// set when the call names its target as written or folded, with its
+// registrable domain; data-exfil reads them to tell a new host from one
+// the installed version already named.
 func (e *extractor) send(c *callSite, key string, attrs map[string]string) map[string]string {
+	if r, ok := sendHost(c, attrs["channel"]); ok {
+		attrs["host"], attrs["domain"] = attrText(r.host), attrText(r.key)
+	}
 	a := e.callFeature(core.FSend, key, c, attrs)
 	e.sends = append(e.sends, sendRef{body: e.bodyAt(c.pos), attrs: a})
 	return a

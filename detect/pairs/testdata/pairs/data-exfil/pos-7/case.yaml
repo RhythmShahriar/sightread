@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: 'from source: options posted to a host the installed version already called is medium'
+old:
+  plugin.php: "<?php\nfunction fx_ping() {\n  return wp_remote_get('https://telemetry.acme-plugins.com/ping');\n}\n"
+new:
+  plugin.php: "<?php\nfunction fx_ping() {\n  return wp_remote_get('https://telemetry.acme-plugins.com/ping');\n}\nfunction fx_report() {\n  $data = get_option('siteurl');\n  wp_remote_post('https://api.acme-plugins.com/report', array('body' => $data));\n}\n"
+expect:
+- {id: data-exfil, min_severity: medium, max_severity: medium}

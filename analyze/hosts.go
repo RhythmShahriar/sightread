@@ -449,6 +449,43 @@ func (e *extractor) callHosts(c *callSite, network bool) {
 	}
 }
 
+// sendHost is the host a send call goes to when its arguments name it:
+// the URL in the first argument of an HTTP call, or the host argument of
+// a socket or DNS call (fsockopen("evil.test", 80), net.connect(443,
+// "1.2.3.4"), stream_socket_client("tcp://evil.test:80")). It is false
+// for a host built at run time.
+func sendHost(c *callSite, channel string) (hostRef, bool) {
+	switch channel {
+	case "http":
+		if v, ok := c.arg(0).v.str(); ok {
+			if refs := findURLs(v); len(refs) > 0 {
+				return refs[0], true
+			}
+		}
+	case "socket", "dns":
+		for i := 0; i < len(c.args) && i < 4; i++ {
+			v, ok := c.args[i].v.str()
+			if !ok || v == "" {
+				continue
+			}
+			if refs := findURLs(v); len(refs) > 0 {
+				return refs[0], true // a WebSocket URL
+			}
+			if scheme, rest, ok := strings.Cut(v, "://"); ok && socketSchemes[strings.ToLower(scheme)] {
+				v = rest
+			}
+			if r, ok := bareHost(v, false); ok {
+				return r, true
+			}
+		}
+	}
+	return hostRef{}, false
+}
+
+// socketSchemes are the transports PHP's stream_socket_client and
+// fsockopen take in front of a host.
+var socketSchemes = map[string]bool{"tcp": true, "udp": true, "ssl": true, "tls": true}
+
 // hostCalls are the calls whose arguments name a host to connect to.
 var hostCalls = map[string]bool{
 	"fsockopen": true, "pfsockopen": true, "stream_socket_client": true, "gethostbyname": true,
