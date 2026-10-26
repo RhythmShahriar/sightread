@@ -1,0 +1,7 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# The benchmark's working folder (caches, homes, reports, results.json)
+# and the corpus downloads: rebuilt on every run, never committed.
+bench/work/
+corpus/cache/

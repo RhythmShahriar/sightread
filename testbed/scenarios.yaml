@@ -373,6 +373,9 @@ scenarios:
     kind: good
     title: "whole site, every package on its good candidate"
     package: g14-site
+    # Every good update the site pins is offered; every bad scenario's
+    # candidate is withheld (g15 too: its owner change is high).
+    extra_packages: [g01-feature, g02-bundle, g03-i18n, g04-vendor, g05-cron, g06-contrib, g07-theme, g08-eol, g09-patch, g10-native, g11-deps, g12-commit, g13-minor]
     command: ["all", "projects/wp"]
     expect:
       verdict: ROUTINE
