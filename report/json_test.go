@@ -350,7 +350,7 @@ func TestReadReportRoundTrip(t *testing.T) {
 	if n := len(got.Updates[0].Hidden); n != 1 || got.Summary.Hidden != 1 || got.Updates[0].Hidden[0].Severity != cli.SeverityNone {
 		t.Errorf("hidden read back as %+v, summary %d", got.Updates[0].Hidden, got.Summary.Hidden)
 	}
-	bad := bytes.Replace(writeWith(t, core.FormatJSON, hid, testOpts), []byte(`"hidden": 1`), []byte(`"hidden": -1`), -1)
+	bad := bytes.ReplaceAll(writeWith(t, core.FormatJSON, hid, testOpts), []byte(`"hidden": 1`), []byte(`"hidden": -1`))
 	if _, err := ReadReport(bytes.NewReader(bad)); err == nil || !strings.Contains(err.Error(), "hidden -1") {
 		t.Errorf("negative hidden: %v", err)
 	}
