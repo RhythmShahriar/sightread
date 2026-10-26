@@ -162,6 +162,14 @@ func (r *reviewer) setup() error {
 		return err
 	}
 	r.cfg, r.cfgPath = cfg, cfgPath
+	baseRef := r.prBaseRef()
+	if baseRef != "" {
+		// Before applyConfig and LoadAllow, so a flag still wins and the
+		// allow files read are the ones the base config names.
+		if err := r.configAtBase(policy, baseRef, start); err != nil {
+			return err
+		}
+	}
 	r.applyConfig()
 	if r.req.NoSignalUpdates {
 		if dp := core.GetDataPacks(); dp != nil {
@@ -171,20 +179,19 @@ func (r *reviewer) setup() error {
 
 	if r.req.NoAllow {
 		r.allow = noAllow{}
-	} else {
-		baseRef := ""
-		if r.req.Changes != nil && !r.req.TrustPRAllow && r.req.Changes.Before == "" {
-			// Allow entries count from the base ref only, so a pull
-			// request can't approve its own update (SR-9).
-			baseRef = cmp.Or(r.req.Changes.Base, "origin/HEAD")
-		}
-		if r.allow, err = policy.LoadAllow(r.cfg, r.cfgPath, baseRef); err != nil {
-			return err
-		}
+	} else if r.allow, err = policy.LoadAllow(r.cfg, r.cfgPath, baseRef); err != nil {
+		// With baseRef set allow entries count from the base only, so a
+		// pull request can't approve its own update (SR-9).
+		return err
 	}
 	if r.req.Baseline != "" {
 		if r.baseline, err = policy.LoadBaseline(r.req.Baseline); err != nil {
 			return err
+		}
+		if baseRef != "" {
+			if err := r.baselineAtBase(policy, baseRef); err != nil {
+				return err
+			}
 		}
 	}
 

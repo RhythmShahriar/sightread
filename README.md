@@ -87,7 +87,7 @@ Without a site, `--from` names the installed version. With one, Sightread reads 
 
 ### Record a review
 
-`allow` writes `.sightread/allowed.yaml`. Each entry binds to the sha256 of the archive you reviewed, so the same version with other bytes is the critical finding `approved-version-changed`, never allowed. Commit the file; in CI the Action reads it from the base branch, so a pull request can't allow its own update unless you pass `trust-pr-allow`.
+`allow` writes `.sightread/allowed.yaml`. Each entry binds to the sha256 of the archive you reviewed, so the same version with other bytes is the critical finding `approved-version-changed`, never allowed. Commit the file; in CI the Action reads it from the base branch, so a pull request can't allow its own update unless you pass `trust-pr-allow`. The same goes for `.sightread/config.yaml` and a committed `--baseline`: an ignore entry, `osv: false`, a new mirror or another setting the pull request relaxes counts only once it is merged, and the report notes each one.
 
 ```sh
 rhythm sr allow --from review.json --reason "reviewed in PR 412"

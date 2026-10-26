@@ -191,7 +191,7 @@ func (f *reviewFlags) gateFlags(fs *flag.FlagSet) {
 	fs.StringVar(&f.baseline, f.add("baseline"), "", "hide findings already in this saved JSON `report`")
 	fs.BoolVar(&f.noAllow, f.add("no-allow"), false, "ignore .sightread/allowed.yaml for this run")
 	if f.changesOn {
-		fs.BoolVar(&f.trustPRAllow, f.add("trust-pr-allow"), false, "count allow entries the change itself adds (default: only the base ref's count)")
+		fs.BoolVar(&f.trustPRAllow, f.add("trust-pr-allow"), false, "count allow entries, config and baseline the change itself edits (default: only the base ref's count)")
 	}
 	fs.StringVar(&f.configFile, f.add("config"), "", "config `file` (default: the nearest .sightread/config.yaml here or above)")
 	fs.BoolVar(&f.noConfig, f.add("no-config"), false, "read no config, for folders you don't trust")

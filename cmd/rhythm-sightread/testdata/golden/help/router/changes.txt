@@ -96,8 +96,9 @@ Gate:
                                  (config fail_on; default none)
   --baseline <report>            hide findings already in this saved JSON report
   --no-allow                     ignore .sightread/allowed.yaml for this run
-  --trust-pr-allow               count allow entries the change itself adds
-                                 (default: only the base ref's count)
+  --trust-pr-allow               count allow entries, config and baseline the
+                                 change itself edits (default: only the base
+                                 ref's count)
   --config <file>                config file (default: the nearest
                                  .sightread/config.yaml here or above)
   --no-config                    read no config, for folders you don't trust

@@ -81,7 +81,7 @@ inputs:
     required: false
     default: ""
   trust-pr-allow:
-    description: '"true" counts allow entries the pull request itself adds. Default: only the base branch''s count.'
+    description: '"true" counts the allow entries, config and baseline the pull request itself edits. Default: only the base branch''s count.'
     required: false
     default: "false"
   transitive:
