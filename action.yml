@@ -9,7 +9,7 @@
 #
 #   on:
 #     pull_request:
-#       paths: ["**/composer.lock", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock", "**/bun.lock"]
+#       paths: ["**/composer.lock", "**/package-lock.json", "**/npm-shrinkwrap.json", "**/pnpm-lock.yaml", "**/yarn.lock", "**/bun.lock"]
 #     schedule: [{cron: "17 3 * * 1"}]
 #   permissions: {contents: read, pull-requests: write}
 #   jobs:
@@ -150,7 +150,7 @@ outputs:
     description: Sightread's exit code (0 ok, 1 findings at fail-on, 2 usage error, 3 couldn't fetch, verify or check).
     value: ${{ steps.run.outputs.exit-code }}
   verdict:
-    description: The worst verdict of the run, hold, review, routine, allowed or unverified, or none.
+    description: The worst verdict of the run, hold, review, unverified, allowed or routine, or none.
     value: ${{ steps.run.outputs.verdict }}
   updates:
     description: How many updates were reviewed.
