@@ -28,6 +28,10 @@ const (
 	KindOSV = "osv"
 	// KindKeys is the npm registry signing keys (24 hours).
 	KindKeys = "keys"
+	// KindPackument is a full npm packument, read for its time map (10
+	// minutes, like a version list, since every publish changes it). It
+	// asks for plain JSON, not the abbreviated form.
+	KindPackument = "packument"
 )
 
 // forever is the TTL of answers that never change. kit cache refreshes
@@ -46,6 +50,7 @@ var ttls = map[string]time.Duration{
 	KindMaintainers: 12 * time.Hour,
 	KindOSV:         6 * time.Hour,
 	KindKeys:        24 * time.Hour,
+	KindPackument:   10 * time.Minute,
 }
 
 // TTL returns how long answers of kind are reused; false for a kind

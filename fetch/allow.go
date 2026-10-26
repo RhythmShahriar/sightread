@@ -69,6 +69,13 @@ func loopbackHost(host string) bool {
 	return false
 }
 
+// IsLoopbackBase reports whether base is a URL on 127.0.0.1, ::1 or
+// localhost: a mirror on this machine (the testbed and the demo).
+func IsLoopbackBase(base string) bool {
+	u, err := url.Parse(base)
+	return err == nil && u.Host != "" && loopbackHost(u.Hostname())
+}
+
 // newAllowlist builds the allowlist from the defaults, cfg.Hosts and
 // cfg.Bases. A base that is not an https URL, or an http one off
 // loopback, is an E12 error naming where it came from.

@@ -118,6 +118,24 @@ func TestLoopbackMirror(t *testing.T) {
 	if m.Accept != "application/json" {
 		t.Errorf("per-version Accept %q", m.Accept)
 	}
+	var full struct{ Accept string }
+	if err := c.JSON(context.Background(), srv.URL+"/left-pad", &full, KindPackument); err != nil {
+		t.Fatal(err)
+	}
+	if full.Accept != "application/json" {
+		t.Errorf("full packument Accept %q", full.Accept)
+	}
+}
+
+func TestIsLoopbackBase(t *testing.T) {
+	for base, want := range map[string]bool{
+		"http://127.0.0.1:31000": true, "http://[::1]:8080/npm": true, "https://localhost": true,
+		"https://registry.npmjs.org": false, "http://127.0.0.2": false, "not a url": false, "": false,
+	} {
+		if got := IsLoopbackBase(base); got != want {
+			t.Errorf("IsLoopbackBase(%q) = %v", base, got)
+		}
+	}
 }
 
 func TestRetryAfter(t *testing.T) {
