@@ -314,6 +314,21 @@ func TestFlagsAfterArguments(t *testing.T) {
 	}
 }
 
+// TestRerunFlags: the terminal's "the full diff" command gets the flags
+// that chose what was compared and none of the output or gate flags.
+func TestRerunFlags(t *testing.T) {
+	p, err := parsePlan(t, "plugin", "b04-roles", "--path", "projects/wp", "--json", "--fail-on", "high", "--to", "2.0.0", "--allow-unverified")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"--path", "projects/wp", "--to", "2.0.0", "--allow-unverified"}; !reflect.DeepEqual(p.write.RerunFlags, want) {
+		t.Errorf("rerun flags %q, want %q", p.write.RerunFlags, want)
+	}
+	if p, err = parsePlan(t, "plugin", "b04-roles", "-o", "x.md"); err != nil || len(p.write.RerunFlags) != 0 {
+		t.Errorf("rerun flags %q (%v), want none", p.write.RerunFlags, err)
+	}
+}
+
 // TestPluginNeedsASlug: plugin and theme need a name; composer and npm
 // don't.
 func TestPluginNeedsASlug(t *testing.T) {

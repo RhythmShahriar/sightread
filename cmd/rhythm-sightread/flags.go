@@ -523,8 +523,33 @@ func (f *reviewFlags) outputPlan(p *plan, env func(string) string, version strin
 		// The terminal writer's read-only line says the staging copy runs
 		// the update when --soundcheck installs it there.
 		Soundcheck: f.soundcheck != "",
+		RerunFlags: rerunFlags(f),
 	}
 	return nil
+}
+
+// rerunFlags are the flags of f that chose what the run read and
+// compared, in a fixed order, for the terminal's "the full diff"
+// command. Output, gate and network flags are left out.
+func rerunFlags(f *reviewFlags) []string {
+	var out []string
+	for _, v := range []struct{ name, value string }{
+		{"--path", f.path}, {"--wp", f.wp}, {"--from-tuner", f.fromTuner}, {"--config", f.configFile},
+		{"--from", f.from}, {"--to", f.to}, {"--from-file", f.fromFile}, {"--to-file", f.toFile},
+	} {
+		if f.set[strings.TrimPrefix(v.name, "--")] && v.value != "" {
+			out = append(out, v.name, v.value)
+		}
+	}
+	for _, v := range []struct {
+		name string
+		on   bool
+	}{{"--transitive", f.transitive}, {"--pre", f.pre}, {"--allow-downgrade", f.allowDowngrade}, {"--allow-unverified", f.allowUnverified}} {
+		if v.on {
+			out = append(out, v.name)
+		}
+	}
+	return out
 }
 
 // checkPackagePattern checks one --only or --skip value: an ecosystem

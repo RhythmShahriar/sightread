@@ -18,6 +18,10 @@ type WriteOptions struct {
 	RedactPaths bool
 	Soundcheck  bool
 	Signed      string // sha256 of the signed JSON, for footers with --sign
+	// RerunFlags are the flags that chose what the run read and compared
+	// (--path, --from, --to-file, ...), as arguments: the terminal's
+	// "the full diff" command repeats them so it reviews the same thing.
+	RerunFlags []string
 }
 
 // Output formats of Writer.Format.
