@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"regexp"
 	"strings"
 	"time"
@@ -64,12 +65,28 @@ func (s *stager) compare(ctx context.Context, name string) (*comparison, error) 
 	if err != nil {
 		return nil, s.ranBadly("rhythm-soundcheck compare", -1, res.Stderr, err)
 	}
-	var c comparison
-	jsonErr := json.Unmarshal(bytes.TrimSpace(res.Stdout), &c)
+	c, jsonErr := decodeComparison(res.Stdout)
 	// Exit 1 is Soundcheck's own gate on what it found; the comparison
 	// is still complete.
-	if res.Code > 1 || jsonErr != nil || c.Kind != "comparison" || c.Interrupted {
+	if res.Code > 1 || jsonErr != nil {
 		return nil, s.ranBadly("rhythm-soundcheck compare", res.Code, res.Stderr, jsonErr)
+	}
+	return c, nil
+}
+
+// decodeComparison reads rhythm-soundcheck compare --json. Anything but
+// a finished comparison is an error: an interrupted one can't clear an
+// update.
+func decodeComparison(stdout []byte) (*comparison, error) {
+	var c comparison
+	if err := json.Unmarshal(bytes.TrimSpace(stdout), &c); err != nil {
+		return nil, err
+	}
+	switch {
+	case c.Kind != "comparison":
+		return nil, errors.New("not a Soundcheck comparison")
+	case c.Interrupted:
+		return nil, errors.New("the comparison was interrupted")
 	}
 	return &c, nil
 }

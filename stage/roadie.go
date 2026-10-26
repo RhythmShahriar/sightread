@@ -58,11 +58,35 @@ func (s *stager) roadieVerify(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", s.ranBadly("rhythm-roadie verify", -1, res.Stderr, err)
 	}
-	var doc verifyDoc
-	jsonErr := json.Unmarshal(bytes.TrimSpace(res.Stdout), &doc)
-	if res.Code > 1 || jsonErr != nil || doc.Schema != roadieSchema || doc.Kind != "verify" {
+	doc, jsonErr := decodeVerify(res.Stdout)
+	if res.Code > 1 || jsonErr != nil {
 		return "", s.ranBadly("rhythm-roadie verify", res.Code, res.Stderr, jsonErr)
 	}
+	if why := verifyProblems(doc, res.Code); len(why) > 0 {
+		return "", &core.Error{Code: core.ESoundcheckMissing, Exit: cli.ExitUnavailable,
+			What: fmt.Sprintf("%s failed rhythm roadie verify (%s)", s.host, strings.Join(why, ", ")),
+			Hint: []string{"fix it with rhythm roadie prepare, or --skip-roadie-verify (the report says it was skipped)"}}
+	}
+	return doc.Data.ProductionURL, nil
+}
+
+// decodeVerify reads rhythm-roadie verify --json. Anything but a
+// rhythm-roadie/v1 verify document is an error.
+func decodeVerify(stdout []byte) (*verifyDoc, error) {
+	var doc verifyDoc
+	if err := json.Unmarshal(bytes.TrimSpace(stdout), &doc); err != nil {
+		return nil, err
+	}
+	if doc.Schema != roadieSchema || doc.Kind != "verify" {
+		return nil, fmt.Errorf("not a %s verify document", roadieSchema)
+	}
+	return &doc, nil
+}
+
+// verifyProblems lists why a staging copy fails the check, in words
+// safe to print: Roadie's own problems first, else the first rule the
+// copy breaks. None means the copy may take the update.
+func verifyProblems(doc *verifyDoc, code int) []string {
 	d := doc.Data
 	var why []string
 	for _, p := range d.Problems {
@@ -72,7 +96,7 @@ func (s *stager) roadieVerify(ctx context.Context) (string, error) {
 	}
 	switch {
 	case len(why) > 0:
-	case doc.Verdict != "ok" || res.Code != 0:
+	case doc.Verdict != "ok" || code != 0:
 		why = append(why, "verdict "+term.SafeText(doc.Verdict))
 	case !d.Signed:
 		why = append(why, "the copy has no signed Roadie marker")
@@ -81,12 +105,7 @@ func (s *stager) roadieVerify(ctx context.Context) (string, error) {
 	case d.CopyCreated.IsZero() || d.VerifiedAt.IsZero() || !d.VerifiedAt.After(d.CopyCreated):
 		why = append(why, "the check is older than the copy")
 	}
-	if len(why) > 0 {
-		return "", &core.Error{Code: core.ESoundcheckMissing, Exit: cli.ExitUnavailable,
-			What: fmt.Sprintf("%s failed rhythm roadie verify (%s)", s.host, strings.Join(why, ", ")),
-			Hint: []string{"fix it with rhythm roadie prepare, or --skip-roadie-verify (the report says it was skipped)"}}
-	}
-	return d.ProductionURL, nil
+	return why
 }
 
 // ranBadly is the error for a helper that didn't run to a usable answer:

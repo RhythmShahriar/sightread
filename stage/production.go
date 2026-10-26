@@ -67,21 +67,11 @@ func soundcheckProduction(dir string) ([]production, error) {
 		f, err := os.Open(p) //nolint:gosec // the user's own Soundcheck config, found by name
 		if err == nil {
 			defer func() { _ = f.Close() }()
-			var cfg struct {
-				Production []string `yaml:"production"`
-			}
 			b, err := io.ReadAll(io.LimitReader(f, maxSoundcheckConfig))
 			if err != nil {
 				return nil, fmt.Errorf("%s: can't be read (%w)", p, err)
 			}
-			if err := yaml.Unmarshal(b, &cfg); err != nil {
-				return nil, fmt.Errorf("%s: not YAML Sightread can read (%w)", p, err)
-			}
-			out := make([]production, 0, len(cfg.Production))
-			for _, e := range cfg.Production {
-				out = append(out, production{entry: e, from: shownPath(p)})
-			}
-			return out, nil
+			return parseProduction(b, p)
 		}
 		if !errors.Is(err, os.ErrNotExist) {
 			return nil, err
@@ -90,6 +80,22 @@ func soundcheckProduction(dir string) ([]production, error) {
 			return nil, nil
 		}
 	}
+}
+
+// parseProduction reads the production key of the Soundcheck config at
+// path p.
+func parseProduction(b []byte, p string) ([]production, error) {
+	var cfg struct {
+		Production []string `yaml:"production"`
+	}
+	if err := yaml.Unmarshal(b, &cfg); err != nil {
+		return nil, fmt.Errorf("%s: not YAML Sightread can read (%w)", p, err)
+	}
+	out := make([]production, 0, len(cfg.Production))
+	for _, e := range cfg.Production {
+		out = append(out, production{entry: e, from: shownPath(p)})
+	}
+	return out, nil
 }
 
 // shownPath is p relative to the working folder when it is inside it.
