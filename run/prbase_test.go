@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"reflect"
 	"slices"
@@ -15,6 +17,7 @@ import (
 
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
+	"github.com/RhythmShahriar/sightread/policy"
 	"github.com/RhythmShahriar/sightread/run"
 	"github.com/RhythmShahriar/sightread/run/runtest"
 )
@@ -263,5 +266,64 @@ func TestPRRuleNotLinked(t *testing.T) {
 	_, err := run.Review(context.Background(), req)
 	if !errors.Is(err, core.ErrNotLinked) {
 		t.Fatalf("err %v, want ErrNotLinked", err)
+	}
+}
+
+// TestPRConfigLinkedPolicy is TestPRConfigNotCounted with the real
+// policy reading a real config file: the change's ignore entry, OSV off,
+// mirror and shorter min_age don't count; the base's values come back.
+func TestPRConfigLinkedPolicy(t *testing.T) {
+	_, _, g, req := prWorld(t, nil, "min_age: 72h\n")
+	repo := req.Changes.Repo
+	head := "ignore:\n  - id: npm-install-script-new\n    reason: trust me\nosv: false\n" +
+		"sources:\n  npm:\n    registry: https://mirror.example\nmin_age: 1h\n"
+	for _, dir := range []string{".git", ".sightread"} {
+		if err := os.MkdirAll(filepath.Join(repo, dir), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(repo, ".sightread", "config.yaml"), []byte(head), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	store := policy.New()
+	store.Stderr = io.Discard
+	t.Cleanup(core.SwapPolicy(store))
+	rep := review(t, req)
+	if got := names(rep); !reflect.DeepEqual(got, []string{"plain-crypto-js →4.2.1 review"}) {
+		t.Fatalf("updates %q: the PR's ignore entry hid the finding", got)
+	}
+	for _, key := range []string{"ignore npm-install-script-new", "osv", "sources", "min_age"} {
+		if !slices.ContainsFunc(rep.Notes, func(n string) bool { return strings.HasPrefix(n, key) && strings.HasSuffix(n, relaxed) }) {
+			t.Errorf("no %q note in %q", key, rep.Notes)
+		}
+	}
+	if !slices.Contains(g.reads, "main:.sightread/config.yaml") {
+		t.Errorf("git show reads %q", g.reads)
+	}
+}
+
+// pathScorer records the config path the run names to the scorer.
+type pathScorer struct {
+	coretest.FakeScorer
+	path *string
+}
+
+func (s pathScorer) SetConfigPath(p string) { *s.path = p }
+
+// TestScorerConfigPath: the scorer's notes name the --config file as
+// typed, and the usual file (empty) without --config.
+func TestScorerConfigPath(t *testing.T) {
+	for _, file := range []string{"ci/sightread.yaml", ""} {
+		w := runtest.Install(t)
+		w.Publish(core.NPM, "a", "1.0.0", "1.1.0")
+		w.Install(core.NPM, "a", "1.0.0")
+		got := "unset"
+		t.Cleanup(core.SwapScorer(pathScorer{path: &got}))
+		req := request(t, "npm")
+		req.ConfigFile = file
+		review(t, req)
+		if got != file {
+			t.Errorf("--config %q: scorer got %q", file, got)
+		}
 	}
 }
