@@ -293,7 +293,10 @@ if [ "$code" != 0 ] && contains "$work/log" "doesn't match its signed checksum; 
   ok "a changed archive is refused"
 else bad "a changed archive is refused"; fi
 # A Windows runner gets a clear error, not a 404 for a .tar.gz.
-printf '#!/bin/sh\n[ "$1" = -s ] && echo MINGW64_NT-10.0-20348 || echo x86_64\n' > "$work/bin/uname"
+cat > "$work/bin/uname" <<'FAKE'
+#!/bin/sh
+if [ "$1" = -s ]; then echo MINGW64_NT-10.0-20348; else echo x86_64; fi
+FAKE
 chmod +x "$work/bin/uname"
 act action-install.sh install VERSION=9.9.9 DOWNLOAD_URL='https://mirror.test/v{version}' VERIFY_SIGNATURE=false
 rm -f "$work/bin/uname"
