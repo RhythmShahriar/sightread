@@ -1,0 +1,11 @@
+eco: composer
+note: the new entry's source is unknown
+meta_old:
+  ref:
+    version: 1.0.0
+lock_old:
+  resolved_kind: registry
+lock_new:
+  reference: 11f6ad8ec52a2984abaafd7c3b516503785c2072
+forbid:
+- lockfile-source-change

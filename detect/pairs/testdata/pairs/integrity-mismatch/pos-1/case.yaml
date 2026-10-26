@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: three files differ from the wordpress.org checksums
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_old:
+  by: checksums
+integrity_new:
+  by: failed
+  mismatch:
+  - includes/loader.php
+  - admin/ajax.php
+  - uninstall.php
+expect:
+- id: integrity-mismatch
+  min_severity: critical

@@ -1,0 +1,12 @@
+eco: composer
+note: a drive letter entry
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: path-escape
+  path: C:/Windows/Temp/x.php
+  detail: drive letter
+expect:
+- id: archive-path-escape
+  min_severity: critical

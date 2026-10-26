@@ -1,0 +1,11 @@
+eco: composer
+note: a link is not a collision
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: link
+  path: x
+  other: y
+forbid:
+- archive-collision

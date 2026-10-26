@@ -1,0 +1,15 @@
+eco: composer
+note: a malicious Composer version
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: MAL-2026-77
+    malicious: true
+    summary: steals tokens
+expect:
+- id: known-malicious
+  min_severity: critical

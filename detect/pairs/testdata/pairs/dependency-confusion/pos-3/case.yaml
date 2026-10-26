@@ -1,0 +1,10 @@
+eco: npm
+note: an added private package
+meta_new:
+  ref:
+    version: 2.0.0
+  private: true
+  public_shadow: 3.0.0
+expect:
+- id: dependency-confusion
+  min_severity: critical

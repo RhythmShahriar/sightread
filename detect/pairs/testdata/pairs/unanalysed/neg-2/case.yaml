@@ -1,0 +1,10 @@
+eco: npm
+note: a large video is listed, not flagged
+new:
+  assets/intro.mp4: binary
+meta_old:
+  ref:
+    version: 1.0.0
+features_new: []
+forbid:
+- unanalysed

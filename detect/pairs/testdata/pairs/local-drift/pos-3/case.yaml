@@ -1,0 +1,12 @@
+eco: wp-theme
+note: functions.php edited, readme.txt not counted
+meta_old:
+  ref:
+    version: 1.0.0
+drift:
+  differ:
+  - functions.php
+  - readme.txt
+expect:
+- id: local-drift
+  min_severity: info

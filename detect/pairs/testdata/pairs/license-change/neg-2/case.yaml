@@ -1,0 +1,12 @@
+eco: npm
+note: unchanged
+meta_old:
+  ref:
+    version: 1.0.0
+  license: MIT
+meta_new:
+  ref:
+    version: 2.0.0
+  license: MIT
+forbid:
+- license-change

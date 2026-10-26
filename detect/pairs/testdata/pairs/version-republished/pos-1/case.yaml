@@ -1,0 +1,16 @@
+eco: composer
+note: 'b19: the tag moved to another commit'
+meta_old:
+  ref:
+    version: 1.0.0
+  archive:
+    reference: 18d30ad46e7f8e79c860f1e1ccf88ba30bae106a
+lock_old:
+  ref:
+    version: 1.0.0
+  reference: 3b3cb58fed62bc51ac94a080fdf7263e12c05123
+  lockfile: composer.lock
+  lock_line: 120
+expect:
+- id: version-republished
+  min_severity: critical

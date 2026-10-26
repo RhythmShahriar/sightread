@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: two spellings of one license
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+  license: GPLv2 or later
+meta_new:
+  ref:
+    version: 2.0.0
+  license: GPL-2.0-or-later
+forbid:
+- license-change

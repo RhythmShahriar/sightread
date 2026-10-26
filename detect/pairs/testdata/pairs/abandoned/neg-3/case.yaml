@@ -1,0 +1,7 @@
+eco: composer
+note: maintained
+meta_old:
+  ref:
+    version: 1.0.0
+forbid:
+- abandoned

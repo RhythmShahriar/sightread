@@ -1,0 +1,11 @@
+eco: npm
+note: registry to registry
+meta_old:
+  ref:
+    version: 1.0.0
+lock_old:
+  resolved_kind: registry
+lock_new:
+  resolved_kind: registry
+forbid:
+- lockfile-source-change

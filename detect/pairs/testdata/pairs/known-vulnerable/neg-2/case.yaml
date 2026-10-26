@@ -1,0 +1,15 @@
+eco: composer
+note: the installed version was listed, the candidate is not
+meta_old:
+  ref:
+    version: 1.0.0
+  advisories:
+  - id: CVE-2025-1
+    fixed_in:
+    - 1.5.0
+meta_new:
+  ref:
+    version: 2.0.0
+expect:
+- id: known-vulnerable
+  max_severity: info

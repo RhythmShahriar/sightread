@@ -1,0 +1,13 @@
+eco: composer
+note: the dist moves to a tarball URL
+meta_old:
+  ref:
+    version: 1.0.0
+lock_old:
+  resolved_kind: registry
+lock_new:
+  resolved_kind: tarball
+  resolved: https://files.example.test/fixture.tar.gz
+expect:
+- id: lockfile-source-change
+  min_severity: high

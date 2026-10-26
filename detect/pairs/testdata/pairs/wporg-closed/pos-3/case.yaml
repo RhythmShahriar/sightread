@@ -1,0 +1,12 @@
+eco: wp-theme
+note: closed with no reason given
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  closed: true
+expect:
+- id: wporg-closed
+  min_severity: critical

@@ -1,0 +1,13 @@
+eco: npm
+note: 'only the installed version had the link: noted at info'
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+issues_old:
+- kind: link
+  path: bin/cli
+  other: ../lib/cli.js
+expect:
+- id: archive-link
+  max_severity: info

@@ -1,0 +1,10 @@
+eco: npm
+note: only the installed version's archive had the entry
+meta_old:
+  ref:
+    version: 1.0.0
+issues_old:
+- kind: path-escape
+  path: ../x
+forbid:
+- archive-path-escape

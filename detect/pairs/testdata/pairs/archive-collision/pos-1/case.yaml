@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: case collision
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: collision
+  path: includes/a.php
+  other: includes/A.php
+expect:
+- id: archive-collision
+  min_severity: high

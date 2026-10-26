@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: readme.txt alone is not counted
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+drift:
+  differ:
+  - readme.txt
+forbid:
+- local-drift

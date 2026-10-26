@@ -1,0 +1,12 @@
+eco: npm
+note: NFC collision
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: collision
+  path: café.js
+  other: café.js
+expect:
+- id: archive-collision
+  min_severity: high

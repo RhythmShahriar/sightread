@@ -1,0 +1,13 @@
+eco: npm
+note: MIT to GPL
+meta_old:
+  ref:
+    version: 1.0.0
+  license: MIT
+meta_new:
+  ref:
+    version: 2.0.0
+  license: GPL-3.0
+expect:
+- id: license-change
+  min_severity: low

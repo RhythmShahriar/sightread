@@ -1,0 +1,16 @@
+eco: npm
+note: a private scoped name also published publicly, higher
+meta_old:
+  ref:
+    name: '@acme/utils'
+    version: 1.0.0
+  private: true
+meta_new:
+  ref:
+    name: '@acme/utils'
+    version: 2.0.0
+  private: true
+  public_shadow: 99.0.0
+expect:
+- id: dependency-confusion
+  min_severity: critical

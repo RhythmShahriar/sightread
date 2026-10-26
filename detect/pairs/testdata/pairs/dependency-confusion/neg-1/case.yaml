@@ -1,0 +1,13 @@
+eco: npm
+note: a private name with no public twin
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+  private: true
+meta_new:
+  ref:
+    version: 2.0.0
+  private: true
+forbid:
+- dependency-confusion

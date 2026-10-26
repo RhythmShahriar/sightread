@@ -1,0 +1,11 @@
+eco: npm
+note: a collision is not a link
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: collision
+  path: a.js
+  other: A.js
+forbid:
+- archive-link

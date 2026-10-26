@@ -1,0 +1,12 @@
+eco: wp-theme
+note: the source marks the theme abandoned
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  abandoned: true
+expect:
+- id: abandoned
+  min_severity: low

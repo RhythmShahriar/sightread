@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: closed for a security issue
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  closed: true
+  closed_reason: Security Issue
+expect:
+- id: wporg-closed
+  min_severity: critical

@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: a file name that starts with two dots is inside the package
+lookalike: true
+new:
+  lib/..config.php: '<?php
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_new: []
+forbid:
+- archive-path-escape

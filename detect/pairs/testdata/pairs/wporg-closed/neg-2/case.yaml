@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: an open plugin
+meta_old:
+  ref:
+    version: 1.0.0
+forbid:
+- wporg-closed

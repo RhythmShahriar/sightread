@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: no drift
+meta_old:
+  ref:
+    version: 1.0.0
+drift:
+  matched:
+  - x.php
+  official: true
+forbid:
+- local-drift

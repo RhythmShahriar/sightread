@@ -1,0 +1,13 @@
+eco: npm
+note: lock and registry agree
+meta_old:
+  ref:
+    version: 1.0.0
+  archive:
+    integrity: sha512-TnwPMjIW8lwUSU8pJUcVuKgTLkHmbEI0b/yW8GZUwUikmQpftBI5GLoZ27P/nVz1zeh49VvJxa8GSuKfmlgTog==
+lock_old:
+  ref:
+    version: 1.0.0
+  integrity: sha512-TnwPMjIW8lwUSU8pJUcVuKgTLkHmbEI0b/yW8GZUwUikmQpftBI5GLoZ27P/nVz1zeh49VvJxa8GSuKfmlgTog== sha1-q2GYD8E/mnfddR9/r3UG5fkpvFQ=
+forbid:
+- version-republished

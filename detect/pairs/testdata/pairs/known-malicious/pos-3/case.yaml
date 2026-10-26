@@ -1,0 +1,12 @@
+eco: npm
+note: an added package listed as malicious
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: MAL-2026-9
+    malicious: true
+    url: https://osv.dev/MAL-2026-9
+expect:
+- id: known-malicious
+  min_severity: critical

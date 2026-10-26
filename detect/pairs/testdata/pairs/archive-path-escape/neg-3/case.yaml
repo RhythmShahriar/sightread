@@ -1,0 +1,7 @@
+eco: composer
+note: a clean archive
+meta_old:
+  ref:
+    version: 1.0.0
+forbid:
+- archive-path-escape

@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: 'only readme.txt differs: WordPress.org rebuilds it after a release'
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_new:
+  by: failed
+  mismatch:
+  - readme.txt
+forbid:
+- integrity-mismatch

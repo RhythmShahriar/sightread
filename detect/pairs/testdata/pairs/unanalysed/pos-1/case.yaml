@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: a code file over the analysis cap
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+  unanalysed:
+  - path: includes/big.php
+    reason: over the 4 MiB analysis limit
+expect:
+- id: unanalysed
+  min_severity: high

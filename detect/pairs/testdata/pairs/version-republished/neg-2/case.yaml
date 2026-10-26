@@ -1,0 +1,13 @@
+eco: composer
+note: the same commit in another case
+meta_old:
+  ref:
+    version: 1.0.0
+  archive:
+    reference: FF3390557335BA88D37755E41514BEB03BC499EC
+lock_old:
+  ref:
+    version: 1.0.0
+  reference: ff3390557335ba88d37755e41514beb03bc499ec
+forbid:
+- version-republished

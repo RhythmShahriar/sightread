@@ -1,0 +1,7 @@
+eco: npm
+note: a public package
+meta_old:
+  ref:
+    version: 1.0.0
+forbid:
+- dependency-confusion

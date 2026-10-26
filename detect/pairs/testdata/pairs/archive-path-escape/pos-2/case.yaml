@@ -1,0 +1,11 @@
+eco: npm
+note: an absolute entry
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: path-escape
+  path: /etc/cron.d/job
+expect:
+- id: archive-path-escape
+  min_severity: critical

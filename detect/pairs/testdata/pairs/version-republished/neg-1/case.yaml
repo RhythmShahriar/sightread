@@ -1,0 +1,14 @@
+eco: npm
+note: sha1 in the lock and sha512 at the registry can't be compared
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+  archive:
+    integrity: sha512-rBHaoYtl/PncDrRIScmmyRf+oi9WLEdIqg8+qbA4zvbdeunozY+gh5r6XcQ61Y+P1Mf2VgDGEOXDt7Pyw03iIg==
+lock_old:
+  ref:
+    version: 1.0.0
+  integrity: sha1-Mp4+mEz/cl42SJqlMPg+r2djcl0=
+forbid:
+- version-republished

@@ -1,0 +1,14 @@
+eco: npm
+note: 'already off the registry: Not checked (vcs), not this signal'
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+lock_old:
+  resolved_kind: git
+  resolved: git+https://github.com/a/b.git#1
+lock_new:
+  resolved_kind: git
+  resolved: git+https://github.com/a/b.git#2
+forbid:
+- lockfile-source-change

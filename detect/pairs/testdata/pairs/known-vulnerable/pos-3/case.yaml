@@ -1,0 +1,16 @@
+eco: npm
+note: the 1.x fix does not cover 2.0.0; the 2.x fix is 2.1.0
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: GHSA-4444-5555-6666
+    fixed_in:
+    - 1.9.5
+    - 2.1.0
+expect:
+- id: known-vulnerable
+  min_severity: high

@@ -1,0 +1,14 @@
+eco: npm
+note: an advisory with no fix
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: GHSA-1111-2222-3333
+    summary: prototype pollution
+expect:
+- id: known-vulnerable
+  min_severity: high

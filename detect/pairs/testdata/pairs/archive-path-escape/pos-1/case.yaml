@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: a ../ entry
+new:
+  plugin.php: '<?php
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: path-escape
+  path: ../../wp-config.php
+features_new: []
+expect:
+- id: archive-path-escape
+  min_severity: critical

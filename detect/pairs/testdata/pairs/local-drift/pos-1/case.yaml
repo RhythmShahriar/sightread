@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: three edited files
+meta_old:
+  ref:
+    version: 5.9.6
+drift:
+  differ:
+  - wp-mail-smtp.php
+  - src/Admin.php
+  - src/Mailer.php
+expect:
+- id: local-drift
+  min_severity: info

@@ -1,0 +1,11 @@
+eco: npm
+note: a first declaration is not a change
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  license: MIT
+forbid:
+- license-change

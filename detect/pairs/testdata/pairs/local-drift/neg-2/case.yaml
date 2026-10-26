@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: translations alone are not counted
+meta_old:
+  ref:
+    version: 1.0.0
+drift:
+  differ:
+  - languages/x-de_DE.mo
+  - languages/x-de_DE.po
+forbid:
+- local-drift

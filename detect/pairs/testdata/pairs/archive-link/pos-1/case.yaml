@@ -1,0 +1,13 @@
+eco: npm
+note: a link inside the package stays high
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: link
+  path: bin/cli
+  other: ../lib/cli.js
+expect:
+- id: archive-link
+  min_severity: high
+  max_severity: high
