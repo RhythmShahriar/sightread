@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: g08-eol
+versions:
+  - version: "1.0.0"
+    installed: true
+    author: eolteam
+    contributors: [eolteam]
+  - version: "1.0.1"
+    candidate: true
+    author: eolteam
+    contributors: [eolteam]

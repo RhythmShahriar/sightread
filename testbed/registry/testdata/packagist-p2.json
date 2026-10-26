@@ -1,0 +1,9 @@
+{
+  "minified": "composer/2.0",
+  "packages": {
+    "vendor/example": [
+      {"name": "vendor/example", "version": "2.0.0", "version_normalized": "2.0.0.0", "source": {"type": "git", "url": "https://github.com/vendor/example.git", "reference": "bbbbbbb"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/vendor/example/zipball/bbbbbbb", "reference": "bbbbbbb", "shasum": ""}, "time": "2025-08-08T00:00:00+00:00", "type": "library"},
+      {"version": "1.0.0", "version_normalized": "1.0.0.0", "source": {"type": "git", "url": "https://github.com/vendor/example.git", "reference": "aaaaaaa"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/vendor/example/zipball/aaaaaaa", "reference": "aaaaaaa", "shasum": ""}, "time": "2024-01-01T00:00:00+00:00"}
+    ]
+  }
+}

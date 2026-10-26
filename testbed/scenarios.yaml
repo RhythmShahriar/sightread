@@ -1,0 +1,517 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# The benchmark's manifest: one entry per scenario of PRD 19. The
+# bench sets each state, runs the command against the fixture
+# registry and checks the review against expect and forbid. Env
+# scenarios carry their own assertions under env, run by the probes.
+# {testbed} in a command is the absolute path of this folder.
+
+scenarios:
+  - id: b01
+    kind: bad
+    title: "owner change, new cron that fetches and runs remote code"
+    package: b01-widget
+    command: ["plugin", "b01-widget", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: owner-change, min_severity: high}
+        - {id: remote-fetch-exec, min_severity: critical}
+        - {id: cron-new-hook, min_severity: low}
+        - {id: changelog-mismatch, min_severity: medium}
+  - id: b02
+    kind: bad
+    title: "exfiltrates admin email, users and options on init"
+    package: b02-formtools
+    command: ["plugin", "b02-formtools", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: data-exfil, min_severity: high}
+        - {id: outbound-new-domain, min_severity: medium}
+  - id: b03
+    kind: bad
+    title: "creates an administrator and hides it"
+    package: b03-seo
+    command: ["plugin", "b03-seo", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: admin-user-hidden, min_severity: critical}
+        - {id: admin-user-create, min_severity: high}
+  - id: b04
+    kind: bad
+    title: "grants manage_options to subscribers"
+    package: b04-roles
+    command: ["plugin", "b04-roles", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: capability-change, min_severity: high}
+  - id: b05
+    kind: bad
+    title: "layered decode that runs built code"
+    package: b05-cache
+    command: ["plugin", "b05-cache", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: decode-exec, min_severity: critical}
+  - id: b06
+    kind: bad
+    title: "unserializes a request cookie in a new handler"
+    package: b06-ajax
+    command: ["plugin", "b06-ajax", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: input-unserialize, min_severity: high}
+  - id: b07
+    kind: bad
+    title: "writes a mu-plugin and edits .htaccess"
+    package: b07-backup
+    command: ["plugin", "b07-backup", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: write-outside-package, min_severity: high}
+  - id: b08
+    kind: bad
+    title: "PHP payload hidden in an asset and included"
+    package: b08-gallery
+    command: ["plugin", "b08-gallery", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: code-in-asset, min_severity: high}
+  - id: b09
+    kind: bad
+    title: "theme serves fetched SEO spam to bots only"
+    package: b09-theme
+    command: ["theme", "b09-theme", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: bot-cloaking, min_severity: high}
+        - {id: outbound-new-domain, min_severity: medium}
+  - id: b10
+    kind: bad
+    title: "new postinstall that downloads and runs a script"
+    package: b10-leftpadplus
+    command: ["npm", "leftpadplus", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: npm-install-script-new, min_severity: high}
+        - {id: remote-fetch-exec, min_severity: critical}
+  - id: b11
+    kind: bad
+    title: "postinstall bundle reads .npmrc and the token"
+    package: b11-colorlib
+    command: ["npm", "colorlib", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: npm-install-script-new, min_severity: high}
+        - {id: credential-access, min_severity: high}
+  - id: b12
+    kind: bad
+    title: "all maintainers replaced, a patch adds network code"
+    package: b12-dateutil
+    command: ["npm", "dateutil", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: owner-change, min_severity: high}
+        - {id: outbound-new-domain, min_severity: medium}
+  - id: b13
+    kind: bad
+    title: "lock gains a typosquat with an install script"
+    package: b13-app
+    extra_packages: ["b13-dep", "b10-leftpadplus"]
+    command: ["changes", "--before", "projects/changes/base/package-lock.json", "--after", "projects/changes/head/package-lock.json"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: typosquat, min_severity: high}
+        - {id: dependency-new, min_severity: medium}
+        - {id: npm-install-script-new, min_severity: high}
+  - id: b14
+    kind: bad
+    title: "lock resolved moved off the registry"
+    package: b14-fetchkit
+    command: ["npm", "fetchkit", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: lockfile-source-change, min_severity: high}
+  - id: b15
+    kind: bad
+    title: "new autoload.files that fetches and runs remote code"
+    package: b15-helper
+    command: ["composer", "acme/helper", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: composer-autoload-files, min_severity: medium}
+        - {id: remote-fetch-exec, min_severity: critical}
+  - id: b16
+    kind: bad
+    title: "becomes a composer-plugin with a post-install-cmd"
+    package: b16-plugin
+    command: ["composer", "acme/installer", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: composer-plugin-new, min_severity: high}
+  - id: b17
+    kind: bad
+    title: "registry serves a tampered archive"
+    package: b17-tamper
+    command: ["plugin", "b17-tamper", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: integrity-mismatch, min_severity: critical}
+    forbid: ["remote-fetch-exec"]
+  - id: b18
+    kind: bad
+    title: "same version, fresh bytes after an allow"
+    package: b18-approved
+    command: ["plugin", "b18-approved", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: approved-version-changed, min_severity: critical}
+  - id: b19
+    kind: bad
+    title: "composer tag moved to another commit"
+    package: b19-republish
+    command: ["composer", "acme/lib", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: version-republished, min_severity: critical}
+  - id: b20
+    kind: bad
+    title: "fresh dependency with a postinstall, no provenance, no tag"
+    package: b20-axios
+    extra_packages: ["b20-dep"]
+    command: ["npm", "axios-wrap", "--transitive", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: dependency-new, min_severity: high}
+        - {id: fresh-release, min_severity: medium}
+        - {id: provenance-dropped, min_severity: high}
+        - {id: git-tag-missing, min_severity: medium}
+  - id: b21
+    kind: bad
+    title: "Essential Plugin replay"
+    package: b21-essential
+    command: ["plugin", "b21-essential", "--path", "projects/wp"]
+    expect:
+      verdict: HOLD
+      exit: 1
+      signals:
+        - {id: input-unserialize, min_severity: high}
+        - {id: eval-dynamic, min_severity: high}
+        - {id: rest-open-route, min_severity: high}
+        - {id: changelog-mismatch, min_severity: medium}
+        - {id: owner-change, min_severity: high}
+  - id: b22
+    kind: bad
+    title: "Gravity Forms pattern reviewed from a vendor zip"
+    package: b22-premium
+    command: ["plugin", "b22-premium", "--from-file", "state/b22-old.zip", "--to-file", "state/b22-new.zip", "--allow-unverified"]
+    expect:
+      verdict: UNVERIFIED
+      exit: 1
+      signals:
+        - {id: admin-user-create, min_severity: high}
+        - {id: update-suppression, min_severity: high}
+        - {id: outbound-new-domain, min_severity: medium}
+  - id: b23
+    kind: bad
+    title: "Trojan Source bidi plus an obfuscated blob"
+    package: b23-bidi
+    command: ["npm", "bidilib", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: unicode-hidden, min_severity: medium}
+        - {id: obfuscation, min_severity: high}
+  - id: g01
+    kind: good
+    title: "large feature release with real permission callbacks"
+    package: g01-feature
+    command: ["plugin", "g01-feature", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g02
+    kind: good
+    title: "rebuilt minified bundle"
+    package: g02-bundle
+    command: ["plugin", "g02-bundle", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g03
+    kind: good
+    title: "thirty translation files added"
+    package: g03-i18n
+    command: ["plugin", "g03-i18n", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g04
+    kind: good
+    title: "bundled Guzzle bumped in vendor"
+    package: g04-vendor
+    command: ["plugin", "g04-vendor", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g05
+    kind: good
+    title: "documented daily cleanup cron"
+    package: g05-cron
+    command: ["plugin", "g05-cron", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+      signals:
+        - {id: cron-new-hook, min_severity: low}
+  - id: g06
+    kind: good
+    title: "a contributor added, all old ones stay"
+    package: g06-contrib
+    command: ["plugin", "g06-contrib", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g07
+    kind: good
+    title: "theme CSS and templates only"
+    package: g07-theme
+    command: ["theme", "g07-theme", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g08
+    kind: good
+    title: "line endings switched to LF"
+    package: g08-eol
+    command: ["plugin", "g08-eol", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g09
+    kind: good
+    title: "npm patch, same maintainers, no scripts"
+    package: g09-patch
+    command: ["npm", "patchlib", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g10
+    kind: good
+    title: "native addon, unchanged node-gyp install"
+    package: g10-native
+    command: ["npm", "nativelib", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g11
+    kind: good
+    title: "popular dependencies added"
+    package: g11-deps
+    command: ["npm", "depapp", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g12
+    kind: good
+    title: "GitHub dist with empty shasum, source unchanged"
+    package: g12-commit
+    command: ["composer", "acme/commit", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g13
+    kind: good
+    title: "composer minor with a new class and tests"
+    package: g13-minor
+    command: ["composer", "acme/minor", "--path", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g14
+    kind: good
+    title: "whole site, every package on its good candidate"
+    package: g14-site
+    # Every good update the site pins is offered; every bad scenario's
+    # candidate is withheld (g15 too: its owner change is high).
+    extra_packages: [g01-feature, g02-bundle, g03-i18n, g04-vendor, g05-cron, g06-contrib, g07-theme, g08-eol, g09-patch, g10-native, g11-deps, g12-commit, g13-minor]
+    command: ["all", "projects/wp"]
+    expect:
+      verdict: ROUTINE
+      exit: 0
+  - id: g15
+    kind: good
+    title: "official takeover, code unchanged, owner-change only"
+    package: g15-takeover
+    command: ["plugin", "g15-takeover", "--path", "projects/wp"]
+    expect:
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: owner-change, min_severity: high}
+      # PRD 19: owner-change and nothing else, at any severity.
+      exact: true
+    fail_on: high
+  - id: e01
+    kind: env
+    title: "registry down"
+    package: e01-down
+    command: ["npm", "downlib", "--path", "projects/wp"]
+    env:
+      exit: 3
+      never: ["no risk"]
+      note: "exits could-not-fetch, never a clean verdict"
+  - id: e02
+    kind: env
+    title: "429 then success"
+    package: e02-retry
+    command: ["npm", "retrylib", "--path", "projects/wp"]
+    env:
+      exit: 0
+      note: "retries with Retry-After and succeeds"
+  - id: e03
+    kind: env
+    title: "body stalls"
+    package: e03-stall
+    command: ["npm", "stalllib", "--path", "projects/wp"]
+    env:
+      exit: 3
+      note: "stops at the configured timeout"
+  - id: e04
+    kind: env
+    title: "zip bomb"
+    package: e04-bomb
+    command: ["plugin", "e04-bomb", "--path", "projects/wp"]
+    expect:
+      signals:
+        - {id: unanalysed, min_severity: high}
+    env:
+      note: "stops at the archive limits, within the memory cap"
+  - id: e05
+    kind: env
+    title: "hostile archive entries"
+    package: e05-entries
+    command: ["plugin", "e05-entries", "--path", "projects/wp"]
+    expect:
+      signals:
+        - {id: archive-path-escape, min_severity: critical}
+        - {id: archive-link, min_severity: high}
+        - {id: archive-collision, min_severity: high}
+    env:
+      note: "reports each entry, writes nothing outside the work folder"
+  - id: e06
+    kind: env
+    title: "cached blob tampered on disk"
+    package: e06-cache
+    command: ["npm", "cachelib", "--path", "projects/wp"]
+    env:
+      note: "detects on reuse and refetches"
+  - id: e07
+    kind: env
+    title: "two runs share one cache"
+    package: e07-shared
+    command: ["npm", "sharedlib", "--path", "projects/wp"]
+    env:
+      note: "both runs correct, no corrupt cache"
+  - id: e08
+    kind: env
+    title: "Ctrl-C during fetch"
+    package: e08-interrupt
+    command: ["npm", "interruptlib", "--path", "projects/wp"]
+    env:
+      exit: 130
+      note: "no partial cache entry, temp removed"
+  - id: e09
+    kind: env
+    title: "offline with a warm cache"
+    package: e09-offline
+    command: ["npm", "offlinelib", "--offline", "--path", "projects/wp"]
+    env:
+      exit: 0
+      says: ["offline"]
+      note: "works and says it is offline"
+  - id: e10
+    kind: env
+    title: "read-only HOME"
+    package: e10-rohome
+    command: ["npm", "rohomelib", "--path", "projects/wp"]
+    env:
+      note: "clear error or a temp cache fallback"
+  - id: e11
+    kind: env
+    title: "private host namesake and private npm scope"
+    package: e11-private
+    command: ["all", "projects/e11"]
+    env:
+      never: ["private-host.example"]
+      note: "never names the private host or the WordPress.org namesake in the request log"
+  - id: e12
+    kind: env
+    title: "version unpublished from npm"
+    package: e12-unpub
+    command: ["npm", "unpublib", "--to", "9.9.9", "--path", "projects/wp"]
+    env:
+      says: ["unpublished"]
+      note: "says the version was unpublished"
+  - id: e13
+    kind: env
+    title: "Windows run catches b10"
+    package: e13-windows
+    command: ["npm", "winlib", "--path", "projects/wp"]
+    env:
+      note: "runs on Windows only; catches the install-script payload"
+  - id: e14
+    kind: env
+    title: "bidi and ANSI escapes in the name and changelog"
+    package: e14-escape
+    command: ["plugin", "e14-escape", "--path", "projects/wp"]
+    env:
+      note: "prints the escapes escaped, never raw"
+  - id: e15
+    kind: env
+    title: "--soundcheck on the Docker WordPress with the Roadie stub"
+    package: e15-soundcheck
+    command: ["plugin", "e15-soundcheck", "--soundcheck", "http://127.0.0.1:18907", "--wp", "{testbed}/bin/wp"]
+    env:
+      note: "the update is applied only on the staging copy; refusals leave files byte-identical (cases in testbed/staging)"

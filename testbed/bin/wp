@@ -1,0 +1,42 @@
+#!/bin/sh
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# WP-CLI in the testbed's WordPress container, as www-data. Sightread
+# sees a local command (no ssh, docker or ddev prefix), so --soundcheck
+# installs the exact archive it reviewed: any absolute path to a file is
+# copied into state/wp-share (the container mounts it at /share) and
+# the argument is rewritten to that path. WP-CLI installs a local file
+# only when its name ends in .zip, so the copy always does.
+#
+#   testbed/bin/wp plugin list --format=json
+set -eu
+
+here=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+share=$here/state/wp-share
+mkdir -p "$share"
+
+n=$#
+i=0
+while [ "$i" -lt "$n" ]; do
+	arg=$1
+	shift
+	i=$((i + 1))
+	case $arg in
+	/*)
+		if [ -f "$arg" ]; then
+			name=$(basename -- "$arg")
+			case $name in
+			*.zip) ;;
+			*) name=$name.zip ;;
+			esac
+			cp -- "$arg" "$share/$name"
+			chmod 0644 "$share/$name"
+			arg=/share/$name
+		fi
+		;;
+	esac
+	set -- "$@" "$arg"
+done
+
+exec docker compose -f "$here/docker-compose.yml" exec -T -u www-data wp wp --path=/var/www/html "$@"

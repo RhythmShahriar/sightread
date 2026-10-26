@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: g15-takeover
+versions:
+  - version: "6.0.0"
+    installed: true
+    author: originalauthor
+    committer: originalauthor
+    contributors: [originalauthor]
+  - version: "6.0.1"
+    candidate: true
+    author: wordpressdotorg
+    committer: wordpressdotorg
+    contributors: [wordpressdotorg]

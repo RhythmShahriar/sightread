@@ -1,0 +1,1 @@
+{"id": "MAL-2026-0001", "summary": "Malicious code in example-pkg", "modified": "2026-01-01T00:00:00.000Z", "affected": [{"package": {"name": "example-pkg", "ecosystem": "npm"}, "versions": ["2.0.0"]}]}

@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-theme
+name: b09-theme
+versions:
+  - version: "1.5.0"
+    installed: true
+    author: themer
+    committer: themer
+  - version: "1.6.0"
+    candidate: true
+    author: themer
+    committer: themer

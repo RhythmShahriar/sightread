@@ -1,0 +1,115 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# The real-release corpus of docs/benchmark.md: 50 popular WordPress.org
+# plugins and 50 npm packages, two published versions each. Owner-run
+# only (make -C testbed corpus, needs network); never part of the bench
+# or CI.
+#
+# ecosystem  name  from  to  sha256-of-from  sha256-of-to
+#
+# A hash of - is not pinned yet: make -C testbed corpus PIN=1 fetches
+# those once, records their SHA-256 here and from then on every fetch
+# must match. Commit the pinned file.
+
+wp-plugin akismet 5.3 5.3.1 - -
+wp-plugin contact-form-7 5.8 5.8.1 - -
+wp-plugin wordpress-seo 21.0 21.1 - -
+wp-plugin woocommerce 8.0.0 8.0.1 - -
+wp-plugin elementor 3.15.0 3.15.1 - -
+wp-plugin classic-editor 1.6.2 1.6.3 - -
+wp-plugin wordfence 7.10.0 7.10.1 - -
+wp-plugin jetpack 12.4 12.5 - -
+wp-plugin litespeed-cache 5.6 5.7 - -
+wp-plugin wp-mail-smtp 3.9.0 3.10.0 - -
+wp-plugin redirection 5.3.10 5.4 - -
+wp-plugin regenerate-thumbnails 3.1.5 3.1.6 - -
+wp-plugin advanced-custom-fields 6.2.0 6.2.1 - -
+wp-plugin google-site-kit 1.108.0 1.109.0 - -
+wp-plugin mailchimp-for-wp 4.9.6 4.9.7 - -
+wp-plugin wp-super-cache 1.10.0 1.11.0 - -
+wp-plugin w3-total-cache 2.4.0 2.4.1 - -
+wp-plugin autoptimize 3.1.8 3.1.9 - -
+wp-plugin loco-translate 2.6.5 2.6.6 - -
+wp-plugin query-monitor 3.13.0 3.13.1 - -
+wp-plugin duplicator 1.5.6 1.5.7 - -
+wp-plugin all-in-one-wp-migration 7.78 7.79 - -
+wp-plugin better-search-replace 1.4.3 1.4.4 - -
+wp-plugin custom-post-type-ui 1.14.0 1.15.0 - -
+wp-plugin the-events-calendar 6.2.0 6.2.1 - -
+wp-plugin breadcrumb-navxt 7.2.0 7.3.0 - -
+wp-plugin polylang 3.4.5 3.5 - -
+wp-plugin safe-svg 2.2.0 2.2.1 - -
+wp-plugin limit-login-attempts-reloaded 2.25.25 2.25.26 - -
+wp-plugin wp-migrate-db 2.6.9 2.6.10 - -
+wp-plugin ninja-forms 3.7.0 3.7.1 - -
+wp-plugin members 3.2.8 3.2.9 - -
+wp-plugin tablepress 2.1.7 2.1.8 - -
+wp-plugin enable-media-replace 4.1.4 4.1.5 - -
+wp-plugin user-role-editor 4.64 4.64.1 - -
+wp-plugin updraftplus 1.23.10 1.23.11 - -
+wp-plugin wp-optimize 3.2.17 3.2.18 - -
+wp-plugin cookie-law-info 3.1.2 3.1.3 - -
+wp-plugin ewww-image-optimizer 7.2.0 7.2.1 - -
+wp-plugin wp-smushit 3.14.0 3.14.1 - -
+wp-plugin really-simple-ssl 7.0.0 7.0.1 - -
+wp-plugin duplicate-post 4.4 4.5 - -
+wp-plugin svg-support 2.5.5 2.5.6 - -
+wp-plugin health-check 1.7.0 1.7.1 - -
+wp-plugin wpforms-lite 1.8.3.1 1.8.4 - -
+wp-plugin all-in-one-seo-pack 4.4.7 4.4.8 - -
+wp-plugin insert-headers-and-footers 2.1.2 2.1.3 - -
+wp-plugin mailpoet 4.30.0 4.31.0 - -
+wp-plugin wp-statistics 14.1.6 14.2 - -
+wp-plugin simple-history 4.5.0 4.6.0 - -
+
+npm lodash 4.17.20 4.17.21 - -
+npm express 4.18.2 4.18.3 - -
+npm react 18.2.0 18.3.1 - -
+npm react-dom 18.2.0 18.3.1 - -
+npm axios 1.6.7 1.6.8 - -
+npm chalk 4.1.1 4.1.2 - -
+npm commander 11.0.0 11.1.0 - -
+npm debug 4.3.4 4.3.5 - -
+npm semver 7.5.4 7.6.0 - -
+npm uuid 9.0.0 9.0.1 - -
+npm moment 2.29.4 2.30.1 - -
+npm dayjs 1.11.9 1.11.10 - -
+npm typescript 5.3.2 5.3.3 - -
+npm eslint 8.56.0 8.57.0 - -
+npm prettier 3.1.0 3.1.1 - -
+npm webpack 5.89.0 5.90.0 - -
+npm vite 5.0.10 5.0.11 - -
+npm rollup 4.9.0 4.9.1 - -
+npm jest 29.6.4 29.7.0 - -
+npm mocha 10.2.0 10.3.0 - -
+npm chai 4.4.0 4.4.1 - -
+npm yargs 17.7.1 17.7.2 - -
+npm glob 8.0.3 8.1.0 - -
+npm minimist 1.2.7 1.2.8 - -
+npm qs 6.11.2 6.12.0 - -
+npm body-parser 1.20.1 1.20.2 - -
+npm cookie 0.5.0 0.6.0 - -
+npm dotenv 16.4.0 16.4.1 - -
+npm cors 2.8.4 2.8.5 - -
+npm jsonwebtoken 9.0.1 9.0.2 - -
+npm bcryptjs 2.4.2 2.4.3 - -
+npm mongoose 8.0.3 8.0.4 - -
+npm pg 8.11.2 8.11.3 - -
+npm mysql2 3.6.4 3.6.5 - -
+npm redis 4.6.11 4.6.12 - -
+npm socket.io 4.7.3 4.7.4 - -
+npm ws 8.15.1 8.16.0 - -
+npm node-fetch 3.3.1 3.3.2 - -
+npm rxjs 7.8.0 7.8.1 - -
+npm tslib 2.6.1 2.6.2 - -
+npm zod 3.22.3 3.22.4 - -
+npm classnames 2.3.2 2.4.0 - -
+npm date-fns 2.30.0 3.0.0 - -
+npm underscore 1.13.5 1.13.6 - -
+npm async 3.2.4 3.2.5 - -
+npm inquirer 9.2.11 9.2.12 - -
+npm nodemon 3.0.1 3.0.2 - -
+npm cross-env 7.0.2 7.0.3 - -
+npm rimraf 5.0.4 5.0.5 - -
+npm @babel/core 7.23.6 7.23.7 - -

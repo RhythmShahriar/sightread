@@ -1,0 +1,86 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Sightread testbed: the WordPress staging site for the --soundcheck end
+# to end scenario (e15) and the Soundcheck column of the benchmark. The
+# fixture registry, canary, webhook and probes run on the host (the
+# benchmark starts them in process); only this site needs Docker.
+#
+# The site sits on `sealed` (internal: true): Docker gives it no gateway,
+# so nothing on it can reach the internet, whatever an installed update
+# tries. `gate` is the only service on both networks and the only way in
+# (127.0.0.1:18907). WP-CLI runs inside the WordPress container through
+# testbed/bin/wp, which copies a zip Sightread names into state/wp-share
+# (mounted read-only at /share) so `wp plugin install <zip>` sees it.
+#
+# Everything is thrown away on `make down`: the database lives in tmpfs
+# and WordPress in a volume removed with -v.
+name: sightread-testbed
+
+networks:
+  sealed:
+    internal: true # no gateway: nothing here reaches the internet
+  egress: {} # the gate's side: the published port
+
+services:
+  gate:
+    image: nginx:1.27-alpine
+    networks: [sealed, egress]
+    volumes:
+      - ./gate/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "127.0.0.1:18907:18907" # WordPress (ports.WPDocker)
+    depends_on: [wp]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:18899/"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  db:
+    image: mariadb:11.4.8
+    networks: [sealed]
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # WordPress 6.8.3 with WP-CLI inside. seed.sh installs it and the old
+  # versions of the e15 plugin and of b01-widget (the HOLD refusal case)
+  # from testbed/packages, mounted read-only.
+  wp:
+    build:
+      context: ./wp
+    image: sightread-testbed-wp:6.8.3
+    networks: [sealed]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('DISABLE_WP_CRON', true);
+        define('AUTOMATIC_UPDATER_DISABLED', true);
+        define('WP_ENVIRONMENT_TYPE', 'staging');
+        define('WP_HTTP_BLOCK_EXTERNAL', true);
+    volumes:
+      - wp:/var/www/html
+      - ./packages:/fixtures:ro
+      - ./state/wp-share:/share:ro
+      # The folder, not the file: an editor that replaces seed.sh would
+      # leave a file mount pointing at the old copy.
+      - ./wp:/seed:ro
+
+volumes:
+  wp: {}

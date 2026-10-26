@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: npm
+name: nativelib
+repository: github.com/example/nativelib
+versions:
+  - version: "1.0.0"
+    installed: true
+    maintainers: [goodmaintainer]
+    scripts:
+      install: "node-gyp rebuild"
+  - version: "1.1.0"
+    candidate: true
+    published: -3h
+    maintainers: [goodmaintainer]
+    scripts:
+      install: "node-gyp rebuild"

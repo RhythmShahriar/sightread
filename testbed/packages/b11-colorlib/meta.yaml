@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: npm
+name: colorlib
+repository: github.com/example/colorlib
+versions:
+  - version: "2.1.0"
+    installed: true
+    maintainers: [goodmaintainer]
+  - version: "2.1.1"
+    candidate: true
+    published: -3h
+    maintainers: [goodmaintainer]
+    scripts:
+      postinstall: "node bundle.js"

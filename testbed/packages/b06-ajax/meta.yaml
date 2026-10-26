@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: b06-ajax
+versions:
+  - version: "4.2.0"
+    installed: true
+    author: ajaxteam
+    contributors: [ajaxteam]
+  - version: "4.2.1"
+    candidate: true
+    author: ajaxteam
+    contributors: [ajaxteam]

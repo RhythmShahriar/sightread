@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: composer
+name: acme/commit
+repository: github.com/acme/commit
+versions:
+  - version: "1.0.0"
+    installed: true
+    reference: aaaa111bbbb222cccc333
+    shasum: false
+    maintainers: [vendoruser]
+  - version: "1.1.0"
+    candidate: true
+    reference: dddd444eeee555ffff666
+    shasum: false
+    maintainers: [vendoruser]

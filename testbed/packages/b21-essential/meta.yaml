@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: b21-essential
+versions:
+  - version: "2.6.7"
+    installed: true
+    author: wponlinesupport
+    committer: wponlinesupport
+    contributors: [wponlinesupport]
+  - version: "2.6.8"
+    candidate: true
+    author: wponlinesupport
+    committer: newcommitter
+    contributors: [wponlinesupport, newcommitter]

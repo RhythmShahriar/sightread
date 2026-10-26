@@ -1,0 +1,8 @@
+{
+  "name": "example-pkg",
+  "dist-tags": {"latest": "2.0.0"},
+  "modified": "2025-08-08T00:00:00.000Z",
+  "versions": {
+    "2.0.0": {"name": "example-pkg", "version": "2.0.0", "dist": {"tarball": "https://registry.npmjs.org/example-pkg/-/example-pkg-2.0.0.tgz", "integrity": "sha512-AAAA", "shasum": "", "signatures": [{"keyid": "SHA256:xxxx", "sig": "yyyy"}]}}
+  }
+}

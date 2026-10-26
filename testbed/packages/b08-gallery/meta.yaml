@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: b08-gallery
+versions:
+  - version: "2.3.0"
+    installed: true
+    author: galleryteam
+    contributors: [galleryteam]
+  - version: "2.3.1"
+    candidate: true
+    author: galleryteam
+    contributors: [galleryteam]

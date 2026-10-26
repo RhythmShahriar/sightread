@@ -1,0 +1,1 @@
+{"name":"acme/installer","type":"composer-plugin","scripts":{"post-install-cmd":["Acme\\Installer::run"]}}

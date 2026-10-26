@@ -1,0 +1,209 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# The slow suites, every night and on demand: each fuzz target for ten
+# minutes; every test with every stage required to be linked on Linux,
+# macOS and Windows; the tagged bench tests; the testbed benchmark run
+# twice; e13 on Windows; the install refusing a tampered copy of the
+# latest signed release. The benchmark page is uploaded as an artifact
+# for a person to read; CI never commits it (the token can only read).
+name: nightly
+on:
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  # A crasher lands in the package's testdata/fuzz/<target>/; it is
+  # uploaded so it can be committed as a seed with the fix.
+  fuzz:
+    runs-on: ubuntu-latest
+    # Ten minutes per target; GitHub stops any job at six hours.
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make fuzz FUZZTIME=10m
+      - name: Collect the crashers
+        if: failure()
+        run: |
+          mkdir -p "$RUNNER_TEMP/crashers"
+          git ls-files --others --exclude-standard -z -- '*/testdata/fuzz/*' |
+            xargs -0 -r cp --parents -t "$RUNNER_TEMP/crashers"
+          find "$RUNNER_TEMP/crashers" -type f
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: fuzz-crashers
+          path: ${{ runner.temp }}/crashers
+          if-no-files-found: ignore
+
+  # make test-integrated: a "stage not linked" skip is a failure here,
+  # and TestAllStagesLinked and the headless HTML check (Chrome is on
+  # every hosted runner) run. Spelled out instead of make because the
+  # Windows runners have no make.
+  integrated:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Every test, every stage linked
+        shell: bash
+        env:
+          SIGHTREAD_REQUIRE_LINKED: "1"
+        run: go test -race ./...
+
+  # The benchmark exits non-zero until every 1.0 target is met; the page
+  # and the results are uploaded either way.
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Start the Docker WordPress for e15
+        run: make -C testbed up-wp
+      # The tagged bench tests: the canary stays silent, nothing reaches
+      # past the proxy guard or out of the sealed Docker network, the good
+      # states are clean and p01-large is within its limits.
+      - name: Bench tests
+        run: make -C testbed test-bench
+      - name: Benchmark
+        if: success() || failure()
+        run: make -C testbed bench
+      - name: Run it twice and compare the outcomes
+        if: success() || failure()
+        run: make -C testbed reproduce
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: benchmark
+          path: |
+            docs/benchmark.md
+            testbed/bench/work/results.json
+            testbed/bench/work/first.json
+            testbed/bench/work/second.json
+          if-no-files-found: warn
+      - name: Stop the Docker WordPress
+        if: always()
+        run: make -C testbed down
+
+  # e13: the Windows run catches b10. Go ignores SSL_CERT_FILE on
+  # Windows, so the registry serves plain HTTP on loopback, which
+  # Sightread accepts for a loopback mirror only.
+  bench-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: e13 on Windows
+        shell: bash
+        env:
+          GOWORK: "off"
+        run: |
+          go run -tags testbed ./testbed/bench -only e13 -plain-http -tools none -rounds 0 -large=false \
+            -out "$RUNNER_TEMP/benchmark-windows.md" -results "$RUNNER_TEMP/results-windows.json"
+          jq -e '[.environment[] | select(.id == "e13" and .result == "pass")] | length == 1' "$RUNNER_TEMP/results-windows.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: benchmark-windows
+          path: |
+            ${{ runner.temp }}/benchmark-windows.md
+            ${{ runner.temp }}/results-windows.json
+          if-no-files-found: warn
+
+  # SR-17 and SR-81 with a real release: the latest signed release from
+  # GitHub, then the same release with its archive and checksums.txt line
+  # swapped for this commit's build, both served on 127.0.0.1. It is the
+  # only CI step that reaches a real service (the GitHub release API), so
+  # it runs here and not on every push in action-test.yml. Before the
+  # first release there is nothing to fetch.
+  signed-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Fetch the latest signed release
+        id: real
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo RhythmShahriar/sightread --json tagName --jq .tagName 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "::notice::RhythmShahriar/sightread has no release yet; the signed-release case runs from the first one"
+            exit 0
+          fi
+          for d in real swapped; do
+            gh release download "$tag" --repo RhythmShahriar/sightread --dir "$RUNNER_TEMP/$d" \
+              --pattern rhythm-sightread_linux_amd64.tar.gz --pattern checksums.txt --pattern checksums.txt.sigstore.json
+          done
+          .github/action-test/release.sh build "$RUNNER_TEMP/local" "${tag#v}"
+          .github/action-test/release.sh swap "$RUNNER_TEMP/swapped" "$RUNNER_TEMP/local/rhythm-sightread_linux_amd64.tar.gz"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/swapped" 31134
+          .github/action-test/serve.sh release "$RUNNER_TEMP/real" 31135
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+      - name: Install the swapped release
+        id: swapped
+        if: steps.real.outputs.version != ''
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: all
+          upload: "false"
+          version: ${{ steps.real.outputs.version }}
+          download-url: http://127.0.0.1:31134
+      - name: The swapped release was refused
+        if: steps.real.outputs.version != ''
+        env:
+          OUTCOME: ${{ steps.swapped.outcome }}
+        run: |
+          set -x
+          test "$OUTCOME" = failure
+          if command -v rhythm-sightread; then exit 1; fi
+      - name: Install the real release from the same mirror setup
+        id: genuine
+        if: steps.real.outputs.version != ''
+        # Only the install matters here; nothing serves a registry, so
+        # the review after it may fail.
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: all
+          fail-on: none
+          upload: "false"
+          version: ${{ steps.real.outputs.version }}
+          download-url: http://127.0.0.1:31135
+      - name: The real one installed, so the refusals were the tampering
+        if: steps.real.outputs.version != ''
+        env:
+          WANT: ${{ steps.real.outputs.version }}
+        run: |
+          set -x
+          rhythm-sightread --version | grep -qF "$WANT"

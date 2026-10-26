@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: e14-escape
+versions:
+  - version: "1.0.0"
+    installed: true
+    author: escteam
+    contributors: [escteam]
+  - version: "1.0.1"
+    candidate: true
+    author: escteam
+    contributors: [escteam]

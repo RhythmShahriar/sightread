@@ -1,0 +1,11 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Versions someone reviewed. An entry matches only this exact archive (sha256).
+allowed:
+  - package: wp-plugin:b18-approved
+    version: "1.0.0"
+    sha256: b646c9f51c89fef1716cdf8d53a5d082c546b8589c4f186792fa91e3b384c2b5
+    hash: manifest
+    reason: reviewed the 1.0.0 release by hand
+    by: testbed
+    date: 2026-01-01

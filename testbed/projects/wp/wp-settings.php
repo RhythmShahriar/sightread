@@ -1,0 +1,2 @@
+<?php
+// testbed WordPress stub

@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: b05-cache
+versions:
+  - version: "1.1.0"
+    installed: true
+    author: cacheteam
+    contributors: [cacheteam]
+  - version: "1.1.1"
+    candidate: true
+    author: cacheteam
+    contributors: [cacheteam]
