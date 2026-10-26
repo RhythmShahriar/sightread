@@ -1,0 +1,308 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Sightread as a GitHub Action. See the wiki page Sightread-CI for
+# examples: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-CI
+#
+# Review every lockfile change on pull requests and everything each
+# Monday (rhythm sightread init ci writes this workflow):
+#
+#   on:
+#     pull_request:
+#       paths: ["**/composer.lock", "**/package-lock.json", "**/pnpm-lock.yaml", "**/yarn.lock", "**/bun.lock"]
+#     schedule: [{cron: "17 3 * * 1"}]
+#   permissions: {contents: read, pull-requests: write}
+#   jobs:
+#     sightread:
+#       runs-on: ubuntu-latest
+#       steps:
+#         - uses: actions/checkout@<sha> # v7.0.1
+#           with: {fetch-depth: 0}
+#         - uses: RhythmShahriar/sightread@<sha> # v1.0.0
+#           with: {fail-on: high, comment: true}
+#
+# Dependabot and Renovate pull requests get a read-only token: the gate
+# and the job summary still work, the comment and the SARIF upload only
+# say they were skipped. Never run this on pull_request_target with a
+# checkout of the pull request's head.
+name: Rhythm Sightread
+description: What will this update really change? Diff each dependency update against its official source and rank what is new. Never runs the code.
+author: Rhythm Shahriar
+branding:
+  icon: eye
+  color: orange
+
+inputs:
+  mode:
+    description: >
+      What to review: "changes" (every version a lockfile change moves, against the base),
+      "all" (every available update under path) or "package" (the package input).
+      Default: changes on pull_request, otherwise all.
+    required: false
+    default: ""
+  package:
+    description: For mode package, one eco:name@version per line, e.g. npm:left-pad@1.4.0 or wp-plugin:akismet@5.3.5.
+    required: false
+    default: ""
+  path:
+    description: The site or project folder, relative to working-directory.
+    required: false
+    default: "."
+  working-directory:
+    description: Folder every step runs in, e.g. apps/web in a monorepo.
+    required: false
+    default: "."
+  base:
+    description: >
+      For mode changes, the branch to compare with. Default the pull request's base branch
+      (GITHUB_BASE_REF). Allow entries count only from this branch.
+    required: false
+    default: ""
+  fail-on:
+    description: Fail the job on a finding at or above none, info, low, medium, high or critical.
+    required: false
+    default: high
+  min-confidence:
+    description: Confidence a finding needs to count, confirmed or likely. Default the config's, else likely.
+    required: false
+    default: ""
+  allow-partial:
+    description: '"true" lets fail-on pass a run with packages not checked, fetch failures or timeouts.'
+    required: false
+    default: "false"
+  allow-unverified:
+    description: '"true" reviews packages whose integrity could not be checked and lets fail-on pass them.'
+    required: false
+    default: "false"
+  baseline:
+    description: A saved JSON report; findings already in it are hidden.
+    required: false
+    default: ""
+  trust-pr-allow:
+    description: '"true" counts allow entries the pull request itself adds. Default: only the base branch''s count.'
+    required: false
+    default: "false"
+  transitive:
+    description: '"true" reviews transitive Composer and npm dependencies too.'
+    required: false
+    default: "false"
+  sarif:
+    description: >
+      "true" writes sightread.sarif and uploads it to code scanning with category sightread. The job
+      needs "permissions: security-events: write"; without it the upload is skipped with a notice.
+    required: false
+    default: "false"
+  comment:
+    description: >
+      "true" posts the review as one pull request comment and updates that same comment on later
+      runs. The job needs "permissions: pull-requests: write"; a read-only token only warns.
+    required: false
+    default: "false"
+  summary:
+    description: '"true" writes the Markdown review to the job summary.'
+    required: false
+    default: "true"
+  upload:
+    description: '"true" uploads the JSON and HTML reports as a workflow artifact.'
+    required: false
+    default: "true"
+  attest:
+    description: >
+      "true" signs the JSON report with actions/attest, under the workflow's identity. The job needs
+      "permissions: id-token: write" and "attestations: write".
+    required: false
+    default: "false"
+  args:
+    description: >
+      Extra flags, e.g. "--only npm:* --jobs 2". Split on spaces with no glob expansion, so a value
+      with spaces or quotes can't go here.
+    required: false
+    default: ""
+  version:
+    description: >
+      Sightread version to install, e.g. 1.0.0, or latest. Default the release that matches the
+      action's tag, so results only change when you move the tag. At a branch or a major tag such
+      as @v1 it installs the latest release and warns.
+    required: false
+    default: ""
+  verify-signature:
+    description: >
+      "true" checks with cosign that the release's checksums.txt was signed by Sightread's release
+      workflow before anything runs. "false" (for a mirror without the signature) checks only the
+      checksum and warns.
+    required: false
+    default: "true"
+  github-token:
+    description: Token for the comment, the SARIF upload and the GitHub API rate of Composer packages and tag checks.
+    required: false
+    default: ${{ github.token }}
+  download-url:
+    description: >
+      Folder holding the release files instead of the GitHub release, for mirrors and tests;
+      {version} is replaced by the version. Needs the version input.
+    required: false
+    default: ""
+
+outputs:
+  exit-code:
+    description: Sightread's exit code (0 ok, 1 findings at fail-on, 2 usage error, 3 couldn't fetch, verify or check).
+    value: ${{ steps.run.outputs.exit-code }}
+  verdict:
+    description: The worst verdict of the run, hold, review, routine, allowed or unverified, or none.
+    value: ${{ steps.run.outputs.verdict }}
+  updates:
+    description: How many updates were reviewed.
+    value: ${{ steps.run.outputs.updates }}
+  findings:
+    description: How many findings count, at every severity.
+    value: ${{ steps.run.outputs.findings }}
+  report:
+    description: Path of the JSON report.
+    value: ${{ steps.run.outputs.report }}
+  html:
+    description: Path of the standalone HTML report.
+    value: ${{ steps.run.outputs.html }}
+  sarif-file:
+    description: Path of the SARIF file, when the sarif input is true.
+    value: ${{ steps.run.outputs.sarif-file }}
+  summary:
+    description: Path of the Markdown review.
+    value: ${{ steps.run.outputs.summary }}
+  comment-id:
+    description: ID of the pull request comment, when one was posted or updated.
+    value: ${{ steps.comment.outputs.comment-id }}
+  version:
+    description: The Sightread version that ran, e.g. 1.0.0.
+    value: ${{ steps.version.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    # Every action is pinned by commit, so a moved tag can't change what
+    # runs in your job. Dependabot keeps the pins current.
+    - name: Pick the Sightread version
+      id: version
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        VERSION: ${{ inputs.version }}
+        ACTION_REF: ${{ github.action_ref }}
+        DOWNLOAD_URL: ${{ inputs.download-url }}
+      run: '"$GITHUB_ACTION_PATH/scripts/action-install.sh" check'
+
+    - name: Install cosign
+      if: steps.version.outputs.skip != 'true' && inputs.verify-signature != 'false'
+      uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+    - name: Install Sightread
+      if: steps.version.outputs.skip != 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        VERSION: ${{ steps.version.outputs.version }}
+        DOWNLOAD_URL: ${{ inputs.download-url }}
+        VERIFY_SIGNATURE: ${{ inputs.verify-signature }}
+      run: '"$GITHUB_ACTION_PATH/scripts/action-install.sh" install'
+
+    # The signal data and the verified archives, kept for a day: a second
+    # run the same day downloads nothing it already checked. Blobs are
+    # hashed again on every read, so a cache can't slip in other bytes.
+    - name: Restore the data and archive cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ runner.temp }}/sightread-cache
+        key: sightread-${{ runner.os }}-${{ steps.version.outputs.day }}
+        restore-keys: sightread-${{ runner.os }}-
+
+    - name: Review
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        MODE: ${{ inputs.mode }}
+        PACKAGE: ${{ inputs.package }}
+        SR_PATH: ${{ inputs.path }}
+        BASE: ${{ inputs.base }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        MIN_CONFIDENCE: ${{ inputs.min-confidence }}
+        ALLOW_PARTIAL: ${{ inputs.allow-partial }}
+        ALLOW_UNVERIFIED: ${{ inputs.allow-unverified }}
+        BASELINE: ${{ inputs.baseline }}
+        TRUST_PR_ALLOW: ${{ inputs.trust-pr-allow }}
+        TRANSITIVE: ${{ inputs.transitive }}
+        SARIF: ${{ inputs.sarif }}
+        SUMMARY: ${{ inputs.summary }}
+        ARGS: ${{ inputs.args }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        RHYTHM_CACHE_DIR: ${{ runner.temp }}/sightread-cache
+        RHYTHM_NO_UPDATE_CHECK: "1"
+      run: '"$GITHUB_ACTION_PATH/scripts/action-run.sh" run'
+
+    - name: Upload reports
+      id: upload
+      if: always() && inputs.upload == 'true' && steps.run.outputs.report != ''
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: ${{ steps.run.outputs.artifact }}
+        path: |
+          ${{ steps.run.outputs.report }}
+          ${{ steps.run.outputs.html }}
+        if-no-files-found: ignore
+
+    # A token without security-events (Dependabot, forks) can't upload:
+    # the step is allowed to fail and the next one says why.
+    - name: Upload SARIF
+      id: sarif
+      if: always() && inputs.sarif == 'true' && steps.run.outputs.sarif-file != ''
+      continue-on-error: true
+      uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+      with:
+        sarif_file: ${{ steps.run.outputs.sarif-file }}
+        category: sightread
+        token: ${{ inputs.github-token }}
+
+    - name: Say the SARIF upload was skipped
+      if: always() && steps.sarif.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::notice::Sightread: the SARIF upload was skipped. The token needs \"permissions: security-events: write\"; Dependabot pull requests and forks only get a read-only token. The gate and the job summary still work."
+
+    - name: Attest the report
+      id: attest
+      if: always() && inputs.attest == 'true' && steps.run.outputs.report != ''
+      continue-on-error: true
+      uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      with:
+        subject-path: ${{ steps.run.outputs.report }}
+        predicate-type: https://github.com/RhythmShahriar/sightread/attestation/review/v1
+        predicate: '{"verdict": "${{ steps.run.outputs.verdict }}", "exit_code": "${{ steps.run.outputs.exit-code }}"}'
+
+    - name: Say the attestation was skipped
+      if: always() && steps.attest.outcome == 'failure'
+      shell: bash
+      run: |
+        echo "::notice::Sightread: the report was not attested. The job needs \"permissions: id-token: write\" and \"attestations: write\"."
+
+    - name: Comment on the pull request
+      id: comment
+      if: always() && inputs.comment == 'true' && steps.run.outputs.summary != ''
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        MARKDOWN: ${{ steps.run.outputs.summary }}
+        REPORT_URL: ${{ steps.upload.outputs.artifact-url }}
+      run: '"$GITHUB_ACTION_PATH/scripts/comment.sh" post "$MARKDOWN" "$REPORT_URL"'
+
+    - name: Pass on the exit code
+      if: steps.run.outputs.exit-code != '0'
+      shell: bash
+      env:
+        CODE: ${{ steps.run.outputs.exit-code }}
+        FAIL_ON: ${{ inputs.fail-on }}
+      run: |
+        case "$CODE" in
+        1) echo "::error::Sightread found updates with findings at or above $FAIL_ON. See the job summary and the report artifact." ;;
+        *) echo "::error::Sightread exited $CODE. See the job summary." ;;
+        esac
+        exit "${CODE:-3}"
