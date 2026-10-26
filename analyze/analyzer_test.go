@@ -475,3 +475,36 @@ func TestRegistered(t *testing.T) {
 		t.Errorf("registered analyzer is %T", core.GetAnalyzer())
 	}
 }
+
+// Line endings and slashes the lexers once misread hid the code after
+// them with no feature and no Unanalysed entry. Each positive case must
+// show the sink; each negative one must stay quiet.
+func TestLexerBypasses(t *testing.T) {
+	tests := []struct {
+		name, path, src string
+		kind            core.FeatureKind
+		key             string
+		want            bool
+	}{
+		{"heredoc closed after a bare CR", "x.php", "<?php\n$a = <<<EOT\nx\rEOT;\reval($_POST[\"x\"]);\r$b = 1; // \nEOT;\n", core.FFlow, "request->eval", true},
+		{"nowdoc closed after a bare CR", "x.php", "<?php\n$a = <<<'EOT'\nx\rEOT;\reval($_POST[\"x\"]);\r$b = 1; // \nEOT;\n", core.FFlow, "request->eval", true},
+		{"heredoc with CRLF lines", "x.php", "<?php\r\n$a = <<<EOT\r\nx\r\nEOT;\r\neval($_POST['x']);\r\n", core.FFlow, "request->eval", true},
+		{"eval inside a CR heredoc", "x.php", "<?php\n$a = <<<EOT\rx eval($_POST['x']);\rEOT;\r", core.FFlow, "request->eval", false},
+		{"line separator ends a comment", "a.js", "// hi eval(location.hash);\n", core.FEval, "eval", true},
+		{"paragraph separator ends a comment", "a.js", "// hi require('child_process').exec(process.env.CMD);\n", core.FCall, "child_process.exec", true},
+		{"no-break space before eval", "a.js", "var a = 1; eval(location.hash);\n", core.FEval, "eval", true},
+		{"regex after an if head", "a.js", "if (x) /'/.test(s) && eval(location.hash);\n", core.FEval, "eval", true},
+		{"quote misread mid-line", "a.js", "var a = b\n/'/; eval(location.hash);\n", core.FEval, "eval", true},
+		{"line separator inside a string", "a.js", "var s = 'a eval(location.hash)';\n", core.FEval, "eval", false},
+		{"eval in a comment", "a.js", "// hi eval(location.hash);\n", core.FEval, "eval", false},
+		{"eval in a leading regex", "a.js", "/eval(x)/.test(s);\n", core.FEval, "eval", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			set := analyzeAll(t, coretest.Tree(map[string]string{tc.path: tc.src}), core.DefaultLimits())
+			if got := set.Has(tc.kind, tc.key); got != tc.want {
+				t.Errorf("%s:%s present = %v, want %v\n%s", tc.kind, tc.key, got, tc.want, dump(set))
+			}
+		})
+	}
+}

@@ -121,7 +121,7 @@ padding or a broken construct can never hide code silently.
 |---|---|
 | `file over 4 MiB` | a code file, `package.json` or `composer.json` over the analysis limit (the size follows the limit: `file over <n> MiB`, `KiB` or `bytes`); also an oversized asset whose start or last 1 MiB holds code |
 | `analysis time limit` | analysing one file took longer than its budget (2 s); features found before the limit are kept |
-| `unterminated <construct> at line <n>` | a PHP string, heredoc, nowdoc, comment, attribute or shell string, or a JavaScript comment or template, never ends; the code before it is still analysed. An unterminated JavaScript string stops at its line break and is not reported |
+| `unterminated <construct> at line <n>` | a PHP string, heredoc, nowdoc, comment, attribute or shell string, or a JavaScript comment or template, never ends; the code before it is still analysed. A JavaScript quote that does not close on its line is not reported: the lexer reads the rest of that line as code, so nothing on it is hidden |
 | `decode limit reached` | a blob needed more than 8 decode layers, decoded past 1 MiB or the package passed 16 MiB of decoded output |
 | `could not read the file` | the file's bytes could not be read back from the cache |
 
@@ -138,6 +138,16 @@ padding or a broken construct can never hide code silently.
 - Folding: 16 steps and 64 KiB of result per expression.
 - Results are the same on every run: files are analysed on one worker
   per CPU and merged sorted by path, line, kind and key.
+
+## How the lexers read tricky input
+
+- PHP ends a line at `\r\n`, `\n` or a bare `\r`; heredoc and nowdoc
+  headers and closing labels follow all three, as PHP does.
+- JavaScript ends lines (line comments, the hashbang, regular
+  expressions) at `\n`, `\r`, U+2028 or U+2029. It reads U+00A0,
+  U+FEFF and the other Unicode spaces as whitespace between tokens.
+- A slash after the head of `if`, `while`, `for` or `with` starts a
+  regular expression.
 
 ## No host is ever resolved
 
