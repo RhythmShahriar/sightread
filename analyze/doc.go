@@ -6,5 +6,8 @@
 // the lexers, within the per-file budget. It registers with
 // core.SetAnalyzer and never touches the network.
 //
-// The skeleton created this package empty; the analyze lane builds it.
+// The lexers' tokens are normalised into one stream for both languages
+// (norm.go). A forward-only evaluator (eval.go) reads expressions from
+// it, folding built names and strings (fold.go) and following data from
+// sources to sinks within each function (flow.go).
 package analyze
