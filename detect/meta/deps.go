@@ -150,7 +150,7 @@ func depFinding(s *core.Subject, name, constraint string, dev bool) core.Finding
 }
 
 // addedFinding is dependency-new for a package a lockfile change adds:
-// "adds expresss 1.0.0 (published 3 hours ago, has an install script)"
+// "adds left-pad-plus 1.0.0 (published 3 hours ago, has an install script)"
 // at its lockfile line. Young or with an install script it is high, as
 // a dependency a release adds; a development entry is info.
 func addedFinding(s *core.Subject) core.Finding {

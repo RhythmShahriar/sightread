@@ -135,12 +135,12 @@ func TestTyposquatSharedMaintainer(t *testing.T) {
 func TestAddedPackageIsNew(t *testing.T) {
 	s := subject(core.NPM)
 	s.Old = nil
-	s.Update.Name, s.Update.Version = "expresss", "1.0.0"
+	s.Update.Name, s.Update.Version = "left-pad-plus", "1.0.0"
 	s.New.HasInstallScript = true
 	s.New.Deps = map[string]string{"left-pad": "^1.3.0"}
 	s.NewLock = &core.Installed{Lockfile: "package-lock.json", LockLine: 9}
 	f := only(t, run(t, depsDetector{}, s), SigDependencyNew)
-	if f.Severity != cli.SeverityHigh || f.Evidence.String() != "adds expresss 1.0.0 (has an install script)" ||
+	if f.Severity != cli.SeverityHigh || f.Evidence.String() != "adds left-pad-plus 1.0.0 (has an install script)" ||
 		f.File != "package-lock.json" || f.Line != 9 {
 		t.Errorf("added package: %+v", f)
 	}
