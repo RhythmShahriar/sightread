@@ -401,6 +401,33 @@ func TestTerminalUnverifiedBox(t *testing.T) {
 	}
 }
 
+// TestTerminalUnverifiedDiffed: an unverified update reviewed with
+// --allow-unverified was diffed, so with nothing found it says neither
+// "Not diffed" in the box nor "not verified" in the FINDINGS column.
+func TestTerminalUnverifiedDiffed(t *testing.T) {
+	r := coretest.SampleReport()
+	r.Updates = r.Updates[4:5]
+	r.NotChecked, r.Errors = nil, nil
+	u := &r.Updates[0]
+	u.Findings = nil
+	u.Diff = core.DiffStats{FilesChanged: 2, LinesAdded: 4, LinesRemoved: 1, BytesFrom: 900, BytesTo: 1000}
+	coretest.FakeScorer{}.Summarise(r)
+	out := writeTerm(t, r, termOpts(120))
+	if strings.Contains(out, "Not diffed") || strings.Contains(out, "not diffed") {
+		t.Errorf("a diffed update says it was not diffed:\n%s", out)
+	}
+	if !strings.Contains(out, "▸ Diff          2 files changed") || !strings.Contains(out, "UNVERIFIED  │") {
+		t.Errorf("no diff line or verdict:\n%s", out)
+	}
+	if got := tableFindings(u); got != "" {
+		t.Errorf("FINDINGS %q for a diffed update with nothing found", got)
+	}
+	u.Diff = core.DiffStats{}
+	if got := tableFindings(u); got != "not verified" {
+		t.Errorf("FINDINGS %q for an update not diffed", got)
+	}
+}
+
 func TestTerminalFleetRow(t *testing.T) {
 	r := smallReport()
 	r.Updates[0] = core.Update{Eco: core.WPPlugin, Name: "wpforms-lite", From: core.Side{Version: "1.9.1"}, To: core.Side{Version: "1.9.2"},

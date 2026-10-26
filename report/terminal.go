@@ -778,17 +778,22 @@ func (t *termView) fleet() bool {
 }
 
 // tableFindings is the FINDINGS cell: "2 critical, 1 high", "1 allowed",
-// "not verified" or empty.
+// "not verified" (an update that was not diffed) or empty.
 func tableFindings(u *core.Update) string {
 	s := findingCounts(u)
 	switch {
-	case u.Verdict == core.Unverified && s == "none":
+	case u.Verdict == core.Unverified && s == "none" && !diffed(u):
 		return "not verified"
 	case s == "none":
 		return ""
 	}
 	return s
 }
+
+// diffed reports whether run diffed u: an unverified update is diffed
+// only with --allow-unverified, and a diff always has the new side's
+// size, so empty stats mean it was not.
+func diffed(u *core.Update) bool { return u.Diff != (core.DiffStats{}) }
 
 // table writes VERDICT UPDATE FROM TO FINDINGS, worst first, with the
 // ROUTINE rows folded into one line when there are over ten. A fleet
@@ -1137,7 +1142,7 @@ func (t *termView) box() {
 		}
 		if u.Verdict == core.Unverified {
 			lines = append(lines, "Not verified: "+strings.TrimSuffix(unverifiedWhy(u), ".")+".")
-			if len(counted(u)) == 0 {
+			if !diffed(u) {
 				lines = append(lines, "Not diffed; --allow-unverified reviews it anyway.")
 			}
 		}
