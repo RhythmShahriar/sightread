@@ -65,7 +65,7 @@ func zipEntry(b *builder, ra io.ReaderAt, f *zip.File) error {
 	// WordPress (_unzip_file_ziparchive), ZipArchive::extractTo and
 	// Composer treat only a name ending in a slash as a folder; anything
 	// else is written out as a file, whatever the mode bits say. So the
-	// name decides, and a folder mode on another name is read as a file
+	// name decides: a folder mode on another name is read as a file
 	// rather than skipped, or code could land on disk unseen.
 	//
 	// A Windows tool may end an empty folder's name in a backslash; one
