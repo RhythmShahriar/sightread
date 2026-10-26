@@ -1005,11 +1005,11 @@ An entry that names the capability (the domain, telemetry, auto-update, license 
 
 ### Fires when
 
-The update adds a runtime dependency. Its code and everything it pulls in now run in your project. It is high when the dependency is younger than 7 days or has install scripts.
+The update adds a runtime dependency, or a lockfile change adds a package. Its code and everything it pulls in now run in your project. It is high when the dependency is younger than 7 days or has install scripts.
 
 ### False alarms
 
-devDependencies are info.
+devDependencies are info, as are development entries a lockfile adds.
 
 ### How to review
 

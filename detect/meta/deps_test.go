@@ -123,7 +123,29 @@ func TestTyposquatSharedMaintainer(t *testing.T) {
 	s.Update.Name, s.New.Ref.Name = "laravell/framework", "laravell/framework"
 	s.New.Maintainers = []core.Person{{Email: "ann@example.test"}}
 	s.New.DepInfo = map[string]*core.DepInfo{"laravel/framework": {Popular: true, Maintainers: ann}}
-	if fs := run(t, depsDetector{}, s); len(fs) != 0 {
-		t.Errorf("added sibling package fired: %+v", fs)
+	for _, f := range run(t, depsDetector{}, s) {
+		if f.ID == SigTyposquat {
+			t.Errorf("added sibling package fired: %+v", f)
+		}
+	}
+}
+
+// An added package is the new dependency: high with an install script,
+// info as a development entry, and its own dependencies are not listed.
+func TestAddedPackageIsNew(t *testing.T) {
+	s := subject(core.NPM)
+	s.Old = nil
+	s.Update.Name, s.Update.Version = "expresss", "1.0.0"
+	s.New.HasInstallScript = true
+	s.New.Deps = map[string]string{"left-pad": "^1.3.0"}
+	s.NewLock = &core.Installed{Lockfile: "package-lock.json", LockLine: 9}
+	f := only(t, run(t, depsDetector{}, s), SigDependencyNew)
+	if f.Severity != cli.SeverityHigh || f.Evidence.String() != "adds expresss 1.0.0 (has an install script)" ||
+		f.File != "package-lock.json" || f.Line != 9 {
+		t.Errorf("added package: %+v", f)
+	}
+	s.NewLock.Dev = true
+	if f := only(t, run(t, depsDetector{}, s), SigDependencyNew); f.Severity != cli.SeverityInfo {
+		t.Errorf("added dev package: %+v", f)
 	}
 }

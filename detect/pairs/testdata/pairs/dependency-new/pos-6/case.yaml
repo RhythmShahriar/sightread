@@ -1,0 +1,9 @@
+eco: composer
+note: 'the lockfile gains a package published a year ago: medium'
+now: 2026-10-26T12:00:00Z
+meta_new:
+  ref: {name: acme/util, version: 1.4.0}
+  published: '2025-10-01T00:00:00Z'
+lock_new: {lockfile: composer.lock, lock_line: 40}
+expect:
+- {id: dependency-new, min_severity: medium, max_severity: medium}

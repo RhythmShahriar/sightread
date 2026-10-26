@@ -1,0 +1,9 @@
+eco: npm
+note: 'b13: the lockfile gains a package with an install script'
+meta_new:
+  ref: {name: expresss, version: 1.0.0}
+  has_install_script: true
+  scripts: {install: node s.js}
+lock_new: {lockfile: package-lock.json, lock_line: 9}
+expect:
+- {id: dependency-new, min_severity: high}

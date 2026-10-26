@@ -56,8 +56,10 @@ func (depsDetector) Detect(_ context.Context, s *core.Subject, emit func(core.Fi
 		}
 		names = slices.Concat(runtime, dev)
 	} else {
-		// An added package (a lockfile gained it): its own name is the
-		// one to check.
+		// An added package (a lockfile gained it) is itself the new
+		// dependency, and its own name is the one to check. Its own
+		// dependencies are new to no one yet, so they are not listed.
+		out.send(addedFinding(s))
 		names = []string{s.Update.Name}
 	}
 	for _, n := range names {
@@ -142,6 +144,39 @@ func depFinding(s *core.Subject, name, constraint string, dev bool) core.Finding
 	case dev:
 		f.Severity, f.Demoted = cli.SeverityInfo, "development dependency"
 	case young || info != nil && info.HasInstallScript:
+		f.Severity = cli.SeverityHigh
+	}
+	return f
+}
+
+// addedFinding is dependency-new for a package a lockfile change adds:
+// "adds expresss 1.0.0 (published 3 hours ago, has an install script)"
+// at its lockfile line. Young or with an install script it is high, as
+// a dependency a release adds; a development entry is info.
+func addedFinding(s *core.Subject) core.Finding {
+	ev := "adds " + strings.TrimSpace(s.Update.Name+" "+s.Update.Version)
+	var notes []string
+	young := false
+	if !s.New.Published.IsZero() && !s.Now.IsZero() {
+		age := s.Now.Sub(s.New.Published)
+		young = age < youngDependency
+		notes = append(notes, "published "+ago(age))
+	}
+	if s.New.HasInstallScript {
+		notes = append(notes, "has an install script")
+	}
+	if len(notes) > 0 {
+		ev += " (" + strings.Join(notes, ", ") + ")"
+	}
+	f := newFinding(SigDependencyNew, ev)
+	f.File = manifest(s.Update.Eco)
+	if l := s.NewLock; l != nil && l.Lockfile != "" {
+		f.File, f.Line = l.Lockfile, l.LockLine
+	}
+	switch {
+	case s.NewLock != nil && s.NewLock.Dev:
+		f.Severity, f.Demoted = cli.SeverityInfo, "development dependency"
+	case young || s.New.HasInstallScript:
 		f.Severity = cli.SeverityHigh
 	}
 	return f

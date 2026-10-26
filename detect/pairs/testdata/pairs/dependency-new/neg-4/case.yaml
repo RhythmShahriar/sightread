@@ -1,4 +1,7 @@
 eco: npm
-note: an added package's own dependencies are not new to anyone
+note: an added development package is info, and its own dependencies are new to no one
+lookalike: true
 meta_new: {deps: {left-pad: ^1.3.0}}
-forbid: [dependency-new]
+lock_new: {lockfile: package-lock.json, lock_line: 12, dev: true}
+expect:
+- {id: dependency-new, max_severity: info}
