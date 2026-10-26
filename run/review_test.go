@@ -324,6 +324,23 @@ func TestTreeMetaFromCache(t *testing.T) {
 	}
 }
 
+// TestTLSDetail: a theme verified by TLS because --svn-check could not
+// finish says why next to the method; one verified by TLS alone, or by
+// the check, shows the method only.
+func TestTLSDetail(t *testing.T) {
+	w := runtest.Install(t)
+	w.Publish(core.WPTheme, "astra", "4.8.0", "4.8.1")
+	src := w.Sources[core.WPTheme]
+	src.Integrity[core.Ref{Eco: core.WPTheme, Name: "astra", Version: "4.8.1"}] =
+		core.Integrity{By: core.ByTLS, Method: "TLS only", Detail: "--svn-check could not finish: timeout"}
+	src.Integrity[core.Ref{Eco: core.WPTheme, Name: "astra", Version: "4.8.0"}] = core.Integrity{By: core.ByTLS, Method: "TLS only"}
+	w.Install(core.WPTheme, "astra", "4.8.0")
+	u := review(t, request(t, "all")).Updates[0]
+	if u.To.Method != "TLS only (--svn-check could not finish: timeout)" || u.From.Method != "TLS only" {
+		t.Errorf("to %q from %q", u.To.Method, u.From.Method)
+	}
+}
+
 // TestUnverified: a side with no integrity check is UNVERIFIED and not
 // diffed, unless --allow-unverified, when it is diffed and still marked.
 func TestUnverified(t *testing.T) {

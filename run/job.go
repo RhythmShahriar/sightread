@@ -452,6 +452,11 @@ func (r *reviewer) fetch(ctx context.Context, src core.Source, m *core.Meta) (*c
 func (r *reviewer) sideInfo(ref core.Ref, m *core.Meta, t *core.Tree, in core.Integrity, local string) core.Side {
 	s := core.Side{Version: ref.Version, SHA256: hex.EncodeToString(t.SHA256[:]), HashKind: t.HashKind,
 		Verified: in.By, Method: in.Method, Source: local}
+	if in.By == core.ByTLS && in.Detail != "" {
+		// A check that could not finish (--svn-check) says why next to
+		// the method that stood in for it.
+		s.Method += " (" + in.Detail + ")"
+	}
 	if m == nil {
 		return s
 	}
