@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+name: release
+on:
+  push:
+    tags: ["v*"]
+# Called at master, not pinned by commit: rhythm update only accepts a
+# release signed by release-go.yml@refs/heads/master, so a release built
+# from a pinned commit would be refused.
+jobs:
+  release:
+    uses: RhythmShahriar/.github/.github/workflows/release-go.yml@master
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write # build provenance from the shared release workflow
