@@ -380,6 +380,22 @@ func TestChangesBeforeRenamedCopy(t *testing.T) {
 	}
 }
 
+func TestLockErrorRedactsAndClips(t *testing.T) {
+	key := "sk_" + "live_" + strings.Repeat("Z9", 16)
+	header := "\"" + key + strings.Repeat("x", 400) + "\":\n  version \"1\"\n"
+	dir := t.TempDir()
+	writeFiles(t, dir, map[string]string{"old/yarn.lock": header, "new/yarn.lock": header})
+	_, err := ReadChanges(context.Background(), core.ChangesRequest{
+		Before: filepath.Join(dir, "old", "yarn.lock"), After: filepath.Join(dir, "new", "yarn.lock")}, noNPMRC)
+	var ce *core.Error
+	if !errors.As(err, &ce) || ce.Code != core.EUnsupportedLock {
+		t.Fatalf("err = %v", err)
+	}
+	if strings.Contains(ce.What, key) || len(ce.What) > 500 {
+		t.Errorf("What leaks or is not clipped (%d bytes): %s", len(ce.What), ce.What)
+	}
+}
+
 func TestChangesSourceMove(t *testing.T) {
 	deps := map[string]string{"xlsx": "*", "fresh": "*"}
 	before := packageLock(deps, lockPkg{"node_modules/xlsx", "0.18.5", reg("xlsx", "0.18.5"), sri("x1")})

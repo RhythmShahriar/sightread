@@ -48,10 +48,10 @@ func yarnSpecs(header string) (name string, ranges []string, err error) {
 		}
 		n, r, ok := splitSpec(spec)
 		if !ok {
-			return "", nil, fmt.Errorf("entry %q has no version range", spec)
+			return "", nil, fmt.Errorf("entry %q has no version range", clipText(spec))
 		}
 		if name != "" && n != name {
-			return "", nil, fmt.Errorf("entry %q names two packages", header)
+			return "", nil, fmt.Errorf("entry %q names two packages", clipText(header))
 		}
 		name = n
 		ranges = append(ranges, r)
@@ -197,7 +197,7 @@ func parseBerryLock(data []byte, m *npmManifest) ([]npmEntry, error) {
 		resolution := v.get("resolution").str()
 		name, ref, ok := splitSpec(resolution)
 		if !ok {
-			return nil, fmt.Errorf("line %d: resolution %q is not name@protocol:ref", root.lines[i], resolution)
+			return nil, fmt.Errorf("line %d: resolution %q is not name@protocol:ref", root.lines[i], clipText(resolution))
 		}
 		e := npmEntry{name: name, version: v.get("version").str(), line: root.lines[i]}
 		protocol, rest, _ := strings.Cut(ref, ":")

@@ -68,10 +68,12 @@ type Packages struct {
 	Warnings   []string
 }
 
-// warn adds a warning. Values from the lockfile go in with %q, so a
-// control character in a hostile file can't reach the terminal raw.
+// warn adds a warning. Values from the lockfile go in with %q and
+// clipped, so a control character in a hostile file can't reach the
+// terminal raw; the whole text is redacted in case a value holds a
+// secret.
 func (p *Packages) warn(format string, a ...any) {
-	p.Warnings = append(p.Warnings, fmt.Sprintf(format, a...))
+	p.Warnings = append(p.Warnings, secrets.Redact(fmt.Sprintf(format, a...)))
 }
 
 // validRef reports whether name and version make a reference ParseRef

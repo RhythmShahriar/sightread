@@ -267,7 +267,7 @@ func ParseComposer(lockName string, lock, manifest, installed []byte, opt Option
 	}{{"packages", lf.Packages, false}, {"packages-dev", lf.PackagesDev, true}} {
 		for i, p := range sec.pkgs {
 			if !validRef(core.Composer, p.Name, p.Version) {
-				out.warn("skipped a %s entry with a name or version Sightread can't use: %q %q", lockName, p.Name, p.Version)
+				out.warn("skipped a %s entry with a name or version Sightread can't use: %q %q", lockName, clipText(p.Name), clipText(p.Version))
 				continue
 			}
 			name := strings.ToLower(p.Name)
@@ -396,12 +396,16 @@ func sameRepoURL(a, b string) bool {
 // vendor/composer/installed.json. It fails with an error wrapping
 // fs.ErrNotExist when there is no composer.lock.
 func ReadComposer(dir string, opt Options) (*Packages, error) {
-	lock, err := readAll(filepath.Join(dir, ComposerLock), maxLockBytes)
+	lock, err := readAllWithin(dir, filepath.Join(dir, ComposerLock), maxLockBytes)
 	if err != nil {
 		return nil, err
 	}
-	manifest, err := readAll(filepath.Join(dir, ComposerJSON), maxLockBytes)
-	if err != nil && !os.IsNotExist(err) {
+	var skipped []string
+	manifest, err := readAllWithin(dir, filepath.Join(dir, ComposerJSON), maxLockBytes)
+	switch {
+	case errors.Is(err, errOutsideRoot):
+		skipped = append(skipped, ComposerJSON)
+	case err != nil && !os.IsNotExist(err):
 		return nil, err
 	}
 	var installed []byte
@@ -411,13 +415,20 @@ func ReadComposer(dir string, opt Options) (*Packages, error) {
 			vendorDir = m.vendorDir
 		}
 	}
-	installed, err = readAll(filepath.Join(dir, filepath.FromSlash(vendorDir), filepath.FromSlash(composerInstalled)), maxLockBytes)
+	installedPath := filepath.Join(dir, filepath.FromSlash(vendorDir), filepath.FromSlash(composerInstalled))
+	installed, err = readAllWithin(dir, installedPath, maxLockBytes)
 	if err != nil {
+		if errors.Is(err, errOutsideRoot) {
+			skipped = append(skipped, filepath.ToSlash(filepath.Join(vendorDir, composerInstalled)))
+		}
 		installed = nil
 	}
 	p, err := ParseComposer(ComposerLock, lock, manifest, installed, opt)
 	if err != nil {
 		return nil, err
+	}
+	for _, name := range skipped {
+		p.warn("skipped %q: %s", clipText(name), errOutsideRoot)
 	}
 	if manifest == nil {
 		p.warn("%s has no %s next to it, so no Composer package counts as direct", ComposerLock, ComposerJSON)

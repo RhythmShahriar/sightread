@@ -4,10 +4,12 @@
 package inventory
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
 )
 
 // notRegularError is returned when a path that should be a file is a
@@ -80,4 +82,36 @@ func readHead(path string, n int64) ([]byte, error) {
 	}
 	defer func() { _ = f.Close() }()
 	return io.ReadAll(io.LimitReader(f, n))
+}
+
+// errOutsideRoot is returned for a file in a project folder that is a
+// link leading out of that folder. A pull request can commit yarn.lock
+// as a link to ~/.npmrc; reading it would quote that file in errors.
+var errOutsideRoot = errors.New("it is a link that leads outside the project folder")
+
+// within checks that path, with every link in it resolved, lies inside
+// root (also resolved). A path that doesn't exist passes with the
+// error the read will give anyway.
+func within(root, path string) error {
+	r, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return err
+	}
+	p, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return err
+	}
+	if rel, err := filepath.Rel(r, p); err != nil || !filepath.IsLocal(rel) && rel != "." {
+		return &fs.PathError{Op: "open", Path: path, Err: errOutsideRoot}
+	}
+	return nil
+}
+
+// readAllWithin is readAll for a file of the project at root: a link
+// that leads outside root is refused.
+func readAllWithin(root, path string, limit int64) ([]byte, error) {
+	if err := within(root, path); err != nil {
+		return nil, err
+	}
+	return readAll(path, limit)
 }

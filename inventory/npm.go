@@ -179,7 +179,7 @@ func finishNPM(lockName string, entries []npmEntry, m *npmManifest, src *npmSour
 			continue // a workspace package is the project's own code
 		}
 		if !validRef(core.NPM, e.name, e.version) {
-			out.warn("skipped a %s entry with a name or version Sightread can't use: %q %q", lockName, e.name, e.version)
+			out.warn("skipped a %s entry with a name or version Sightread can't use: %q %q", lockName, clipText(e.name), clipText(e.version))
 			continue
 		}
 		if m != nil {
@@ -366,15 +366,18 @@ func ReadNPM(dir string, opt Options) (*Packages, error) {
 
 // readNPMFile is ReadNPM for the lockfile name in dir.
 func readNPMFile(dir, name string, opt Options) (*Packages, error) {
-	data, err := readAll(filepath.Join(dir, name), maxLockBytes)
+	data, err := readAllWithin(dir, filepath.Join(dir, name), maxLockBytes)
 	if err != nil {
 		return nil, err
 	}
-	manifest, err := readAll(filepath.Join(dir, "package.json"), maxLockBytes)
-	if err != nil && !os.IsNotExist(err) {
+	out := &Packages{}
+	manifest, err := readAllWithin(dir, filepath.Join(dir, "package.json"), maxLockBytes)
+	switch {
+	case errors.Is(err, errOutsideRoot):
+		out.warn("skipped package.json: %s", errOutsideRoot)
+	case err != nil && !os.IsNotExist(err):
 		return nil, err
 	}
-	out := &Packages{}
 	files := opt.NPMRC
 	if files == nil {
 		files = []string{filepath.Join(dir, ".npmrc")}

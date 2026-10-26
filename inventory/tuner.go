@@ -187,15 +187,18 @@ func tunerError(name, what string, cause error) error {
 
 // clipText drops control characters and cuts s to 100 bytes, for text
 // from a file that goes into a message.
-func clipText(s string) string {
+func clipText(s string) string { return clipN(s, 100) }
+
+// clipN is clipText with a cap of n bytes.
+func clipN(s string, n int) string {
 	s = strings.Map(func(r rune) rune {
 		if r < 0x20 || r == 0x7f || r >= 0x80 && r < 0xa0 {
 			return -1
 		}
 		return r
 	}, s)
-	if len(s) > 100 {
-		s = strings.ToValidUTF8(s[:100], "") + "..."
+	if len(s) > n {
+		s = strings.ToValidUTF8(s[:n], "") + "..."
 	}
 	return s
 }

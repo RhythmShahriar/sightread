@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/inventory/gitref"
 )
@@ -115,10 +116,10 @@ func beforeAfter(req core.ChangesRequest, opt ChangesOptions) (*ChangeSet, error
 	if req.Before == "" || req.After == "" {
 		return nil, &core.Error{Code: core.EBadFlag, Exit: 2, What: "--before and --after go together: the old and the new lockfile"}
 	}
-	kb, ka := lockKind(req.Before), lockKind(req.After)
 	// The --after file names the format. --before may be a copy saved
 	// under any name (git show main:package-lock.json > old.json), so
 	// only two known names that disagree are refused.
+	kb, ka := lockKind(req.Before), lockKind(req.After)
 	if ka == "" {
 		return nil, unsupportedLock(req.After)
 	}
@@ -127,8 +128,8 @@ func beforeAfter(req core.ChangesRequest, opt ChangesOptions) (*ChangeSet, error
 			What: fmt.Sprintf("--before %s and --after %s are different kinds of lockfile", filepath.Base(req.Before), filepath.Base(req.After)),
 			Hint: []string{"give the same lockfile from before and after the change"}}
 	}
-	cs := &ChangeSet{}
 	format := filepath.Base(req.After)
+	cs := &ChangeSet{}
 	read := func(flag, path string) (*Packages, error) {
 		data, err := readAll(path, maxLockBytes)
 		if err != nil {
@@ -215,8 +216,11 @@ func lockError(name string, err error) error {
 	if errors.As(err, &ce) {
 		return err
 	}
+	// The parser's text can quote the file, which may not be a lockfile
+	// at all, so it is redacted and clipped.
+	detail := clipN(secrets.Redact(strings.TrimPrefix(errText(err), name+": ")), 300)
 	return &core.Error{Code: core.EUnsupportedLock, Exit: 2,
-		What: fmt.Sprintf("%s can't be read: %s", name, strings.TrimPrefix(errText(err), name+": ")),
+		What: fmt.Sprintf("%s can't be read: %s", name, detail),
 		Hint: []string{"run your package manager once to write it again"}, Err: err}
 }
 
@@ -227,11 +231,15 @@ func readLockAt(ctx context.Context, repo, rel, ref string, show core.GitShow, o
 	manifestRel := filepath.ToSlash(filepath.Join(filepath.Dir(rel), manifestFor(rel)))
 	var data, manifest []byte
 	var err error
+	var warning string
 	if ref == "" {
-		if data, err = readAll(filepath.Join(repo, filepath.FromSlash(rel)), maxLockBytes); err != nil {
+		if data, err = readAllWithin(repo, filepath.Join(repo, filepath.FromSlash(rel)), maxLockBytes); err != nil {
 			return nil, &core.Error{Code: core.ENoLockfile, Exit: 2, What: fmt.Sprintf("can't read %s: %s", rel, errText(err)), Err: err}
 		}
-		if manifest, err = readAll(filepath.Join(repo, filepath.FromSlash(manifestRel)), maxLockBytes); err != nil {
+		if manifest, err = readAllWithin(repo, filepath.Join(repo, filepath.FromSlash(manifestRel)), maxLockBytes); err != nil {
+			if errors.Is(err, errOutsideRoot) {
+				warning = fmt.Sprintf("skipped %s: %s", manifestRel, errOutsideRoot)
+			}
 			manifest = nil
 		}
 	} else {
@@ -248,7 +256,11 @@ func readLockAt(ctx context.Context, repo, rel, ref string, show core.GitShow, o
 			manifest = nil
 		}
 	}
-	return parseLock(rel, filepath.Base(rel), data, manifest, npmrcOptions(opt, dir))
+	p, err := parseLock(rel, filepath.Base(rel), data, manifest, npmrcOptions(opt, dir))
+	if err == nil && warning != "" {
+		p.Warnings = append(p.Warnings, warning)
+	}
+	return p, err
 }
 
 // changeLockfiles returns the lockfiles to compare, relative to repo and
