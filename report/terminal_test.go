@@ -454,6 +454,26 @@ func TestTerminalUnverifiedDiffed(t *testing.T) {
 	}
 }
 
+// TestTerminalUnverifiedListHint: the UNVERIFIED section of a run with
+// several updates offers --allow-unverified only for the ones not
+// diffed.
+func TestTerminalUnverifiedListHint(t *testing.T) {
+	r := coretest.SampleReport()
+	r.NotChecked, r.Errors = nil, nil
+	coretest.FakeScorer{}.Summarise(r)
+	if out := writeTerm(t, r, termOpts(120)); !strings.Contains(out, "--allow-unverified reviews them anyway") {
+		t.Errorf("no hint for an update not diffed:\n%s", out)
+	}
+	for i := range r.Updates {
+		if r.Updates[i].Verdict == core.Unverified {
+			r.Updates[i].Diff = core.DiffStats{FilesChanged: 1, LinesAdded: 1, BytesTo: 10}
+		}
+	}
+	if out := writeTerm(t, r, termOpts(120)); strings.Contains(out, "reviews them anyway") || strings.Contains(out, "not diffed anyway") {
+		t.Errorf("a diffed update gets the hint:\n%s", out)
+	}
+}
+
 func TestTerminalFleetRow(t *testing.T) {
 	r := smallReport()
 	r.Updates[0] = core.Update{Eco: core.WPPlugin, Name: "wpforms-lite", From: core.Side{Version: "1.9.1"}, To: core.Side{Version: "1.9.2"},

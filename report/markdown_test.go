@@ -93,6 +93,17 @@ func TestMarkdownUnverifiedWithFindings(t *testing.T) {
 	if !strings.Contains(out, "### Unverified\n\n- left-pad 1.3.1 (npm): its integrity could not be checked") {
 		t.Errorf("no Unverified list:\n%s", out)
 	}
+	// Not diffed: --allow-unverified would review it.
+	if !strings.Contains(out, "`--allow-unverified` reviews them anyway") {
+		t.Errorf("no hint for an update not diffed:\n%s", out)
+	}
+	// Diffed with --allow-unverified: the hint would contradict the
+	// findings above it.
+	u.Diff = core.DiffStats{FilesChanged: 1, LinesAdded: 1, BytesTo: 10}
+	out = writeMD(t, r)
+	if strings.Contains(out, "reviews them anyway") || !strings.Contains(out, "Reviewed with `--allow-unverified`: these releases could not be verified.") {
+		t.Errorf("a diffed update gets the --allow-unverified hint:\n%s", out)
+	}
 }
 
 // TestMarkdownAllowRefused: an update allow would refuse (E18 or a local

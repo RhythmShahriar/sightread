@@ -980,9 +980,13 @@ func (t *termView) unverifiedList() {
 		return
 	}
 	var lines []string
+	notDiffed := 0
 	for _, u := range byVerdict(t.r) {
 		if u.Verdict != core.Unverified {
 			continue
+		}
+		if !diffed(u) {
+			notDiffed++
 		}
 		lines = append(lines, tt(u.Name)+" "+tt(u.To.Version)+" ("+tt(string(u.Eco))+"): "+unverifiedWhy(u))
 	}
@@ -993,8 +997,21 @@ func (t *termView) unverifiedList() {
 	for _, l := range lines {
 		t.item(l, "")
 	}
-	t.item("", "--allow-unverified reviews them anyway")
+	// The hint is for updates left undiffed: with --allow-unverified
+	// they were reviewed and their findings are above.
+	if notDiffed > 0 {
+		t.item("", unverifiedHint(len(lines), notDiffed))
+	}
 	t.blank()
+}
+
+// unverifiedHint is the line under n unverified updates when notDiffed
+// of them were not diffed.
+func unverifiedHint(n, notDiffed int) string {
+	if notDiffed == n {
+		return "--allow-unverified reviews them anyway"
+	}
+	return "--allow-unverified reviews the ones not diffed anyway"
 }
 
 // unverifiedWhy is the first error of an unverified update, or a stock

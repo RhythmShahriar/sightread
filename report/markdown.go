@@ -642,9 +642,13 @@ func longestRun(s string, c byte) int {
 
 func (m mdReport) unverified(b *strings.Builder) {
 	var lines []string
+	notDiffed := 0
 	for _, u := range m.sorted() {
 		if u.Verdict != core.Unverified {
 			continue
+		}
+		if !diffed(u) {
+			notDiffed++
 		}
 		why := "its integrity could not be checked"
 		if len(u.Errors) > 0 {
@@ -656,7 +660,15 @@ func (m mdReport) unverified(b *strings.Builder) {
 		return
 	}
 	b.WriteString("### Unverified\n\n" + strings.Join(lines, "\n") + "\n\n")
-	b.WriteString("Not reviewed as verified releases; `--allow-unverified` reviews them anyway.\n\n")
+	switch {
+	case notDiffed == 0:
+		// --allow-unverified was used: their findings are above.
+		b.WriteString("Reviewed with `--allow-unverified`: these releases could not be verified.\n\n")
+	case notDiffed == len(lines):
+		b.WriteString("Not reviewed as verified releases; `--allow-unverified` reviews them anyway.\n\n")
+	default:
+		b.WriteString("Some were not diffed; `--allow-unverified` reviews the ones not diffed anyway.\n\n")
+	}
 }
 
 func (m mdReport) notChecked(b *strings.Builder) {
