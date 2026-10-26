@@ -473,7 +473,7 @@ func TestTimesAreUTC(t *testing.T) {
 }
 
 // TestJSONSoundcheckNotCompared: a --soundcheck run that stopped before
-// the comparison writes summary null and its error, and reads back the
+// the comparison writes summary null and its error. It reads back the
 // same; a finished one keeps its zero counts.
 func TestJSONSoundcheckNotCompared(t *testing.T) {
 	r := coretest.SampleReport()

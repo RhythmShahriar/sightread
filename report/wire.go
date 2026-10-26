@@ -149,10 +149,10 @@ type jsonSoundcheckSummary struct {
 }
 
 type jsonSoundcheck struct {
-	Staging      string                `json:"staging"`
-	RoadieVerify string                `json:"roadie_verify"`
-	Snapshot     string                `json:"snapshot"`
-	Applied      string                `json:"applied"`
+	Staging      string                 `json:"staging"`
+	RoadieVerify string                 `json:"roadie_verify"`
+	Snapshot     string                 `json:"snapshot"`
+	Applied      string                 `json:"applied"`
 	Summary      *jsonSoundcheckSummary `json:"summary"` // null when it stopped before the comparison
 	Report       string                 `json:"report"`
 	RolledBack   bool                   `json:"rolled_back"`

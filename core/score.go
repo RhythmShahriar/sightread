@@ -60,7 +60,7 @@ type Policy interface {
 	// ErrAllowedOtherHash that the version is there with another hash.
 	AddAllow(path string, e AllowEntry) error
 	// ReplaceAllow appends e in place of the entries for the same
-	// package and version, and returns the ones it removed.
+	// package and version. It returns the ones it removed.
 	ReplaceAllow(path string, e AllowEntry) ([]AllowEntry, error)
 	RemoveAllow(path string, r Ref) error
 	ImportAllow(path, from string) (int, error)

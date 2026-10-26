@@ -533,7 +533,7 @@ const maskBullets = "•••••"
 // never the rest of the line, so "// for example" or an example.com
 // host next to a real token does not lower it. The value is found by
 // lining raw up with what secrets.Redact makes of it: each masked span
-// is the kept prefix and the bullets, and the raw text after it starts
+// is the kept prefix and the bullets. The raw text after it starts
 // where the redacted text resumes.
 func exampleSecret(raw string, s secrets.Secret) bool {
 	if raw == "" || !strings.HasSuffix(s.Masked, maskBullets) {

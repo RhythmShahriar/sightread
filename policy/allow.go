@@ -474,7 +474,7 @@ func (s *Store) AddAllow(path string, e core.AllowEntry) error {
 }
 
 // ReplaceAllow appends e in place of every entry for the same package
-// and version, and returns the entries it removed.
+// and version. It returns the entries it removed.
 func (s *Store) ReplaceAllow(path string, e core.AllowEntry) ([]core.AllowEntry, error) {
 	if err := checkAllowEntry(&e, "the new entry"); err != nil {
 		return nil, configError(path, err.Error())

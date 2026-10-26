@@ -199,7 +199,7 @@ func (f *allowFlags) fromReport(policy core.Policy, path string, stdout, stderr 
 				continue
 			}
 			// Other bytes than the ones allowed, or no hash at all: refused
-			// like an unverified update, and the others still go in.
+			// like an unverified update while the others still go in.
 			if errors.Is(err, core.ErrAllowedOtherHash) || errors.Is(err, errNoHash) {
 				fmt.Fprintln(stderr, err.Error())
 				refused++

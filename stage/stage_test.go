@@ -594,7 +594,7 @@ func TestSoundcheckFailures(t *testing.T) {
 
 // TestSoundcheckFailureRecorded: a compare that prints something else
 // than a comparison leaves the report incomplete with the reason in
-// the Soundcheck block and the report errors, and no counts.
+// the Soundcheck block and the report errors. It has no counts.
 func TestSoundcheckFailureRecorded(t *testing.T) {
 	w := newWorld(t)
 	w.rep.Complete = true
