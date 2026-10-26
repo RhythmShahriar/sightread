@@ -369,6 +369,68 @@ func TestSecretsNegative(t *testing.T) {
 	}
 }
 
+// fakePEM assembles a PEM block of the given label at run time, so no
+// literal key sits in the repository.
+func fakePEM(label string) string {
+	body := strings.Repeat("TUlJRXBBSUJBQUtDQVFFQXNpZ2h0cmVhZFRFU1Qwbmx5", 2)
+	return "-----BEGIN " + label + "-----\n" + body + "\n" + body[:40] + "\n-----END " + label + "-----\n"
+}
+
+func TestSecretsPEM(t *testing.T) {
+	key := fakePEM("RSA " + "PRIVATE KEY")
+	set := analyzeAll(t, coretest.Tree(map[string]string{
+		"keys/deploy.pem":   "# deploy key\n" + key,
+		"config/deploy.key": "a\nb\n" + key,
+		"inc/k.php":         "<?php\n$k = <<<EOT\n" + key + "EOT;\n",
+	}), core.DefaultLimits())
+	want := map[string]int{"keys/deploy.pem": 2, "config/deploy.key": 3, "inc/k.php": 3}
+	got := map[string]int{}
+	for _, fs := range set.ByKey {
+		for _, f := range fs {
+			if f.Kind != core.FSecret || f.Attrs["kind"] != "private-key" {
+				continue
+			}
+			got[f.Ev.Path] = f.Ev.Line
+			for _, part := range strings.Split(strings.TrimSpace(key), "\n")[1:3] {
+				for _, text := range []string{f.Key, fmt.Sprint(f.Ev.Snippet), fmt.Sprint(f.Attrs)} {
+					if strings.Contains(text, part[8:]) {
+						t.Errorf("%s: raw key text in %q", f.Ev.Path, text)
+					}
+				}
+			}
+		}
+	}
+	for p, line := range want {
+		if got[p] != line {
+			t.Errorf("%s: private key at line %d, want %d\n%s", p, got[p], line, dump(set))
+		}
+	}
+	out, _ := json.Marshal(set)
+	if strings.Contains(string(out)+dump(set), "TUlJRXBBSUJBQUtDQVFFQXNpZ2h0") {
+		t.Errorf("raw key in the output")
+	}
+	// Text in a documentation context is not scanned by Analyze, but the
+	// scan itself places a block in any text.
+	fs := secretFeatures("notes.txt", []byte("a\nb\n"+key), false)
+	if len(fs) != 1 || fs[0].Ev.Line != 3 {
+		t.Errorf("notes.txt: %+v", fs)
+	}
+}
+
+func TestSecretsPEMNegative(t *testing.T) {
+	set := analyzeAll(t, coretest.Tree(map[string]string{
+		"keys/pub.pem": fakePEM("PUBLIC KEY"),
+		"certs/ca.txt": fakePEM("CERTIFICATE"),
+		"inc/cert.php": "<?php\n$c = '" + fakePEM("CERTIFICATE") + "';\n",
+		"keys/ssh.pub": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA sightread\n",
+	}), core.DefaultLimits())
+	for k := range set.ByKey {
+		if strings.HasPrefix(k, string(core.FSecret)+":") {
+			t.Errorf("FSecret %s", k)
+		}
+	}
+}
+
 func TestAnalyzeRace(t *testing.T) {
 	files := map[string]string{}
 	for i := range 1000 {

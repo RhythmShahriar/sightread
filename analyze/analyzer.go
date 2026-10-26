@@ -401,10 +401,20 @@ func secretFeatures(p string, src []byte, code bool) []core.Feature {
 		}
 		return ss
 	}
-	if len(keep(secrets.FindSecrets(src))) == 0 {
+	all := keep(secrets.FindSecrets(src))
+	if len(all) == 0 {
 		return nil
 	}
 	col := newCollector(p, pathContext(p), newLineIndex(src))
+	found := map[secrets.Secret]bool{}
+	add := func(s secrets.Secret, line int) {
+		found[s] = true
+		col.add(core.FSecret, s.Kind+":"+attrText(s.String()), line, line, "", map[string]string{
+			"kind":   s.Kind,
+			"name":   attrText(s.Name),
+			"masked": s.Masked,
+		})
+	}
 	line := 0
 	for rest := src; len(rest) > 0; {
 		line++
@@ -413,15 +423,64 @@ func secretFeatures(p string, src []byte, code bool) []core.Feature {
 			n = len(rest)
 		}
 		for _, s := range keep(secrets.FindSecrets(rest[:n])) {
-			col.add(core.FSecret, s.Kind+":"+attrText(s.String()), line, line, "", map[string]string{
-				"kind":   s.Kind,
-				"name":   attrText(s.Name),
-				"masked": s.Masked,
-			})
+			add(s, line)
 		}
 		rest = rest[min(n+1, len(rest)):]
 	}
+	if len(found) == len(all) {
+		return col.out
+	}
+	// A secret the whole text holds but no single line does spans
+	// lines: a PEM private key block. Each block is scanned from its
+	// BEGIN line, which is where it is reported.
+	for _, b := range pemBlocks(src) {
+		for _, s := range keep(secrets.FindSecrets(src[b.start:b.end])) {
+			if !found[s] {
+				add(s, b.line)
+			}
+		}
+	}
+	// Fail toward reporting: anything still not placed goes on line 1.
+	for _, s := range all {
+		if !found[s] {
+			add(s, 1)
+		}
+	}
 	return col.out
+}
+
+// pemBlock is a "-----BEGIN" block at src[start:end] that starts on line.
+type pemBlock struct {
+	start, end, line int
+}
+
+// pemBlocks returns every "-----BEGIN" block of src, each running to
+// the end of its "-----END ...-----" line or, unterminated, to the end
+// of src.
+func pemBlocks(src []byte) []pemBlock {
+	const begin, end = "-----BEGIN ", "-----END "
+	var out []pemBlock
+	line, last := 1, 0
+	for off := 0; ; {
+		i := bytes.Index(src[off:], []byte(begin))
+		if i < 0 {
+			return out
+		}
+		i += off
+		line += bytes.Count(src[last:i], []byte("\n"))
+		last = i
+		stop := len(src)
+		if j := bytes.Index(src[i+len(begin):], []byte(end)); j >= 0 {
+			stop = i + len(begin) + j + len(end)
+			if k := bytes.IndexAny(src[stop:], "\r\n"); k >= 0 {
+				stop += k
+			} else {
+				stop = len(src)
+			}
+		}
+		out = append(out, pemBlock{start: i, end: stop, line: line})
+		off = i + len(begin)
+	}
 }
 
 // AnalyzeText analyses text that is not a file of a tree, such as an
