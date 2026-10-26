@@ -201,9 +201,9 @@ func (h *harness) jailSoundcheck(real string) (*soundcheckJail, error) {
 			return nil, err
 		}
 	}
-	// Chrome puts its singleton socket under TMPDIR, and a socket path
-	// is capped near 108 bytes: a temp folder under a deep work folder
-	// is too long, so Soundcheck gets a short one of its own.
+	// Chrome puts its singleton socket under TMPDIR. A socket path is
+	// capped near 108 bytes: a temp folder under a deep work folder is
+	// too long, so Soundcheck gets a short one of its own.
 	tmp, err := os.MkdirTemp("", "sr-sc-")
 	if err != nil {
 		_ = g.Close()

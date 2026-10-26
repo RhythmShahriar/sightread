@@ -98,8 +98,7 @@ func (versionInventory) TreeVersion(_ core.Ecosystem, _ string, t *core.Tree) st
 
 // TestLocalDeclaredVersion: a --from-file or --to-file side with no
 // --from or --to is named by the version its files declare; one that
-// declares none stays "local", and changelog-mismatch evidence then
-// speaks of the local copy. An explicit --to still wins.
+// declares none stays "local". An explicit --to still wins.
 func TestLocalDeclaredVersion(t *testing.T) {
 	cases := []struct {
 		name, oldV, newV, to, wantFrom, wantTo string

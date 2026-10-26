@@ -11,8 +11,8 @@ import (
 )
 
 // TestTreeVersion reads the version a local copy declares, the way the
-// platform would after installing it, and refuses anything that is not a
-// plain version token.
+// platform would after installing it. Anything that is not a plain
+// version token is refused.
 func TestTreeVersion(t *testing.T) {
 	plugin := "<?php\n/*\n * Plugin Name: Premium\n * Version: 2.8.1\n */\n"
 	cases := []struct {
@@ -48,7 +48,7 @@ func TestTreeVersion(t *testing.T) {
 }
 
 // FuzzTreeVersion: any style.css or package.json gives a short plain
-// version token or nothing, and never panics.
+// version token or nothing. It never panics.
 func FuzzTreeVersion(f *testing.F) {
 	f.Add("/*\nTheme Name: Shop\nVersion: 3.1\n*/")
 	f.Add(`{"version":"1.4.0"}`)
