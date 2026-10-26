@@ -13,9 +13,18 @@ import (
 )
 
 // codeFeatures returns every feature of one PHP or JavaScript file:
-// data flows and the capabilities extraction finds. ctx is the file's
-// context (pathContext). The result is sorted by line, kind and key.
+// data flows, the capabilities extraction finds, hosts and encoded
+// blobs with what their payloads do. ctx is the file's context
+// (pathContext). The result is sorted by line, kind and key.
 func codeFeatures(l lang, path string, src []byte, ctx string) []core.Feature {
+	fs, _ := analyzeCode(l, path, src, ctx, decodeEnv{budget: newDecodeBudget(), layers: maxLayers})
+	return fs
+}
+
+// analyzeCode is codeFeatures with a decode budget shared by a package.
+// It also returns the file as Unanalysed when a blob hit a decode
+// limit.
+func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]core.Feature, []core.Unanalysed) {
 	lines := newLineIndex(src)
 	var st *stream
 	var ptoks []php.Token
@@ -36,9 +45,16 @@ func codeFeatures(l lang, path string, src []byte, ctx string) []core.Feature {
 	} else {
 		ex.jsHosts(jtoks)
 	}
+	bs := &blobScan{col: col, st: st, path: path, env: env}
+	bs.scan()
 	out = append(out, col.out...)
+	out = append(out, bs.out...)
 	sortFeatures(out)
-	return out
+	var un []core.Unanalysed
+	if bs.un {
+		un = append(un, core.Unanalysed{Path: path, Reason: reasonDecodeLimit})
+	}
+	return out, un
 }
 
 // finish runs the token scans and fills what waited for the whole file.
