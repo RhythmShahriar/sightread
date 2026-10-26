@@ -32,7 +32,7 @@ func TestSoundcheckJail(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = sc.guard.Close() }()
+	defer func() { _ = sc.close() }()
 	cmd := exec.Command(filepath.Join(sc.bin, "rhythm-soundcheck"), "compare", "a b") //nolint:gosec // the wrapper under test
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "HOME=/somewhere/else", "HTTPS_PROXY=http://127.0.0.1:1"}
 	out, err := cmd.CombinedOutput()
@@ -42,12 +42,12 @@ func TestSoundcheckJail(t *testing.T) {
 	home := filepath.Join(h.work, "soundcheck", "home")
 	guard := "http://127.0.0.1:" + strconv.Itoa(sc.guard.Port())
 	for _, want := range []string{"args=compare a b", "HOME=" + home, "XDG_CACHE_HOME=" + home + "/.cache",
-		"XDG_CONFIG_HOME=" + home + "/.config", "HTTPS_PROXY=" + guard, "http_proxy=" + guard, "ALL_PROXY=" + guard} {
+		"XDG_CONFIG_HOME=" + home + "/.config", "TMPDIR=" + sc.tmp, "HTTPS_PROXY=" + guard, "http_proxy=" + guard, "ALL_PROXY=" + guard} {
 		if !strings.Contains(string(out), want+"\n") {
 			t.Errorf("output lacks %q:\n%s", want, out)
 		}
 	}
-	if sc.guard.Port() == 0 || strings.Contains(string(out), "/somewhere/else") {
-		t.Errorf("guard port %d, output:\n%s", sc.guard.Port(), out)
+	if sc.guard.Port() == 0 || strings.Contains(string(out), "/somewhere/else") || sc.tmp == "" {
+		t.Errorf("guard port %d, temp %q, output:\n%s", sc.guard.Port(), sc.tmp, out)
 	}
 }

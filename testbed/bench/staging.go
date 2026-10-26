@@ -91,7 +91,7 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 	var sc *soundcheckJail
 	if scErr == nil {
 		if sc, scErr = h.jailSoundcheck(scPath); scErr == nil {
-			defer func() { _ = sc.guard.Close() }()
+			defer func() { _ = sc.close() }()
 		}
 	}
 	wrapper := filepath.Join(h.tb, "bin", "wp")
@@ -172,7 +172,14 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 // or outside writes. They must still go nowhere.
 type soundcheckJail struct {
 	bin   string // the folder holding the wrapper, for the front of PATH
+	tmp   string // Soundcheck's TMPDIR
 	guard *probes.Guard
+}
+
+// close stops the guard and removes the temp folder.
+func (j *soundcheckJail) close() error {
+	_ = os.RemoveAll(j.tmp)
+	return j.guard.Close()
 }
 
 // jailSoundcheck writes the wrapper around real and starts its guard on
@@ -194,23 +201,34 @@ func (h *harness) jailSoundcheck(real string) (*soundcheckJail, error) {
 			return nil, err
 		}
 	}
-	if err := os.WriteFile(filepath.Join(bin, "rhythm-soundcheck"), []byte(soundcheckWrapper(real, home, g.Port())), 0o750); err != nil { //nolint:gosec // an executable wrapper in the work folder
+	// Chrome puts its singleton socket under TMPDIR, and a socket path
+	// is capped near 108 bytes: a temp folder under a deep work folder
+	// is too long, so Soundcheck gets a short one of its own.
+	tmp, err := os.MkdirTemp("", "sr-sc-")
+	if err != nil {
 		_ = g.Close()
 		return nil, err
 	}
-	return &soundcheckJail{bin: bin, guard: g}, nil
+	j := &soundcheckJail{bin: bin, tmp: tmp, guard: g}
+	if err := os.WriteFile(filepath.Join(bin, "rhythm-soundcheck"), []byte(soundcheckWrapper(real, home, tmp, g.Port())), 0o750); err != nil { //nolint:gosec // an executable wrapper in the work folder
+		_ = j.close()
+		return nil, err
+	}
+	return j, nil
 }
 
 // soundcheckWrapper is the wrapper script: Soundcheck's own HOME and XDG
-// folders under home and every proxy variable on the guard at port.
-// Loopback stays direct, so the staging site is still reached.
-func soundcheckWrapper(real, home string, port int) string {
+// folders under home, TMPDIR at tmp and every proxy variable on the
+// guard at port. Loopback stays direct, so the staging site is still
+// reached.
+func soundcheckWrapper(real, home, tmp string, port int) string {
 	guard := fmt.Sprintf("http://127.0.0.1:%d", port)
 	var b strings.Builder
 	b.WriteString("#!/bin/sh\n# Written by the benchmark: Soundcheck and its Chrome in the work folder.\n")
 	vars := [][2]string{
 		{"HOME", home}, {"XDG_CACHE_HOME", filepath.Join(home, ".cache")},
 		{"XDG_CONFIG_HOME", filepath.Join(home, ".config")}, {"XDG_DATA_HOME", filepath.Join(home, ".local", "share")},
+		{"TMPDIR", tmp}, {"TMP", tmp}, {"TEMP", tmp},
 	}
 	for _, k := range []string{"HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy", "ALL_PROXY", "all_proxy"} {
 		vars = append(vars, [2]string{k, guard})
