@@ -14,6 +14,7 @@ import (
 
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
+	_ "github.com/RhythmShahriar/sightread/diff" // the one drift rule VerifyLocal uses
 	"github.com/RhythmShahriar/sightread/fetch"
 )
 
@@ -388,8 +389,7 @@ func TestVerifyLocal(t *testing.T) {
 			t.Errorf("drift %+v", d)
 		}
 	}
-	t.Run("own", func(t *testing.T) {
-		t.Cleanup(core.SwapDiffer(nil))
+	t.Run("diff", func(t *testing.T) {
 		p := NewPlugin(start(t, r, core.SourceOptions{}))
 		d, err := p.VerifyLocal(context.Background(), ref, coretest.Tree(local))
 		if err != nil {
@@ -410,7 +410,6 @@ func TestVerifyLocal(t *testing.T) {
 		}
 	})
 	t.Run("namesake", func(t *testing.T) {
-		t.Cleanup(core.SwapDiffer(nil))
 		p := NewPlugin(start(t, r, core.SourceOptions{}))
 		other := map[string]string{"akismet.php": "<?php /* Plugin Name: Someone else */", "inc/a.php": "<?php", "readme.txt": "x"}
 		d, err := p.VerifyLocal(context.Background(), ref, coretest.Tree(other))
@@ -419,11 +418,17 @@ func TestVerifyLocal(t *testing.T) {
 		}
 	})
 	t.Run("no checksums", func(t *testing.T) {
-		t.Cleanup(core.SwapDiffer(nil))
 		p := NewPlugin(start(t, r, core.SourceOptions{}))
 		d, err := p.VerifyLocal(context.Background(), core.Ref{Eco: core.WPPlugin, Name: "akismet", Version: "0.1"}, coretest.Tree(local))
 		if err != nil || d.Official {
 			t.Errorf("a version without checksums: %+v %v", d, err)
+		}
+	})
+	t.Run("no differ", func(t *testing.T) {
+		t.Cleanup(core.SwapDiffer(nil))
+		p := NewPlugin(start(t, r, core.SourceOptions{}))
+		if _, err := p.VerifyLocal(context.Background(), ref, coretest.Tree(local)); !errors.Is(err, core.ErrNotLinked) {
+			t.Errorf("without a differ: %v", err)
 		}
 	})
 	t.Run("503", func(t *testing.T) {
@@ -437,19 +442,6 @@ func TestVerifyLocal(t *testing.T) {
 			t.Errorf("E5: %v", err)
 		}
 	})
-}
-
-func TestDriftIgnored(t *testing.T) {
-	for p, want := range map[string]bool{
-		"readme.txt": true, "README.TXT": true, "inc/readme.txt": false,
-		"languages/x-de_DE.po": true, "languages/x-de_DE.mo": true, "x.mo": true,
-		"languages/x-de_DE-1234.json": true, "block.json": false, "languages/x.pot": false,
-		".DS_Store": true, "assets/.DS_Store": true, "x.php": false, "languages/x.php": false,
-	} {
-		if got := DriftIgnored(p); got != want {
-			t.Errorf("DriftIgnored(%q) = %v, want %v", p, got, want)
-		}
-	}
 }
 
 func TestVerifyTreeLimitCut(t *testing.T) {

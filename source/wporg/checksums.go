@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"maps"
 	"net/url"
-	"path"
 	"slices"
 	"strings"
 
@@ -170,24 +169,6 @@ func plural(n int, one, many string) string {
 	return many
 }
 
-// DriftIgnored reports whether a drift check skips the file at p (a path
-// inside the plugin folder): readme.txt, which WordPress.org rewrites,
-// and what WordPress itself writes into a plugin folder: language packs
-// (.po and translation .json under languages/, .mo anywhere) and macOS
-// .DS_Store files. package diff skips the same files, so both drift
-// paths agree.
-func DriftIgnored(p string) bool {
-	base := path.Base(p)
-	ext := strings.ToLower(path.Ext(p))
-	switch {
-	case isReadme(p), base == ".DS_Store", ext == ".mo":
-		return true
-	case strings.HasPrefix(p, "languages/") && (ext == ".po" || ext == ".json"):
-		return true
-	}
-	return false
-}
-
 // officialTree is the official copy as the checksums describe it, for
 // core.Differ.Drift: paths and hashes, no contents. Where a file has
 // several accepted hashes, the one the local copy has is used, so a
@@ -206,36 +187,6 @@ func officialTree(want sums, local *core.Tree) *core.Tree {
 	}
 	t.SortFiles()
 	return t
-}
-
-// drift compares local with want by hash, skipping DriftIgnored files.
-// It is used only when no core.Differ is linked (the diff package owns
-// the one implementation run uses); its rules are the same.
-func drift(local *core.Tree, want sums) core.Drift {
-	var d core.Drift
-	have := byPath(local)
-	listed := 0
-	for _, p := range slices.Sorted(maps.Keys(want)) {
-		if DriftIgnored(p) {
-			continue
-		}
-		listed++
-		switch f, ok := have[p]; {
-		case !ok:
-			d.Missing = append(d.Missing, p)
-		case f.Mode.IsRegular() && slices.Contains(want[p], hexOf(f)):
-			d.Matched = append(d.Matched, p)
-		default:
-			d.Differ = append(d.Differ, p)
-		}
-	}
-	for _, f := range local.Files {
-		if _, ok := want[f.Path]; !ok && !DriftIgnored(f.Path) {
-			d.Extra = append(d.Extra, f.Path)
-		}
-	}
-	d.Official = listed > 0 && 2*len(d.Matched) >= listed
-	return d
 }
 
 // byPath indexes a tree's files; a local tree from disk may not be

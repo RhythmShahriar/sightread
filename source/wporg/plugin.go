@@ -5,6 +5,7 @@ package wporg
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
@@ -99,19 +100,22 @@ func (p *Plugin) MetaFromTree(m *core.Meta, tree *core.Tree) { metaFromTree(m, t
 // does a version WordPress.org has no checksums for. Checksums that
 // can't be had right now are E5.
 func (p *Plugin) VerifyLocal(ctx context.Context, ref core.Ref, local *core.Tree) (core.Drift, error) {
+	differ := core.GetDiffer()
+	if differ == nil {
+		// package diff holds the one drift rule (which files a site may
+		// change); without it there is nothing to compare by.
+		return core.Drift{}, fmt.Errorf("drift: differ %w", core.ErrNotLinked)
+	}
 	want, reason, err := p.s.checksums(ctx, ref.Name, ref.Version)
 	switch {
 	case err != nil:
 		return core.Drift{}, p.s.pkg(ref.Name, ref.Version).Wrap(err)
 	case want == nil && reason == reasonNoChecksums:
-		return drift(local, sums{}), nil
+		want = sums{}
 	case want == nil:
 		return core.Drift{}, fetch.Unverified(p.s.command, ref.Name, ref.Version, reason)
 	}
-	if d := core.GetDiffer(); d != nil {
-		return d.Drift(ctx, local, officialTree(want, local)), nil
-	}
-	return drift(local, want), nil
+	return differ.Drift(ctx, local, officialTree(want, local)), nil
 }
 
 // Tags returns {"latest": the info API version}.

@@ -13,6 +13,7 @@ import (
 
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
+	_ "github.com/RhythmShahriar/sightread/diff" // the one drift rule VerifyLocal uses
 )
 
 // Made-up commits in the shape of monolog's.

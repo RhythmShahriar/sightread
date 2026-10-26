@@ -290,6 +290,12 @@ func (cj *composerJSON) apply(m *core.Meta) {
 // the package the repository knows. An official archive that fails its
 // own check can't be compared with: that is E5.
 func (s *Source) VerifyLocal(ctx context.Context, ref core.Ref, local *core.Tree) (core.Drift, error) {
+	differ := core.GetDiffer()
+	if differ == nil {
+		// package diff holds the one drift rule; without it there is
+		// nothing to compare by.
+		return core.Drift{}, fmt.Errorf("drift: differ %w", core.ErrNotLinked)
+	}
 	m, err := s.Meta(ctx, ref)
 	if err != nil {
 		return core.Drift{}, err
@@ -301,39 +307,5 @@ func (s *Source) VerifyLocal(ctx context.Context, ref core.Ref, local *core.Tree
 	if in.By == core.ByFailed {
 		return core.Drift{}, fetch.Unverified(command, ref.Name, m.Ref.Version, in.Detail)
 	}
-	if d := core.GetDiffer(); d != nil {
-		return d.Drift(ctx, local, official), nil
-	}
-	return drift(local, official), nil
-}
-
-// drift compares local with official by path and SHA-256. It is used
-// only when no core.Differ is linked (package diff owns the one
-// implementation run uses).
-func drift(local, official *core.Tree) core.Drift {
-	var d core.Drift
-	have := map[string]core.File{}
-	for _, f := range local.Files {
-		have[f.Path] = f
-	}
-	want := map[string]bool{}
-	for _, f := range official.Files {
-		want[f.Path] = true
-		switch l, ok := have[f.Path]; {
-		case !ok:
-			d.Missing = append(d.Missing, f.Path)
-		case l.Mode.IsRegular() == f.Mode.IsRegular() && l.SHA256 == f.SHA256:
-			d.Matched = append(d.Matched, f.Path)
-		default:
-			d.Differ = append(d.Differ, f.Path)
-		}
-	}
-	for _, f := range local.Files {
-		if !want[f.Path] {
-			d.Extra = append(d.Extra, f.Path)
-		}
-	}
-	slices.Sort(d.Extra)
-	d.Official = len(official.Files) > 0 && 2*len(d.Matched) >= len(official.Files)
-	return d
+	return differ.Drift(ctx, local, official), nil
 }
