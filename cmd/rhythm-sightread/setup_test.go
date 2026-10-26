@@ -23,7 +23,11 @@ import (
 )
 
 // lanePorts are the 127.0.0.1 ports this package's fixture servers use.
-const lanePortFirst, lanePortLast = 31100, 31119
+// The cli lane's ports 31100-31119 are split between its test packages,
+// because go test ./... runs packages at the same time and two of them
+// must never race for one port: cmd 31100-31107, demo 31108-31111,
+// notify 31112-31115 and watch 31116-31119.
+const lanePortFirst, lanePortLast = 31100, 31107
 
 // laneListener listens on the first free lane port.
 func laneListener(t *testing.T) net.Listener {
@@ -34,7 +38,7 @@ func laneListener(t *testing.T) net.Listener {
 			return ln
 		}
 	}
-	t.Fatal("no free port in 31100-31119")
+	t.Fatal("no free port in 31100-31107")
 	return nil
 }
 

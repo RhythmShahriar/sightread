@@ -12,9 +12,6 @@
 package main
 
 import (
-	"context"
-	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -38,36 +35,6 @@ them as text. It never runs their code. A clean result is a static diff, not pro
 an update is safe. This notice is shown once.
 `
 
-// stub is a command a later part of the build fills in. It answers
-// --help and otherwise says it isn't built yet (exit 3).
-type stub struct {
-	name, args, summary string
-}
-
-// watchStub is the one command still to come.
-var watchStub = stub{"watch", "-l <sites.yaml> --every <d> [flags]", "check sites on a schedule"}
-
-func (s stub) flags(stderr io.Writer) *flag.FlagSet {
-	return cli.NewFlagSet(s.name, "Usage: "+cli.Name()+" "+s.name+" "+s.args+"\n\n"+s.summary, stderr)
-}
-
-func (s stub) command() cli.Command {
-	return cli.Command{
-		Name: s.name, Args: s.args, Summary: s.summary,
-		Flags: func() *flag.FlagSet { return s.flags(io.Discard) },
-		Run: func(_ context.Context, args []string, stdout, stderr io.Writer) error {
-			fs := s.flags(stderr)
-			if cli.HasFlag(args, "h") || cli.HasFlag(args, "help") {
-				fs.SetOutput(stdout)
-			}
-			if _, err := cli.ParseArgs(fs, args); err != nil {
-				return err
-			}
-			return &cli.ExitError{Code: cli.ExitUnavailable, Err: errors.New(s.name + ": not built yet")}
-		},
-	}
-}
-
 // commands lists every command in PRD 6 order: the review commands, the
 // rest, update and the hidden picker.
 func commands() []cli.Command {
@@ -75,7 +42,7 @@ func commands() []cli.Command {
 	for _, c := range reviewCommands {
 		out = append(out, c.command())
 	}
-	out = append(out, explainCommand.command(), allowCommand.command(), watchStub.command())
+	out = append(out, explainCommand.command(), allowCommand.command(), watchCmd())
 	for _, c := range []*simpleCommand{reportCommand, verifyCommand, initCommand, doctorCommand, demoCommand, signalsCommand, cacheCommand} {
 		out = append(out, c.command())
 	}

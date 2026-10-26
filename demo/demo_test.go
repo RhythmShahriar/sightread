@@ -34,14 +34,14 @@ import (
 // start runs a server on the first free port of this lane's range.
 func start(t *testing.T) *Server {
 	t.Helper()
-	for p := 31100; p <= 31119; p++ {
+	for p := 31108; p <= 31111; p++ {
 		s, err := Start(fmt.Sprintf("127.0.0.1:%d", p), time.Now())
 		if err == nil {
 			t.Cleanup(func() { _ = s.Close() })
 			return s
 		}
 	}
-	t.Fatal("no free port in 31100-31119")
+	t.Fatal("no free port in 31108-31111")
 	return nil
 }
 
