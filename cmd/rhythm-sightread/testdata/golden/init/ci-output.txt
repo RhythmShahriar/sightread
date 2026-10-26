@@ -1,0 +1,11 @@
+Wrote ../.github/workflows/sightread.yml: reviews lockfile changes on pull requests and everything each Monday, fails on high or worse.
+
+Next steps:
+  1. Review the file, then commit and push it:
+       git add ../.github/workflows/sightread.yml
+       git commit -m "ci: review updates with sightread"
+  2. Protect .sightread/allowed.yaml with CODEOWNERS, so a pull request can't approve its own update:
+       /.sightread/allowed.yaml @your-org/reviewers
+  3. Dependabot and Renovate pull requests get a read-only token: the gate and the job summary still
+     work while the comment and the SARIF upload are skipped with a notice.
+More: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-CI

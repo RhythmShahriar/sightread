@@ -1,3 +1,20 @@
 Usage: rhythm sightread init [ci] [--force]
 
-write .sightread/config.yaml or a CI workflow
+Without ci, writes .sightread/config.yaml in this folder with every setting
+explained, the ecosystems found here and fail_on high. With ci, writes
+.github/workflows/sightread.yml in the repository root: the Sightread Action
+reviews lockfile changes on pull requests and everything once a week. Neither
+replaces an existing file without --force.
+
+Flags:
+  --comment           ci: keep one pull request comment with the result;
+                      --comment=false turns it off (default true)
+  --fail-on <level>   ci: fail the job on findings at or above this level, or
+                      none (default high)
+  --force             replace an existing file
+  --sarif             ci: also upload findings to GitHub code scanning
+
+Examples:
+  rhythm sightread init
+  rhythm sightread init ci
+  rhythm sightread init ci --fail-on critical --sarif

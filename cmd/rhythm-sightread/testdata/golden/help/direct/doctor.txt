@@ -1,3 +1,16 @@
 Usage: rhythm-sightread doctor [--offline] [--json]
 
-check sources, cache, tokens and helpers
+Checks what a review needs: each source answers, the npm registry's signing keys
+load and match the set pinned in this build, the cache folder is writable,
+GITHUB_TOKEN is set (and how many GitHub requests are left), git is on PATH and,
+when the config has a soundcheck section, rhythm-soundcheck and rhythm-roadie
+are installed. --offline skips the network checks. Exit 1 when a check fails.
+
+Flags:
+  --json      print the kind doctor JSON document
+  --offline   skip the network checks (also RHYTHM_OFFLINE)
+  --plain     no symbols or colour (also when stdout is not a terminal)
+
+Examples:
+  rhythm-sightread doctor
+  rhythm-sightread doctor --offline --json

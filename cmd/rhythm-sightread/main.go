@@ -47,8 +47,6 @@ type stub struct {
 // The commands still to come.
 var (
 	watchStub  = stub{"watch", "-l <sites.yaml> --every <d> [flags]", "check sites on a schedule"}
-	initStub   = stub{"init", "[ci] [--force]", "write .sightread/config.yaml or a CI workflow"}
-	doctorStub = stub{"doctor", "[--offline] [--json]", "check sources, cache, tokens and helpers"}
 	demoStub   = stub{"demo", "[--keep]", "try it on built-in packages, no network"}
 )
 
@@ -81,7 +79,7 @@ func commands() []cli.Command {
 		out = append(out, c.command())
 	}
 	out = append(out, explainCommand.command(), allowCommand.command(), watchStub.command())
-	out = append(out, reportCommand.command(), verifyCommand.command(), initStub.command(), doctorStub.command(), demoStub.command(),
+	out = append(out, reportCommand.command(), verifyCommand.command(), initCommand.command(), doctorCommand.command(), demoStub.command(),
 		signalsCommand.command(), cacheCommand.command())
 	return append(out, updateCommand(), pickCommand())
 }
