@@ -545,14 +545,25 @@ func TestGitHubBudget403(t *testing.T) {
 
 func TestGoldenErrors(t *testing.T) {
 	t.Setenv("RHYTHM_INVOKED_AS", "rhythm sightread")
-	// E7: a closed port in the range.
-	l := listen(t)
-	closed := "https://" + l.Addr().String()
-	_ = l.Close()
-	c := client(t, core.GetterConfig{Retries: -1, Bases: map[string]string{core.BaseNPM: closed}})
-	var v any
-	err := c.JSON(context.Background(), closed+"/left-pad", &v, KindVersions)
+	// E7: a closed port in the range. The source packages' tests share
+	// the range and run in other processes at the same time, so one may
+	// bind the port between Close and the request; a few fresh ports
+	// make that race harmless.
 	want := "rhythm sightread: can't reach 127.0.0.1 (connection refused)\n  check the connection or HTTPS_PROXY"
+	var (
+		err error
+		c   *Client
+		v   any
+	)
+	for range 5 {
+		l := listen(t)
+		closed := "https://" + l.Addr().String()
+		_ = l.Close()
+		c = client(t, core.GetterConfig{Retries: -1, Bases: map[string]string{core.BaseNPM: closed}})
+		if err = c.JSON(context.Background(), closed+"/left-pad", &v, KindVersions); err != nil && err.Error() == want {
+			break
+		}
+	}
 	if err == nil || err.Error() != want {
 		t.Errorf("E7\n%v\nwant\n%s", err, want)
 	}
