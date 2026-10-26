@@ -359,7 +359,7 @@ func validateDocument(t *testing.T, doc []byte) {
 }
 
 // TestExplainFindingInLockfile: a finding in the project's lockfile says
-// it is outside the package, never that the archive is missing, and its
+// it is outside the package (never that the archive is missing); its
 // JSON is complete.
 func TestExplainFindingInLockfile(t *testing.T) {
 	withStandIns(t)

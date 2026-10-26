@@ -144,8 +144,8 @@ func (f *reviewFlags) short(fs *flag.FlagSet, letter, long string) {
 
 // versionFlags registers the Versions group. The flags that pick one
 // package's versions don't apply to all (--from) or changes (the
-// lockfiles give both versions): they are still parsed, so using one
-// is refused by name (offFlag) rather than ignored, but the help page
+// lockfiles give both versions). They are still parsed so that using
+// one is refused by name (offFlag) rather than ignored; the help page
 // leaves them out.
 func (f *reviewFlags) versionFlags(fs *flag.FlagSet) {
 	reg := f.add
