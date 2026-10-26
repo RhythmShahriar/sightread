@@ -1,0 +1,7 @@
+eco: npm
+note: one more minified file in a package that already shipped one
+old: {dist/a.min.js: "!function(){}();\n"}
+new: {dist/a.min.js: "!function(){}();\n", dist/b.min.js: "!function(){var b}();\n"}
+features_old: []
+features_new: []
+forbid: [size-jump]

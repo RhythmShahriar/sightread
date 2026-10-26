@@ -1,0 +1,9 @@
+eco: wp-plugin
+note: no changelog entry; a new scheduled task (medium)
+meta_old: {}
+meta_new: {}
+features_old: []
+features_new:
+- {kind: cron, key: acme_sync, path: inc/cron.php, line: 5}
+expect:
+- {id: changelog-mismatch, min_severity: medium, max_severity: medium}

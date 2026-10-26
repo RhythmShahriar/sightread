@@ -1,0 +1,6 @@
+eco: composer
+note: a new autoload file next to an existing one
+meta_old: {autoload_files: [src/functions.php]}
+meta_new: {autoload_files: [src/functions.php, src/bootstrap.php]}
+expect:
+- {id: composer-autoload-files, min_severity: medium}

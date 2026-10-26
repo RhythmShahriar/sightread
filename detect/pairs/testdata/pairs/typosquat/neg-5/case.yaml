@@ -1,0 +1,5 @@
+eco: npm
+note: a name nowhere near a popular one
+meta_old: {deps: {}}
+meta_new: {deps: {acme-internal-widgets: ^2.0.0}}
+forbid: [typosquat]

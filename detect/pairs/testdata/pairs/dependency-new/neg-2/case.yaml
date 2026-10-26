@@ -1,0 +1,5 @@
+eco: npm
+note: a version bump of an existing dependency
+meta_old: {deps: {lodash: ^4.17.20}}
+meta_new: {deps: {lodash: ^4.17.21}}
+forbid: [dependency-new]

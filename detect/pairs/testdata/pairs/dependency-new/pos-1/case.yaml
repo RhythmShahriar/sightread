@@ -1,0 +1,13 @@
+eco: npm
+note: 'axios 2026: a patch adds plain-crypto-js, published the day before, with an install script'
+meta_old: {ref: {name: axios, version: 1.12.0}, deps: {follow-redirects: ^1.15.6, form-data: ^4.0.4}}
+meta_new:
+  ref: {name: axios, version: 1.12.1}
+  published: '2026-10-26T09:00:00Z'
+  deps: {follow-redirects: ^1.15.6, form-data: ^4.0.4, plain-crypto-js: ^4.2.1}
+  dep_info:
+    plain-crypto-js: {name: plain-crypto-js, version: 4.2.1, published: '2026-10-25T08:00:00Z', has_install_script: true}
+expect:
+- {id: dependency-new, min_severity: high}
+- {id: typosquat, min_severity: high}
+- {id: fresh-release, min_severity: medium}

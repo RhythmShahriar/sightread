@@ -1,0 +1,4 @@
+eco: npm
+note: an added package's own dependencies are not new to anyone
+meta_new: {deps: {left-pad: ^1.3.0}}
+forbid: [dependency-new]

@@ -1,0 +1,8 @@
+eco: npm
+note: a new binding.gyp makes npm run node-gyp rebuild at install
+old: {index.js: "module.exports = 1;\n"}
+new: {index.js: "module.exports = 1;\n", binding.gyp: "{ 'targets': [ { 'target_name': 'x', 'actions': [] } ] }\n"}
+features_old: []
+features_new: []
+expect:
+- {id: npm-install-script-new, min_severity: high}

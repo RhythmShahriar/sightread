@@ -1,0 +1,10 @@
+eco: composer
+note: the same autoload file, its contents changed (the code signals cover it)
+lookalike: true
+old: {src/helpers.php: "<?php function a() {}\n"}
+new: {src/helpers.php: "<?php function a() { return 1; }\n"}
+features_old: []
+features_new: []
+meta_old: {autoload_files: [src/helpers.php]}
+meta_new: {autoload_files: [src/helpers.php]}
+forbid: [composer-autoload-files]

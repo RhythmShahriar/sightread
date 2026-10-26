@@ -1,0 +1,10 @@
+eco: composer
+note: history out of order; the newest before the candidate is two years back
+meta_new:
+  published: '2026-10-01T00:00:00Z'
+  history:
+  - {version: 1.2.0, published: '2024-09-15T00:00:00Z'}
+  - {version: 1.0.0, published: '2023-01-01T00:00:00Z'}
+  - {version: 1.1.0, published: '2023-11-01T00:00:00Z'}
+expect:
+- {id: dormant-release, min_severity: medium}

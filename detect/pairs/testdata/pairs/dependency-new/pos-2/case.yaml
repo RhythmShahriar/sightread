@@ -1,0 +1,9 @@
+eco: composer
+note: a Composer package adds a runtime dependency
+meta_old: {deps: {php: '>=8.1'}}
+meta_new:
+  deps: {php: '>=8.1', monolog/monolog: ^3.0}
+  dep_info:
+    monolog/monolog: {name: monolog/monolog, version: 3.7.0, published: '2024-06-28T00:00:00Z', downloads: 900000000, popular: true}
+expect:
+- {id: dependency-new, min_severity: medium, max_severity: medium}

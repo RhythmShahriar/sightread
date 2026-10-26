@@ -1,0 +1,6 @@
+eco: composer
+note: 'b16: the package becomes a composer-plugin with a post-install-cmd'
+meta_old: {type: library}
+meta_new: {type: composer-plugin, composer_scripts: {post-install-cmd: ['Acme\Setup\Installer::run']}}
+expect:
+- {id: composer-plugin-new, min_severity: high}

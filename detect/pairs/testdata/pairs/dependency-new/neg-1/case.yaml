@@ -1,0 +1,7 @@
+eco: npm
+note: devDependencies are info
+lookalike: true
+meta_old: {deps: {}}
+meta_new: {dev_deps: {vitest: ^2.0.0}}
+expect:
+- {id: dependency-new, max_severity: info}

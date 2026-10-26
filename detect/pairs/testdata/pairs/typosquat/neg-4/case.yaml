@@ -1,0 +1,5 @@
+eco: composer
+note: a package under the popular one's own vendor
+meta_old: {deps: {symfony/polyfill-php83: ^1.29}}
+meta_new: {deps: {symfony/polyfill-php83: ^1.29, symfony/polyfill-php84: ^1.31}}
+forbid: [typosquat]

@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: a removed readme that shows esc_html() in an example is not code
+old:
+  plugin.php: "<?php\n"
+  docs/README.md: "Call esc_html( $x ) before printing.\n"
+new:
+  plugin.php: "<?php\n"
+features_old: []
+features_new: []
+forbid: [files-removed]

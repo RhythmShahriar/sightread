@@ -1,0 +1,12 @@
+eco: composer
+note: a helpers file with only function definitions is low
+old: {src/Client.php: "<?php class Client {}\n"}
+new:
+  src/Client.php: "<?php class Client {}\n"
+  src/helpers.php: "<?php\nfunction acme_slug($s) { return strtolower(trim($s)); }\n"
+features_old: []
+features_new:
+- {kind: call, key: strtolower, path: src/helpers.php, line: 2}
+meta_new: {autoload_files: [src/helpers.php]}
+expect:
+- {id: composer-autoload-files, min_severity: low, max_severity: low}

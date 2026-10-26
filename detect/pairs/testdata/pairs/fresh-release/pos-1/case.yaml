@@ -1,0 +1,5 @@
+eco: npm
+note: published two hours before the review
+meta_new: {published: '2026-10-26T10:00:00Z'}
+expect:
+- {id: fresh-release, min_severity: medium}

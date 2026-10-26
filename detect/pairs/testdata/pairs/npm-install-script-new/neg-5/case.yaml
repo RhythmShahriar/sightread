@@ -1,0 +1,5 @@
+eco: npm
+note: the postinstall is only re-indented
+meta_old: {scripts: {postinstall: node   scripts/postinstall.js}}
+meta_new: {scripts: {postinstall: ' node scripts/postinstall.js '}}
+forbid: [npm-install-script-new]

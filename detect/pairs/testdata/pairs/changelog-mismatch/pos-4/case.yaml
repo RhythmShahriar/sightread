@@ -1,0 +1,9 @@
+eco: composer
+note: '"Minor fixes" while a post-install-cmd appears'
+meta_old: {}
+meta_new:
+  composer_scripts: {post-install-cmd: ['Acme\Setup::run']}
+  changelog:
+  - {version: 2.0.0, text: Minor fixes, generic: true}
+expect:
+- {id: changelog-mismatch, min_severity: high}

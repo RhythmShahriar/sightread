@@ -1,0 +1,5 @@
+eco: npm
+note: prepare runs the build script and the compiler the installed version already had
+meta_old: {scripts: {build: tsc -p .}, dev_deps: {typescript: ^5.4.0}}
+meta_new: {scripts: {build: tsc -p ., prepare: npm run build && tsc --noEmit}, dev_deps: {typescript: ^5.4.0}}
+forbid: [npm-install-script-new]

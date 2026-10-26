@@ -1,0 +1,8 @@
+eco: npm
+note: run found the new name popular itself (DepInfo.Popular)
+meta_old: {deps: {}}
+meta_new:
+  deps: {expresso: ^1.0.0}
+  dep_info:
+    expresso: {name: expresso, version: 1.0.0, popular: true}
+forbid: [typosquat]

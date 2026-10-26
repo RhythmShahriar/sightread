@@ -1,0 +1,9 @@
+eco: npm
+note: 400 days since the release before
+meta_new:
+  published: '2026-10-06T00:00:00Z'
+  history:
+  - {version: 0.9.0, published: '2025-03-01T00:00:00Z'}
+  - {version: 1.0.0, published: '2025-09-01T00:00:00Z'}
+expect:
+- {id: dormant-release, min_severity: medium}

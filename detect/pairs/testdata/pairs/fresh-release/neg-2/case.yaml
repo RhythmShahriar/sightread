@@ -1,0 +1,5 @@
+eco: npm
+note: min_age 24h and a release thirty hours old
+config: {min_age: 24h}
+meta_new: {published: '2026-10-25T06:00:00Z'}
+forbid: [fresh-release]

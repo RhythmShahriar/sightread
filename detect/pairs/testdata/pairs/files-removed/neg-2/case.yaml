@@ -1,0 +1,9 @@
+eco: wp-plugin
+note: the file with the checks is kept and changed
+old:
+  admin/save.php: "<?php check_admin_referer('a');\n"
+new:
+  admin/save.php: "<?php check_admin_referer('a'); // tidy\n"
+features_old: []
+features_new: []
+forbid: [files-removed]

@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a removed file that only talks about nonces in a comment
+lookalike: true
+old:
+  plugin.php: "<?php\n"
+  inc/notes.php: "<?php\n// The nonce check lives in admin.php.\nreturn 1;\n"
+new:
+  plugin.php: "<?php\n"
+features_old: []
+features_new: []
+forbid: [files-removed]

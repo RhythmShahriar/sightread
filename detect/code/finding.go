@@ -107,3 +107,13 @@ func newFeatures(s *core.Subject) []core.Feature {
 	}
 	return out
 }
+
+// FeatureDetectors returns the detectors that work on features alone:
+// execution, WordPress behaviour and network. detect/meta runs them on
+// the code an install script runs; it also tells how serious the
+// capabilities a changelog leaves out are. The rule detector is left
+// out: it reads tree files, not features, so it would only repeat the
+// main pass.
+func FeatureDetectors() []core.Detector {
+	return []core.Detector{execDetector{}, wpDetector{}, netDetector{}}
+}

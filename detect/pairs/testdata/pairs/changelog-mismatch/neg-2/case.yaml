@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: the changelog says telemetry
+meta_old: {}
+meta_new:
+  changelog:
+  - {version: 2.0.0, text: 'Adds opt-in telemetry', generic: true}
+features_old: []
+features_new:
+- {kind: send, key: wp_remote_post, path: inc/t.php, line: 9, attrs: {host: t.acme.test}}
+forbid: [changelog-mismatch]

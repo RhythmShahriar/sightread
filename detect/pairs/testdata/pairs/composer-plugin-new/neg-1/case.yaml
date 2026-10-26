@@ -1,0 +1,5 @@
+eco: composer
+note: new test and lint scripts only run when someone types composer test
+lookalike: true
+meta_new: {composer_scripts: {test: [phpunit], lint: ['php-cs-fixer fix --dry-run'], post-fix: []}}
+forbid: [composer-plugin-new]
