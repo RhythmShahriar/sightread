@@ -22,12 +22,15 @@ var (
 	// ErrInsecureScheme is a request or redirect hop that is not https,
 	// other than to a configured loopback mirror.
 	ErrInsecureScheme = errors.New("only https is allowed")
+	// ErrUnconfiguredMirror is a request or redirect hop to a loopback
+	// host:port that is not one of the configured mirrors.
+	ErrUnconfiguredMirror = errors.New("not a configured mirror")
 )
 
 // refusal is a refused hop: which host and why.
 type refusal struct {
 	host string
-	err  error // ErrOffAllowlist or ErrInsecureScheme
+	err  error // ErrOffAllowlist, ErrInsecureScheme or ErrUnconfiguredMirror
 }
 
 func (r *refusal) Error() string { return r.host + ": " + r.err.Error() }
@@ -139,6 +142,7 @@ const (
 	hintOffline   = "with --offline only cached data and archives are used; run once without it to fill the cache"
 	hintAllowlist = "Sightread fetches only from the official registries and the mirrors you configure (the SIGHTREAD_* variables)"
 	hintInsecure  = "plain http could let anyone in between swap the package; mirrors on 127.0.0.1 are the only exception"
+	hintMirror    = "Sightread reaches 127.0.0.1, ::1 or localhost only on the mirror ports you configure (the SIGHTREAD_* variables)"
 	hintRateLimit = "run again in a few minutes or lower --jobs"
 	hintTooLarge  = "raise --max-size if you expect that; a size jump this big is worth a look on its own"
 	hintGitHub    = "set GITHUB_TOKEN (sent only to api.github.com)"
@@ -155,6 +159,13 @@ func networkError(host, reason, hint string, err error) *core.Error {
 
 // refusedError is E7 for a refused hop.
 func refusedError(r *refusal) *core.Error {
+	if errors.Is(r.err, ErrUnconfiguredMirror) {
+		return &core.Error{
+			Code: core.ENetwork, Exit: cli.ExitUnavailable,
+			What: r.host + " is not a configured mirror",
+			Hint: []string{hintMirror}, Err: r,
+		}
+	}
 	if errors.Is(r.err, ErrInsecureScheme) {
 		return networkError(r.host, ErrInsecureScheme.Error(), hintInsecure, r)
 	}

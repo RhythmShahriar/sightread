@@ -86,16 +86,20 @@ func writeNew(path, display, body string, force bool) error {
 
 // initConfig writes .sightread/config.yaml in dir.
 func initConfig(ctx context.Context, dir string, force bool, stdout io.Writer) error {
-	ecos := detectEcosystems(ctx, dir)
+	ecos, found := detectEcosystems(ctx, dir)
 	path := filepath.Join(dir, ".sightread", "config.yaml")
-	if err := writeNew(path, shown(path), configYAML(ecos), force); err != nil {
+	if err := writeNew(path, shown(path), configYAML(ecos, found), force); err != nil {
 		return err
 	}
 	names := make([]string, len(ecos))
 	for i, e := range ecos {
 		names[i] = string(e)
 	}
-	fmt.Fprintf(stdout, "Wrote %s: reviews %s, fails on high or worse.\n\nNext steps:\n", shown(path), joinAnd(names))
+	reviews := "reviews " + joinAnd(names)
+	if !found {
+		reviews = "nothing was found here yet, so it reviews every ecosystem"
+	}
+	fmt.Fprintf(stdout, "Wrote %s: %s, fails on high or worse.\n\nNext steps:\n", shown(path), reviews)
 	fmt.Fprintln(stdout, "  1. Review the file, then commit it.")
 	fmt.Fprintf(stdout, "  2. Review what is installed here: %s all\n", cli.Name())
 	fmt.Fprintf(stdout, "  3. Review every pull request that moves a lockfile: %s init ci\n", cli.Name())
@@ -104,17 +108,18 @@ func initConfig(ctx context.Context, dir string, force bool, stdout io.Writer) e
 
 // detectEcosystems lists the ecosystems the folder holds, in report
 // order, or all of them when nothing is found (or no inventory is
-// linked), so a fresh project reviews whatever it adds later.
-func detectEcosystems(ctx context.Context, dir string) []core.Ecosystem {
+// linked), so a fresh project reviews whatever it adds later. found
+// says whether the list came from the folder.
+func detectEcosystems(ctx context.Context, dir string) (ecos []core.Ecosystem, found bool) {
 	inv := core.GetInventory()
 	if inv == nil {
-		return core.Ecosystems()
+		return core.Ecosystems(), false
 	}
 	ctx, cancel := context.WithTimeout(ctx, detectTimeout)
 	defer cancel()
 	site, err := inv.Read(ctx, core.InventoryRequest{Root: dir, MaxDepth: 6})
 	if err != nil || site == nil {
-		return core.Ecosystems()
+		return core.Ecosystems(), false
 	}
 	var out []core.Ecosystem
 	for _, eco := range core.Ecosystems() {
@@ -123,16 +128,21 @@ func detectEcosystems(ctx context.Context, dir string) []core.Ecosystem {
 		}
 	}
 	if len(out) == 0 {
-		return core.Ecosystems()
+		return core.Ecosystems(), false
 	}
-	return out
+	return out, true
 }
 
-// configYAML is the commented config init writes.
-func configYAML(ecos []core.Ecosystem) string {
+// configYAML is the commented config init writes. found says whether
+// ecos came from the folder or is every ecosystem for lack of any.
+func configYAML(ecos []core.Ecosystem, found bool) string {
 	names := make([]string, len(ecos))
 	for i, e := range ecos {
 		names[i] = string(e)
+	}
+	ecoNote := "These were found when this file was written."
+	if !found {
+		ecoNote = "Nothing was found here yet, so every ecosystem is listed."
 	}
 	return `# Sightread settings for this project. Commit this file.
 # Every key is optional and flags on the command line win.
@@ -148,7 +158,7 @@ min_confidence: likely
 # A release younger than this gets the fresh-release signal.
 min_age: 72h
 
-# What "all" reviews here. These were found when this file was written.
+# What "all" reviews here. ` + ecoNote + `
 ecosystems: [` + strings.Join(names, ", ") + `]
 
 # Also review packages you don't require directly.

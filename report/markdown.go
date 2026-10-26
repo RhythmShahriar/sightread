@@ -517,6 +517,8 @@ func publisherLine(u *core.Update) string {
 	switch {
 	case to == "" && from == "":
 		return "Publisher: not known."
+	case u.From.Version != "" && from == "":
+		return "Publisher: " + md(to) + " (no publisher known for " + mdInline(u.From.Version) + ")."
 	case u.From.Version != "" && from != to:
 		return "Publisher changed: " + md(orNone(from)) + " → " + md(orNone(to)) + "."
 	}

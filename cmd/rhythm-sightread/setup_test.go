@@ -101,8 +101,15 @@ func TestInitConfig(t *testing.T) {
 	}
 	// Nothing found: every ecosystem.
 	w.Inventory.Site.Installed = nil
-	if got := configYAML(detectEcosystems(context.Background(), dir)); !strings.Contains(got, "ecosystems: [wp-plugin, wp-theme, composer, npm]\n") {
-		t.Errorf("empty folder config:\n%s", got)
+	ecos, found := detectEcosystems(context.Background(), dir)
+	if got := configYAML(ecos, found); found || !strings.Contains(got, "ecosystems: [wp-plugin, wp-theme, composer, npm]\n") ||
+		!strings.Contains(got, "# What \"all\" reviews here. Nothing was found here yet, so every ecosystem is listed.\n") ||
+		strings.Contains(got, "These were found") {
+		t.Errorf("empty folder config (found %v):\n%s", found, got)
+	}
+	if code, out, errOut := execute(t, "init", "--force"); code != cli.ExitOK ||
+		!strings.HasPrefix(out, "Wrote .sightread/config.yaml: nothing was found here yet, so it reviews every ecosystem, fails on high or worse.\n") {
+		t.Errorf("empty folder: exit %d %q %q", code, out, errOut)
 	}
 	back()
 	coretest.Golden(t, "init/config.yaml", b)

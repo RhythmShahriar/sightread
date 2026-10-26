@@ -155,7 +155,7 @@ func verifyTree(tree *core.Tree, want sums) core.Integrity {
 	switch {
 	case len(bad) > 0:
 		return core.Integrity{By: core.ByFailed, Method: MethodChecksumsFailed, Mismatch: bad,
-			Detail: fmt.Sprintf("%d %s differ from WordPress.org's checksums", len(bad), plural(len(bad), "file", "files"))}
+			Detail: fmt.Sprintf("%d %s from WordPress.org's checksums", len(bad), plural(len(bad), "file differs", "files differ"))}
 	case cut:
 		// The checksums were there: the archive's limit is why nothing
 		// is verified. The Integrity fact must say so.

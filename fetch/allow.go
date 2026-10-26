@@ -160,7 +160,8 @@ func configError(what, hint string) *core.Error {
 // check refuses a hop that is off the allowlist or not https.
 func (a *allowlist) check(u *url.URL) error {
 	addr := canonical(u)
-	switch strings.ToLower(u.Scheme) {
+	scheme := strings.ToLower(u.Scheme)
+	switch scheme {
 	case "https":
 		if a.https[addr] {
 			return nil
@@ -169,11 +170,18 @@ func (a *allowlist) check(u *url.URL) error {
 		if a.http[addr] {
 			return nil
 		}
-		return &refusal{host: u.Hostname(), err: ErrInsecureScheme}
-	default:
-		return &refusal{host: u.Hostname(), err: ErrInsecureScheme}
 	}
-	return &refusal{host: u.Hostname(), err: ErrOffAllowlist}
+	switch {
+	case (scheme == "http" || scheme == "https") && loopbackHost(u.Hostname()):
+		// A loopback port that isn't one of the mirrors: the scheme is
+		// not why it was refused, so the message must not say so.
+		return &refusal{host: addr, err: ErrUnconfiguredMirror}
+	case scheme == "http":
+		return &refusal{host: u.Hostname(), err: ErrInsecureScheme}
+	case scheme == "https":
+		return &refusal{host: u.Hostname(), err: ErrOffAllowlist}
+	}
+	return &refusal{host: u.Hostname(), err: ErrInsecureScheme}
 }
 
 // tlsConfig is TLS 1.2 or newer with Go's verification. roots nil means

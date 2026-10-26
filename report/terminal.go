@@ -413,8 +413,15 @@ func (t *termView) publisherFact(u *core.Update) string {
 	switch {
 	case from == "" && to == "":
 		return "not known"
+	case u.From.Version != "" && from == "":
+		// The installed copy was never looked up: that is not a change.
+		return to + " (no publisher known for " + tt(u.From.Version) + ")"
 	case u.From.Version != "" && from != to:
-		return "changed: " + orNone(from) + " → " + orNone(to)
+		arrow := " → "
+		if t.o.Plain {
+			arrow = " to "
+		}
+		return "changed: " + orNone(from) + arrow + orNone(to)
 	case u.From.Version != "":
 		return "unchanged (" + to + ")"
 	}

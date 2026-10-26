@@ -424,6 +424,8 @@ func publisherText(u *core.Update) (string, bool) {
 	switch {
 	case to == "" && from == "":
 		return "not known", false
+	case u.From.Version != "" && from == "":
+		return to + " (no publisher known for " + text(u.From.Version) + ")", false
 	case u.From.Version != "" && from != to:
 		return orNone(from) + " → " + orNone(to), true
 	}

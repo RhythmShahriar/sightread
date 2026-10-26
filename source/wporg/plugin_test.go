@@ -595,3 +595,12 @@ func TestPluginOlderVersionOwners(t *testing.T) {
 		t.Errorf("readme contributors %q", old.Contributors)
 	}
 }
+
+// TestVerifyTreeOneFileDiffers: the Detail's verb agrees with one file.
+func TestVerifyTreeOneFileDiffers(t *testing.T) {
+	tree := &core.Tree{Files: []core.File{{Path: "a.php", Mode: 0o644}}}
+	in := verifyTree(tree, sums{"a.php": {strings.Repeat("f", 64)}})
+	if in.By != core.ByFailed || in.Detail != "1 file differs from WordPress.org's checksums" {
+		t.Errorf("integrity %+v", in)
+	}
+}

@@ -733,3 +733,39 @@ func TestDemoNextSteps(t *testing.T) {
 		t.Error("the demo's Markdown or HTML offers an allow command")
 	}
 }
+
+// TestPublisherFact: a change uses "to" in plain mode. An installed
+// side with no publisher data is not reported as a change.
+func TestPublisherFact(t *testing.T) {
+	for _, tc := range []struct {
+		from, to []string
+		plain    bool
+		want     string
+	}{
+		{[]string{"wponlinesupport"}, []string{"essentialplugin"}, true, "Publisher: changed: wponlinesupport to essentialplugin\n"},
+		{[]string{"wponlinesupport"}, []string{"essentialplugin"}, false, "Publisher     changed: wponlinesupport → essentialplugin\n"},
+		{nil, []string{"vendor"}, true, "Publisher: vendor (no publisher known for 2.6.7)\n"},
+		{nil, []string{"vendor"}, false, "Publisher     vendor (no publisher known for 2.6.7)\n"},
+	} {
+		r := oneUpdate()
+		u := &r.Updates[0]
+		u.From.Publisher, u.To.Publisher = tc.from, tc.to
+		o := termOpts(120)
+		o.Plain = tc.plain
+		out := writeTerm(t, r, o)
+		if !strings.Contains(out, tc.want) {
+			t.Errorf("plain %v: missing %q in\n%s", tc.plain, tc.want, out)
+		}
+		if strings.Contains(out, "changed: none") {
+			t.Errorf("plain %v: reports a change from none:\n%s", tc.plain, out)
+		}
+	}
+	u := &oneUpdate().Updates[0]
+	u.From.Publisher, u.To.Publisher = nil, []string{"vendor"}
+	if got := publisherLine(u); got != "Publisher: vendor (no publisher known for 2.6.7)." {
+		t.Errorf("markdown: %q", got)
+	}
+	if got, changed := publisherText(u); got != "vendor (no publisher known for 2.6.7)" || changed {
+		t.Errorf("html: %q %v", got, changed)
+	}
+}

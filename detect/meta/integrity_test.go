@@ -237,3 +237,16 @@ func TestSafeURLWithoutHost(t *testing.T) {
 		}
 	}
 }
+
+// TestMismatchCountsOnce: the WordPress text counts the files, so the
+// checksums Detail that counts them again is left out.
+func TestMismatchCountsOnce(t *testing.T) {
+	s := subject(core.WPPlugin)
+	s.NewIntegrity = core.Integrity{By: core.ByFailed, Mismatch: []string{"b17-tamper.php"},
+		Detail: "1 file differs from WordPress.org's checksums"}
+	f := only(t, run(t, integrityDetector{}, s), SigIntegrityMismatch)
+	want := "Archive does not match wordpress.org checksums: 1 file differs (b17-tamper.php)"
+	if f.Evidence.String() != want {
+		t.Errorf("evidence = %q, want %q", f.Evidence, want)
+	}
+}

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 
@@ -232,8 +233,8 @@ func TestRedirectRefusals(t *testing.T) {
 		{"plain http", "http://downloads.wordpress.org/plugin/x.zip", ErrInsecureScheme, "only https is allowed"},
 		{"metadata service", "https://169.254.169.254/latest/meta-data/", ErrOffAllowlist, "not an allowed registry host"},
 		{"metadata over http", "http://169.254.169.254/latest/meta-data/", ErrInsecureScheme, "only https is allowed"},
-		{"unconfigured loopback port", unlisted.URL + "/x", ErrOffAllowlist, "not an allowed registry host"},
-		{"unconfigured loopback http", unlistedHTTP.URL + "/x", ErrInsecureScheme, "only https is allowed"},
+		{"unconfigured loopback port", unlisted.URL + "/x", ErrUnconfiguredMirror, strings.TrimPrefix(unlisted.URL, "https://") + " is not a configured mirror"},
+		{"unconfigured loopback http", unlistedHTTP.URL + "/x", ErrUnconfiguredMirror, strings.TrimPrefix(unlistedHTTP.URL, "http://") + " is not a configured mirror"},
 		{"other scheme", "ftp://downloads.wordpress.org/x", ErrInsecureScheme, "only https is allowed"},
 	}
 	for _, tc := range cases {
@@ -249,6 +250,11 @@ func TestRedirectRefusals(t *testing.T) {
 			}
 			if core.CodeOf(err) != core.ENetwork || !strings.Contains(err.Error(), tc.reason) {
 				t.Errorf("err %q, want E7 saying %q", err, tc.reason)
+			}
+			var ce *core.Error
+			if errors.As(err, &ce) && errors.Is(tc.want, ErrUnconfiguredMirror) &&
+				(strings.Contains(ce.What, "https") || len(ce.Hint) != 1 || ce.Hint[0] != hintMirror) {
+				t.Errorf("an unconfigured mirror port gives a scheme reason: %q %q", ce.What, ce.Hint)
 			}
 			_, err = c.Download(context.Background(), srv.URL+"/pkg.tgz", 1<<20, coretest.MemBlobs())
 			if !errors.Is(err, tc.want) {
@@ -852,5 +858,20 @@ func TestUnknownKind(t *testing.T) {
 	}
 	if _, ok := TTL(KindChecksums); !ok {
 		t.Error("checksums has no TTL")
+	}
+}
+
+// TestNetworkReason: a network failure gets PRD 10's short cause and
+// any other error is left to its own text.
+func TestNetworkReason(t *testing.T) {
+	refused := &url.Error{Op: "Post", URL: "http://127.0.0.1:1", Err: fmt.Errorf("dial tcp: %w", syscall.ECONNREFUSED)}
+	if why, ok := NetworkReason(refused); !ok || why != "connection refused" {
+		t.Errorf("refused: %q %v", why, ok)
+	}
+	if why, ok := NetworkReason(errors.New("receiver answered 500 Internal Server Error")); ok || why != "" {
+		t.Errorf("an answer is not a network failure: %q %v", why, ok)
+	}
+	if _, ok := NetworkReason(nil); ok {
+		t.Error("nil is a network failure")
 	}
 }

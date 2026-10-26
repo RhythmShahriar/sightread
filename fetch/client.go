@@ -488,6 +488,24 @@ func reason(err error) string {
 	return "network error"
 }
 
+// NetworkReason is the short cause PRD 10 prints for err ("connection
+// refused", "timed out") when err is a network failure. It is false for
+// any other error, whose own text is already meant for people.
+func NetworkReason(err error) (string, bool) {
+	if err == nil {
+		return "", false
+	}
+	if r := reason(err); r != "network error" {
+		return r, true
+	}
+	var ne net.Error
+	var op *net.OpError
+	if errors.As(err, &ne) || errors.As(err, &op) {
+		return "network error", true
+	}
+	return "", false
+}
+
 func isTimeout(err error) bool {
 	var ne net.Error
 	return errors.As(err, &ne) && ne.Timeout()

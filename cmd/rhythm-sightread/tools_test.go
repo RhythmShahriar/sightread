@@ -470,3 +470,25 @@ func TestOlderText(t *testing.T) {
 		}
 	}
 }
+
+// TestAllowListSanitises: an imported entry's fields reach the terminal
+// escaped, never as raw control bytes (SR-10).
+func TestAllowListSanitises(t *testing.T) {
+	w := world(t)
+	p := installAllow(t, w)
+	esc := string(rune(0x1b))
+	p.Allow = append(p.Allow, core.AllowEntry{Package: "npm:sh" + esc + "]0;x", Version: "1.0.0", SHA256: strings.Repeat("a", 64),
+		By: "eve" + esc + "[2J", Date: "2026-10-01", Reason: "x" + esc + "[31mred\tcol\nrow"})
+	code, out, errOut := execute(t, "allow", "list")
+	if code != cli.ExitOK || strings.Contains(out, esc) {
+		t.Fatalf("exit %d %q %q", code, out, errOut)
+	}
+	if strings.Count(out, "\n") != 2 {
+		t.Errorf("a field broke a row:\n%s", out)
+	}
+	for _, want := range []string{`x\x1b[31mred\tcol\nrow`, `eve\x1b[2J`, `npm:sh\x1b]0;x@1.0.0`} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in\n%s", want, out)
+		}
+	}
+}

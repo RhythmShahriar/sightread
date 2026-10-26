@@ -938,3 +938,33 @@ func TestDurationText(t *testing.T) {
 		t.Errorf("validate: %v", err)
 	}
 }
+
+// TestSendFailureSummarised: a receiver that can't be reached is one
+// short cause on the run's line (PRD 10); the raw Go error goes to -v.
+func TestSendFailureSummarised(t *testing.T) {
+	l := listen(t)
+	addr := l.Addr().String()
+	_ = l.Close()
+	n, err := notify.Parse("webhook+http://"+addr+"/hook", notify.Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	wd := fake(t)
+	var verbose strings.Builder
+	wd.w.Verbose = &verbose
+	wd.w.Notifiers = []notify.Notifier{n}
+	r, err := wd.w.RunOnce(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "webhook+http://" + addr + ": connection refused"
+	if len(r.SendErrors) != 1 || r.SendErrors[0] != want {
+		t.Fatalf("send errors %q, want %q", r.SendErrors, want)
+	}
+	if !strings.Contains(r.Lines(), "\n  couldn't notify "+want) || strings.Contains(r.Lines(), "dial tcp") {
+		t.Errorf("lines %q", r.Lines())
+	}
+	if !strings.Contains(verbose.String(), "couldn't notify webhook+http://"+addr+": ") || !strings.Contains(verbose.String(), "connect: connection refused") {
+		t.Errorf("-v holds no raw error: %q", verbose.String())
+	}
+}

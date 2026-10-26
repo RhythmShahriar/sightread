@@ -27,8 +27,10 @@ func demoPort(t *testing.T) {
 	t.Cleanup(func() { demoAddr = old })
 }
 
-// endLines are the two lines PRD 6.9 ends the demo with.
-const endLines = "\n→ on your site: rhythm-sightread all /path/to/wordpress\n→ in CI: rhythm-sightread init ci\n"
+// endLines are the two lines PRD 6.9 ends the demo with, as plain
+// output prints them: next: lines, no glyph (tests never write to a
+// terminal).
+const endLines = "\nnext: on your site: rhythm-sightread all /path/to/wordpress\nnext: in CI: rhythm-sightread init ci\n"
 
 // TestDemoFlow runs the demo against the fakes: exit 0, the report and
 // the end lines, no file left behind without --keep and the archives
@@ -47,7 +49,7 @@ func TestDemoFlow(t *testing.T) {
 	t.Setenv("TMPDIR", tmp)
 	t.Setenv("SIGHTREAD_NPM_EXTRA_KEYS", "")
 	code, out, errOut := execute(t, "demo")
-	if code != cli.ExitOK || out != "fake terminal: 3 updates\n"+endLines || errOut != "" {
+	if code != cli.ExitOK || out != "fake terminal: 3 updates"+endLines || errOut != "" {
 		t.Fatalf("exit %d stdout %q stderr %q", code, out, errOut)
 	}
 	if entries, _ := os.ReadDir(tmp); len(entries) != 0 {
@@ -111,6 +113,11 @@ func TestDemoIntegrated(t *testing.T) {
 	}
 	if code != cli.ExitOK || !strings.HasSuffix(out, endLines) {
 		t.Fatalf("exit %d\n%s\n%s", code, out, errOut)
+	}
+	// Plain output: the closing lines follow the report's next: lines
+	// directly and no line holds an arrow.
+	if !strings.Contains(out, "rhythm-sightread explain remote-fetch-exec"+endLines) || strings.Contains(out, "→") {
+		t.Errorf("plain closing lines:\n%s", out)
 	}
 	// The update table lists the worst first: one row per package.
 	got := map[string]string{}

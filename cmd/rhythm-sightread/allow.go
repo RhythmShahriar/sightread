@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
+	"github.com/RhythmShahriar/rhythm/kit/term"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/internal/proc"
 	"github.com/RhythmShahriar/sightread/run"
@@ -264,8 +265,10 @@ func (f *allowFlags) list(policy core.Policy, cfg *core.Config, cfgPath, path st
 	tw := tabwriter.NewWriter(stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, "PACKAGE\tSHA256\tSIGNALS\tBY\tDATE\tUNTIL\tREASON")
 	for _, e := range entries {
-		fmt.Fprintf(tw, "%s@%s\t%s\t%s\t%s\t%s\t%s\t%s\n", e.Package, e.Version, short(e.SHA256),
-			cmp.Or(strings.Join(e.Signals, ","), "all"), e.By, e.Date, cmp.Or(e.Until, "-"), e.Reason)
+		// allowed.yaml may come from another repository (allow import,
+		// allow_from): every field is terminal text from outside (SR-10).
+		fmt.Fprintf(tw, "%s@%s\t%s\t%s\t%s\t%s\t%s\t%s\n", cell(e.Package), cell(e.Version), cell(short(e.SHA256)),
+			cell(cmp.Or(strings.Join(e.Signals, ","), "all")), cell(e.By), cell(e.Date), cell(cmp.Or(e.Until, "-")), cell(e.Reason))
 	}
 	return tw.Flush()
 }
@@ -299,6 +302,13 @@ func reviewer(ctx context.Context) string {
 }
 
 // short is the first 12 hex of a sha256, as reports show it.
+// cellEscapes shows the tab and newline term.Sanitize keeps, so a field
+// can't break the table's columns or rows.
+var cellEscapes = strings.NewReplacer("\t", `\t`, "\n", `\n`)
+
+// cell is a table field made safe for the terminal.
+func cell(s string) string { return cellEscapes.Replace(term.Sanitize(s)) }
+
 func short(sum string) string {
 	if len(sum) > 12 {
 		return sum[:12]

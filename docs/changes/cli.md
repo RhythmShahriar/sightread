@@ -349,7 +349,9 @@ reviews them with the normal terminal report: `comment-guard` 4.1.2 → 4.1.3 (R
 `share-kit` 3.2.0 → 3.2.1 (new committer, unserialize of a remote body, open REST route,
 blockchain RPC host: HOLD) and npm `date-utils-lite` 1.4.0 → 1.4.1 (new postinstall that would
 fetch and eval code plus the look-alike dependency `axois`: HOLD). It ends with `→ on your site:
-rhythm sightread all /path/to/wordpress` and `→ in CI: rhythm sightread init ci`. `--keep` keeps
+rhythm sightread all /path/to/wordpress` and `→ in CI: rhythm sightread init ci` (with `--plain` or
+when stdout is not a terminal, `next: on your site: ...` and `next: in CI: ...` right after the report's
+own `next:` lines). `--keep` keeps
 the temp folder and prints `kept the demo archives, cache and site in <dir>`. `-o` writes the
 report as a review does (.json, .md, .html or .sarif) and `--open` opens the HTML one. Its next
 steps are `→ every finding and the full diff: rhythm sightread demo -o review.html --open` and
@@ -370,7 +372,8 @@ report it`.
   or 1, adds `; incomplete: 2 not checked, 1 unverified, 1 error (see <dir>/<stamp>.log)` (or
   `the run hit its --deadline`, `the review exited 3`). Without a report: `<stamp>: the review
   exited 3 without a report; see <dir>/<stamp>.log`. Problems follow indented: `  couldn't notify <scheme://host>:
-  <error>`.
+  <error>`. A network failure is its short cause (`connection refused`, `timed out`); the raw error
+  is printed with `-v`.
 - Loop mode: `Watching the sites in <file>, every 24h; reports go to <dir>` (or `daily at 02:00,
   14:00`), `Next run 2026-10-27 02:00 AEST`, `Stopped.`. First Ctrl-C: `<prog>: stopping once
   the current review finishes; press Ctrl-C again to stop it now`. A held lock: `<stamp>:

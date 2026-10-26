@@ -20,6 +20,7 @@ import (
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/fetch"
 	"github.com/RhythmShahriar/sightread/internal/proc"
 	"github.com/RhythmShahriar/sightread/notify"
 	"github.com/RhythmShahriar/sightread/run"
@@ -480,7 +481,16 @@ func (w *Watcher) send(ctx context.Context, report, partial string, items []noti
 		cancel()
 		if err != nil {
 			ok = false
-			r.SendErrors = append(r.SendErrors, secrets.Redact(nt.String()+": "+err.Error()))
+			// PRD 10: a network failure is summarised; the raw error is
+			// for -v.
+			msg := err.Error()
+			if why, network := fetch.NetworkReason(err); network {
+				msg = why
+				if w.Verbose != nil {
+					fmt.Fprintln(w.Verbose, secrets.Redact("couldn't notify "+nt.String()+": "+err.Error()))
+				}
+			}
+			r.SendErrors = append(r.SendErrors, secrets.Redact(nt.String()+": "+msg))
 			continue
 		}
 		if w.Verbose != nil {

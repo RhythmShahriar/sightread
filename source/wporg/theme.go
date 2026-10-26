@@ -173,7 +173,7 @@ func (s *site) svnCheck(ctx context.Context, slug, v string, tree *core.Tree) (c
 	switch {
 	case len(bad) > 0:
 		return core.Integrity{By: core.ByFailed, Method: MethodSVNFailed, Mismatch: bad,
-			Detail: fmt.Sprintf("%d %s differ from themes.svn.wordpress.org", len(bad), plural(len(bad), "file", "files"))}, nil
+			Detail: fmt.Sprintf("%d %s from themes.svn.wordpress.org", len(bad), plural(len(bad), "file differs", "files differ"))}, nil
 	case cut:
 		return core.Integrity{By: core.ByTLS, Method: MethodTLS,
 			Detail: "--svn-check could not finish: the archive hit a limit, so not every file could be checked"}, nil

@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"flag"
@@ -146,10 +147,21 @@ func runDemo(ctx context.Context, d demoRun, o core.WriteOptions, stdout, stderr
 			return fmt.Errorf("-o %s: %w", f.path, err)
 		}
 	}
-	if err := w.Write(stdout, rep, o); err != nil {
-		return err
+	if !o.Plain {
+		if err := w.Write(stdout, rep, o); err != nil {
+			return err
+		}
+		fmt.Fprintf(stdout, "\n→ on your site: %s all /path/to/wordpress\n→ in CI: %s init ci\n", cli.Name(), cli.Name())
+	} else {
+		// Plain output has no glyphs: the two lines join the report's
+		// own "next:" lines, with no blank line between.
+		var buf bytes.Buffer
+		if err := w.Write(&buf, rep, o); err != nil {
+			return err
+		}
+		fmt.Fprintf(stdout, "%s\nnext: on your site: %s all /path/to/wordpress\nnext: in CI: %s init ci\n",
+			strings.TrimRight(buf.String(), "\n"), cli.Name(), cli.Name())
 	}
-	fmt.Fprintf(stdout, "\n→ on your site: %s all /path/to/wordpress\n→ in CI: %s init ci\n", cli.Name(), cli.Name())
 	if keep {
 		if err := keepArchives(srv, filepath.Join(dir, "archives")); err != nil {
 			return err

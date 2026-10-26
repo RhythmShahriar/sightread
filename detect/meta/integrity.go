@@ -100,7 +100,9 @@ func mismatchFinding(s *core.Subject, in core.Integrity, m *core.Meta, old bool)
 	default:
 		fmt.Fprintf(&b, "Archive does not match the hash %s publishes", src)
 	}
-	if in.Detail != "" {
+	if in.Detail != "" && (!wp || len(in.Mismatch) == 0) {
+		// The WordPress text above already counts the files, which is
+		// all the checksums Detail says.
 		b.WriteString("; " + in.Detail)
 	}
 	f := newFinding(SigIntegrityMismatch, b.String())
