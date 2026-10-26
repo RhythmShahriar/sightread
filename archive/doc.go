@@ -6,5 +6,9 @@
 // links and collisions, counts limits on bytes actually read and
 // registers the local archive reader with core.SetLocalArchive.
 //
-// The skeleton created this package empty; the fetch lane builds it.
+// What is wrong with an entry is recorded in Tree.Issues, never fatal:
+// a refused name, a link, a collision, an encrypted or malformed entry,
+// a limit hit. Only an archive that unpacks past the uncompressed cap
+// fails, with E11. Files whose Mode is not regular (links, devices,
+// pipes) carry their Link text and have no blob.
 package archive
