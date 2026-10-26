@@ -2,6 +2,8 @@
 # Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
 # SPDX-License-Identifier: MIT
 
+# Derived from soundcheck/scripts/comment-test.sh
+
 # Tests comment.sh offline: the body built from fixture Markdown (marker,
 # report, links, the size limit) and posting through a fake gh that
 # records each call. CI runs it; so can you: scripts/comment-test.sh

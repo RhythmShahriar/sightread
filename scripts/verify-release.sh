@@ -2,6 +2,8 @@
 # Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
 # SPDX-License-Identifier: MIT
 
+# Derived from soundcheck/scripts/verify-release.sh
+
 # Checks a downloaded Sightread release before anything runs it.
 #
 #   verify-release.sh ARCHIVE

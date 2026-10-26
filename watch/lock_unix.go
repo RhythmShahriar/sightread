@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
 // SPDX-License-Identifier: MIT
 
+// Derived from tuner/watch/lock_unix.go
+
 //go:build unix
 
 package watch

@@ -2,6 +2,8 @@
 # Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
 # SPDX-License-Identifier: MIT
 
+# Derived from soundcheck/scripts/verify-release-test.sh
+
 # Tests verify-release.sh offline with a fake cosign that records its
 # arguments and passes only when checksums.txt is unchanged. CI runs it;
 # so can you: scripts/verify-release-test.sh

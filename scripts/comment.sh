@@ -2,6 +2,8 @@
 # Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
 # SPDX-License-Identifier: MIT
 
+# Derived from soundcheck/scripts/comment.sh
+
 # Posts Sightread's review as one pull request comment for the GitHub
 # Action (comment: true). Later runs update that comment instead of
 # adding another.

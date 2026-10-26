@@ -2,6 +2,8 @@
 # Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
 # SPDX-License-Identifier: MIT
 
+# Derived from soundcheck/scripts/action-install.sh
+
 # Installs Sightread for the GitHub Action (action.yml).
 #
 #   action-install.sh check     picks the version and says whether it's installed
