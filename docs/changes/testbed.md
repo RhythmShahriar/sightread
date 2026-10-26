@@ -233,10 +233,9 @@ keeps the copies equal). Jobs:
 - `tampered-release` (SR-17, SR-81): a `checksums.txt` that no longer
   matches the archive (with `verify-signature: false`) and a signature
   bundle that signs nothing (signature on) must both fail the step with
-  no `exit-code` and no `rhythm-sightread` on PATH. From the first
-  release on, the latest signed release with its archive and
-  `checksums.txt` line swapped for this commit's build is refused too;
-  the untouched release installs from the same kind of mirror.
+  no `exit-code` and no `rhythm-sightread` on PATH. Every job here
+  stays on 127.0.0.1; the case with a real signed release runs in the
+  nightly `signed-release` job.
 - `comment-read-only` (pull requests only, `contents: read` alone):
   `comment: true` with `fail-on: none` passes with `exit-code` 0 and no
   `comment-id`. The job then runs the Action's `scripts/comment.sh post`
@@ -262,6 +261,13 @@ Daily at 02:41 UTC and on demand, read-only token:
   ./testbed/bench -only e13 -plain-http -tools none -rounds 0
   -large=false`, then fails unless e13's result is `pass`; the page and
   results are uploaded as the artifact `benchmark-windows`.
+- `signed-release` (SR-17, SR-81): from the first release on, the
+  latest signed release is downloaded from GitHub, served on 127.0.0.1
+  with its archive and `checksums.txt` line swapped for this commit's
+  build and must be refused; the untouched release then installs from
+  the same kind of mirror. It is the only CI step that reaches a real
+  service (the GitHub release API), which is why it is not on every
+  push.
 
 ## Link check and headless HTML check
 

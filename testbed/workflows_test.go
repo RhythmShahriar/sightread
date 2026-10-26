@@ -106,10 +106,15 @@ func TestPinnedPattern(t *testing.T) {
 var outputRef = regexp.MustCompile(`steps\.([\w-]+)\.outputs\.([\w-]+)`)
 
 // TestActionTestUsesPRDInputs checks the Action steps of action-test.yml
-// against PRD 16: only its inputs, only its outputs read back, the four
-// jobs of the lane spec.
+// and nightly.yml against PRD 16: only its inputs, only its outputs read
+// back, the four jobs of the lane spec.
 func TestActionTestUsesPRDInputs(t *testing.T) {
 	w, raw := readWorkflow(t, "action-test.yml")
+	nightly, nightlyRaw := readWorkflow(t, "nightly.yml")
+	for name, j := range nightly.Jobs {
+		w.Jobs["nightly/"+name] = j
+	}
+	raw = append(append(raw, '\n'), nightlyRaw...)
 	for _, job := range []string{"changes", "pr-allow", "tampered-release", "comment-read-only"} {
 		if _, ok := w.Jobs[job]; !ok {
 			t.Errorf("action-test.yml has no job %s", job)
@@ -142,6 +147,28 @@ func TestActionTestUsesPRDInputs(t *testing.T) {
 	for _, out := range []string{"exit-code", "verdict", "findings", "report", "sarif-file", "summary", "comment-id"} {
 		if !bytes.Contains(raw, []byte("outputs."+out+" }}")) {
 			t.Errorf("action-test.yml never checks the %s output", out)
+		}
+	}
+}
+
+// TestActionTestStaysOffline keeps every push and pull request run on
+// 127.0.0.1: the one case that downloads a real signed release from
+// GitHub runs in the nightly signed-release job.
+func TestActionTestStaysOffline(t *testing.T) {
+	_, raw := readWorkflow(t, "action-test.yml")
+	for _, real := range []string{"gh release", "gh api", "api.github.com", "github.com/RhythmShahriar", "--repo "} {
+		if bytes.Contains(raw, []byte(real)) {
+			t.Errorf("action-test.yml contacts a real service (%q); move the step to nightly.yml", real)
+		}
+	}
+	w, nraw := readWorkflow(t, "nightly.yml")
+	if _, ok := w.Jobs["signed-release"]; !ok {
+		t.Fatal("nightly.yml has no signed-release job")
+	}
+	job := nraw[bytes.Index(nraw, []byte("  signed-release:")):]
+	for _, want := range []string{"gh release download", "release.sh swap", "steps.swapped.outcome", "rhythm-sightread --version"} {
+		if !bytes.Contains(job, []byte(want)) {
+			t.Errorf("signed-release lacks %q", want)
 		}
 	}
 }

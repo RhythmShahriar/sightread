@@ -7,7 +7,8 @@
 # release whose checksums.txt was changed (SR-17, SR-81) and a token that
 # can't comment. The release under test is this commit, built and served
 # from 127.0.0.1 through the download-url input. Everything is pinned by
-# commit.
+# commit. No job here reaches a real service: the case that downloads the
+# latest signed release from GitHub runs in nightly.yml (signed-release).
 name: action-test
 on:
   push:
@@ -248,67 +249,6 @@ jobs:
           test -z "$SUM_CODE"
           test -z "$SIG_CODE"
           if command -v rhythm-sightread; then exit 1; fi
-
-      # The real case: the latest signed release, then the same release
-      # with its archive and checksums.txt line swapped for this commit's
-      # build. Before the first release there is nothing to fetch.
-      - name: Fetch the latest signed release
-        id: real
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          tag=$(gh release view --repo RhythmShahriar/sightread --json tagName --jq .tagName 2>/dev/null || true)
-          if [ -z "$tag" ]; then
-            echo "::notice::RhythmShahriar/sightread has no release yet; the signed-release case runs from the first one"
-            exit 0
-          fi
-          for d in real swapped; do
-            gh release download "$tag" --repo RhythmShahriar/sightread --dir "$RUNNER_TEMP/$d" \
-              --pattern rhythm-sightread_linux_amd64.tar.gz --pattern checksums.txt --pattern checksums.txt.sigstore.json
-          done
-          .github/action-test/release.sh build "$RUNNER_TEMP/local" "${tag#v}"
-          .github/action-test/release.sh swap "$RUNNER_TEMP/swapped" "$RUNNER_TEMP/local/rhythm-sightread_linux_amd64.tar.gz"
-          .github/action-test/serve.sh release "$RUNNER_TEMP/swapped" 31134
-          .github/action-test/serve.sh release "$RUNNER_TEMP/real" 31135
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
-      - name: Install the swapped release
-        id: swapped
-        if: steps.real.outputs.version != ''
-        continue-on-error: true
-        uses: ./
-        with:
-          mode: all
-          upload: "false"
-          version: ${{ steps.real.outputs.version }}
-          download-url: http://127.0.0.1:31134
-      - name: The swapped release was refused
-        if: steps.real.outputs.version != ''
-        env:
-          OUTCOME: ${{ steps.swapped.outcome }}
-        run: |
-          set -x
-          test "$OUTCOME" = failure
-          if command -v rhythm-sightread; then exit 1; fi
-      - name: Install the real release from the same mirror setup
-        id: genuine
-        if: steps.real.outputs.version != ''
-        # Only the install matters here; nothing serves a registry, so
-        # the review after it may fail.
-        continue-on-error: true
-        uses: ./
-        with:
-          mode: all
-          fail-on: none
-          upload: "false"
-          version: ${{ steps.real.outputs.version }}
-          download-url: http://127.0.0.1:31135
-      - name: The real one installed, so the refusals were the tampering
-        if: steps.real.outputs.version != ''
-        env:
-          WANT: ${{ steps.real.outputs.version }}
-        run: |
-          set -x
-          rhythm-sightread --version | grep -qF "$WANT"
 
   # A read-only token (pull requests from forks and Dependabot get one):
   # the gate and the summary still work, the comment is only a warning.
