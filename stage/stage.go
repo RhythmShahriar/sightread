@@ -82,7 +82,7 @@ func Run(ctx context.Context, p Plan, rep *core.Report) (tripped bool, err error
 	}
 	s := &stager{p: p, u: &rep.Updates[0]}
 	u := s.u
-	if err := Precheck(p.Command, u.Eco, p.Staging, len(p.Apply) > 0); err != nil {
+	if err := Precheck(p.Command, u.Eco, u.Name, p.Staging, len(p.Apply) > 0, nil); err != nil {
 		return false, err
 	}
 	staging, _ := url.Parse(p.Staging) // Precheck parsed it
@@ -104,10 +104,7 @@ func Run(ctx context.Context, p Plan, rep *core.Report) (tripped bool, err error
 			What: "--soundcheck needs the staging site's wp command to install the verified zip",
 			Hint: []string{"give it with --wp \"wp --path=/srv/staging\" (or soundcheck.wp in .sightread/config.yaml)"}}
 	case remotePrefix(p.WP):
-		return false, &core.Error{Code: core.ERemoteWPSoundcheck, Exit: cli.ExitUsage, Command: p.Command,
-			What: "--soundcheck can install the verified zip only through a local wp command",
-			Hint: []string{fmt.Sprintf("for a remote staging site give --apply \"<command that installs %s %s>\"; "+
-				"the report then says the applied bytes were not checked", u.Name, u.To.Version)}}
+		return false, remoteWPError(p.Command, u.Name+" "+u.To.Version)
 	}
 	// 2. Production, by name.
 	prods := make([]production, 0, len(p.Production))
@@ -191,9 +188,14 @@ func Run(ctx context.Context, p Plan, rep *core.Report) (tripped bool, err error
 }
 
 // Precheck refuses what can be refused before a review starts: a
-// staging URL that isn't one and a Composer or npm package without the
-// --apply command that installs it.
-func Precheck(command string, eco core.Ecosystem, stagingURL string, apply bool) error {
+// staging URL that isn't one, a Composer or npm package without the
+// --apply command that installs it and a plugin or theme whose --wp
+// command wp runs on another machine (E21). The last must come first:
+// the review itself runs wp to read the site, and a remote prefix would
+// reach the staging host before the refusal.
+// name is the package the run installs, for the E21 hint; the version
+// is not picked yet.
+func Precheck(command string, eco core.Ecosystem, name, stagingURL string, apply bool, wp []string) error {
 	staging, err := url.Parse(stagingURL)
 	if err != nil || staging.Hostname() == "" || (staging.Scheme != "https" && staging.Scheme != "http") {
 		return &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage,
@@ -203,7 +205,20 @@ func Precheck(command string, eco core.Ecosystem, stagingURL string, apply bool)
 		return &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: command,
 			What: "--soundcheck needs --apply \"<command that installs the update on staging>\" for Composer and npm packages"}
 	}
+	if !apply && (eco == core.WPPlugin || eco == core.WPTheme) && remotePrefix(wp) {
+		return remoteWPError(command, cmp.Or(name, "the update"))
+	}
 	return nil
+}
+
+// remoteWPError is E21: --soundcheck with a --wp command that runs on
+// another machine, which can't see the verified zip on this one. what
+// names the update for the hint.
+func remoteWPError(command, what string) *core.Error {
+	return &core.Error{Code: core.ERemoteWPSoundcheck, Exit: cli.ExitUsage, Command: command,
+		What: "--soundcheck can install the verified zip only through a local wp command",
+		Hint: []string{"for a remote staging site give --apply \"<command that installs " + what + ">\"; " +
+			"the report then says the applied bytes were not checked"}}
 }
 
 // notProduction refuses a staging host that a production entry names

@@ -240,7 +240,7 @@ var errorCases = []errorCase{
 		chdir(t, t.TempDir())
 		return soundcheckUpdate(w, "https://staging.shop.test", "ssh deploy@staging -- wp --path=/srv/www")
 	}, stderr: "{prog} plugin: --soundcheck can install the verified zip only through a local wp command\n" +
-		"  for a remote staging site give --apply \"<command that installs countdown-timer-ultimate 2.6.8>\"; " +
+		"  for a remote staging site give --apply \"<command that installs countdown-timer-ultimate>\"; " +
 		"the report then says the applied bytes were not checked\n"},
 	{code: core.EUnknownCommand, exit: cli.ExitUsage, setup: func(*testing.T, *runtest.World) []string {
 		return []string{"plugn"}

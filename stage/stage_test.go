@@ -717,3 +717,27 @@ func TestArchiveKept(t *testing.T) {
 		}
 	}
 }
+
+// TestPrecheckRemoteWP: a remote --wp prefix is refused before the
+// review, which would otherwise run it to read the site (E21); --apply,
+// a local wp command and a Composer package with --apply pass.
+func TestPrecheckRemoteWP(t *testing.T) {
+	remote := []string{"ssh", "-p", "2222", "staging", "wp"}
+	err := Precheck("plugin", core.WPPlugin, "countdown", "https://staging.shop.test", false, remote)
+	if core.CodeOf(err) != core.ERemoteWPSoundcheck || !strings.Contains(err.Error(), `--apply "<command that installs countdown>"`) {
+		t.Errorf("remote --wp: %v", err)
+	}
+	for _, c := range []struct {
+		eco   core.Ecosystem
+		apply bool
+		wp    []string
+	}{
+		{core.WPPlugin, true, remote},
+		{core.WPTheme, false, []string{"wp", "--path=/srv/staging"}},
+		{core.Composer, true, remote},
+	} {
+		if err := Precheck("plugin", c.eco, "x", "https://staging.shop.test", c.apply, c.wp); err != nil {
+			t.Errorf("%s apply %v wp %q: %v", c.eco, c.apply, c.wp, err)
+		}
+	}
+}

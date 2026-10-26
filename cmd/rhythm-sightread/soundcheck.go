@@ -23,7 +23,7 @@ func (c *reviewCommand) checkSoundcheck(p *plan) error {
 	if len(p.req.Names) != 1 {
 		return badFlag("--soundcheck installs one update: name one package, e.g. %s %s <name> --soundcheck <staging-url>", cli.Name(), c.name)
 	}
-	return stage.Precheck(c.name, c.eco, p.soundcheck.Staging, len(p.soundcheck.ApplyArgv) > 0)
+	return stage.Precheck(c.name, c.eco, p.req.Names[0], p.soundcheck.Staging, len(p.soundcheck.ApplyArgv) > 0, p.req.Inventory.WP)
 }
 
 // runSoundcheck runs the --soundcheck flow on the reviewed update (PRD
