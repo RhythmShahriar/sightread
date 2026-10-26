@@ -92,6 +92,9 @@ type decodeEnv struct {
 	budget *decodeBudget
 	layers int    // decode layers left for payloads found in this file
 	clk    *clock // the file's time budget, shared with its payloads
+	// own names the package's own plugin folders (see ownDirs), so an
+	// update filter can tell its own entry from another plugin's.
+	own []string
 }
 
 // decodeStep undoes one encoding of data, or reports false when it does
@@ -600,7 +603,7 @@ func (b *blobScan) payload(l lang, text []byte, line, end, layers int) {
 	if l == langPHP && !bytes.Contains(text, []byte("<?")) {
 		text = append([]byte("<?php "), text...)
 	}
-	fs, un := analyzeCode(l, b.path, text, core.CtxDecoded, decodeEnv{budget: b.env.budget, layers: layers, clk: b.env.clk})
+	fs, un := analyzeCode(l, b.path, text, core.CtxDecoded, decodeEnv{budget: b.env.budget, layers: layers, clk: b.env.clk, own: b.env.own})
 	if len(un) > 0 {
 		b.un = true
 	}
@@ -682,7 +685,7 @@ func assetFeatures(p string, src []byte, env decodeEnv) ([]core.Feature, []core.
 		}
 		line := strings.Count(s[:k], "\n") + 1
 		addDataURI(col, env, p, s[k:e], k, line, line, func(l lang, text []byte, layers int) {
-			fs, un := analyzeCode(l, p, text, core.CtxDecoded, decodeEnv{budget: env.budget, layers: layers, clk: env.clk})
+			fs, un := analyzeCode(l, p, text, core.CtxDecoded, decodeEnv{budget: env.budget, layers: layers, clk: env.clk, own: env.own})
 			limit = limit || len(un) > 0
 			for _, f := range fs {
 				f.Ev.Line, f.Ev.EndLine = line, line

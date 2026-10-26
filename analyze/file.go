@@ -116,6 +116,7 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	st.clk = env.clk
 	col := newCollector(path, ctx, lines)
 	ex := newExtractor(st, col)
+	ex.own = env.own
 	out := runFlow(st, lines, path, ctx, ex)
 	if env.clk.expired() {
 		return timeUp(append(out, col.out...))

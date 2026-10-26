@@ -182,6 +182,10 @@ type extractor struct {
 	sends  []sendRef
 	work   int             // look-back steps left (spend)
 	uaVars map[string]bool // PHP variables holding the user agent
+	own    []string        // the package's own plugin folders (ownDirs)
+	// basenames holds the names given plugin_basename(__FILE__), found
+	// on the first update filter: variables, properties and constants.
+	basenames map[string]bool
 }
 
 // sendRef is a send whose "reads" attribute waits for the end of the

@@ -38,7 +38,11 @@ secrets masked and control characters escaped.
   with `permission=open` when anyone may call them, cron hooks, file
   writes by target (`wp-config`, `htaccess`, `mu-plugins`, `plugins-dir`,
   `uploads`, `parent-dir`, `own`, `temp` and more), update filters with
-  `scope=own` or `all`, user agent and logged-in checks that print
+  `scope=own` or `all` (`own` only when the callback uses
+  `plugin_basename(__FILE__)`, a name assigned from it, or a
+  `folder/file.php` literal whose folder is the package's own top folder
+  or main file name; another plugin's entry anywhere in the callback
+  makes it `all`), user agent and logged-in checks that print
   content, environment and credential file reads, network sends with
   what the same function reads (`users`, `options`, `admin_email`,
   `env`, `creds`), calls by a built or variable name, eval-like calls,

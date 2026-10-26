@@ -5,6 +5,7 @@ package analyze
 
 import (
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -702,20 +703,97 @@ func (e *extractor) hidesUsers(r [2]int, hook string) bool {
 }
 
 // ownScope reports whether an update filter callback limits itself to
-// the plugin's own entry: it names its basename or its own file.
+// the plugin's own entry: it uses plugin_basename(__FILE__), a name
+// assigned from it, or a "folder/file.php" literal whose folder is the
+// package's own (ownDirs). A literal naming another plugin's folder
+// makes the scope all even next to an own reference. So does a
+// callback with neither: a variable merely called $slug or $basename
+// proves nothing, as it can hold any plugin's entry.
 func (e *extractor) ownScope(r [2]int) bool {
-	return e.contains(r, func(t tok) bool {
+	toks := e.toks
+	own := false
+	for j := r[0]; j < r[1] && j < len(toks); j++ {
+		t := toks[j]
 		switch t.k {
-		case tName:
-			return t.text == "plugin_basename" || t.text == "__file__" || strings.Contains(t.text, "basename") ||
-				strings.Contains(t.text, "slug") || strings.HasSuffix(t.text, "_file")
-		case tVar:
-			return strings.Contains(t.text, "basename") || strings.Contains(t.text, "slug")
 		case tStr:
-			return strings.HasSuffix(t.val, ".php") && strings.Contains(t.val, "/")
+			if !t.known || !strings.HasSuffix(strings.ToLower(t.val), ".php") {
+				continue
+			}
+			dir, _, ok := strings.Cut(t.val, "/")
+			if !ok {
+				continue
+			}
+			if !slices.Contains(e.own, strings.ToLower(dir)) {
+				return false
+			}
+			own = true
+		case tName:
+			switch {
+			case t.text == "plugin_basename" && e.ownBasenameCall(j):
+				own = true
+			case at(toks, j-1).punct("->") && e.ownBasenames()["->"+t.text]:
+				own = true
+			case !at(toks, j-1).punct("->") && !at(toks, j+1).punct("(") && e.ownBasenames()[t.text]:
+				own = true // a constant
+			}
+		case tVar:
+			if e.ownBasenames()[t.text] {
+				own = true
+			}
 		}
+	}
+	return own
+}
+
+// ownBasenameCall reports whether the plugin_basename call at j is of
+// the file's own path: its argument holds __FILE__ (or __DIR__) or a
+// constant named like MY_PLUGIN_FILE, the usual way to keep it.
+func (e *extractor) ownBasenameCall(j int) bool {
+	toks := e.toks
+	if !at(toks, j+1).punct("(") {
 		return false
-	})
+	}
+	end := e.st.close(j + 1)
+	for k := j + 2; k < end && k < len(toks); k++ {
+		t := toks[k]
+		if t.k != tName {
+			continue
+		}
+		if t.text == "__file__" || t.text == "__dir__" ||
+			strings.HasSuffix(t.text, "_file") && t.raw == strings.ToUpper(t.raw) && !at(toks, k+1).punct("(") {
+			return true
+		}
+	}
+	return false
+}
+
+// ownBasenames returns the names the file assigns plugin_basename of
+// its own path to: "$var" for variables and static properties, "->p"
+// for object properties, the lower-case name for constants (const X =
+// and define('X', ...)). It is computed once per file.
+func (e *extractor) ownBasenames() map[string]bool {
+	if e.basenames != nil {
+		return e.basenames
+	}
+	e.basenames = map[string]bool{}
+	toks := e.toks
+	for j := range toks {
+		if !toks[j].is(tName, "plugin_basename") || !e.ownBasenameCall(j) {
+			continue
+		}
+		lhs := at(toks, j-2)
+		switch {
+		case at(toks, j-1).punct("=") && lhs.k == tVar:
+			e.basenames[lhs.text] = true
+		case at(toks, j-1).punct("=") && lhs.k == tName && at(toks, j-3).punct("->"):
+			e.basenames["->"+lhs.text] = true
+		case at(toks, j-1).punct("=") && lhs.k == tName && at(toks, j-3).is(tName, "const"):
+			e.basenames[lhs.text] = true
+		case at(toks, j-1).punct(",") && lhs.k == tStr && lhs.known && at(toks, j-3).punct("(") && at(toks, j-4).is(tName, "define"):
+			e.basenames[strings.ToLower(lhs.val)] = true
+		}
+	}
+	return e.basenames
 }
 
 // envRead records getenv of a credential-like name, or of the whole

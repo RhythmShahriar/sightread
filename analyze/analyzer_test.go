@@ -508,3 +508,38 @@ func TestLexerBypasses(t *testing.T) {
 		})
 	}
 }
+
+// An update filter's scope is own only for the package's own folder,
+// taken from the tree: its top folder or its main file's name.
+func TestUpdateFilterOwnFolder(t *testing.T) {
+	filter := func(entry string) string {
+		return "<?php\nadd_filter('site_transient_update_plugins', function ($t) { unset($t->response['" + entry + "']); return $t; });\n"
+	}
+	tests := []struct {
+		name, entry, scope string
+	}{
+		{"own folder", "my-plugin/my-plugin.php", "own"},
+		{"own folder in another case", "My-Plugin/my-plugin.php", "own"},
+		{"another plugin", "akismet/akismet.php", "all"},
+		{"a look-alike folder", "my-plugin-pro/my-plugin.php", "all"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			set := analyzeAll(t, coretest.Tree(map[string]string{
+				"my-plugin.php":      "<?php\n/* Plugin Name: Mine */\n",
+				"includes/hooks.php": filter(tc.entry),
+			}), core.DefaultLimits())
+			fs := set.ByKey[string(core.FUpdateFilter)+":site_transient_update_plugins"]
+			if len(fs) != 1 || fs[0].Attrs["scope"] != tc.scope {
+				t.Errorf("update filters %v, want scope %s\n%s", fs, tc.scope, dump(set))
+			}
+		})
+	}
+	// The archive's top folder counts as the package's own.
+	tree := coretest.Tree(map[string]string{"inc/hooks.php": filter("akismet/akismet.php")})
+	tree.Root = "akismet/"
+	set := analyzeAll(t, tree, core.DefaultLimits())
+	if fs := set.ByKey[string(core.FUpdateFilter)+":site_transient_update_plugins"]; len(fs) != 1 || fs[0].Attrs["scope"] != "own" {
+		t.Errorf("under its own top folder: %v", fs)
+	}
+}

@@ -32,6 +32,24 @@ func init() { core.SetAnalyzer(Analyzer{}) }
 // for code appended after the image data.
 const tailMax = 1 << 20
 
+// ownDirs returns the folder names a WordPress install could give the
+// package: the archive's stripped top folder ("akismet/" gives
+// "akismet") and the name of each top-level PHP file without ".php",
+// since a plugin's main file usually carries its slug. A GitHub archive
+// folder ("owner-repo-sha") never matches, which errs toward scope=all.
+func ownDirs(t *core.Tree) []string {
+	var out []string
+	if r := strings.Trim(t.Root, "/"); r != "" && !strings.Contains(r, "/") {
+		out = append(out, strings.ToLower(r))
+	}
+	for _, f := range t.Files {
+		if !strings.Contains(f.Path, "/") && strings.HasSuffix(strings.ToLower(f.Path), ".php") {
+			out = append(out, strings.ToLower(f.Path[:len(f.Path)-4]))
+		}
+	}
+	return out
+}
+
 // fileResult is what one file gave.
 type fileResult struct {
 	feats    []core.Feature
@@ -57,6 +75,7 @@ func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim c
 	if t == nil {
 		return set, nil
 	}
+	own := ownDirs(t)
 	paths = slices.Clone(paths)
 	slices.Sort(paths)
 	paths = slices.Compact(paths)
@@ -69,7 +88,7 @@ func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim c
 			defer wg.Done()
 			for i := range jobs {
 				if ctx.Err() == nil {
-					results[i] = analyzeFile(ctx, t, paths[i], lim)
+					results[i] = analyzeFile(ctx, t, paths[i], lim, own)
 				}
 			}
 		}()
@@ -155,7 +174,7 @@ func manifest(p string) bool {
 var styleExts = map[string]bool{".css": true, ".scss": true, ".sass": true, ".less": true}
 
 // analyzeFile analyses one file of t within its time budget.
-func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits) fileResult {
+func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, own []string) fileResult {
 	f, ok := t.Lookup(p)
 	if !ok || f.Mode&fs.ModeType != 0 {
 		return fileResult{} // removed, or a link: the archive issues cover links
@@ -188,7 +207,7 @@ func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits) f
 	fctx, cancel := context.WithTimeout(ctx, lim.FileBudget)
 	defer cancel()
 	budget := newDecodeBudget()
-	env := decodeEnv{budget: budget, layers: maxLayers, clk: newClock(fctx)}
+	env := decodeEnv{budget: budget, layers: maxLayers, clk: newClock(fctx), own: own}
 	var r fileResult
 	switch {
 	case code:
