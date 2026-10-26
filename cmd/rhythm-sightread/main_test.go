@@ -271,8 +271,8 @@ func TestFoundHere(t *testing.T) {
 // TestStubsNotBuiltYet: a command a later part of the build fills in
 // says so and exits 3.
 func TestStubsNotBuiltYet(t *testing.T) {
-	code, _, errOut := child(t, t.TempDir(), "signals")
-	if code != cli.ExitUnavailable || !strings.Contains(errOut, "rhythm-sightread: signals: not built yet") {
-		t.Errorf("signals: exit %d, stderr %q", code, errOut)
+	code, _, errOut := child(t, t.TempDir(), "watch")
+	if code != cli.ExitUnavailable || !strings.Contains(errOut, "rhythm-sightread: watch: not built yet") {
+		t.Errorf("watch: exit %d, stderr %q", code, errOut)
 	}
 }

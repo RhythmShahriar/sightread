@@ -1,3 +1,13 @@
 Usage: rhythm-sightread signals [--json]
 
-list every signal with its default severity
+Lists every signal Sightread can raise, in catalogue order, with its default
+severity, confidence, the ecosystems it applies to and the title reports use.
+Config signals.severity changes a severity for one project. Read one in full
+with rhythm-sightread explain <id>.
+
+Flags:
+  --json   print the kind signals JSON document
+
+Examples:
+  rhythm-sightread signals
+  rhythm-sightread signals --json

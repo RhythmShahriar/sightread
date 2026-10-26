@@ -1,3 +1,16 @@
 Usage: rhythm sightread report <report.json>... -o <file>
 
-render saved JSON as Markdown, HTML or SARIF
+Renders one or more JSON reports a review saved into another format, by the
+extension of each -o file: .md, .html, .sarif or .json. Several reports merge
+into one, for example the reports of several CI jobs. It needs no network.
+
+Flags:
+  --diff                keep every changed hunk the reports hold
+  -o, --output <file>   write the merged report to this file (repeatable; .md,
+                        .html, .sarif or .json)
+  --redact-paths        show paths relative to the project only (default on when
+                        CI is set)
+
+Examples:
+  rhythm sightread report review.json -o review.html
+  rhythm sightread report web.json api.json -o all.md -o all.sarif

@@ -1,3 +1,15 @@
 Usage: rhythm-sightread verify-report <report.json> [--key <pub>]
 
-check a signed report
+Checks the signature <report.json>.sig that --sign wrote against this machine's
+report key, the keys listed in config trusted_keys and --key. Exit 0 means the
+report is unchanged and signed by one of them, 1 a bad or untrusted signature
+and 2 a missing file.
+
+Flags:
+  --config <file>   read trusted_keys from this config file
+  --json            print the kind verify JSON document
+  --key <file>      also trust this public key file (repeatable)
+
+Examples:
+  rhythm-sightread verify-report review.json
+  rhythm-sightread verify-report review.json --key ci-report-key.pub

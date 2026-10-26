@@ -44,18 +44,13 @@ type stub struct {
 	name, args, summary string
 }
 
-var stubs = []stub{
-	{"explain", "<signal-id> | <report.json> <n|fp>", "what a signal means and how to review it"},
-	{"allow", "<ref>... | --from <json> | list | remove | import", "record a reviewed version"},
-	{"watch", "-l <sites.yaml> --every <d> [flags]", "check sites on a schedule"},
-	{"report", "<report.json>... -o <file>", "render saved JSON as Markdown, HTML or SARIF"},
-	{"verify-report", "<report.json> [--key <pub>]", "check a signed report"},
-	{"init", "[ci] [--force]", "write .sightread/config.yaml or a CI workflow"},
-	{"doctor", "[--offline] [--json]", "check sources, cache, tokens and helpers"},
-	{"demo", "[--keep]", "try it on built-in packages, no network"},
-	{"signals", "[--json]", "list every signal with its default severity"},
-	{"cache", "prune [--older <d>]", "remove cached archives nothing uses"},
-}
+// The commands still to come.
+var (
+	watchStub  = stub{"watch", "-l <sites.yaml> --every <d> [flags]", "check sites on a schedule"}
+	initStub   = stub{"init", "[ci] [--force]", "write .sightread/config.yaml or a CI workflow"}
+	doctorStub = stub{"doctor", "[--offline] [--json]", "check sources, cache, tokens and helpers"}
+	demoStub   = stub{"demo", "[--keep]", "try it on built-in packages, no network"}
+)
 
 func (s stub) flags(stderr io.Writer) *flag.FlagSet {
 	return cli.NewFlagSet(s.name, "Usage: "+cli.Name()+" "+s.name+" "+s.args+"\n\n"+s.summary, stderr)
@@ -85,9 +80,9 @@ func commands() []cli.Command {
 	for _, c := range reviewCommands {
 		out = append(out, c.command())
 	}
-	for _, s := range stubs {
-		out = append(out, s.command())
-	}
+	out = append(out, explainCommand.command(), allowCommand.command(), watchStub.command())
+	out = append(out, reportCommand.command(), verifyCommand.command(), initStub.command(), doctorStub.command(), demoStub.command(),
+		signalsCommand.command(), cacheCommand.command())
 	return append(out, updateCommand(), pickCommand())
 }
 

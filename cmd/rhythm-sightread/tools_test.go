@@ -1,0 +1,383 @@
+// Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+// SPDX-License-Identifier: MIT
+
+package main
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/RhythmShahriar/rhythm/kit/cli"
+	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/core/coretest"
+	"github.com/RhythmShahriar/sightread/run/runtest"
+)
+
+// docWriter is a JSON writer that also writes the other document kinds:
+// the envelope as plain JSON.
+type docWriter struct{ *coretest.FakeWriter }
+
+func (d docWriter) WriteDocument(w io.Writer, env core.Envelope, _ core.WriteOptions) error {
+	env.Schema, env.Tool = core.Schema, "rhythm-sightread"
+	return json.NewEncoder(w).Encode(env)
+}
+
+// installDocs registers docWriter for JSON.
+func installDocs(t *testing.T) {
+	t.Helper()
+	t.Cleanup(core.SwapWriter(docWriter{&coretest.FakeWriter{Name: core.FormatJSON}}))
+}
+
+// jsonReports makes core.ReadReport read reports the test saved with
+// saveReport (encoding/json of core.Report).
+func jsonReports(t *testing.T) {
+	t.Helper()
+	t.Cleanup(core.SwapReportReader(func(r io.Reader) (*core.Report, error) {
+		var rep core.Report
+		if err := json.NewDecoder(r).Decode(&rep); err != nil {
+			return nil, err
+		}
+		return &rep, nil
+	}))
+}
+
+func saveReport(t *testing.T, rep *core.Report) string {
+	t.Helper()
+	b, err := json.Marshal(rep)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(t.TempDir(), "review.json")
+	if err := os.WriteFile(p, b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+func TestSignalsGolden(t *testing.T) {
+	code, out, _ := execute(t, "signals")
+	if code != cli.ExitOK {
+		t.Fatalf("exit %d", code)
+	}
+	coretest.Golden(t, "signals.txt", []byte(out))
+	if !strings.HasPrefix(out, "ID  ") || strings.Count(out, "\n") != len(core.Catalog)+1 {
+		t.Errorf("table:\n%s", out)
+	}
+}
+
+func TestSignalsJSON(t *testing.T) {
+	installDocs(t)
+	code, out, _ := execute(t, "signals", "--json")
+	var env struct {
+		Kind string
+		Data core.SignalsData
+	}
+	if err := json.Unmarshal([]byte(out), &env); code != cli.ExitOK || err != nil || env.Kind != core.KindSignals ||
+		len(env.Data.Signals) != len(core.Catalog) {
+		t.Errorf("exit %d (%v) %.200s", code, err, out)
+	}
+}
+
+func TestExplain(t *testing.T) {
+	coretest.FakeExplainRenderer{}.Install(t)
+	code, out, _ := execute(t, "explain", "remote-fetch-exec")
+	if code != cli.ExitOK {
+		t.Fatalf("exit %d", code)
+	}
+	coretest.Golden(t, "explain-signal.txt", []byte(out))
+
+	code, _, errOut := execute(t, "explain", "eval-dynamik")
+	want := "rhythm-sightread explain: no signal \"eval-dynamik\" (did you mean eval-dynamic?)\n  list them: rhythm-sightread signals\n"
+	if code != cli.ExitUsage || errOut != want {
+		t.Errorf("unknown signal: exit %d %q", code, errOut)
+	}
+}
+
+// TestExplainFinding picks a finding by number and by fingerprint and
+// diffs it from the cached archives.
+func TestExplainFinding(t *testing.T) {
+	w := world(t)
+	coretest.FakeExplainRenderer{}.Install(t)
+	routineAndHold(w)
+	report := filepath.Join(t.TempDir(), "r.json")
+	if code, _, errOut := execute(t, "all", "-o", report); code != cli.ExitOK {
+		t.Fatal(errOut)
+	}
+	rep := w.Writers[core.FormatTerminal].Got()[0]
+	jsonReports(t)
+	path := saveReport(t, rep)
+	hunks := &hunkDiffer{}
+	t.Cleanup(core.SwapDiffer(hunks))
+
+	code, out, errOut := execute(t, "explain", path, "1")
+	if code != cli.ExitOK || out != "explain finding 1 (1 hunks)\n" {
+		t.Errorf("by number: exit %d %q %q", code, out, errOut)
+	}
+	if got := hunks.asked; len(got) != 1 || got[0] != "main.php 6" {
+		t.Errorf("hunks asked %q, want main.php with 6 lines of context", got)
+	}
+	fp := rep.Updates[1].Findings[0].Fingerprint
+	if code, out, _ := execute(t, "explain", path, fp); code != cli.ExitOK || out != "explain finding "+fp+" (1 hunks)\n" {
+		t.Errorf("by fingerprint: exit %d %q", code, out)
+	}
+	code, _, errOut = execute(t, "explain", path, "9")
+	if code != cli.ExitUsage || !strings.HasSuffix(errOut, "review.json has no finding 9 (it has 1)\n") {
+		t.Errorf("no such finding: exit %d %q", code, errOut)
+	}
+
+	// Without the cached archives the renderer gets no hunks and says so.
+	t.Setenv("RHYTHM_CACHE_DIR", t.TempDir())
+	if code, out, _ := execute(t, "explain", path, "1"); code != cli.ExitOK || out != "explain finding 1 (0 hunks)\n" {
+		t.Errorf("no cache: exit %d %q", code, out)
+	}
+}
+
+// hunkDiffer is the fake differ with one hunk per path asked for.
+type hunkDiffer struct {
+	coretest.FakeDiffer
+	asked []string
+}
+
+func (h *hunkDiffer) Hunks(_ context.Context, _ *core.Diff, path string, n int) ([]core.Hunk, error) {
+	h.asked = append(h.asked, fmt.Sprintf("%s %d", path, n))
+	return []core.Hunk{{Path: path, Lines: []string{"+x"}}}, nil
+}
+
+// listPolicy is FakePolicy with an allow set that lists its entries, as
+// policy.AllowSet does.
+type listPolicy struct{ *coretest.FakePolicy }
+
+type listSet struct{ coretest.AllowList }
+
+func (l listSet) Entries() []core.AllowEntry { return l.AllowList }
+
+func (p listPolicy) LoadAllow(c *core.Config, path, base string) (core.AllowSet, error) {
+	s, err := p.FakePolicy.LoadAllow(c, path, base)
+	if err != nil {
+		return nil, err
+	}
+	return listSet{s.(coretest.AllowList)}, nil //nolint:forcetypeassert // FakePolicy returns an AllowList
+}
+
+func installAllow(t *testing.T, w *runtest.World) *coretest.FakePolicy {
+	t.Helper()
+	t.Cleanup(core.SwapPolicy(listPolicy{w.Policy}))
+	installDocs(t)
+	t.Setenv("USER", "Ann Reviewer")
+	t.Setenv("PATH", t.TempDir()) // no git: --by comes from $USER
+	return w.Policy
+}
+
+// TestAllowRoundTrip adds, lists and removes an entry.
+func TestAllowRoundTrip(t *testing.T) {
+	w := world(t)
+	p := installAllow(t, w)
+	w.Publish(core.NPM, "sharp", "0.33.5")
+	code, out, errOut := execute(t, "allow", "npm:sharp@0.33.5", "--reason", "known install script", "--signals", "npm-install-script-new")
+	if code != cli.ExitOK || !strings.HasPrefix(out, "allowed npm:sharp@0.33.5 (sha256 ") {
+		t.Fatalf("add: exit %d %q %q", code, out, errOut)
+	}
+	if len(p.Allow) != 1 {
+		t.Fatalf("entries %+v", p.Allow)
+	}
+	e := p.Allow[0]
+	if e.Package != "npm:sharp" || e.Version != "0.33.5" || len(e.SHA256) != 64 || e.By != "Ann Reviewer" ||
+		e.Date != time.Now().Format(time.DateOnly) || !slices.Equal(e.Signals, []string{"npm-install-script-new"}) {
+		t.Errorf("entry %+v", e)
+	}
+	code, out, _ = execute(t, "allow", "list")
+	if code != cli.ExitOK || !strings.Contains(out, "npm:sharp@0.33.5  "+e.SHA256[:12]) {
+		t.Errorf("list: exit %d\n%s", code, out)
+	}
+	code, out, _ = execute(t, "allow", "list", "--json")
+	if code != cli.ExitOK || !strings.Contains(out, `"kind":"allowed"`) || !strings.Contains(out, e.SHA256) {
+		t.Errorf("list --json: exit %d %s", code, out)
+	}
+	if code, out, _ := execute(t, "allow", "remove", "npm:sharp@0.33.5"); code != cli.ExitOK || !strings.HasPrefix(out, "removed npm:sharp@0.33.5 from ") {
+		t.Errorf("remove: exit %d %q", code, out)
+	}
+	if code, out, _ := execute(t, "allow", "list"); code != cli.ExitOK || !strings.HasSuffix(out, "allows nothing yet\n") {
+		t.Errorf("list after remove: exit %d %q", code, out)
+	}
+}
+
+// TestAllowRefuses: E12 without a reason, E18 for an unverified or
+// mismatched version, through a fetch and through --from.
+func TestAllowRefuses(t *testing.T) {
+	w := world(t)
+	p := installAllow(t, w)
+	w.Publish(core.NPM, "left-pad", "1.4.0")
+	w.Publish(core.NPM, "evil", "2.0.0")
+	w.Sources[core.NPM].Integrity[core.Ref{Eco: core.NPM, Name: "left-pad", Version: "1.4.0"}] = core.Integrity{By: core.ByNone}
+	w.Sources[core.NPM].Integrity[core.Ref{Eco: core.NPM, Name: "evil", Version: "2.0.0"}] = core.Integrity{By: core.ByFailed,
+		Mismatch: []string{"sha512"}}
+
+	code, _, errOut := execute(t, "allow", "npm:left-pad@1.4.0")
+	if code != cli.ExitUsage || errOut != "rhythm-sightread allow: --reason is required, so the next person knows why it is allowed\n"+
+		"  add --reason \"<what you checked>\"\n" {
+		t.Errorf("E12: exit %d %q", code, errOut)
+	}
+	unverified := "rhythm-sightread allow: npm:left-pad@1.4.0 couldn't be verified, so it can't be allowed\n" +
+		"  allow records a reviewed archive by its hash; review it first with rhythm-sightread npm left-pad --to 1.4.0\n"
+	code, _, errOut = execute(t, "allow", "npm:left-pad@1.4.0", "--reason", "ok")
+	if code != cli.ExitUsage || errOut != unverified {
+		t.Errorf("E18 unverified: exit %d %q", code, errOut)
+	}
+	mismatch := "rhythm-sightread allow: npm:evil@2.0.0 doesn't match its published hash, so it can't be allowed\n" +
+		"  someone between you and the registry changed it, or the release was edited; don't install this copy\n"
+	code, _, errOut = execute(t, "allow", "npm:evil@2.0.0", "--reason", "ok")
+	if code != cli.ExitUsage || errOut != mismatch {
+		t.Errorf("E18 mismatch: exit %d %q", code, errOut)
+	}
+
+	jsonReports(t)
+	sum := strings.Repeat("ab", 32)
+	rep := &core.Report{Kind: core.KindReview, Updates: []core.Update{
+		{Eco: core.NPM, Name: "left-pad", To: core.Side{Version: "1.4.0", SHA256: sum, Verified: core.ByNone}},
+		{Eco: core.NPM, Name: "evil", To: core.Side{Version: "2.0.0", SHA256: sum, Verified: core.BySignature},
+			Findings: []core.Finding{{ID: "integrity-mismatch"}}},
+		{Eco: core.WPPlugin, Name: "akismet", To: core.Side{Version: "5.3.5", SHA256: sum, HashKind: core.HashManifest, Verified: core.ByChecksums}},
+	}}
+	code, out, errOut := execute(t, "allow", "--from", saveReport(t, rep), "--reason", "reviewed in PR 412")
+	if code != cli.ExitUsage || errOut != unverified+mismatch {
+		t.Errorf("--from: exit %d %q", code, errOut)
+	}
+	if len(p.Allow) != 1 || p.Allow[0].Package != "wp-plugin:akismet" || p.Allow[0].Hash != core.HashManifest ||
+		!strings.HasPrefix(out, "allowed wp-plugin:akismet@5.3.5 (sha256 abababababab)") {
+		t.Errorf("--from added %+v, printed %q", p.Allow, out)
+	}
+	if code, _, _ := execute(t, "allow", "npm:x@1", "--until", "soon", "--reason", "r"); code != cli.ExitUsage {
+		t.Errorf("bad --until: exit %d", code)
+	}
+}
+
+// TestReportMerges renders two saved reports as one Markdown file.
+func TestReportMerges(t *testing.T) {
+	w := world(t)
+	jsonReports(t)
+	a := saveReport(t, &core.Report{Kind: core.KindReview, Target: core.Target{Path: "/srv/a"}, Updates: []core.Update{{Name: "x"}}})
+	b := saveReport(t, &core.Report{Kind: core.KindReview, Target: core.Target{Path: "/srv/b"}, Updates: []core.Update{{Name: "y"}},
+		NotChecked: []core.NotChecked{{Name: "z"}}})
+	out := filepath.Join(t.TempDir(), "all.md")
+	code, stdout, errOut := execute(t, "report", a, b, "-o", out)
+	if code != cli.ExitOK || stdout != "wrote "+filepath.ToSlash(out)+"\n" {
+		t.Fatalf("exit %d %q %q", code, stdout, errOut)
+	}
+	got := w.Writers[core.FormatMarkdown].Got()
+	if len(got) != 1 || len(got[0].Updates) != 2 || len(got[0].NotChecked) != 1 || got[0].Summary.Updates != 2 ||
+		!slices.Equal(got[0].Target.Sites, []string{"/srv/a", "/srv/b"}) {
+		t.Errorf("merged %+v", got)
+	}
+	if b, _ := os.ReadFile(out); string(b) != "fake md: 2 updates\n" { //nolint:gosec // the test's own file
+		t.Errorf("file %q", b)
+	}
+	if code, _, _ := execute(t, "report", a); code != cli.ExitUsage {
+		t.Errorf("no -o: exit %d", code)
+	}
+	if code, _, errOut := execute(t, "report", a, "-o", "x.txt"); code != cli.ExitUsage || !strings.Contains(errOut, `-o "x.txt"`) {
+		t.Errorf("bad -o: exit %d %q", code, errOut)
+	}
+}
+
+// keySigner verifies like FakeSigner and also wants "trusted-key"
+// among the trusted keys.
+type keySigner struct{ coretest.FakeSigner }
+
+func (k keySigner) Verify(j, s []byte, trusted [][]byte) (string, error) {
+	id, err := k.FakeSigner.Verify(j, s, trusted)
+	if err != nil {
+		return "", err
+	}
+	if !slices.ContainsFunc(trusted, func(b []byte) bool { return bytes.Equal(b, []byte("trusted-key")) }) {
+		return "", errors.New("untrusted key")
+	}
+	return id, nil
+}
+
+// TestVerifyReport: exit 0 for a good signature from a trusted key, 1
+// for a changed report or an untrusted key, 2 for a missing file.
+func TestVerifyReport(t *testing.T) {
+	w := world(t)
+	installDocs(t)
+	t.Cleanup(core.SwapSigner(keySigner{}))
+	dir := t.TempDir()
+	report := filepath.Join(dir, "r.json")
+	if err := os.WriteFile(report, []byte(`{"kind":"review"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := (coretest.FakeSigner{}).Sign(report, ""); err != nil {
+		t.Fatal(err)
+	}
+	if code, _, errOut := execute(t, "verify-report", report); code != cli.ExitFindings || !strings.Contains(errOut, "untrusted key") {
+		t.Errorf("untrusted: exit %d %q", code, errOut)
+	}
+	w.Policy.Config = &core.Config{TrustedKeys: []string{"trusted-key"}}
+	if code, out, _ := execute(t, "verify-report", report); code != cli.ExitOK || !strings.HasSuffix(out, "r.json: signature good, signed by fake\n") {
+		t.Errorf("trusted_keys: exit %d %q", code, out)
+	}
+	if code, out, _ := execute(t, "verify-report", report, "--json"); code != cli.ExitOK || !strings.Contains(out, `"valid":true`) {
+		t.Errorf("--json: exit %d %q", code, out)
+	}
+	if err := os.WriteFile(report, []byte(`{"kind":"changed"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if code, _, errOut := execute(t, "verify-report", report); code != cli.ExitFindings || !strings.Contains(errOut, "signature doesn't check out") {
+		t.Errorf("changed: exit %d %q", code, errOut)
+	}
+	if code, _, errOut := execute(t, "verify-report", filepath.Join(dir, "none.json")); code != cli.ExitUsage || !strings.HasSuffix(errOut, "none.json: no such file\n") {
+		t.Errorf("missing: exit %d %q", code, errOut)
+	}
+	_ = os.Remove(report + ".sig")
+	if code, _, _ := execute(t, "verify-report", report); code != cli.ExitUsage {
+		t.Errorf("missing signature: exit %d", code)
+	}
+}
+
+// pruneBlobs is a blob store that records what Prune keeps.
+type pruneBlobs struct {
+	core.BlobStore
+	kept map[[32]byte]bool
+}
+
+func (p *pruneBlobs) Prune(referenced map[[32]byte]bool, _ time.Duration) (int, int64, error) {
+	p.kept = referenced
+	return 2, 3 << 20, nil
+}
+
+// TestCachePrune: prune keeps every blob a live index names and drops
+// old indexes.
+func TestCachePrune(t *testing.T) {
+	w := world(t)
+	w.Publish(core.WPPlugin, "akismet", "5.3.3", "5.3.5")
+	w.Install(core.WPPlugin, "akismet", "5.3.3")
+	if code, _, errOut := execute(t, "all"); code != cli.ExitOK {
+		t.Fatal(errOut)
+	}
+	pb := &pruneBlobs{BlobStore: w.Blobs}
+	t.Cleanup(core.SwapBlobStore(func(string) (core.BlobStore, error) { return pb, nil }))
+	code, out, _ := execute(t, "cache", "prune")
+	if code != cli.ExitOK || out != "removed 0 archive indexes older than 30 days and 2 cached files nothing uses (3.0 MiB)\n" {
+		t.Errorf("prune: exit %d %q", code, out)
+	}
+	tree := coretest.Tree(map[string]string{"main.php": "<?php // akismet 5.3.5\n"})
+	if !pb.kept[tree.Files[0].SHA256] || len(pb.kept) != 2 {
+		t.Errorf("kept %d blobs, want both versions' files", len(pb.kept))
+	}
+	code, out, _ = execute(t, "cache", "prune", "--older", "0s")
+	if code != cli.ExitOK || !strings.HasPrefix(out, "removed 2 archive indexes") || len(pb.kept) != 0 {
+		t.Errorf("--older 0s: exit %d %q, kept %d", code, out, len(pb.kept))
+	}
+	if code, _, _ := execute(t, "cache"); code != cli.ExitUsage {
+		t.Errorf("cache with no action: exit %d", code)
+	}
+}

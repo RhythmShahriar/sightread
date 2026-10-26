@@ -1,3 +1,15 @@
-Usage: rhythm-sightread explain <signal-id> | <report.json> <n|fp>
+Usage: rhythm-sightread explain <signal-id> | <report.json> <n|fingerprint>
 
-what a signal means and how to review it
+With a signal ID, prints what the signal means, why it matters, how to review
+it, its usual false alarms and the incidents it is built on. It needs no
+network. With a saved JSON report and a finding's number (as the report counts
+them, from 1) or fingerprint, prints that finding, its evidence and the diff
+hunk with 6 lines of context, read from the archives the review cached.
+
+Flags:
+  --json   print the kind explain JSON document
+
+Examples:
+  rhythm-sightread explain remote-fetch-exec
+  rhythm-sightread explain review.json 3
+  rhythm-sightread explain review.json 9f2c41aa07d3b6e1
