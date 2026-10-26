@@ -150,6 +150,17 @@ Shared by `plugin`, `theme`, `composer`, `npm`, `all` and `changes`.
   `--open` opens the first HTML output, else prints `open /abs/path/review.html in a browser`.
 - Cache: verified archives are indexed under `<cache>/archives/` so a second run downloads
   nothing; each review's JSON is kept under `<cache>/runs/` (newest 20).
+- Pull request rule (`changes` with a base ref, the Action's default on pull requests, unless
+  `--trust-pr-allow`): the config is also read at `--base` (default `origin/HEAD`). What the
+  change relaxes does not count and leaves a report note ending `: relaxed in this change, not
+  counted (--trust-pr-allow counts it)`: the policy's keys (ignore, signals.severity,
+  signals.domains_ok, min_confidence, fail_on, allow_file, allow_from) and, in run, `osv false`,
+  `sources`, `local_files`, `trusted_keys "<key>"`, `ecosystems` and `min_age <base value>`. A
+  config the base can't show or parse counts as empty; a `--config` file outside the repository
+  counts as written; a config the change deleted is still read at the base. `--baseline`
+  fingerprints the change added are dropped with the note `--baseline: <n> finding(s) saved in
+  this change, not counted (--trust-pr-allow counts them)`. A policy without these rules stops
+  the run (`the config pull request rule (policy) not linked`).
 - `-v` lines: `sightread: <eco>:<name>: <error>`, `sightread: <ref>: from the archive cache` and
   `  cause: <cause>` under an error, all secret-masked.
 
@@ -409,7 +420,8 @@ read-only token, so the gate and the job summary still work without the comment.
 version isn't pinned: ...`. Errors: `Sightread found updates with findings at or above
 <fail-on>. ...`, `Sightread exited <n>. See the job summary.`, `unknown mode "x": use changes,
 all or package`, `mode changes needs a base branch: run it on pull_request or set the base
-input`, `package: line N isn't eco:name@version, e.g. npm:left-pad@1.4.0`, `mode package needs
+input`, `package: line N isn't eco:name@version, e.g. npm:left-pad@1.4.0`, `package: line N: a name or
+version can't start with -`, `mode package needs
 the package input: one eco:name@version per line`, `download-url needs the version input: a
 mirror has no latest release to look up`. The pull request comment carries the marker `<!--
 rhythm-sightread -->` and is updated on later runs.
