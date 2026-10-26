@@ -339,6 +339,23 @@ func history(all []string, v string, t *times) []core.Release {
 	return out
 }
 
+// Unpublished reports whether version v of name was published and then
+// unpublished: the full packument's time map still lists it and the
+// packument's versions no longer do. run asks it to word E3 for a
+// version named with --to.
+func (s *Source) Unpublished(ctx context.Context, name, v string) bool {
+	p, err := s.load(ctx, name)
+	if err != nil || p.notFound || slices.Contains(p.abbr.Versions, v) {
+		return false
+	}
+	t := s.timesOf(ctx, name, p)
+	if t == nil {
+		return false
+	}
+	_, ok := t.At[v]
+	return ok
+}
+
 // missing is the E3 for a version the packument does not list: in npm's
 // words when the time map shows it was published and then unpublished.
 func (s *Source) missing(ctx context.Context, ref core.Ref, p *pkg, latest string) error {

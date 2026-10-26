@@ -329,6 +329,15 @@ func TestErrors(t *testing.T) {
 	_, err = s.Meta(ctx, core.Ref{Eco: core.NPM, Name: "left-pad", Version: "9.9.9"})
 	wantErr(t, err, core.EVersionMissing, "rhythm sightread npm: left-pad has no version 9.9.9 on 127.0.0.1\n"+
 		"  newest: 1.3.0 · see them all: rhythm sightread npm left-pad --to list")
+	// run asks before it words E3 for --to: only 1.4.0 was there once.
+	for v, want := range map[string]bool{"1.4.0": true, "9.9.9": false, "1.3.0": false} {
+		if got := s.Unpublished(ctx, "left-pad", v); got != want {
+			t.Errorf("Unpublished(%s) = %v, want %v", v, got, want)
+		}
+	}
+	if s.Unpublished(ctx, "lodahs", "1.0.0") {
+		t.Error("an unknown package has an unpublished version")
+	}
 	_, err = s.Versions(ctx, "lodahs")
 	wantErr(t, err, core.EUnknownPackage, "rhythm sightread npm: 127.0.0.1 has no package \"lodahs\"\n"+
 		"  if it is private, set its scope's registry under sources.npm.scopes in .sightread/config.yaml")

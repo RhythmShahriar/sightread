@@ -736,3 +736,33 @@ func TestListVersions(t *testing.T) {
 type writerFunc func(p []byte)
 
 func (f writerFunc) Write(p []byte) (int, error) { f(p); return len(p), nil }
+
+// unpubSource is a fake npm source that says which versions were
+// unpublished.
+type unpubSource struct {
+	*runtest.Source
+	gone map[string]bool
+}
+
+func (u unpubSource) Unpublished(_ context.Context, _, v string) bool { return u.gone[v] }
+
+// TestToUnpublished: --to naming a version that was taken down says so;
+// one that never existed keeps the usual E3.
+func TestToUnpublished(t *testing.T) {
+	for to, want := range map[string]string{
+		"1.0.1": "rhythm sightread npm: lib 1.0.1 was unpublished from registry.npmjs.org\n  newest: 1.0.0 · see them all: rhythm sightread npm lib --to list",
+		"9.9.9": "rhythm sightread npm: lib has no version 9.9.9 on registry.npmjs.org\n  newest: 1.0.0 · see them all: rhythm sightread npm lib --to list",
+	} {
+		w := runtest.Install(t)
+		w.Publish(core.NPM, "lib", "1.0.0")
+		w.Install(core.NPM, "lib", "1.0.0")
+		src := unpubSource{Source: w.Sources[core.NPM], gone: map[string]bool{"1.0.1": true}}
+		t.Cleanup(core.SwapSource(core.NPM, func(*core.Env) core.Source { return src }))
+		req := request(t, "npm")
+		req.Eco, req.Names, req.To = core.NPM, []string{"lib"}, to
+		_, err := run.Review(context.Background(), req)
+		if err == nil || err.Error() != want || core.CodeOf(err) != core.EVersionMissing {
+			t.Errorf("--to %s: %v, want %q", to, err, want)
+		}
+	}
+}

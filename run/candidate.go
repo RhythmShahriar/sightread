@@ -114,7 +114,11 @@ func pickCandidate(ctx context.Context, src core.Source, in pickInput) (pickResu
 		case tags[to] != "" && published(tags[to]):
 			c.Version = tags[to]
 		default:
-			return pickResult{}, versionMissing(in, to, versions, vs)
+			err := versionMissing(in, to, versions, vs)
+			if u, ok := src.(unpublishedSource); ok && vs.Valid(to) && u.Unpublished(ctx, in.Name, to) {
+				err.What = fmt.Sprintf("%s %s was unpublished from %s", in.Name, to, sourceName(in.Eco))
+			}
+			return pickResult{}, err
 		}
 	}
 	if c.Version == "" {
@@ -139,8 +143,15 @@ func pickCandidate(ctx context.Context, src core.Source, in pickInput) (pickResu
 	return res, nil
 }
 
+// unpublishedSource is a source that can tell a version that was
+// published and then taken down (npm keeps it in the time map) from one
+// that never existed.
+type unpublishedSource interface {
+	Unpublished(ctx context.Context, name, version string) bool
+}
+
 // versionMissing is E3: the asked version isn't published.
-func versionMissing(in pickInput, to string, versions []string, vs core.VersionScheme) error {
+func versionMissing(in pickInput, to string, versions []string, vs core.VersionScheme) *core.Error {
 	newest := core.Newest(vs, versions, "", false)
 	if newest == "" {
 		newest = core.Newest(vs, versions, "", true)
