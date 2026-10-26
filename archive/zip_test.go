@@ -213,6 +213,39 @@ func TestReadZipPathEscapes(t *testing.T) {
 	}
 }
 
+// A colon or a device name is refused but reported as the Windows risk
+// it is, not as an escape from the package.
+func TestReadZipWindowsOnlyNames(t *testing.T) {
+	data := makeZip(t,
+		zent{name: "plugin/ok.php", body: "<?php"},
+		zent{name: "plugin/a:b.php", body: "colon"},
+		zent{name: "plugin/con.php", body: "device"},
+		zent{name: "plugin/../x:y.php", body: "both"},
+		zent{name: `C:\x.php`, body: "drive"},
+	)
+	tree, _ := mustZip(t, data, StripSingle)
+	want := map[string]string{
+		"plugin/a:b.php":    detailColon,
+		"plugin/con.php":    detailDevice,
+		"plugin/../x:y.php": detailOutside,
+		`C:\x.php`:          detailOutside,
+	}
+	for _, is := range tree.Issues {
+		if d, ok := want[is.Path]; ok {
+			if is.Kind != core.IssuePathEscape || is.Detail != d {
+				t.Errorf("%q: %s %q, want path-escape %q", is.Path, is.Kind, is.Detail, d)
+			}
+			delete(want, is.Path)
+		}
+	}
+	if len(want) != 0 {
+		t.Errorf("no issue for %v", want)
+	}
+	if !slices.Equal(paths(tree), []string{"ok.php"}) {
+		t.Errorf("stored %v", paths(tree))
+	}
+}
+
 func TestReadZipLinks(t *testing.T) {
 	data := makeZip(t,
 		zent{name: "p/ok.php", body: "<?php"},

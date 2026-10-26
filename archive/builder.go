@@ -110,7 +110,7 @@ func (b *builder) name(raw string, dir bool) (string, bool) {
 	}
 	clean, kind, ok := ValidateName(n)
 	if !ok {
-		detail := "outside the package"
+		detail := escapeDetail(n)
 		if kind == core.IssueMalformed {
 			detail = "empty, too long, not UTF-8 or with a control character"
 		}

@@ -54,6 +54,37 @@ func ValidateName(raw string) (clean string, issue core.ArchiveIssueKind, ok boo
 	return name, "", true
 }
 
+// Escape details: why ValidateName refused a name as IssuePathEscape.
+const (
+	detailOutside = "outside the package"
+	detailColon   = "name has a colon, which Windows reads as a stream or drive"
+	detailDevice  = "name is a Windows device such as NUL or COM1"
+)
+
+// escapeDetail says why ValidateName refused raw as IssuePathEscape. A
+// colon or a device name stays inside the package on Linux and macOS,
+// so the report names the Windows risk instead of claiming an escape.
+func escapeDetail(raw string) string {
+	name := strings.ReplaceAll(raw, `\`, "/")
+	if strings.HasPrefix(name, "/") || hasDrive(name) {
+		return detailOutside
+	}
+	for seg := range strings.SplitSeq(name, "/") {
+		if dotLike(seg) {
+			return detailOutside
+		}
+	}
+	if strings.ContainsRune(name, ':') {
+		return detailColon
+	}
+	for seg := range strings.SplitSeq(name, "/") {
+		if reservedWindows(seg) {
+			return detailDevice
+		}
+	}
+	return detailOutside
+}
+
 // CaseKey is the name two entries collide on when a file system ignores
 // case and Unicode normalisation (macOS and Windows defaults).
 func CaseKey(name string) string { return strings.ToLower(norm.NFC.String(name)) }
