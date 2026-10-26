@@ -6,6 +6,7 @@ package report
 import (
 	"bytes"
 	"encoding/json"
+	"regexp"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -41,6 +42,19 @@ var formatChecks = map[string]func(t *testing.T, out []byte){
 			}
 		}
 	},
+	core.FormatMarkdown: func(t *testing.T, out []byte) {
+		prose := strings.ReplaceAll(outsideCode(string(out)), "[Signal reference]("+signalReference+")", "")
+		prose = ownTags.ReplaceAllString(prose, "")
+		if m := liveMarkup.FindString(prose); m != "" {
+			t.Errorf("md: %q is live outside code", m)
+		}
+		if m := mention.FindString(prose); m != "" {
+			t.Errorf("md: unescaped mention %q", m)
+		}
+		if len(out) > markdownMax {
+			t.Errorf("md: %d characters, over %d", len(out), markdownMax)
+		}
+	},
 	core.FormatJSONL: func(t *testing.T, out []byte) {
 		for i, line := range bytes.Split(bytes.TrimSpace(out), []byte("\n")) {
 			if !json.Valid(line) {
@@ -49,6 +63,15 @@ var formatChecks = map[string]func(t *testing.T, out []byte){
 		}
 	},
 }
+
+var (
+	// mention is an @ GitHub would turn into a mention.
+	mention = regexp.MustCompile(`(^|[^\\A-Za-z0-9])@[A-Za-z]`)
+	// liveMarkup is an unescaped HTML tag or link target in Markdown.
+	// ownTags are the HTML tags the Markdown writer itself writes.
+	ownTags    = regexp.MustCompile(`</?(details|summary)>`)
+	liveMarkup = regexp.MustCompile(`(^|[^\\])(<[A-Za-z/!?]|\]\()`)
+)
 
 // hostileReport puts s everywhere a package controls text.
 func hostileReport(s string) *core.Report {
