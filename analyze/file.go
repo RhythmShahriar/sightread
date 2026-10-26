@@ -18,15 +18,24 @@ import (
 func codeFeatures(l lang, path string, src []byte, ctx string) []core.Feature {
 	lines := newLineIndex(src)
 	var st *stream
+	var ptoks []php.Token
+	var jtoks []js.Token
 	if l == langPHP {
-		st = newStream(langPHP, normPHP(php.Lex(src)))
+		ptoks = php.Lex(src)
+		st = newStream(langPHP, normPHP(ptoks))
 	} else {
-		st = newStream(langJS, normJS(js.Lex(src)))
+		jtoks = js.Lex(src)
+		st = newStream(langJS, normJS(jtoks))
 	}
 	col := newCollector(path, ctx, lines)
 	ex := newExtractor(st, col)
 	out := runFlow(st, lines, path, ctx, ex)
 	ex.finish()
+	if l == langPHP {
+		ex.phpHosts(ptoks)
+	} else {
+		ex.jsHosts(jtoks)
+	}
 	out = append(out, col.out...)
 	sortFeatures(out)
 	return out

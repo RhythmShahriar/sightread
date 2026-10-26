@@ -119,6 +119,7 @@ func shellFeatures(p string, src []byte) []core.Feature {
 	var out []core.Feature
 	for n, text := range strings.Split(string(src), "\n") {
 		line := n + 1
+		col.addTextHosts(ctx, text, line, "", false, false)
 		for _, pipe := range shellCommands(text) {
 			fetched := ""
 			for _, seg := range pipe {

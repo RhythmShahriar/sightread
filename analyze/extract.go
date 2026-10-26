@@ -177,9 +177,10 @@ func (e *extractor) begin(h *flowHooks) {
 func (e *extractor) call(s *scope, c *callSite) {
 	if e.lang == langPHP {
 		e.phpCall(s, c)
-		return
+	} else {
+		e.jsCall(s, c)
 	}
-	e.jsCall(s, c)
+	e.callHosts(c, hostCalls[jsName(c.name)])
 }
 
 func (e *extractor) include(s *scope, r res, sp [2]int, line int, kind string) {
