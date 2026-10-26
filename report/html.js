@@ -58,11 +58,11 @@
       if (k === "-") { if (adds.length) { flush(); } dels.push(r); return; }
       if (k === "+") { adds.push(r); return; }
       flush();
-      var tr = document.createElement("tr");
+      var tr = document.createElement("tr"), cls = "code " + (k === "@" ? "hunk" : k === "\\" ? "note" : "");
       cell(tr, "ln", r.cells[0].textContent);
-      cell(tr, "code " + (k === "@" ? "hunk" : ""), r.cells[2].textContent);
+      cell(tr, cls, r.cells[2].textContent);
       cell(tr, "ln", r.cells[1].textContent);
-      cell(tr, "code " + (k === "@" ? "hunk" : ""), r.cells[2].textContent);
+      cell(tr, cls, r.cells[2].textContent);
       body.appendChild(tr);
     });
     flush();

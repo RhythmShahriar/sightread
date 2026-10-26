@@ -725,7 +725,7 @@ func (t *termView) diff(u *core.Update) {
 	add := t.re.NewStyle().Foreground(lipgloss.Color(ui.Ok))
 	del := t.re.NewStyle().Foreground(lipgloss.Color(ui.Danger))
 	for _, h := range u.Hunks {
-		head := fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s", h.OldStart, h.OldLines, h.NewStart, h.NewLines, tt(h.Path))
+		head := hunkTitle(h, tt(h.Path))
 		if t.o.Plain {
 			t.line(head)
 		} else {
@@ -739,6 +739,8 @@ func (t *termView) diff(u *core.Update) {
 			}
 			style := t.re.NewStyle()
 			switch {
+			case noteLine(l):
+				style = t.muted
 			case strings.HasPrefix(l, "+"):
 				style = add
 			case strings.HasPrefix(l, "-"):

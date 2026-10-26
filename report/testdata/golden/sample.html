@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src data:; script-src &#39;sha256-JJgB3gRH5JbN/AdlGkyvpM&#43;i1ld67FiBEh/8fsuL0zg=&#39;">
+<meta http-equiv="Content-Security-Policy" content="default-src &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src data:; script-src &#39;sha256-iLOep9PpZP9sWLmwTXy8mR82A/7PfjJVQ66PrEwmKYU=&#39;">
 <meta name="referrer" content="no-referrer">
 <meta name="generator" content="rhythm-sightread <version>">
 <title>Sightread review: /var/www/shop</title>
@@ -82,6 +82,7 @@ table.diff.unified td.code { width: auto; }
 tr.add td.code, td.code.add { background: var(--add); }
 tr.del td.code, td.code.del { background: var(--del); }
 tr.hunk td, td.code.hunk { background: var(--hunk); color: var(--muted); }
+tr.note td.code, td.code.note { color: var(--muted); font-style: italic; }
 table.split { display: none; }
 body.side table.split { display: table; }
 body.side table.unified { display: none; }
@@ -799,11 +800,11 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
       if (k === "-") { if (adds.length) { flush(); } dels.push(r); return; }
       if (k === "+") { adds.push(r); return; }
       flush();
-      var tr = document.createElement("tr");
+      var tr = document.createElement("tr"), cls = "code " + (k === "@" ? "hunk" : k === "\\" ? "note" : "");
       cell(tr, "ln", r.cells[0].textContent);
-      cell(tr, "code " + (k === "@" ? "hunk" : ""), r.cells[2].textContent);
+      cell(tr, cls, r.cells[2].textContent);
       cell(tr, "ln", r.cells[1].textContent);
-      cell(tr, "code " + (k === "@" ? "hunk" : ""), r.cells[2].textContent);
+      cell(tr, cls, r.cells[2].textContent);
       body.appendChild(tr);
     });
     flush();

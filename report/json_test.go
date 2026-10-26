@@ -327,6 +327,8 @@ func TestNoFakeSecrets(t *testing.T) {
 func TestReadReportRoundTrip(t *testing.T) {
 	withFunc := coretest.SampleReport()
 	withFunc.Updates[0].Findings[0].Func = "Share_Kit::sync"
+	withFunc.Updates[0].Hunks = append(withFunc.Updates[0].Hunks, core.Hunk{Path: "dist/app.min.js", OldStart: 7, OldLines: 1,
+		NewStart: 7, NewLines: 1, Tokens: true, Lines: []string{"-a;", "+b;"}})
 	for name, r := range map[string]*core.Report{"sample": coretest.SampleReport(), "small": smallReport(),
 		"empty": {Kind: core.KindReview}, "func": withFunc} {
 		doc := writeWith(t, core.FormatJSON, r, testOpts)

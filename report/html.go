@@ -584,10 +584,18 @@ func summariseMinified(u *core.Update, f *htmlFile) {
 }
 
 func htmlHunkOf(h core.Hunk) htmlHunk {
-	out := htmlHunk{Lines: []htmlLine{{K: "@", Class: "hunk", Text: fmt.Sprintf("@@ -%d,%d +%d,%d @@", h.OldStart, h.OldLines, h.NewStart, h.NewLines)}}}
+	var out htmlHunk
+	if head := hunkHead(h); head != "" {
+		out.Lines = append(out.Lines, htmlLine{K: "@", Class: "hunk", Text: head})
+	}
 	oldN, newN := h.OldStart, h.NewStart
 	for _, raw := range h.Lines {
 		l := defang(strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(text(raw)))
+		if noteLine(l) {
+			// Sightread's note: no line of either side, no number.
+			out.Lines = append(out.Lines, htmlLine{K: `\`, Class: "note", Text: strings.TrimPrefix(l, notePrefix)})
+			continue
+		}
 		k, body := " ", l
 		if l != "" && (l[0] == '+' || l[0] == '-' || l[0] == ' ') {
 			k, body = l[:1], l[1:]

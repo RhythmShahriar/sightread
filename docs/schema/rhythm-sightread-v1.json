@@ -475,9 +475,14 @@
         },
         "lines": {
           "type": "array",
+          "description": "Unified diff lines; a line starting with a backslash and a space is a note from Sightread, not package text",
           "items": {
             "type": "string"
           }
+        },
+        "tokens": {
+          "type": "boolean",
+          "description": "Set when the starts and counts number tokens of a minified file, not lines"
         }
       }
     },

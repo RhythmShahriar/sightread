@@ -137,6 +137,7 @@ type jsonHunk struct {
 	NewStart int      `json:"new_start"`
 	NewLines int      `json:"new_lines"`
 	Lines    []string `json:"lines"`
+	Tokens   bool     `json:"tokens,omitempty"`
 }
 
 type jsonSoundcheckSummary struct {

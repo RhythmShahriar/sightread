@@ -282,7 +282,7 @@ func hunksJSON(hs []core.Hunk) []jsonHunk {
 	out := make([]jsonHunk, 0, len(hs))
 	for _, h := range hs {
 		out = append(out, jsonHunk{Path: text(h.Path), OldStart: h.OldStart, OldLines: h.OldLines, NewStart: h.NewStart,
-			NewLines: h.NewLines, Lines: list(texts(h.Lines))})
+			NewLines: h.NewLines, Lines: list(texts(h.Lines)), Tokens: h.Tokens})
 	}
 	return out
 }

@@ -369,7 +369,7 @@ func countedText(f *core.Finding) string {
 func (e *explainWriter) hunks(hs []core.Hunk) {
 	e.b.WriteString("\nDiff\n")
 	for _, h := range hs {
-		fmt.Fprintf(&e.b, "  @@ -%d,%d +%d,%d @@ %s\n", h.OldStart, h.OldLines, h.NewStart, h.NewLines, tt(h.Path))
+		e.b.WriteString("  " + hunkTitle(h, tt(h.Path)) + "\n")
 		for _, l := range h.Lines {
 			e.b.WriteString("  " + strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(tt(l)) + "\n")
 		}

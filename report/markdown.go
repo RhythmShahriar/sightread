@@ -563,10 +563,15 @@ func flagged(u *core.Update, fs []*core.Finding) []core.Hunk {
 	return out
 }
 
-// covers reports whether the new side of h holds a line of f.
+// covers reports whether the new side of h holds a line of f. A hunk of
+// tokens numbers tokens, not lines, so it never covers a line (flagged
+// then takes every hunk of the file).
 func covers(h core.Hunk, f *core.Finding) bool {
 	if f.Line == 0 {
 		return true
+	}
+	if h.Tokens {
+		return false
 	}
 	end := max(f.EndLine, f.Line)
 	return f.Line < h.NewStart+max(h.NewLines, 1) && end >= h.NewStart
@@ -579,7 +584,7 @@ func (m mdReport) hunks(b *strings.Builder, u *core.Update, fs []*core.Finding) 
 	}
 	var body strings.Builder
 	for _, h := range hs {
-		fmt.Fprintf(&body, "@@ -%d,%d +%d,%d @@ %s\n", h.OldStart, h.OldLines, h.NewStart, h.NewLines, defang(text(h.Path)))
+		body.WriteString(hunkTitle(h, defang(text(h.Path))) + "\n")
 		for _, l := range h.Lines {
 			// One hunk line is one output line, whatever it holds.
 			body.WriteString(defang(strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(text(l))) + "\n")

@@ -221,7 +221,7 @@ func updateFromJSON(j *jsonUpdate) (core.Update, error) {
 	}
 	for _, h := range j.Hunks {
 		u.Hunks = append(u.Hunks, core.Hunk{Path: text(h.Path), OldStart: h.OldStart, OldLines: h.OldLines,
-			NewStart: h.NewStart, NewLines: h.NewLines, Lines: nilIfEmpty(texts(h.Lines))})
+			NewStart: h.NewStart, NewLines: h.NewLines, Lines: nilIfEmpty(texts(h.Lines)), Tokens: h.Tokens})
 	}
 	if sc := j.Soundcheck; sc != nil {
 		u.Soundcheck = &core.SoundcheckResult{Staging: text(sc.Staging), RoadieVerify: text(sc.RoadieVerify), Snapshot: text(sc.Snapshot),
