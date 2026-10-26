@@ -439,6 +439,20 @@ func TestSlowBodyStopsAtTimeout(t *testing.T) {
 	}
 }
 
+// TestNotJSONIsNotATimeout: an answer that ends cleanly well inside the
+// timeout but isn't JSON is reported as such, not as a timeout.
+func TestNotJSONIsNotATimeout(t *testing.T) {
+	srv := serve(t, http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = io.WriteString(w, `{"name": "cut`)
+	}), true)
+	c := client(t, core.GetterConfig{Timeout: 5 * time.Second, Retries: -1, Bases: map[string]string{core.BaseNPM: srv.URL}}, srv)
+	var v any
+	err := c.JSON(context.Background(), srv.URL+"/cut", &v, KindVersions)
+	if err == nil || !strings.Contains(err.Error(), "did not answer with JSON") || strings.Contains(err.Error(), "timed out") {
+		t.Errorf("err %v, want did not answer with JSON", err)
+	}
+}
+
 func TestGitHubBudget(t *testing.T) {
 	t.Setenv("RHYTHM_INVOKED_AS", "rhythm sightread")
 	api := &counter{h: func(w http.ResponseWriter, _ *http.Request) {

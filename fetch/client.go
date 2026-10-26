@@ -4,6 +4,7 @@
 package fetch
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha1" //nolint:gosec // Packagist publishes dist.shasum as SHA-1; it is compared, not trusted alone
 	"crypto/sha256"
@@ -220,6 +221,7 @@ func (c *Client) getJSON(ctx context.Context, u *url.URL, kind string) (json.Raw
 	if kind == KindVersions && c.npmAddrs[canonical(u)] {
 		req.Header.Set("Accept", npmAbbreviated)
 	}
+	start := time.Now()
 	resp, err := c.do(c.api, req)
 	if err != nil {
 		return nil, err
@@ -231,6 +233,12 @@ func (c *Client) getJSON(ctx context.Context, u *url.URL, kind string) (json.Raw
 	}
 	if int64(len(body)) > c.jsonCap {
 		return nil, tooLargeError("the answer of "+u.Hostname(), &SizeError{Limit: c.jsonCap})
+	}
+	if !json.Valid(body) && (ctx.Err() != nil || c.api.Timeout > 0 && time.Since(start) >= c.api.Timeout) {
+		// A body the timeout cut short can still end in a clean EOF
+		// (seen under load), as in Download: that is a stalled answer,
+		// not one that isn't JSON.
+		return nil, c.netError(ctx, u, cmp.Or(ctx.Err(), context.DeadlineExceeded))
 	}
 	if !json.Valid(body) {
 		return nil, fmt.Errorf("%s did not answer with JSON", u.Hostname())
