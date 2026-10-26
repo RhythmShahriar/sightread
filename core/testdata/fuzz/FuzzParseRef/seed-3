@@ -1,0 +1,2 @@
+go test fuzz v1
+string("composer:monolog/monolog@3.12.1")
