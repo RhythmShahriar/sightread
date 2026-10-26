@@ -124,3 +124,23 @@ func TestWPEcosystems(t *testing.T) {
 		t.Errorf("composer: %s", got)
 	}
 }
+
+// The own option excuses unserialize only when it is the whole argument,
+// and never a request or remote flow.
+func TestOutsideUnserializeOption(t *testing.T) {
+	for _, c := range []struct {
+		f    core.Feature
+		want bool
+	}{
+		{coretest.Feat(core.FUnserialize, "unserialize", "a.php", 1, AttrSource, SrcRequest, AttrArg, "get_option( 'x' )"), false},
+		{coretest.Feat(core.FUnserialize, "unserialize", "a.php", 1, AttrSource, SrcRequest, AttrArg, "$_REQUEST['d'] ?: get_option('x')"), true},
+		{coretest.Feat(core.FUnserialize, "unserialize", "a.php", 1, AttrSource, SrcRequest, AttrArg, "get_option('x') . $_GET['y']"), true},
+		{coretest.Feat(core.FUnserialize, "unserialize", "a.php", 1, AttrSource, SrcRequest, AttrArg, "get_option($_GET['k'])"), false},
+		{coretest.Feat(core.FFlow, "request->unserialize", "a.php", 1, AttrArg, "get_option('x')"), true},
+		{coretest.Feat(core.FFlow, "remote->unserialize", "a.php", 1, AttrAllowedClasses, "false"), false},
+	} {
+		if got := outsideUnserialize(c.f); got != c.want {
+			t.Errorf("outsideUnserialize(%s %v) = %v, want %v", c.f.Key, c.f.Attrs, got, c.want)
+		}
+	}
+}

@@ -174,17 +174,43 @@ func capGrant(f core.Feature) bool {
 }
 
 // outsideUnserialize reports whether request or remote data reaches
-// unserialize, unless allowed_classes is false or the argument is the
-// plugin's own option.
+// unserialize, unless allowed_classes is false or the argument is only
+// the plugin's own option. A request or remote flow is never excused by
+// an option: unserialize($_REQUEST['d'] ?: get_option('x')) still fires.
 func outsideUnserialize(f core.Feature) bool {
-	if f.Attrs[AttrAllowedClasses] == "false" || strings.Contains(strings.ToLower(f.Attrs[AttrArg]), "get_option(") {
+	if f.Attrs[AttrAllowedClasses] == "false" {
 		return false
 	}
 	if f.Kind == core.FFlow {
 		return f.Key == "request->unserialize" || f.Key == "remote->unserialize"
 	}
+	if onlyCall(f.Attrs[AttrArg], "get_option") {
+		return false
+	}
 	src := f.Attrs[AttrSource]
 	return src == SrcRequest || src == SrcRemote
+}
+
+// onlyCall reports whether arg is one call of fn and nothing else: the
+// parenthesis after fn closes at the end of the text.
+func onlyCall(arg, fn string) bool {
+	a := strings.ToLower(strings.TrimSpace(arg))
+	if !strings.HasPrefix(a, fn+"(") {
+		return false
+	}
+	depth := 0
+	for i, r := range a[len(fn):] {
+		switch r {
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return len(fn)+i == len(a)-1
+			}
+		}
+	}
+	return false
 }
 
 // Write target classes (FWrite keys). insideTargets are where a package
