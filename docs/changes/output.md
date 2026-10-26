@@ -291,6 +291,12 @@ Record your review: `rhythm sightread allow wp-plugin:countdown-timer-ultimate@2
 Static diff of official releases; Sightread never ran this code. Not proof an update is safe.
 ```
 
+The `Record your review:` line appears only for a version `allow` accepts. In its place an
+unverified version or local copy gets `This version isn't verified, so it can't be allowed yet.`,
+an integrity-mismatch or failed check gets `This version doesn't match its published hash, so it
+can't be allowed.` and approved-version-changed gets `This allowed version now has other bytes, so
+it can't be allowed again until you know why.` The HTML report shows the same texts.
+
 Defanging: inside code spans and the diff block `https://` becomes
 `hxxps://` and the last dot of a host name becomes `[.]`
 (`analytics.wpos-cdn[.]example`), unless the last label is a file
