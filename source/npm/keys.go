@@ -15,6 +15,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/RhythmShahriar/sightread/fetch"
@@ -163,4 +165,45 @@ func verifySig(k key, name, version, integrity, sig string, published time.Time)
 		return fmt.Errorf("the signature does not verify")
 	}
 	return nil
+}
+
+// CheckKeys loads the public registry's signing keys and compares them
+// with the pinned set, for doctor (PRD 6.9). It fails when the answer
+// can't be read, when no key matches or when the registry serves a key
+// this build does not pin: signatures by that key would count as
+// unverified, so the build needs an update.
+func (s *Source) CheckKeys(ctx context.Context) (string, error) {
+	var doc keysDoc
+	if err := s.env.Get.JSON(ctx, s.base+"/-/npm/v1/keys", &doc, fetch.KindKeys); err != nil {
+		return "", err
+	}
+	served := usable(doc)
+	host := hostOf(s.base)
+	var unknown []string
+	for id, k := range served {
+		if p, ok := s.pinned[id]; !ok || p.der != k.der {
+			unknown = append(unknown, id)
+		}
+	}
+	slices.Sort(unknown)
+	switch {
+	case len(served) == 0:
+		return "", fmt.Errorf("%s serves no signing key Sightread can read", host)
+	case len(unknown) > 0:
+		return "", fmt.Errorf("%s serves %s this build does not pin (%s); update Sightread",
+			host, plural(len(unknown), "signing key", "signing keys"), strings.Join(unknown, ", "))
+	}
+	verb := "match"
+	if len(served) == 1 {
+		verb = "matches"
+	}
+	return fmt.Sprintf("%s of %s %s the set pinned in this build", plural(len(served), "key", "keys"), host, verb), nil
+}
+
+// plural is "<n> <one>" or "<n> <many>".
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return "1 " + one
+	}
+	return fmt.Sprintf("%d %s", n, many)
 }

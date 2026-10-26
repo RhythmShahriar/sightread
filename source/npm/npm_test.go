@@ -392,3 +392,50 @@ func TestPathName(t *testing.T) {
 		t.Errorf("plain: %q", got)
 	}
 }
+
+// TestCheckKeys: doctor's check passes when every key the registry
+// serves is pinned and fails for a key this build does not know or an
+// answer with no usable key.
+func TestCheckKeys(t *testing.T) {
+	sg := newSigner(t, "SHA256:test-key-1")
+	other := newSigner(t, "SHA256:test-key-2")
+	for _, c := range []struct {
+		name   string
+		served []map[string]any
+		want   string
+		fail   bool
+	}{
+		{"pinned", []map[string]any{sg.entry(t, "")}, "1 key of 127.0.0.1 matches the set pinned in this build", false},
+		{"unknown key", []map[string]any{sg.entry(t, ""), other.entry(t, "")},
+			"127.0.0.1 serves 1 signing key this build does not pin (SHA256:test-key-2); update Sightread", true},
+		{"no key", nil, "127.0.0.1 serves no signing key Sightread can read", true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := newRegistry(t)
+			r.body["/-/npm/v1/keys"] = []byte(keysJSON(t, c.served...))
+			pinExtra(t, sg.entry(t, ""))
+			got, err := New(env(t, r, nil, nil)).CheckKeys(context.Background())
+			if c.fail {
+				if err == nil || err.Error() != c.want {
+					t.Errorf("CheckKeys = %q, %v; want the error %q", got, err, c.want)
+				}
+				return
+			}
+			if err != nil || got != c.want {
+				t.Errorf("CheckKeys = %q, %v; want %q", got, err, c.want)
+			}
+		})
+	}
+}
+
+// TestCheckKeysPinnedOnly: without the loopback extra keys file the
+// registry's own key is not trusted, whatever it serves.
+func TestCheckKeysPinnedOnly(t *testing.T) {
+	sg := newSigner(t, "SHA256:test-key-1")
+	r := newRegistry(t)
+	r.body["/-/npm/v1/keys"] = []byte(keysJSON(t, sg.entry(t, "")))
+	t.Setenv(ExtraKeysEnv, "")
+	if _, err := New(env(t, r, nil, nil)).CheckKeys(context.Background()); err == nil {
+		t.Error("a key outside the pinned set passed")
+	}
+}
