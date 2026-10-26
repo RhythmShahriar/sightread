@@ -10,6 +10,7 @@ make hooks   # Conventional Commits check
 make check   # lint + tests
 make fuzz    # every fuzz target for 30s (FUZZTIME=10m for longer; SHARD=n SHARDS=m for a part)
 make testbed # the fixture registries on 127.0.0.1, for end-to-end tests and the benchmark
+make perf    # the speed targets: 2 s per plugin side, 50 MB/s of lexing (run it on an idle machine)
 ```
 
 Sightread builds with `GOWORK=off` against released versions of the Rhythm kit only; the Makefile
