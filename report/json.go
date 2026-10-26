@@ -91,9 +91,19 @@ var (
 // Format returns "jsonl".
 func (JSONLWriter) Format() string { return core.FormatJSONL }
 
-// WriteUpdate writes one {"kind":"update", ...} line.
-func (JSONLWriter) WriteUpdate(w io.Writer, u *core.Update, o core.WriteOptions) error {
-	p := newPaths("", o.RedactPaths)
+// WriteUpdate writes one {"kind":"update", ...} line. It doesn't know
+// the target, so with RedactPaths a path inside it stays absolute (only
+// the home folder becomes ~); WriteUpdateIn redacts as the json format
+// does.
+func (j JSONLWriter) WriteUpdate(w io.Writer, u *core.Update, o core.WriteOptions) error {
+	return j.WriteUpdateIn(w, u, "", o)
+}
+
+// WriteUpdateIn is WriteUpdate for an update of the report on target
+// (Report.Target.Path): with RedactPaths a path inside target becomes
+// relative to it, as in the json format.
+func (JSONLWriter) WriteUpdateIn(w io.Writer, u *core.Update, target string, o core.WriteOptions) error {
+	p := newPaths(target, o.RedactPaths)
 	return encode(w, jsonUpdateLine{Kind: "update", jsonUpdate: updateJSON(u, p)}, false)
 }
 

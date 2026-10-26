@@ -285,6 +285,23 @@ func TestRedactPaths(t *testing.T) {
 	if !bytes.Contains(plain, []byte(home)) {
 		t.Errorf("without RedactPaths the path should stay")
 	}
+
+	// JSONL update lines redact like json once they know the target.
+	var line bytes.Buffer
+	if err := (JSONLWriter{}).WriteUpdateIn(&line, &r.Updates[0], site, o); err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(line.Bytes(), []byte(home)) || !bytes.Contains(line.Bytes(), []byte(`"path":"wp-content/plugins/x"`)) {
+		t.Errorf("jsonl line not redacted like json:\n%s", line.String())
+	}
+	// Without the target only the home prefix can go.
+	line.Reset()
+	if err := (JSONLWriter{}).WriteUpdate(&line, &r.Updates[0], o); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(line.Bytes(), []byte(`"path":"~/sites/shop/wp-content/plugins/x"`)) {
+		t.Errorf("jsonl line without target:\n%s", line.String())
+	}
 }
 
 func TestNoFakeSecrets(t *testing.T) {
