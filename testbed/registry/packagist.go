@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/RhythmShahriar/sightread/testbed/ports"
 )
@@ -125,6 +126,10 @@ func (r *Registry) pkgMeta(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	cv, _ := p.meta.CandidateVersion()
+	created := r.opts.Now
+	if bv, ok := p.versions[p.installed]; ok {
+		created = bv.published
+	}
 	var maints []map[string]string
 	for _, m := range cv.Maintainers {
 		maints = append(maints, map[string]string{"name": m})
@@ -132,9 +137,21 @@ func (r *Registry) pkgMeta(w http.ResponseWriter, req *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{
 		"package": map[string]any{
 			"name":        rest,
+			"description": "Fixture package " + rest + ".",
+			"time":        created.Format(time.RFC3339),
+			"type":        "library",
 			"maintainers": maints,
 			"abandoned":   false,
 			"repository":  "https://" + p.meta.Repository,
+			// The rest of the public shape, with fixed values: Sightread
+			// reads versions from p2, never from here.
+			"versions":     map[string]any{},
+			"github_stars": 10,
+			"language":     "PHP",
+			"dependents":   0,
+			"suggesters":   0,
+			"favers":       10,
+			"downloads":    map[string]int{"total": 1000, "monthly": 100, "daily": 3},
 		},
 	})
 }

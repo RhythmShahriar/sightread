@@ -1,0 +1,19 @@
+{
+  "package": {
+    "name": "vendor/example",
+    "description": "An example library.",
+    "time": "2020-01-01T00:00:00+00:00",
+    "maintainers": [
+      {"name": "vendoruser", "avatar_url": "https://www.gravatar.com/avatar/0000?d=identicon"}
+    ],
+    "versions": {},
+    "type": "library",
+    "repository": "https://github.com/vendor/example",
+    "github_stars": 10,
+    "language": "PHP",
+    "dependents": 0,
+    "suggesters": 0,
+    "favers": 10,
+    "downloads": {"total": 1000, "monthly": 100, "daily": 3}
+  }
+}

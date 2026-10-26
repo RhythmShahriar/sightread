@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -153,6 +154,17 @@ func getJSON(t *testing.T, c *http.Client, url string) map[string]any {
 // recordedKeys loads a recorded example and returns its top-level keys.
 func recordedKeys(t *testing.T, name string) []string {
 	t.Helper()
+	m := recordedJSON(t, name)
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// recordedJSON loads a recorded example as a generic map.
+func recordedJSON(t *testing.T, name string) map[string]any {
+	t.Helper()
 	b, err := os.ReadFile(filepath.Join("testdata", name))
 	if err != nil {
 		t.Fatal(err)
@@ -161,11 +173,38 @@ func recordedKeys(t *testing.T, name string) []string {
 	if err := json.Unmarshal(b, &m); err != nil {
 		t.Fatal(err)
 	}
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
+	return m
+}
+
+// assertMapKeys fails when got is missing a key of the recorded object.
+func assertMapKeys(t *testing.T, label string, got, recorded map[string]any) {
+	t.Helper()
+	for k := range recorded {
+		if _, ok := got[k]; !ok {
+			t.Errorf("%s: served object missing key %q", label, k)
+		}
 	}
-	return keys
+}
+
+// xmlElements returns the namespace-qualified names of every element in
+// an XML document, as "<namespace> <local>", so prefixes do not matter
+// (mod_dav_svn writes lp1:creator-displayname, the registry D:).
+func xmlElements(t *testing.T, b []byte) map[string]bool {
+	t.Helper()
+	out := map[string]bool{}
+	dec := xml.NewDecoder(bytes.NewReader(b))
+	for {
+		tok, err := dec.Token()
+		if err == io.EOF {
+			return out
+		}
+		if err != nil {
+			t.Fatalf("bad XML: %v\n%s", err, b)
+		}
+		if se, ok := tok.(xml.StartElement); ok {
+			out[se.Name.Space+" "+se.Name.Local] = true
+		}
+	}
 }
 
 // assertKeys fails when got is missing a key the recorded example has.
@@ -205,6 +244,60 @@ func TestFixtureRegistry(t *testing.T) {
 		for path := range files {
 			if !names[path] {
 				t.Errorf("checksum names %q but the zip has no such file", path)
+			}
+		}
+	})
+
+	t.Run("wporg theme info shape", func(t *testing.T) {
+		got := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/themes/info/1.2/?action=theme_information&request[slug]=example-theme")
+		assertKeys(t, "wporg theme", got, "wporg-theme-info.json")
+		author, ok := got["author"].(map[string]any)
+		if !ok {
+			t.Fatalf("theme author is %T, want an object as the themes API gives", got["author"])
+		}
+		recorded := recordedJSON(t, "wporg-theme-info.json")["author"].(map[string]any)
+		assertMapKeys(t, "wporg theme author", author, recorded)
+		if author["user_nicename"] != "themeauthor" {
+			t.Errorf("theme author login = %v, want themeauthor", author["user_nicename"])
+		}
+	})
+
+	t.Run("plugin checksums shape", func(t *testing.T) {
+		got := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugin-checksums/example-plugin/1.3.0.json")
+		assertKeys(t, "plugin checksums", got, "wporg-plugin-checksums.json")
+		files, _ := got["files"].(map[string]any)
+		for name, f := range files {
+			entry, _ := f.(map[string]any)
+			if _, ok := entry["sha256"].(string); !ok {
+				t.Errorf("checksum of %s has no sha256 string: %v", name, f)
+			}
+		}
+	})
+
+	t.Run("packagist maintainers shape", func(t *testing.T) {
+		got := getJSON(t, c, baseOf(reg, ports.Packagist)+"/packages/vendor/example.json")
+		assertKeys(t, "packagist packages", got, "packagist-packages.json")
+		pkg, ok := got["package"].(map[string]any)
+		if !ok {
+			t.Fatalf("package is %T, want an object", got["package"])
+		}
+		assertMapKeys(t, "packagist package", pkg, recordedJSON(t, "packagist-packages.json")["package"].(map[string]any))
+		maints, _ := pkg["maintainers"].([]any)
+		if len(maints) != 1 || maints[0].(map[string]any)["name"] != "vendoruser" {
+			t.Errorf("maintainers = %v, want [vendoruser]", pkg["maintainers"])
+		}
+	})
+
+	t.Run("propfind shape", func(t *testing.T) {
+		body := propfind(t, c, baseOf(reg, ports.WPOrg)+"/svn/plugins/example-plugin/tags/1.3.0/")
+		served := xmlElements(t, []byte(body))
+		b, err := os.ReadFile(filepath.Join("testdata", "svn-propfind.xml"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for name := range xmlElements(t, b) {
+			if !served[name] {
+				t.Errorf("PROPFIND answer has no %s element: %s", name, body)
 			}
 		}
 	})

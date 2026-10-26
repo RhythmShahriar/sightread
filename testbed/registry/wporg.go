@@ -81,6 +81,23 @@ func (r *Registry) wpInfo(eco string) http.HandlerFunc {
 			"sections":       map[string]string{"changelog": changelogHTML(p, r.publishedVersions(p))},
 			"download_count": 12345,
 		}
+		if eco == "wp-theme" {
+			// The themes API gives the author as an object and dates in
+			// two more fields; the plugins API gives HTML text.
+			resp["author"] = map[string]string{
+				"user_nicename": lv.meta.Author,
+				"profile":       "https://profiles.wordpress.org/" + lv.meta.Author,
+				"avatar":        "",
+				"display_name":  lv.meta.Author,
+				"author":        lv.meta.Author,
+				"author_url":    "",
+			}
+			resp["last_updated_time"] = lv.published.Format("2006-01-02 15:04:05")
+			resp["creation_time"] = p.versions[p.installed].published.Format("2006-01-02 15:04:05")
+			resp["homepage"] = "https://wordpress.org/themes/" + slug + "/"
+			resp["preview_url"] = "https://wp-themes.com/" + slug + "/"
+			delete(resp, "author_profile")
+		}
 		writeJSON(w, http.StatusOK, resp)
 	}
 }
@@ -180,7 +197,13 @@ func (r *Registry) wpChecksums(w http.ResponseWriter, req *http.Request) {
 	for pth, sum := range bv.checksums {
 		files[pth] = map[string]string{"sha256": sum}
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"plugin": slug, "version": version, "files": files})
+	writeJSON(w, http.StatusOK, map[string]any{
+		"plugin":  slug,
+		"version": version,
+		"source":  r.baseURL(req) + "/svn/plugins/" + slug + "/tags/" + version + "/",
+		"zip":     r.baseURL(req) + "/plugin/" + slug + "." + version + ".zip",
+		"files":   files,
+	})
 }
 
 // writeJSON writes v as JSON with the given status.
