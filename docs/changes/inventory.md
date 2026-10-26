@@ -16,7 +16,7 @@ For npm it reads the first of these it finds in a folder, in this order:
 
 `bun.lockb`, Bun's binary lockfile, can't be read. `bun.lock` next to it is read as usual.
 
-A lockfile is capped at 64 MiB. In `pnpm-lock.yaml` and Berry `yarn.lock`, YAML aliases may expand to at most 10,000 nodes each and the document to 2,000,000 nodes and 64 levels.
+A lockfile is capped at 64 MiB. In `pnpm-lock.yaml` and Berry `yarn.lock`, YAML aliases may expand to at most 10,000 nodes each and the document to 2,000,000 nodes and 64 levels. A YAML lockfile is counted before it is decoded: one whose block entries, mapping colons and flow separators pass 2,000,000 is refused at once with the same error, so a flat list near the size cap costs neither gigabytes of memory nor seconds.
 
 ### .npmrc
 
