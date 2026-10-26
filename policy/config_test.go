@@ -90,6 +90,7 @@ func TestConfigRules(t *testing.T) {
 		{"severity unknown id", "signals:\n  severity:\n    fresh-relase: low\n", `signals.severity: no signal "fresh-relase" (did you mean fresh-release?)`},
 		{"severity lowers unignorable", "signals:\n  severity:\n    known-malicious: high\n", "signals.severity.known-malicious: known-malicious can't be lowered below critical; it says the bytes are not the ones published or reviewed"},
 		{"domains_ok glob", "signals:\n  domains_ok: [\"[x\"]\n", `signals.domains_ok: bad pattern "[x"`},
+		{"soundcheck fail_on", "soundcheck:\n  fail_on: broken\n", `soundcheck.fail_on "broken": want broke, new or changed`},
 		{"production URL", "soundcheck:\n  production: [shop.example.com]\n", `soundcheck.production 1: "shop.example.com" is not a site URL such as https://shop.example.com`},
 		{"local_files empty", "local_files:\n  gravityforms: \"\"\n", "local_files.gravityforms: needs a path such as ~/vendor-zips/gravityforms-{version}.zip"},
 		{"allow_from empty", "allow_from: [\"\"]\n", "allow_from: a path is empty"},
@@ -406,4 +407,16 @@ func FuzzConfig(f *testing.F) {
 			}
 		}
 	})
+}
+
+// Positive: every Soundcheck change class is a valid soundcheck.fail_on.
+func TestSoundcheckFailOnClasses(t *testing.T) {
+	for _, class := range []string{"broke", "new", "changed"} {
+		dir := inProject(t)
+		writeConfig(t, dir, "soundcheck:\n  fail_on: "+class+"\n")
+		c, _, err := testStore(nil).LoadConfig(dir, "", false)
+		if err != nil || c.Soundcheck.FailOn != class {
+			t.Errorf("%s: %v %+v", class, err, c)
+		}
+	}
 }

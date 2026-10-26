@@ -184,6 +184,13 @@ func (s *Store) ParseConfig(data []byte, name string) (*core.Config, error) {
 			return nil, bad("soundcheck.production %d: %s", i+1, err)
 		}
 	}
+	// The Soundcheck change classes (stage.ClassBroke and the others);
+	// any other word would never trip the gate.
+	switch c.Soundcheck.FailOn {
+	case "", "broke", "new", "changed":
+	default:
+		return nil, bad("soundcheck.fail_on %q: want broke, new or changed", c.Soundcheck.FailOn)
+	}
 	return &c, nil
 }
 
