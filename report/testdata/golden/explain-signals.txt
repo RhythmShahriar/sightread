@@ -1,0 +1,1157 @@
+integrity-mismatch: Archive does not match the published hash
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+  Unignorable: yes: it can't be ignored, allowed or lowered below critical
+
+Why it matters
+  A release that shows integrity-mismatch can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped integrity-mismatch.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#integrity-mismatch
+
+version-republished: Same version, different bytes than the lockfile recorded
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  npm, composer
+  Unignorable: yes: it can't be ignored, allowed or lowered below critical
+
+Why it matters
+  A release that shows version-republished can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped version-republished.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#version-republished
+
+approved-version-changed: Allowed version now has a different hash
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+  Unignorable: yes: it can't be ignored, allowed or lowered below critical
+
+Why it matters
+  A release that shows approved-version-changed can change what runs on every
+  request of your site. This text stands in for the detect lane's explain YAML,
+  which the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped approved-version-changed.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#approved-version-changed
+
+known-malicious: Listed as malicious by OSV
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  npm, composer
+  Unignorable: yes: it can't be ignored, allowed or lowered below critical
+
+Why it matters
+  A release that shows known-malicious can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped known-malicious.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#known-malicious
+
+wporg-closed: Closed on WordPress.org
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows wporg-closed can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped wporg-closed.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#wporg-closed
+
+archive-path-escape: Archive entry points outside the package
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+  Unignorable: yes: it can't be ignored, allowed or lowered below critical
+
+Why it matters
+  A release that shows archive-path-escape can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped archive-path-escape.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-path-escape
+
+remote-fetch-exec: Fetches remote code and runs it
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows remote-fetch-exec can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped remote-fetch-exec.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec
+
+decode-exec: Decodes hidden code and runs it
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows decode-exec can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped decode-exec.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#decode-exec
+
+admin-user-hidden: Hides users from the admin user list
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows admin-user-hidden can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped admin-user-hidden.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#admin-user-hidden
+
+lockfile-source-change: Lockfile entry moved off the registry
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  npm, composer
+
+Why it matters
+  A release that shows lockfile-source-change can change what runs on every
+  request of your site. This text stands in for the detect lane's explain YAML,
+  which the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped lockfile-source-change.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#lockfile-source-change
+
+archive-link: Archive holds a link or special file
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows archive-link can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped archive-link.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-link
+
+archive-collision: Archive holds two entries with the same name
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows archive-collision can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped archive-collision.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-collision
+
+unanalysed: Code that could not be analysed
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows unanalysed can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped unanalysed.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#unanalysed
+
+eval-dynamic: Runs code built at run time
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows eval-dynamic can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped eval-dynamic.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#eval-dynamic
+
+obfuscation: Adds a large encoded or scrambled blob
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows obfuscation can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped obfuscation.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#obfuscation
+
+input-unserialize: Unserializes request or remote data
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer
+
+Why it matters
+  A release that shows input-unserialize can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped input-unserialize.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#input-unserialize
+
+write-outside-package: Writes files outside its own folder
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows write-outside-package can change what runs on every
+  request of your site. This text stands in for the detect lane's explain YAML,
+  which the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped write-outside-package.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#write-outside-package
+
+admin-user-create: Creates an administrator account
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows admin-user-create can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped admin-user-create.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#admin-user-create
+
+capability-change: Grants admin capabilities to another role
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows capability-change can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped capability-change.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#capability-change
+
+update-suppression: Blocks updates of other plugins or themes
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows update-suppression can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped update-suppression.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#update-suppression
+
+bot-cloaking: Shows search engines different content
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, npm
+
+Why it matters
+  A release that shows bot-cloaking can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped bot-cloaking.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#bot-cloaking
+
+credential-access: Reads credentials or tokens
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows credential-access can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped credential-access.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#credential-access
+
+data-exfil: Sends site data to a new host
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows data-exfil can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped data-exfil.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#data-exfil
+
+code-in-asset: Hides code in an image, font or text file
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows code-in-asset can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped code-in-asset.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#code-in-asset
+
+npm-install-script-new: Adds or changes an install script
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  npm
+
+Why it matters
+  A release that shows npm-install-script-new can change what runs on every
+  request of your site. This text stands in for the detect lane's explain YAML,
+  which the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped npm-install-script-new.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#npm-install-script-new
+
+composer-plugin-new: Runs code when Composer installs it
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  composer
+
+Why it matters
+  A release that shows composer-plugin-new can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped composer-plugin-new.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#composer-plugin-new
+
+owner-change: New owner or publisher
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows owner-change can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped owner-change.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#owner-change
+
+provenance-dropped: Release lost its build provenance
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  npm
+
+Why it matters
+  A release that shows provenance-dropped can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped provenance-dropped.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#provenance-dropped
+
+typosquat: New dependency named like a popular package
+  Severity:    high
+  Confidence:  likely
+  Ecosystems:  npm, composer
+
+Why it matters
+  A release that shows typosquat can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped typosquat.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#typosquat
+
+known-vulnerable: Has a known vulnerability
+  Severity:    high
+  Confidence:  confirmed
+  Ecosystems:  npm, composer
+
+Why it matters
+  A release that shows known-vulnerable can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped known-vulnerable.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#known-vulnerable
+
+dependency-confusion: Private name also published publicly
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  npm, composer
+
+Why it matters
+  A release that shows dependency-confusion can change what runs on every
+  request of your site. This text stands in for the detect lane's explain YAML,
+  which the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped dependency-confusion.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dependency-confusion
+
+outbound-new-domain: Contacts a new domain
+  Severity:    medium
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows outbound-new-domain can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped outbound-new-domain.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#outbound-new-domain
+
+rest-open-route: Adds a REST route anyone can call
+  Severity:    medium
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows rest-open-route can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped rest-open-route.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#rest-open-route
+
+changelog-mismatch: Changelog does not mention what the code adds
+  Severity:    medium
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows changelog-mismatch can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped changelog-mismatch.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#changelog-mismatch
+
+dependency-new: Adds a runtime dependency
+  Severity:    medium
+  Confidence:  confirmed
+  Ecosystems:  npm, composer
+
+Why it matters
+  A release that shows dependency-new can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped dependency-new.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dependency-new
+
+composer-autoload-files: Adds a file that runs on every request
+  Severity:    medium
+  Confidence:  confirmed
+  Ecosystems:  composer
+
+Why it matters
+  A release that shows composer-autoload-files can change what runs on every
+  request of your site. This text stands in for the detect lane's explain YAML,
+  which the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped composer-autoload-files.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#composer-autoload-files
+
+fresh-release: Released very recently
+  Severity:    medium
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows fresh-release can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped fresh-release.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#fresh-release
+
+dormant-release: First release after a long silence
+  Severity:    medium
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows dormant-release can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped dormant-release.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dormant-release
+
+git-tag-missing: No matching tag in the repository
+  Severity:    medium
+  Confidence:  likely
+  Ecosystems:  npm
+
+Why it matters
+  A release that shows git-tag-missing can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped git-tag-missing.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#git-tag-missing
+
+size-jump: Code grew far more than usual
+  Severity:    medium
+  Confidence:  likely
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows size-jump can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped size-jump.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#size-jump
+
+unicode-hidden: Hidden or bidirectional characters in code
+  Severity:    medium
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows unicode-hidden can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped unicode-hidden.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#unicode-hidden
+
+secret-added: Adds a credential to the code
+  Severity:    medium
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows secret-added can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped secret-added.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#secret-added
+
+cron-new-hook: Schedules a new background task
+  Severity:    low
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme
+
+Why it matters
+  A release that shows cron-new-hook can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped cron-new-hook.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#cron-new-hook
+
+license-change: License changed
+  Severity:    low
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows license-change can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped license-change.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#license-change
+
+abandoned: Marked abandoned or not updated in years
+  Severity:    low
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer
+
+Why it matters
+  A release that shows abandoned can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped abandoned.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#abandoned
+
+local-drift: Installed copy differs from the official one
+  Severity:    info
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer
+
+Why it matters
+  A release that shows local-drift can change what runs on every request of your
+  site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped local-drift.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#local-drift
+
+php-requirement: PHP requirement changed
+  Severity:    info
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer
+
+Why it matters
+  A release that shows php-requirement can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped php-requirement.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#php-requirement
+
+files-removed: Removes security-relevant files
+  Severity:    info
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows files-removed can change what runs on every request of
+  your site. This text stands in for the detect lane's explain YAML, which the
+  release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped files-removed.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#files-removed
+
