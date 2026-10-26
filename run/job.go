@@ -48,6 +48,10 @@ func (r *reviewer) pick(ctx context.Context, t *target) error {
 	}
 	t.cand, t.versions = res.cand, res.versions
 	switch {
+	case res.upToDate && r.sameWorthChecking(t):
+		// Nothing to diff, but the source may serve other bytes under
+		// the installed version now: reviewSame checks that.
+		t.picked, t.same = true, true
 	case res.upToDate:
 		t.skip = true
 		if t.explicit {
@@ -95,6 +99,106 @@ func (r *reviewer) pickPrevious(ctx context.Context, src core.Source, t *target)
 	t.versions, t.cand = versions, candidate{Version: installed}
 	t.fromVersion, t.rereview, t.picked = prev, true, true
 	return nil
+}
+
+// sameWorthChecking reports whether an installed version that is
+// already the candidate still needs its source: its lock entry records
+// an integrity or a commit, or an allow entry records a hash for it.
+// Either shows a version republished in place, which the source alone
+// can tell. A version with neither costs no request.
+func (r *reviewer) sameWorthChecking(t *target) bool {
+	if t.fromVersion == "" || t.fromVersion != t.cand.Version || t.fromFile != "" || t.toFile != "" || t.localFrom != "" {
+		return false
+	}
+	if l := t.oldLock; l != nil && (l.Integrity != "" || l.Reference != "") {
+		return true
+	}
+	return r.allowed(t)
+}
+
+// allowed reports whether an allow entry that counts names t's
+// candidate version, whatever hash it records.
+func (r *reviewer) allowed(t *target) bool {
+	if r.allow == nil {
+		return false
+	}
+	// No hash matches "", so any counted entry for the version comes
+	// back as the match or the conflict.
+	match, counted, conflict := r.allow.Match(t.eco, t.name, t.cand.Version, "")
+	return match != nil && counted || conflict != nil
+}
+
+// sameSignals are what reviewSame reports: the version's bytes, as the
+// lockfile, the allow entries and the source's own hashes recorded them.
+// The scorer adds approved-version-changed.
+var sameSignals = map[string]bool{"version-republished": true, "integrity-mismatch": true}
+
+// reviewSame checks an installed version that is already the candidate.
+// There is nothing to diff, but the source must still serve what was
+// recorded for it: a lock integrity or commit other than the source's is
+// version-republished (PRD 11) and other bytes under an allowed version
+// are approved-version-changed (SR-9). The archive is fetched only when
+// an allow entry needs its hash. When everything matches the run says
+// the version is up to date, as before.
+func (r *reviewer) reviewSame(ctx context.Context, src core.Source, t *target) *result {
+	res := &result{}
+	fail := func(err error) *result {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return r.failure(t, err)
+	}
+	ref := core.Ref{Eco: t.eco, Name: t.name, Version: t.cand.Version}
+	m, err := src.Meta(ctx, ref)
+	if err != nil {
+		return fail(err)
+	}
+	u := &core.Update{Eco: t.eco, Name: t.name}
+	for _, mb := range t.members {
+		if mb.site != "" {
+			u.Sites = append(u.Sites, mb.site)
+		}
+	}
+	if inst := t.installed(); inst != nil {
+		u.Installed = core.InstalledInfo{Path: inst.Path, Lockfile: inst.Lockfile, LockLine: inst.LockLine}
+	}
+	s := &core.Subject{Update: ref, Old: m, New: m, OldLock: t.oldLock, Config: r.cfg, Now: r.req.now()}
+	u.To = core.Side{Version: ref.Version, URL: m.Archive.URL, Released: m.Published, Source: sourceName(t.eco)}
+	if r.allowed(t) {
+		tree, in, cached, err := r.fetch(ctx, src, m)
+		if err != nil {
+			return fail(err)
+		}
+		s.NewTree, s.NewIntegrity = tree, in
+		u.To, u.FromCache = r.sideInfo(ref, m, tree, in, ""), cached
+	}
+	u.To.Latest = t.cand.Latest != "" && ref.Version == t.cand.Latest
+	u.To.Wanted = t.cand.Wanted != "" && ref.Version == t.cand.Wanted
+	u.To.Constraint = t.constraint
+	u.From = core.Side{Version: ref.Version, Source: u.To.Source}
+	findings, errs := r.detect(ctx, s)
+	for _, f := range findings {
+		if sameSignals[f.ID] {
+			u.Findings = append(u.Findings, f)
+		}
+	}
+	if ctx.Err() != nil {
+		return nil
+	}
+	r.scorer.Score(ctx, u, r.cfg, r.allow, r.baseline)
+	if len(u.Findings) == 0 {
+		if t.explicit {
+			r.note(upToDateNote(t))
+		}
+		return res
+	}
+	for _, e := range errs {
+		u.Errors = append(u.Errors, core.ErrorEntry{Eco: t.eco, Name: t.name, Message: e})
+	}
+	r.filter(u)
+	r.finish(u)
+	res.update = u
+	return res
 }
 
 func upToDateNote(t *target) string {
@@ -177,6 +281,9 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 	official := t.toFile == "" || (t.fromVersion != "" && t.fromFile == "" && t.localFrom == "")
 	if src == nil && official {
 		return fail(fmt.Errorf("%s source %w", t.eco, core.ErrNotLinked))
+	}
+	if t.same {
+		return r.reviewSame(ctx, src, t)
 	}
 	u := &core.Update{Eco: t.eco, Name: t.name}
 
