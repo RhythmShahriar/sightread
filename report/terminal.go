@@ -790,9 +790,9 @@ func tableFindings(u *core.Update) string {
 	return s
 }
 
-// diffed reports whether run diffed u: an unverified update is diffed
-// only with --allow-unverified, and a diff always has the new side's
-// size, so empty stats mean it was not.
+// diffed reports whether run diffed u. An unverified update is diffed
+// only with --allow-unverified. A diff always has the new side's size,
+// so empty stats mean it was not.
 func diffed(u *core.Update) bool { return u.Diff != (core.DiffStats{}) }
 
 // table writes VERDICT UPDATE FROM TO FINDINGS, worst first, with the

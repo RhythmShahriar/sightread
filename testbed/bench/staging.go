@@ -165,11 +165,11 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 }
 
 // soundcheckJail runs the real rhythm-soundcheck through a wrapper that
-// gives it, and the Chrome it starts, a HOME and caches in the work
-// folder and a proxy guard of their own. Chrome calls Google services
-// and writes font and dconf caches whatever Soundcheck asks; those are
-// Soundcheck's, so they must not count as Sightread's egress or outside
-// writes, and they must still go nowhere.
+// gives Soundcheck and the Chrome it starts a HOME and caches in the
+// work folder and a proxy guard of their own. Chrome calls Google
+// services and writes font and dconf caches whatever Soundcheck asks.
+// Those are Soundcheck's, so they must not count as Sightread's egress
+// or outside writes. They must still go nowhere.
 type soundcheckJail struct {
 	bin   string // the folder holding the wrapper, for the front of PATH
 	guard *probes.Guard

@@ -345,7 +345,7 @@ func TestSVNCheckSkipsTLSCache(t *testing.T) {
 }
 
 // TestSignalDirsCheckedFirst: the --signals folders reach the detectors'
-// config check, and its error stops the run before any download.
+// config check; its error stops the run before any download.
 func TestSignalDirsCheckedFirst(t *testing.T) {
 	w := runtest.Install(t)
 	w.Publish(core.WPPlugin, "akismet", "5.3.3", "5.3.5")
