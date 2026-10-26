@@ -5,7 +5,7 @@
 # WP-CLI in the testbed's WordPress container, as www-data. Sightread
 # sees a local command (no ssh, docker or ddev prefix), so --soundcheck
 # installs the exact archive it reviewed: any absolute path to a file is
-# copied into state/wp-share, which the container mounts at /share, and
+# copied into state/wp-share (the container mounts it at /share) and
 # the argument is rewritten to that path. WP-CLI installs a local file
 # only when its name ends in .zip, so the copy always does.
 #
