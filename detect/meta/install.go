@@ -100,13 +100,16 @@ func changedInstallScripts(s *core.Subject) []string {
 	}
 	var out []string
 	for _, k := range lifecycleScripts {
-		nv, ov := collapse(s.New.Scripts[k]), collapse(old[k])
+		// The guards read the raw text: collapse would turn a newline,
+		// which the shell runs as a second command, into a space.
+		raw, rawOld := s.New.Scripts[k], old[k]
+		nv, ov := collapse(raw), collapse(rawOld)
 		switch {
 		case nv == "" || nv == ov:
-		case nodeGyp(nv) && (nodeGyp(ov) || ov == "" && hadBindingGyp(s)):
+		case nodeGyp(raw) && (nodeGyp(rawOld) || ov == "" && hadBindingGyp(s)):
 			// One native build command swapped for another, or the
 			// implicit node-gyp rebuild of binding.gyp written out.
-		case k == "prepare" && benignPrepare(nv, s.Old):
+		case k == "prepare" && benignPrepare(raw, s.Old, s.New):
 		default:
 			out = append(out, k)
 		}
@@ -131,8 +134,14 @@ var nativeBuild = []string{
 	"cmake-js compile", "cmake-js rebuild", "node-gyp configure",
 }
 
-// nodeGyp reports whether every command of script is a native build.
+// nodeGyp reports whether every command of script is a native build
+// with nothing but plain flags after it. Anything the shell could turn
+// into a second program (substitution, backticks, redirection) makes it
+// no native build, so "node-gyp rebuild $(node x.js)" is not one.
 func nodeGyp(script string) bool {
+	if hasShellMeta(script) {
+		return false
+	}
 	cmds := commands(script)
 	if len(cmds) == 0 {
 		return false
@@ -140,7 +149,7 @@ func nodeGyp(script string) bool {
 	for _, c := range cmds {
 		ok := false
 		for _, b := range nativeBuild {
-			if c == b || strings.HasPrefix(c, b+" ") {
+			if c == b || strings.HasPrefix(c, b+" ") && plainFlags(strings.Fields(c[len(b):])) {
 				ok = true
 				break
 			}
@@ -152,9 +161,51 @@ func nodeGyp(script string) bool {
 	return true
 }
 
-// commands splits a script at &&, ||, ; and |, trimming each part.
+// hasShellMeta reports text the shell runs or redirects beyond the
+// plain command: $( ), ${ }, backticks and < or >.
+func hasShellMeta(script string) bool {
+	return strings.ContainsAny(script, "`<>") || strings.Contains(script, "$(") || strings.Contains(script, "${")
+}
+
+// plainFlags reports whether args are only flags ("--release",
+// "--target=20", "-j") plus the one value right after a flag without
+// "=" ("-O build"), all in a plain character set. A loose word such as
+// "node-gyp rebuild node x.js" is refused.
+func plainFlags(args []string) bool {
+	prevFlag := false
+	for _, a := range args {
+		if !plainWord(a) {
+			return false
+		}
+		switch {
+		case strings.HasPrefix(a, "-"):
+			prevFlag = !strings.Contains(a, "=")
+		case prevFlag:
+			prevFlag = false
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// plainWord reports whether w has only letters, digits and . _ , / : = @ + -.
+func plainWord(w string) bool {
+	for _, r := range w {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9':
+		case strings.ContainsRune("._,/:=@+-", r):
+		default:
+			return false
+		}
+	}
+	return w != ""
+}
+
+// commands splits a script at &&, ||, ;, |, & and line breaks (the
+// shell runs each line as its own command), trimming each part.
 func commands(script string) []string {
-	f := func(r rune) bool { return r == '&' || r == '|' || r == ';' }
+	f := func(r rune) bool { return r == '&' || r == '|' || r == ';' || r == '\n' || r == '\r' }
 	var out []string
 	for _, c := range strings.FieldsFunc(script, f) {
 		if c = collapse(c); c != "" {
@@ -202,20 +253,28 @@ var runners = map[string]bool{
 	"node": true, "sh": true, "bash": true, "zsh": true, "python": true, "python3": true, "perl": true,
 	"ruby": true, "php": true, "curl": true, "wget": true, "pwsh": true, "powershell": true, "cmd": true,
 	"deno": true, "bun": true, "eval": true, "exec": true, "env": true,
+	// A package manager runs any script or package it is given; only the
+	// "same script as before" case of benignPrepare vouches for it.
+	"npm": true, "yarn": true, "pnpm": true, "npx": true,
 }
 
 // benignPrepare reports whether every command of a prepare script only
-// runs husky or a build tool the installed version already depended on
-// or ran: prepare runs for git and local installs; those commands
-// were trusted before.
-func benignPrepare(script string, old *core.Meta) bool {
+// runs husky, a script the installed version had with the same text or
+// a build tool the installed version already depended on or ran:
+// prepare runs for git and local installs; those commands were trusted
+// before. Substitution, redirection and environment assignments are
+// never benign: NODE_OPTIONS=--require=./x.js makes even tsc load code.
+func benignPrepare(script string, old, cur *core.Meta) bool {
+	if hasShellMeta(script) {
+		return false
+	}
 	cmds := commands(script)
 	if len(cmds) == 0 {
 		return false
 	}
 	for _, c := range cmds {
 		words := strings.Fields(c)
-		for len(words) > 0 && (words[0] == "npx" || words[0] == "is-ci" || strings.Contains(words[0], "=")) {
+		for len(words) > 0 && (words[0] == "npx" || words[0] == "is-ci") {
 			words = words[1:]
 		}
 		if len(words) == 0 {
@@ -223,8 +282,10 @@ func benignPrepare(script string, old *core.Meta) bool {
 		}
 		prog := words[0]
 		switch {
+		case isAssignment(prog):
+			return false
 		case prog == "husky":
-		case (prog == "npm" || prog == "yarn" || prog == "pnpm") && len(words) > 1 && oldRunsScript(words[1:], old):
+		case (prog == "npm" || prog == "yarn" || prog == "pnpm") && len(words) > 1 && oldRunsScript(prog, words[1:], old, cur):
 		case old != nil && !runners[prog] && toolPresent(prog, old):
 		default:
 			return false
@@ -233,21 +294,70 @@ func benignPrepare(script string, old *core.Meta) bool {
 	return true
 }
 
-// oldRunsScript reports whether "run build" (or "build") names a script
-// the installed version had with the same text.
-func oldRunsScript(args []string, old *core.Meta) bool {
-	if old == nil {
+// isAssignment reports a VAR=value word in command position.
+func isAssignment(w string) bool {
+	name, _, ok := strings.Cut(w, "=")
+	return ok && name != "" && !strings.HasPrefix(name, "-")
+}
+
+// pmBuiltins are package manager commands that are not scripts: yarn
+// and pnpm run a bare name as a script only when it is none of these.
+var pmBuiltins = map[string]bool{
+	"add": true, "install": true, "i": true, "ci": true, "exec": true, "dlx": true, "x": true,
+	"create": true, "link": true, "unlink": true, "remove": true, "rm": true, "up": true, "upgrade": true,
+	"publish": true, "pack": true, "rebuild": true, "patch": true, "node": true, "set": true, "config": true,
+}
+
+// npmScriptCmds are the npm commands that run a script of the same name.
+var npmScriptCmds = map[string]bool{"test": true, "start": true, "stop": true, "restart": true}
+
+// oldRunsScript reports whether "run build" (or "build" for yarn and
+// pnpm) names a script the installed version had with the same text in
+// the candidate. Every script it runs in turn must be unchanged too, so
+// an untouched "build: npm run gen" can't vouch for a new gen.
+func oldRunsScript(pm string, args []string, old, cur *core.Meta) bool {
+	if old == nil || cur == nil {
 		return false
 	}
 	name := args[0]
-	if name == "run" || name == "run-script" {
+	switch {
+	case name == "run" || name == "run-script":
 		if len(args) < 2 {
 			return false
 		}
 		name = args[1]
+	case pm == "npm" && !npmScriptCmds[name], pm != "npm" && pmBuiltins[name]:
+		return false
 	}
-	_, ok := old.Scripts[name]
-	return ok
+	return sameScript(name, old, cur, map[string]bool{})
+}
+
+// sameScript reports whether script name has the same text in old and
+// cur, and so does every script it runs through a package manager.
+func sameScript(name string, old, cur *core.Meta, seen map[string]bool) bool {
+	if seen[name] {
+		return true
+	}
+	seen[name] = true
+	ov, ok := old.Scripts[name]
+	nv, ok2 := cur.Scripts[name]
+	if !ok || !ok2 || collapse(ov) != collapse(nv) {
+		return false
+	}
+	for _, c := range commands(nv) {
+		w := strings.Fields(c)
+		if len(w) < 2 || w[0] != "npm" && w[0] != "yarn" && w[0] != "pnpm" {
+			continue
+		}
+		next := w[1]
+		if (next == "run" || next == "run-script") && len(w) > 2 {
+			next = w[2]
+		}
+		if _, ok := cur.Scripts[next]; ok && !sameScript(next, old, cur, seen) {
+			return false
+		}
+	}
+	return true
 }
 
 // toolPresent reports whether prog comes from a package the installed

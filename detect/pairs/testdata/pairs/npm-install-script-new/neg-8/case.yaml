@@ -1,0 +1,6 @@
+eco: npm
+note: a new prepare runs an unchanged build script that itself runs an unchanged script
+lookalike: true
+meta_old: {scripts: {gen: tsc -p gen, build: npm run gen && tsc}, dev_deps: {typescript: ^5.4.0}}
+meta_new: {scripts: {gen: tsc -p gen, build: npm run gen && tsc, prepare: yarn build}, dev_deps: {typescript: ^5.4.0}}
+forbid: [npm-install-script-new]

