@@ -54,7 +54,7 @@ func driftFiles(t *core.Tree) map[string][32]byte {
 	}
 	for _, f := range t.Files {
 		if !DriftIgnored(f.Path) {
-			m[f.Path] = f.SHA256
+			m[f.Path] = identity(&f)
 		}
 	}
 	return m

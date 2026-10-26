@@ -50,7 +50,7 @@ func (Differ) Hunks(ctx context.Context, d *core.Diff, path string, contextLines
 	if c.EOLOnly {
 		return []core.Hunk{{Path: path, Lines: []string{EOLNote}}}, nil
 	}
-	if c.Kind == core.ModeChanged || c.Kind == core.Renamed && c.Old.SHA256 == c.New.SHA256 {
+	if c.Kind == core.ModeChanged || c.Kind == core.Renamed && identity(c.Old) == identity(c.New) {
 		return nil, nil
 	}
 	if err := ctx.Err(); err != nil {
@@ -100,10 +100,11 @@ func readSide(t *core.Tree, f *core.File) ([]byte, error) {
 }
 
 // binaryChange reports whether either side is binary: by kind, or by a
-// NUL byte in the first 8,000 bytes as git decides.
+// NUL byte in the first 8,000 bytes as git decides. A link reads as its
+// target text, so a moved link shows both targets.
 func binaryChange(c core.FileChange, old, new []byte) bool {
 	for _, f := range []*core.File{c.Old, c.New} {
-		if f != nil && !textKind(f.Kind) {
+		if f != nil && f.Link == "" && !textKind(f.Kind) {
 			return true
 		}
 	}

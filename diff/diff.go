@@ -6,6 +6,7 @@ package diff
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"hash/maphash"
@@ -77,7 +78,7 @@ func (Differ) Diff(ctx context.Context, old, new *core.Tree) (*core.Diff, error)
 		}
 		paired[o.Path] = true
 		switch {
-		case o.SHA256 != n.SHA256:
+		case identity(o) != identity(n):
 			d.Changes = append(d.Changes, core.FileChange{Kind: core.Modified, Old: o, New: n})
 		case o.Mode != n.Mode:
 			d.Changes = append(d.Changes, core.FileChange{Kind: core.ModeChanged, Old: o, New: n})
@@ -144,24 +145,39 @@ func compareChanges(x, y core.FileChange) int {
 	return strings.Compare(xo, yo)
 }
 
+// identity is what tells two versions of a file apart: its SHA-256, or
+// for a link its target text. An archive records a link's target with no
+// blob (a zero hash) while an installed folder stores the target text as
+// the link's contents; both give the hash of the target here, so a link
+// pointing at the same place is unchanged and one moved elsewhere is
+// modified, whichever side read it.
+func identity(f *core.File) [32]byte {
+	if f.Link != "" {
+		return sha256.Sum256([]byte(f.Link))
+	}
+	return f.SHA256
+}
+
 // renamesByHash pairs removed and added files with the same hash, in
 // path order on both sides. It returns the files left.
 func renamesByHash(d *core.Diff, removed, added []*core.File) (restRemoved, restAdded []*core.File) {
 	bySum := map[[32]byte][]*core.File{}
 	for _, f := range removed {
-		bySum[f.SHA256] = append(bySum[f.SHA256], f)
+		k := identity(f)
+		bySum[k] = append(bySum[k], f)
 	}
 	for _, n := range added {
-		if q := bySum[n.SHA256]; len(q) > 0 {
-			bySum[n.SHA256] = q[1:]
+		if k := identity(n); len(bySum[k]) > 0 {
+			q := bySum[k]
+			bySum[k] = q[1:]
 			d.Changes = append(d.Changes, core.FileChange{Kind: core.Renamed, Old: q[0], New: n, Similarity: 1})
 			continue
 		}
 		restAdded = append(restAdded, n)
 	}
 	for _, f := range removed {
-		if q := bySum[f.SHA256]; len(q) > 0 && q[0] == f {
-			bySum[f.SHA256] = q[1:]
+		if k := identity(f); len(bySum[k]) > 0 && bySum[k][0] == f {
+			bySum[k] = bySum[k][1:]
 			restRemoved = append(restRemoved, f)
 		}
 	}
@@ -332,6 +348,11 @@ var errNoBlobs = errors.New("the tree has no blob store")
 
 // readBlob reads f's bytes from t's blob store.
 func readBlob(t *core.Tree, f *core.File) ([]byte, error) {
+	if f.Link != "" {
+		// A link's contents are its target text: an archive stores no
+		// blob for it and an installed folder stores that same text.
+		return []byte(f.Link), nil
+	}
 	if t == nil || t.Blobs == nil {
 		return nil, errNoBlobs
 	}
