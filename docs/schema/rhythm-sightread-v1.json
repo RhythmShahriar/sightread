@@ -388,6 +388,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "func": {
+          "type": "string",
+          "description": "The function or method the evidence is in; absent at the top level and for metadata findings"
+        },
         "evidence": {
           "type": "string",
           "description": "At most 300 bytes, sanitised and secret-masked"

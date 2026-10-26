@@ -25,6 +25,10 @@ type DepInfo struct {
 	Downloads        int64
 	HasInstallScript bool
 	Popular          bool
+	// Maintainers are the registry maintainers of this version, so
+	// typosquat can tell a sibling package of a popular one's own
+	// maintainers from a lookalike.
+	Maintainers []Person
 }
 
 // ChangelogEntry is one version's changelog text.

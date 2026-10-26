@@ -36,11 +36,10 @@ var codeSignals = []string{
 	"data-exfil", "outbound-new-domain", "rest-open-route", "cron-new-hook",
 }
 
-// funcOf returns the function a finding is in, "" when unknown. The
-// analyzer records it on Feature evidence (core.Evidence.Func);
-// core.Finding has no field to carry it yet, so until it does every
-// finding is in no known function and rule 2 never fires. Tests set it.
-var funcOf = func(*core.Finding) string { return "" }
+// funcOf returns the function a finding is in, "" when unknown: the
+// detectors copy it from the analyzer's evidence (core.Evidence.Func).
+// Tests replace it.
+var funcOf = func(f *core.Finding) string { return f.Func }
 
 func raise(s cli.Severity) cli.Severity { return min(s+1, cli.SeverityCritical) }
 

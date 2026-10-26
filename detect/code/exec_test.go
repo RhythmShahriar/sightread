@@ -208,3 +208,15 @@ func TestEntropyNeedsPeers(t *testing.T) {
 		t.Errorf("fired with 2 peers: %v", ids(got))
 	}
 }
+
+// A code finding carries the function of its feature for the
+// same-function rule; a top-level feature carries none.
+func TestFindingFunc(t *testing.T) {
+	ev := core.Evidence{Path: "a.php", Line: 3, Func: "Share_Kit::sync"}
+	if f := newFinding(SigEvalDynamic, core.Feature{Ev: ev}); f.Func != "Share_Kit::sync" || f.File != "a.php" {
+		t.Errorf("finding %+v", f)
+	}
+	if f := newFinding(SigEvalDynamic, core.Feature{Ev: core.Evidence{Path: "a.php"}}); f.Func != "" {
+		t.Errorf("top level func %q", f.Func)
+	}
+}

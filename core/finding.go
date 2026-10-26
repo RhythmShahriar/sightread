@@ -42,6 +42,10 @@ type Finding struct {
 	Advice      string
 	Fingerprint string
 	Allowed     *AllowMatch
+	// Func is the function or method the evidence is in, from the
+	// feature's Evidence.Func ("" at the top level or for metadata), for
+	// the same-function context rule.
+	Func string
 
 	Baselined       bool
 	Ignored         bool

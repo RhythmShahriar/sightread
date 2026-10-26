@@ -47,7 +47,7 @@ const reasonDecodeLimit = "decode limit reached"
 
 // ctxAsset is the Context of a data URI: an image, font or style
 // embedded in a file, not code.
-const ctxAsset = "asset"
+const ctxAsset = core.CtxAsset
 
 // The encodings of FBlob's encoding attribute.
 const (

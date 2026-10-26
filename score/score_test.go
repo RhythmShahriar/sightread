@@ -146,7 +146,7 @@ func TestOwnerChangeRaises(t *testing.T) {
 }
 
 // inFunc makes funcOf read the function from a test table by file and
-// line, standing in for the field core.Finding doesn't have yet.
+// line, so a table drives the cases below.
 func inFunc(t *testing.T, funcs map[string]string) {
 	t.Helper()
 	old := funcOf
@@ -194,6 +194,21 @@ func TestSameFunctionRaises(t *testing.T) {
 	score(u, nil, nil, nil)
 	if f := find(t, u, "outbound-new-domain"); f.RaisedBy != nil {
 		t.Errorf("raised without a function: %+v", f)
+	}
+}
+
+// The rule reads the function the detectors copy onto the finding.
+func TestSameFunctionFromFinding(t *testing.T) {
+	in := func(f core.Finding, fn string) core.Finding { f.Func = fn; return f }
+	u := upd(core.WPPlugin, "p", in(fd("eval-dynamic", "a.php", 10), "boot"), in(fd("outbound-new-domain", "a.php", 12), "boot"))
+	score(u, nil, nil, nil)
+	if f := find(t, u, "outbound-new-domain"); !reflect.DeepEqual(f.RaisedBy, []string{"eval-dynamic"}) {
+		t.Errorf("not raised: %+v", f)
+	}
+	u = upd(core.WPPlugin, "p", in(fd("eval-dynamic", "a.php", 10), "boot"), in(fd("outbound-new-domain", "a.php", 12), "other"))
+	score(u, nil, nil, nil)
+	if f := find(t, u, "outbound-new-domain"); f.RaisedBy != nil {
+		t.Errorf("raised across functions: %+v", f)
 	}
 }
 

@@ -49,6 +49,9 @@ const (
 	CtxTest     = "test"
 	CtxVendored = "vendored"
 	CtxDecoded  = "decoded"
+	// CtxAsset is a data URI: an image, font or style embedded in a
+	// file, not code.
+	CtxAsset = "asset"
 )
 
 // Evidence is where a feature or finding is.

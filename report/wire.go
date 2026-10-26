@@ -124,6 +124,7 @@ type jsonFinding struct {
 	HelpURI         string           `json:"help_uri"`
 	Fingerprint     string           `json:"fingerprint"`
 	Allowed         *core.AllowMatch `json:"allowed"`
+	Func            string           `json:"func,omitempty"`
 	Baselined       bool             `json:"baselined"`
 	Ignored         bool             `json:"ignored"`
 	BelowConfidence bool             `json:"below_confidence"`

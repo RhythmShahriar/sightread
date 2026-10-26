@@ -61,7 +61,7 @@ func newFinding(id string, f core.Feature) core.Finding {
 	ex, _ := core.ExplainFor(id)
 	return core.Finding{
 		ID: id, Title: info.Title, Severity: info.Severity, Confidence: info.Confidence,
-		File: f.Ev.Path, Line: f.Ev.Line, EndLine: f.Ev.EndLine,
+		File: f.Ev.Path, Line: f.Ev.Line, EndLine: f.Ev.EndLine, Func: f.Ev.Func,
 		Evidence: f.Ev.Snippet, Advice: ex.Advice,
 	}
 }

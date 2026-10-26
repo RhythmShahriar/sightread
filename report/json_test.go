@@ -325,8 +325,10 @@ func TestNoFakeSecrets(t *testing.T) {
 }
 
 func TestReadReportRoundTrip(t *testing.T) {
+	withFunc := coretest.SampleReport()
+	withFunc.Updates[0].Findings[0].Func = "Share_Kit::sync"
 	for name, r := range map[string]*core.Report{"sample": coretest.SampleReport(), "small": smallReport(),
-		"empty": {Kind: core.KindReview}} {
+		"empty": {Kind: core.KindReview}, "func": withFunc} {
 		doc := writeWith(t, core.FormatJSON, r, testOpts)
 		got, err := ReadReport(bytes.NewReader(doc))
 		if err != nil {

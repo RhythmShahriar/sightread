@@ -240,7 +240,7 @@ func findingFromJSON(j *jsonFinding) (core.Finding, error) {
 		ID: text(j.ID), Title: text(j.Name), Severity: sev, Confidence: core.Confidence(text(j.Confidence)),
 		File: text(j.File), Line: j.Line, EndLine: j.EndLine, Evidence: core.NewSnippet(j.Evidence),
 		Domains: nilIfEmpty(texts(j.Domains)), RaisedBy: nilIfEmpty(texts(j.RaisedBy)), Demoted: text(j.Demoted),
-		Advice: text(j.Advice), Fingerprint: text(j.Fingerprint),
+		Advice: text(j.Advice), Fingerprint: text(j.Fingerprint), Func: text(j.Func),
 		Baselined: j.Baselined, Ignored: j.Ignored, BelowConfidence: j.BelowConfidence,
 	}
 	if a := j.Allowed; a != nil {

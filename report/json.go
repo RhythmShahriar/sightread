@@ -269,7 +269,7 @@ func findingJSON(f *core.Finding) jsonFinding {
 		ID: text(f.ID), Name: text(f.Title), Severity: f.Severity.String(), Confidence: text(string(f.Confidence)),
 		File: text(f.File), Line: f.Line, EndLine: f.EndLine, Evidence: text(f.Evidence.String()),
 		Domains: list(texts(f.Domains)), RaisedBy: list(texts(f.RaisedBy)), Demoted: text(f.Demoted),
-		Advice: text(f.Advice), HelpURI: helpURI(text(f.ID)), Fingerprint: text(f.Fingerprint),
+		Advice: text(f.Advice), HelpURI: helpURI(text(f.ID)), Fingerprint: text(f.Fingerprint), Func: text(f.Func),
 		Baselined: f.Baselined, Ignored: f.Ignored, BelowConfidence: f.BelowConfidence,
 	}
 	if a := f.Allowed; a != nil {
