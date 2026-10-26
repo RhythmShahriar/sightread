@@ -627,7 +627,7 @@ func LoadRuleDirs(dirs []string) ([]*Rule, error) {
 		// mistyped folder is checked here; else it would add no rules
 		// without a word.
 		if fi, err := os.Stat(dir); err != nil || !fi.IsDir() {
-			e := ruleConfigError(&RuleError{File: dir, Problem: "not a folder Sightread can read"}).(*core.Error)
+			e := ruleConfigError(&RuleError{File: dir, Problem: "not a folder Sightread can read"})
 			e.Hint = []string{"check the folder given to --signals"}
 			return nil, e
 		}
@@ -648,7 +648,7 @@ func LoadRuleDirs(dirs []string) ([]*Rule, error) {
 }
 
 // ruleConfigError wraps a rule problem as E12.
-func ruleConfigError(err error) error {
+func ruleConfigError(err error) *core.Error {
 	return &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage, What: err.Error(),
 		Hint: []string{"fix the rule file or leave its folder out of --signals"}, Err: err}
 }
