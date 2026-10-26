@@ -35,8 +35,8 @@ type Scorer struct {
 }
 
 // maxNoteUpdates bounds notes for a caller that scores without ever
-// summarising, such as a long watch: past it the oldest run's notes are
-// dropped. A real run holds far fewer updates.
+// calling Summarise, such as a long watch: past it the kept notes are
+// dropped and start again. A real run holds far fewer updates.
 const maxNoteUpdates = 1 << 16
 
 // SetConfigPath names the config file the header notes cite, as the user
