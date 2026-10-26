@@ -114,10 +114,10 @@ func (r *reviewer) baselineAtBase(policy core.Policy, baseRef string) error {
 	return nil
 }
 
-// baseConfig reads the config file at baseRef. It returns nil for a
-// file outside the repository, which the change can't touch, and an
-// empty config for one the ref can't show or parse, so nothing the
-// change adds counts.
+// baseConfig reads the config file at baseRef. A file outside the
+// repository gives nil: the change can't touch it. One the ref can't
+// show or parse gives an empty config, so nothing the change adds
+// counts.
 func (r *reviewer) baseConfig(path, baseRef string) (*core.Config, error) {
 	show := core.GetGitShow()
 	if show == nil {
