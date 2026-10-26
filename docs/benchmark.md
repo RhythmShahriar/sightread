@@ -6,125 +6,87 @@ We wrote Sightread and the testbed, so read this as a regression suite with a sc
 
 | | |
 |---|---|
-| Run | 2026-10-26 07:11 UTC, took 1m27s |
+| Run | 2026-10-26 13:58 UTC, took 1m15s |
 | Binary | rhythm-sightread dev |
 | Machine | linux/amd64, 16 CPUs, go1.27.3 |
-| Compared tools | npm audit 11.12.1; composer audit 2.9.5; GuardDog not run (not installed) |
+| Compared tools | none |
 
 ## 1.0 targets
 
-**Not every target is met.** The bench exits non-zero until they are.
+**Every target is met.**
 
 | Target | Result | Detail |
 |---|---|---|
-| Every non-pending bad scenario caught | **NOT MET** | 0 of 23 caught, 0 pending shown apart |
-| Zero false alarms on good scenarios | **NOT MET** | 0 of 15 clean |
-| Exit codes, verdicts and Not checked as expected | **NOT MET** | b01, b02, b03, b04, b05, b06, b07, b08, b09, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19, b20, b21, b22, b23, g01, g02, g03, g04, g05, g06, g07, g08, g09, g10, g11, g12, g13, g14, g15 |
-| Zero false alarms in the control pass | **NOT MET** | 10 rounds, 150 runs, 150 false alarms, unstable: none |
-| Zero canary, egress and outside-write events | met | canary 0 connections and 0 files, egress 0, outside writes 0 |
-| Every environment scenario passes | **NOT MET** | failed: e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e14, e15, applies, hold, production, roadie-failed, roadie-stale, roadie-unsealed, roadie-missing, remote-wp; not run here: e13 |
+| Every non-pending bad scenario caught | met | 23 of 23 caught, 0 pending shown apart |
+| Zero false alarms on good scenarios | met | 15 of 15 clean |
+| Every run wrote a report | met | 0 without a report |
+| Exit codes, verdicts and Not checked as expected | met | none |
+| Zero false alarms in the control pass | met | 10 rounds, 150 runs, 0 false alarms, unstable: none |
+| Zero canary, egress, outside-write, unmasked-key and forwarded-token events | met | canary 0 connections and 0 files, egress 0, outside writes 0, unmasked keys 0, tokens sent to codeload 0 |
+| Every environment scenario passes | met | failed: none; not run here: e13, e15, applies, hold, production, roadie-failed, roadie-stale, roadie-unsealed, roadie-missing, remote-wp |
 | Cold and warm runs agree | met | differ: none |
-| p01-large under 10 s warm and 512 MB RSS | **NOT MET** | warm 0.0 s, peak 84 MB (cold 0.0 s, 84 MB), exit 2 |
-| Full benchmark under 10 minutes | met | 1m27s |
+| p01-large under 10 s warm and 512 MB RSS | met | warm 1.6 s, peak 80 MB (cold 1.8 s, 80 MB), exit 0 |
+| Full benchmark under 10 minutes | met | 1m15s |
 
 ## Scoreboard
 
-Caught 0, found as something else 0, missed 23, false alarms 15, pending 0.
+Caught 23, found as something else 0, missed 0, false alarms 0, no report 0, pending 0.
 
 ### Bad scenarios
 
 | Scenario | Title | Result | Signals |
 |---|---|---|---|
-| b01 | owner change, new cron that fetches and runs remote code | MISSED | - |
-| b02 | exfiltrates admin email, users and options on init | MISSED | - |
-| b03 | creates an administrator and hides it | MISSED | - |
-| b04 | grants manage_options to subscribers | MISSED | - |
-| b05 | layered decode that runs built code | MISSED | - |
-| b06 | unserializes a request cookie in a new handler | MISSED | - |
-| b07 | writes a mu-plugin and edits .htaccess | MISSED | - |
-| b08 | PHP payload hidden in an asset and included | MISSED | - |
-| b09 | theme serves fetched SEO spam to bots only | MISSED | - |
-| b10 | new postinstall that downloads and runs a script | MISSED | - |
-| b11 | postinstall bundle reads .npmrc and the token | MISSED | - |
-| b12 | all maintainers replaced, a patch adds network code | MISSED | - |
-| b13 | lock gains a typosquat with an install script | MISSED | - |
-| b14 | lock resolved moved off the registry | MISSED | - |
-| b15 | new autoload.files that fetches and runs remote code | MISSED | - |
-| b16 | becomes a composer-plugin with a post-install-cmd | MISSED | - |
-| b17 | registry serves a tampered archive | MISSED | - |
-| b18 | same version, fresh bytes after an allow | MISSED | - |
-| b19 | composer tag moved to another commit | MISSED | - |
-| b20 | fresh dependency with a postinstall, no provenance, no tag | MISSED | - |
-| b21 | Essential Plugin replay | MISSED | - |
-| b22 | Gravity Forms pattern reviewed from a vendor zip | MISSED | - |
-| b23 | Trojan Source bidi plus an obfuscated blob | MISSED | - |
+| b01 | owner change, new cron that fetches and runs remote code | caught | changelog-mismatch, cron-new-hook, owner-change, remote-fetch-exec |
+| b02 | exfiltrates admin email, users and options on init | caught | data-exfil, outbound-new-domain |
+| b03 | creates an administrator and hides it | caught | admin-user-create, admin-user-hidden |
+| b04 | grants manage_options to subscribers | caught | capability-change |
+| b05 | layered decode that runs built code | caught | decode-exec |
+| b06 | unserializes a request cookie in a new handler | caught | input-unserialize |
+| b07 | writes a mu-plugin and edits .htaccess | caught | write-outside-package |
+| b08 | PHP payload hidden in an asset and included | caught | code-in-asset |
+| b09 | theme serves fetched SEO spam to bots only | caught | bot-cloaking, outbound-new-domain |
+| b10 | new postinstall that downloads and runs a script | caught | npm-install-script-new, remote-fetch-exec |
+| b11 | postinstall bundle reads .npmrc and the token | caught | credential-access, npm-install-script-new |
+| b12 | all maintainers replaced, a patch adds network code | caught | outbound-new-domain, owner-change |
+| b13 | lock gains a typosquat with an install script | caught | dependency-new, npm-install-script-new, typosquat |
+| b14 | lock resolved moved off the registry | caught | lockfile-source-change |
+| b15 | new autoload.files that fetches and runs remote code | caught | composer-autoload-files, remote-fetch-exec |
+| b16 | becomes a composer-plugin with a post-install-cmd | caught | composer-plugin-new |
+| b17 | registry serves a tampered archive | caught | integrity-mismatch |
+| b18 | same version, fresh bytes after an allow | caught | approved-version-changed |
+| b19 | composer tag moved to another commit | caught | version-republished |
+| b20 | fresh dependency with a postinstall, no provenance, no tag | caught | dependency-new, fresh-release, git-tag-missing, provenance-dropped |
+| b21 | Essential Plugin replay | caught | changelog-mismatch, eval-dynamic, input-unserialize, owner-change, rest-open-route |
+| b22 | Gravity Forms pattern reviewed from a vendor zip | caught | admin-user-create, outbound-new-domain, update-suppression |
+| b23 | Trojan Source bidi plus an obfuscated blob | caught | obfuscation, unicode-hidden |
 
 ### Good scenarios
 
 | Scenario | Title | Result | False alarms |
 |---|---|---|---|
-| g01 | large feature release with real permission callbacks | FALSE ALARM | - |
-| g02 | rebuilt minified bundle | FALSE ALARM | - |
-| g03 | thirty translation files added | FALSE ALARM | - |
-| g04 | bundled Guzzle bumped in vendor | FALSE ALARM | - |
-| g05 | documented daily cleanup cron | FALSE ALARM | - |
-| g06 | a contributor added, all old ones stay | FALSE ALARM | - |
-| g07 | theme CSS and templates only | FALSE ALARM | - |
-| g08 | line endings switched to LF | FALSE ALARM | - |
-| g09 | npm patch, same maintainers, no scripts | FALSE ALARM | - |
-| g10 | native addon, unchanged node-gyp install | FALSE ALARM | - |
-| g11 | popular dependencies added | FALSE ALARM | - |
-| g12 | GitHub dist with empty shasum, source unchanged | FALSE ALARM | - |
-| g13 | composer minor with a new class and tests | FALSE ALARM | - |
-| g14 | whole site, every package on its good candidate | FALSE ALARM | - |
-| g15 | official takeover, code unchanged, owner-change only | FALSE ALARM | - |
+| g01 | large feature release with real permission callbacks | clean | - |
+| g02 | rebuilt minified bundle | clean | - |
+| g03 | thirty translation files added | clean | - |
+| g04 | bundled Guzzle bumped in vendor | clean | - |
+| g05 | documented daily cleanup cron | clean | - |
+| g06 | a contributor added, all old ones stay | clean | - |
+| g07 | theme CSS and templates only | clean | - |
+| g08 | line endings switched to LF | clean | - |
+| g09 | npm patch, same maintainers, no scripts | clean | - |
+| g10 | native addon, unchanged node-gyp install | clean | - |
+| g11 | popular dependencies added | clean | - |
+| g12 | GitHub dist with empty shasum, source unchanged | clean | - |
+| g13 | composer minor with a new class and tests | clean | - |
+| g14 | whole site, every package on its good candidate | clean | - |
+| g15 | official takeover, code unchanged, owner-change only | clean | - |
 
 ### Exit codes, verdicts and problems
 
-| Scenario | What differs |
-|---|---|
-| b01 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b02 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b03 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b04 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b05 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b06 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b07 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b08 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b09 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b10 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b11 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b12 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b13 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -before |
-| b14 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b15 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b16 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b17 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b18 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b19 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b20 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -transitive |
-| b21 | exit 2, want 1; verdict -, want HOLD; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| b22 | exit 2, want 1; verdict -, want UNVERIFIED; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -from-file |
-| b23 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g01 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g02 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g03 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g04 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g05 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g06 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g07 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g08 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g09 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g10 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g11 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g12 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g13 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
-| g14 | exit 2, want 0; verdict -, want ROUTINE; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -fail-on |
-| g15 | exit 2, want 1; verdict -, want REVIEW; an expected Not checked reason is missing; no rhythm-sightread/v1 report (exit 2): flag provided but not defined: -path |
+Every scenario gave the expected exit code, verdict and Not checked reasons.
 
 ## False alarms
 
-Findings at or above each good scenario's gate (medium unless its entry says otherwise) that it is not allowed.
+Findings at or above each good scenario's gate (medium unless its entry says otherwise) that it is not allowed. An exact scenario (g15) counts any other finding at any severity and lists a required signal it did not report as missing.
 
 | Scenario | Findings | Signals |
 |---|---|---|
@@ -144,11 +106,11 @@ Findings at or above each good scenario's gate (medium unless its entry says oth
 | g14 | 0 | - |
 | g15 | 0 | - |
 
-Control pass: every good scenario again 10 times on a warm cache, 150 runs, 150 false alarms; outcome changed between rounds: none.
+Control pass: every good scenario again 10 times on a warm cache, 150 runs, 0 false alarms; outcome changed between rounds: none.
 
 ## Safety
 
-Every bad payload targets the canary: it would connect to 127.0.0.1:18905 and write a file under testbed/state/canary if it ever ran. HTTPS_PROXY and HTTP_PROXY point at the proxy guard on 127.0.0.1:23399, which closes every connection, so a forgotten base URL fails and is counted. HOME and the project fixtures are walked before and after every run.
+Every bad payload targets the canary: it would connect to 127.0.0.1:18905 and write a file under testbed/state/canary if it ever ran. HTTPS_PROXY and HTTP_PROXY point at the proxy guard on 127.0.0.1:23399, which closes every connection, so a forgotten base URL fails and is counted. HOME and the project fixtures are walked before and after every run. Fixtures carry fake keys built at run time; every output and report is searched for them in full. Sightread runs with a fake GITHUB_TOKEN and codeload answers on a second host name (localhost), so a token sent across the zipball redirect is counted.
 
 | Counter | Count | Must be |
 |---|---|---|
@@ -156,6 +118,8 @@ Every bad payload targets the canary: it would connect to 127.0.0.1:18905 and wr
 | Canary files | 0 | 0 |
 | Egress attempts | 0 | 0 |
 | Files written outside the work folders | 0 | 0 |
+| Fake keys printed or written unmasked | 0 | 0 |
+| Codeload requests carrying GITHUB_TOKEN | 0 | 0 |
 
 ## Environment scenarios
 
@@ -163,21 +127,21 @@ Each runs the real binary against the registry, the probes or a misbehaving fron
 
 | ID | Situation | Result | Notes |
 |---|---|---|---|
-| e01 | registry down | **FAIL** | exit 2, want 3 |
-| e02 | 429 then success | **FAIL** | exit 2, want 0; no JSON report (exit 2): flag provided but not defined: -path; the front never answered 429: the run did not reach it |
-| e03 | body stalls | **FAIL** | exit 2, want 3; the tarball download never reached the stalling front |
-| e04 | zip bomb | **FAIL** | no JSON report (exit 2): flag provided but not defined: -path |
-| e05 | hostile archive entries | **FAIL** | no JSON report (exit 2): flag provided but not defined: -path |
-| e06 | cached blob tampered on disk | **FAIL** | no JSON report (exit 2): flag provided but not defined: -path; no cached blob to tamper with in the run's cache |
-| e07 | two runs share one cache | **FAIL** | no JSON report (exit 2): flag provided but not defined: -path; no JSON report (exit 2): flag provided but not defined: -path |
-| e08 | Ctrl-C during fetch | **FAIL** | exit 2, want 130; interrupted before the download started |
-| e09 | offline with a warm cache | **FAIL** | the online warm-up exited 2: flag provided but not defined: -path; exit 2, want 0; no JSON report (exit 2): flag provided but not defined: -offline |
-| e10 | read-only HOME | **FAIL** | exit 2 without a clear cache or HOME message: flag provided but not defined: -path |
-| e11 | private host namesake and private npm scope | **FAIL** | no JSON report (exit 2): flag provided but not defined: -fail-on |
-| e12 | version unpublished from npm | **FAIL** | does not say "unpublished"; no JSON report (exit 2): flag provided but not defined: -to |
-| e13 | Windows run catches b10 | not run | Windows only; the nightly runs it on windows-latest |
-| e14 | bidi and ANSI escapes in the name and changelog | **FAIL** | no JSON report (exit 2): flag provided but not defined: -path |
-| e15 | --soundcheck on the Docker WordPress with the Roadie stub | **FAIL** | 0 of 8 cases passed, 0 not run (see the e15 table); applies failed; hold failed; production failed; roadie-failed failed; roadie-stale failed; roadie-unsealed failed; roadie-missing failed; remote-wp failed |
+| e01 | registry down | pass | - |
+| e02 | 429 then success | pass | 6 answers of 429, 13 requests |
+| e03 | body stalls | pass | - |
+| e04 | zip bomb | pass | - |
+| e05 | hostile archive entries | pass | - |
+| e06 | cached blob tampered on disk | pass | tampered 6 cached blobs |
+| e07 | two runs share one cache | pass | - |
+| e08 | Ctrl-C during fetch | pass | - |
+| e09 | offline with a warm cache | pass | - |
+| e10 | read-only HOME | pass | stopped with a clear error (exit 3) |
+| e11 | private host namesake and private npm scope | pass | - |
+| e12 | version unpublished from npm | pass | - |
+| e13 | Windows run catches b10 | not run | Windows only; the nightly bench-windows job runs it on windows-latest with -only e13 -plain-http |
+| e14 | bidi and ANSI escapes in the name and changelog | pass | - |
+| e15 | --soundcheck on the Docker WordPress with the Roadie stub | not run | 0 of 8 cases passed, 8 not run (see the e15 table) |
 
 ## --soundcheck end to end (e15)
 
@@ -185,14 +149,14 @@ Against the sealed Docker WordPress on 127.0.0.1:18907 with the Roadie stub. The
 
 | ID | Situation | Result | Notes |
 |---|---|---|---|
-| applies | update lands in the container only | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; exit 2, want 0; output does not say "Sightread did not"; the container has e15-soundcheck 1.0.0 after the run, want 1.1.0 |
-| hold | refused: hold | **FAIL** | exit 2, b01-widget 2.6.7 to 2.6.7; exit 2, want 1; output does not say "HOLD" |
-| production | refused: production | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; output does not say "production" |
-| roadie-failed | refused: roadie-failed | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; exit 2, want 3; output does not say "roadie verify" |
-| roadie-stale | refused: roadie-stale | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; exit 2, want 3; output does not say "roadie verify" |
-| roadie-unsealed | refused: roadie-unsealed | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; exit 2, want 3; output does not say "roadie verify" |
-| roadie-missing | refused: rhythm-roadie missing | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; exit 2, want 3; output does not say "rhythm-roadie" |
-| remote-wp | refused: remote --wp prefix | **FAIL** | exit 2, e15-soundcheck 1.0.0 to 1.0.0; output does not say "--apply" |
+| applies | update lands in the container only | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| hold | refused: hold | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| production | refused: production | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| roadie-failed | refused: roadie-failed | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| roadie-stale | refused: roadie-stale | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| roadie-unsealed | refused: roadie-unsealed | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| roadie-missing | refused: rhythm-roadie missing | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| remote-wp | refused: remote --wp prefix | not run | the Docker WordPress is not up (make -C testbed up-wp) |
 
 ## Reproducibility
 
@@ -202,101 +166,56 @@ Cold and warm runs gave the same outcome for 38 of 38 scenarios. `make -C testbe
 
 Wall time and peak RSS of the rhythm-sightread process (from its rusage), on the machine above. Cold is an empty cache, warm the second run on the same cache.
 
-p01-large (4021 files, 40 MB, not a scored scenario): cold 0.03 s and 84 MB, warm 0.02 s and 84 MB; target under 10s warm and under 512 MB.
+p01-large (4021 files, 40 MB, not a scored scenario): cold 1.83 s and 80 MB, warm 1.62 s and 80 MB; target under 10s warm and under 512 MB.
 
-Full benchmark: 1m27s; target under 10m0s.
+Full benchmark: 1m15s; target under 10m0s.
 
 | Scenario | Cold s | Warm s | Peak RSS MB |
 |---|---|---|---|
-| b01 | 0.01 | 0.01 | 84 |
-| b02 | 0.01 | 0.01 | 84 |
-| b03 | 0.01 | 0.01 | 84 |
-| b04 | 0.00 | 0.01 | 84 |
-| b05 | 0.01 | 0.01 | 84 |
-| b06 | 0.01 | 0.02 | 84 |
-| b07 | 0.01 | 0.01 | 84 |
-| b08 | 0.02 | 0.02 | 84 |
-| b09 | 0.01 | 0.02 | 84 |
-| b10 | 0.01 | 0.01 | 84 |
-| b11 | 0.01 | 0.01 | 84 |
-| b12 | 0.01 | 0.01 | 84 |
-| b13 | 0.02 | 0.01 | 84 |
-| b14 | 0.02 | 0.02 | 84 |
-| b15 | 0.02 | 0.01 | 84 |
-| b16 | 0.02 | 0.02 | 84 |
-| b17 | 0.01 | 0.01 | 84 |
-| b18 | 0.02 | 0.01 | 84 |
-| b19 | 0.01 | 0.02 | 84 |
-| b20 | 0.02 | 0.01 | 84 |
-| b21 | 0.01 | 0.01 | 84 |
-| b22 | 0.02 | 0.02 | 84 |
-| b23 | 0.02 | 0.03 | 84 |
-| g01 | 0.01 | 0.02 | 84 |
-| g02 | 0.03 | 0.01 | 84 |
-| g03 | 0.01 | 0.01 | 84 |
-| g04 | 0.01 | 0.03 | 84 |
-| g05 | 0.01 | 0.01 | 84 |
-| g06 | 0.01 | 0.02 | 84 |
-| g07 | 0.01 | 0.02 | 84 |
-| g08 | 0.01 | 0.01 | 84 |
-| g09 | 0.01 | 0.02 | 84 |
-| g10 | 0.01 | 0.02 | 84 |
-| g11 | 0.01 | 0.02 | 84 |
-| g12 | 0.03 | 0.01 | 84 |
-| g13 | 0.01 | 0.01 | 84 |
-| g14 | 0.01 | 0.02 | 84 |
-| g15 | 0.01 | 0.01 | 84 |
+| b01 | 0.13 | 0.02 | 80 |
+| b02 | 0.10 | 0.02 | 80 |
+| b03 | 0.10 | 0.02 | 80 |
+| b04 | 0.10 | 0.02 | 80 |
+| b05 | 0.16 | 0.02 | 80 |
+| b06 | 0.15 | 0.02 | 80 |
+| b07 | 0.15 | 0.02 | 80 |
+| b08 | 0.13 | 0.02 | 80 |
+| b09 | 0.12 | 0.02 | 80 |
+| b10 | 0.16 | 0.04 | 80 |
+| b11 | 0.18 | 0.04 | 80 |
+| b12 | 0.16 | 0.03 | 80 |
+| b13 | 0.15 | 0.05 | 80 |
+| b14 | 0.09 | 0.03 | 80 |
+| b15 | 0.06 | 0.03 | 80 |
+| b16 | 0.12 | 0.03 | 80 |
+| b17 | 0.18 | 0.05 | 80 |
+| b18 | 0.17 | 0.02 | 80 |
+| b19 | 0.19 | 0.03 | 80 |
+| b20 | 0.45 | 0.04 | 80 |
+| b21 | 0.49 | 0.02 | 80 |
+| b22 | 0.06 | 0.02 | 80 |
+| b23 | 0.34 | 0.04 | 80 |
+| g01 | 0.56 | 0.02 | 80 |
+| g02 | 0.33 | 0.02 | 80 |
+| g03 | 0.42 | 0.02 | 80 |
+| g04 | 0.22 | 0.03 | 80 |
+| g05 | 0.24 | 0.02 | 80 |
+| g06 | 0.31 | 0.02 | 80 |
+| g07 | 0.23 | 0.02 | 80 |
+| g08 | 0.27 | 0.03 | 80 |
+| g09 | 0.26 | 0.04 | 80 |
+| g10 | 1.48 | 0.03 | 80 |
+| g11 | 0.27 | 0.03 | 80 |
+| g12 | 0.09 | 0.03 | 80 |
+| g13 | 0.09 | 0.04 | 80 |
+| g14 | 0.67 | 0.04 | 80 |
+| g15 | 0.11 | 0.02 | 80 |
 
 ## Compared tools
 
 On the same fixture states. composer audit and npm audit point at the fixture registry, which publishes the same advisories OSV serves; they know only published advisories, so they miss a fresh malicious update by design, not by defect. GuardDog scans the npm tarballs offline. Soundcheck compares the Docker WordPress before and after each update, the stand-in for a visual-only safe update: a backdoor changes nothing visible.
 
-| Tool | Version | Sees |
-|---|---|---|
-| npm audit | 11.12.1 | published advisories for npm lockfiles |
-| composer audit | 2.9.5 | published advisories for Composer lockfiles |
-| GuardDog | not run: not installed | heuristics on npm tarballs, offline |
-
-| Scenario | Sightread | npm audit | composer audit | GuardDog |
-|---|---|---|---|---|
-| b01 | missed | can't see | can't see | not run |
-| b02 | missed | can't see | can't see | not run |
-| b03 | missed | can't see | can't see | not run |
-| b04 | missed | can't see | can't see | not run |
-| b05 | missed | can't see | can't see | not run |
-| b06 | missed | can't see | can't see | not run |
-| b07 | missed | can't see | can't see | not run |
-| b08 | missed | can't see | can't see | not run |
-| b09 | missed | can't see | can't see | not run |
-| b10 | missed | missed | can't see | not run |
-| b11 | missed | missed | can't see | not run |
-| b12 | missed | missed | can't see | not run |
-| b13 | missed | missed | can't see | not run |
-| b14 | missed | missed | can't see | not run |
-| b15 | missed | can't see | missed | not run |
-| b16 | missed | can't see | missed | not run |
-| b17 | missed | can't see | can't see | not run |
-| b18 | missed | can't see | can't see | not run |
-| b19 | missed | can't see | missed | not run |
-| b20 | missed | missed | can't see | not run |
-| b21 | missed | can't see | can't see | not run |
-| b22 | missed | can't see | can't see | not run |
-| b23 | missed | missed | can't see | not run |
-| g01 | false alarm | can't see | can't see | not run |
-| g02 | false alarm | can't see | can't see | not run |
-| g03 | false alarm | can't see | can't see | not run |
-| g04 | false alarm | can't see | can't see | not run |
-| g05 | false alarm | can't see | can't see | not run |
-| g06 | false alarm | can't see | can't see | not run |
-| g07 | false alarm | can't see | can't see | not run |
-| g08 | false alarm | can't see | can't see | not run |
-| g09 | false alarm | clean | can't see | not run |
-| g10 | false alarm | clean | can't see | not run |
-| g11 | false alarm | clean | can't see | not run |
-| g12 | false alarm | can't see | clean | not run |
-| g13 | false alarm | can't see | clean | not run |
-| g14 | false alarm | can't see | can't see | not run |
-| g15 | false alarm | can't see | can't see | not run |
+No compared tool was run.
 
 ## Known gaps
 
@@ -308,7 +227,7 @@ What this board does not cover:
 - Owner changes that keep the same account; sales WordPress.org does not show (PRD 18 point 6).
 - Typosquats of niche packages that are not on the popular-names list.
 - Case and Unicode collisions on macOS and Windows file systems: e05 runs on Linux, where only the report is checked.
-- Windows-only behaviour (e13) unless the benchmark runs on Windows.
+- Windows-only behaviour (e13) on this board: a Linux run reports it not run; the nightly bench-windows job runs it on windows-latest.
 - SARIF fingerprint stability, HTML escaping in a real browser and watch alert dedupe: covered by golden and unit tests, not by this board.
 - Lockfiles Sightread does not read (yarn.lock, bun.lockb): checked by unit tests for the E4 and E8 messages only.
 - Real releases: the fixtures are not real packages; the owner-run real-release section below is the only measure of noise beyond them.
