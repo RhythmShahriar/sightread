@@ -31,7 +31,7 @@ func (r *Registry) npmAuditBulk(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "POST only", http.StatusMethodNotAllowed)
 		return
 	}
-	body := io.Reader(io.LimitReader(req.Body, maxAuditBody))
+	body := io.LimitReader(req.Body, maxAuditBody)
 	if strings.EqualFold(req.Header.Get("Content-Encoding"), "gzip") {
 		zr, err := gzip.NewReader(body)
 		if err != nil {

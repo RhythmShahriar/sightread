@@ -59,7 +59,7 @@ func TestNPMAuditBulk(t *testing.T) {
 	if len(hit["example-pkg"]) != 1 || hit["example-pkg"][0]["title"] != "MAL-2026-0001" {
 		t.Errorf("advisory not reported for the affected version: %v", hit)
 	}
-	// The installed version has none, and an unknown package is quiet.
+	// The installed version has none; an unknown package is quiet.
 	if miss := post(map[string][]string{"example-pkg": {"1.0.0"}, "left-pad": {"1.0.0"}}, false); len(miss) != 0 {
 		t.Errorf("advisories for clean versions: %v", miss)
 	}

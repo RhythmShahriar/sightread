@@ -33,7 +33,7 @@ const (
 // Front is a reverse proxy in front of the fixture registry on another
 // loopback port that misbehaves in one way. It keeps the Host header,
 // so the documents the registry builds (tarball URLs) point back at the
-// front and the misbehaviour reaches the download too.
+// front and the fault reaches the download too.
 type Front struct {
 	mode     string
 	srv      *http.Server
@@ -87,7 +87,7 @@ func StartFront(port int, mode, upstream string, serverTLS *tls.Config, caPEM []
 	return f, nil
 }
 
-// handler wraps the proxy with the front's misbehaviour.
+// handler wraps the proxy with the front's fault.
 func (f *Front) handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		f.requests.Add(1)
@@ -129,7 +129,7 @@ func (f *Front) Stalled() int { return int(f.stalled.Load()) }
 func (f *Front) Requests() int { return int(f.requests.Load()) }
 
 // Reset forgets which paths were already answered with 429 and zeroes
-// the counters, so a second run sees the same misbehaviour.
+// the counters, so a second run sees the same fault.
 func (f *Front) Reset() {
 	f.mu.Lock()
 	f.seen = map[string]int{}

@@ -76,6 +76,6 @@ const (
 // ClosedProxy is the port the benchmark sets HTTPS_PROXY and HTTP_PROXY
 // to. The benchmark's proxy guard listens there and closes every
 // connection at once, so a request that forgets a configured loopback
-// base fails instead of reaching the internet, and the guard counts it
+// base fails instead of reaching the internet; the guard counts it
 // as an egress attempt.
 const ClosedProxy = 23399
