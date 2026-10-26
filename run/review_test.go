@@ -301,6 +301,49 @@ func TestArchiveIndexReuse(t *testing.T) {
 	}
 }
 
+// TestSVNCheckSkipsTLSCache: a theme cached by TLS alone is fetched and
+// checked again for --svn-check, the svn result is cached and reused,
+// and a run without --svn-check still reuses the TLS entry of a plugin.
+func TestSVNCheckSkipsTLSCache(t *testing.T) {
+	w := runtest.Install(t)
+	w.Publish(core.WPTheme, "astra", "4.8.0", "4.8.1")
+	w.Install(core.WPTheme, "astra", "4.8.0")
+	src := w.Sources[core.WPTheme]
+	refs := []core.Ref{{Eco: core.WPTheme, Name: "astra", Version: "4.8.0"}, {Eco: core.WPTheme, Name: "astra", Version: "4.8.1"}}
+	set := func(in core.Integrity) {
+		for _, r := range refs {
+			src.Integrity[r] = in
+		}
+	}
+	set(core.Integrity{By: core.ByTLS, Method: "TLS only"})
+	req := request(t, "all")
+	if u := review(t, req).Updates[0]; u.To.Verified != core.ByTLS || src.Fetches() != 2 {
+		t.Fatalf("first run: verified %s, %d fetches", u.To.Verified, src.Fetches())
+	}
+	// Without --svn-check the TLS entry is enough.
+	if u := review(t, req).Updates[0]; !u.FromCache || src.Fetches() != 2 {
+		t.Fatalf("second run: from cache %v, %d fetches", u.FromCache, src.Fetches())
+	}
+	// A check that could not finish is not cached.
+	req.Options.SVNCheck = true
+	set(core.Integrity{By: core.ByTLS, Method: "TLS only", Detail: "--svn-check could not finish: timeout"})
+	if u := review(t, req).Updates[0]; u.FromCache || src.Fetches() != 4 {
+		t.Fatalf("svn run that could not finish: from cache %v, %d fetches", u.FromCache, src.Fetches())
+	}
+	set(core.Integrity{By: core.BySVN, Method: "svn"})
+	if u := review(t, req).Updates[0]; u.FromCache || u.To.Verified != core.BySVN || src.Fetches() != 6 {
+		t.Fatalf("svn run: from cache %v, verified %s, %d fetches", u.FromCache, u.To.Verified, src.Fetches())
+	}
+	if u := review(t, req).Updates[0]; !u.FromCache || u.To.Verified != core.BySVN || src.Fetches() != 6 {
+		t.Fatalf("second svn run: from cache %v, verified %s, %d fetches", u.FromCache, u.To.Verified, src.Fetches())
+	}
+	// The svn entry serves a run without --svn-check too.
+	req.Options.SVNCheck = false
+	if u := review(t, req).Updates[0]; !u.FromCache || u.To.Verified != core.BySVN {
+		t.Fatalf("plain run after svn: from cache %v, verified %s", u.FromCache, u.To.Verified)
+	}
+}
+
 // TestTreeMetaFromCache: what a source reads from the release's files
 // is filled again for a cached tree, so a second run reports the same;
 // the changelog keeps only the entries newer than the installed side.

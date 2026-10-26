@@ -554,7 +554,11 @@ type treeMeta interface {
 // fetch returns the verified tree of m from the archive index, or
 // downloads, verifies and indexes it.
 func (r *reviewer) fetch(ctx context.Context, src core.Source, m *core.Meta) (*core.Tree, core.Integrity, bool, error) {
-	if t, in, ok := loadIndex(r.cache, m.Ref, r.blobs); ok {
+	// --svn-check asks for a stronger check than a theme cached by TLS
+	// alone had, so that cache entry is not enough: the theme is fetched
+	// and checked again (and the upgraded result saved).
+	svn := r.req.Options.SVNCheck && m.Ref.Eco == core.WPTheme
+	if t, in, ok := loadIndex(r.cache, m.Ref, r.blobs); ok && (!svn || in.By == core.BySVN) {
 		r.logf("%s: from the archive cache", m.Ref)
 		// Fetch fills part of m from the archive's files (changelog,
 		// composer.json, readme contributors); a cached tree must give
@@ -573,7 +577,9 @@ func (r *reviewer) fetch(ctx context.Context, src core.Source, m *core.Meta) (*c
 	}
 	// A failed or unverified result isn't kept: the next run checks the
 	// source again instead of trusting a bad or partial answer.
-	if in.By != core.ByFailed && in.By != core.ByNone {
+	// An --svn-check that could not finish leaves TLS with a reason
+	// that belongs to this run only, so that result isn't kept either.
+	if in.By != core.ByFailed && in.By != core.ByNone && (!svn || in.By == core.BySVN) {
 		if err := saveIndex(r.cache, m.Ref, t, in, r.req.now()); err != nil {
 			r.logf("%s: archive index: %v", m.Ref, err)
 		}
