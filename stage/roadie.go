@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
+	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/rhythm/kit/term"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/internal/proc"
@@ -90,10 +91,11 @@ func (s *stager) roadieVerify(ctx context.Context) (string, error) {
 
 // ranBadly is the error for a helper that didn't run to a usable answer:
 // it couldn't start, stopped or printed something else than its JSON.
-// Its stderr goes to -v only.
+// Its stderr goes to -v only, masked: an install command or a helper
+// can print a token.
 func (s *stager) ranBadly(what string, code int, stderr []byte, cause error) error {
 	if s.p.Log != nil && len(stderr) > 0 {
-		fmt.Fprintf(s.p.Log, "%s: %s\n", what, term.SafeLines(string(bytes.TrimSpace(stderr))))
+		fmt.Fprintf(s.p.Log, "%s: %s\n", what, secrets.Redact(term.SafeLines(string(bytes.TrimSpace(stderr)))))
 	}
 	e := &core.Error{Code: core.ESoundcheckMissing, Exit: cli.ExitUnavailable, Command: s.p.Command, Err: cause}
 	if code >= 0 {

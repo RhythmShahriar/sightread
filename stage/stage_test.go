@@ -607,6 +607,21 @@ func TestVerboseLog(t *testing.T) {
 	}
 }
 
+// TestVerboseLogMasksSecrets: a token in a helper's stderr is masked in
+// the -v log.
+func TestVerboseLogMasksSecrets(t *testing.T) {
+	w := newWorld(t)
+	var log bytes.Buffer
+	w.plan.Log = &log
+	key := "sk_" + "live_" + strings.Repeat("Ab3", 8)
+	t.Setenv("STUB_STDERR", "Error: auth failed for "+key)
+	t.Setenv("STUB_WP_EXIT", "1")
+	_, _ = w.run()
+	if strings.Contains(log.String(), key) || !strings.Contains(log.String(), "Error: auth failed for sk_l") {
+		t.Errorf("the key reached the log or the line is missing:\n%s", log.String())
+	}
+}
+
 // TestNothingToInstall: a run with no update (up to date) does nothing.
 func TestNothingToInstall(t *testing.T) {
 	w := newWorld(t)

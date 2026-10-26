@@ -50,6 +50,10 @@ func main() {
 		}
 	}
 	os.Stderr.WriteString(name + " stub ran\n")
+	// STUB_STDERR is an extra stderr line, e.g. a token a helper leaks.
+	if extra := os.Getenv("STUB_STDERR"); extra != "" {
+		os.Stderr.WriteString(extra + "\n")
+	}
 	code, _ := strconv.Atoi(os.Getenv("STUB_" + key + "_EXIT"))
 	os.Exit(code)
 }
