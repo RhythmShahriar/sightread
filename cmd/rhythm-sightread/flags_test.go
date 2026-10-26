@@ -121,6 +121,11 @@ func TestBadFlagValues(t *testing.T) {
 		{[]string{"changes", "--before", "a.json"}, `rhythm-sightread: --before and --after go together: the old and the new lockfile`},
 		{[]string{"all", "--to-file", "x.zip"}, `rhythm-sightread: --to-file and --from-file review one package: use rhythm-sightread plugin, theme, composer or npm with a name`},
 		{[]string{"plugin", "a", "--", "--limit", "100"}, `rhythm-sightread: the arguments after -- go to rhythm-soundcheck, so they need --soundcheck <staging-url>`},
+		{[]string{"plugin", "a", "--rollback"}, `rhythm-sightread: --rollback goes with --soundcheck <staging-url>`},
+		{[]string{"plugin", "a", "--soundcheck", "https://s.test", "--apply", "wp 'x"}, `rhythm-sightread: --apply "wp 'x": a quote is not closed`},
+		{[]string{"plugin", "a", "b", "--soundcheck", "https://s.test"}, `rhythm-sightread: --soundcheck installs one update: name one package, e.g. rhythm-sightread plugin <name> --soundcheck <staging-url>`},
+		{[]string{"npm", "a", "--soundcheck", "https://s.test"}, `rhythm-sightread npm: --soundcheck needs --apply "<command that installs the update on staging>" for Composer and npm packages`},
+		{[]string{"plugin", "a", "--soundcheck", "s.test"}, `rhythm-sightread: --soundcheck "s.test": want the staging site's URL, such as https://staging.shop.test`},
 		{[]string{"all", "--rereview", "--to", "latest"}, `rhythm-sightread: --rereview reviews the installed versions against the release before them, so it takes no --to or --from`},
 	}
 	for _, c := range cases {
@@ -227,7 +232,7 @@ func TestFlagMapping(t *testing.T) {
 			"--soundcheck-fail-on", "new", "--soundcheck-anyway", "--skip-roadie-verify", "--", "--limit", "100"}, nil,
 			func(p *plan) any { return []any{p.soundcheck, p.write.Soundcheck} },
 			[]any{soundcheckPlan{Staging: "https://staging.shop.test", Apply: "wp plugin install x", FailOn: "new", Rollback: true, Anyway: true,
-				Skip: true, Args: []string{"--limit", "100"}}, true}},
+				Skip: true, Args: []string{"--limit", "100"}, ApplyArgv: []string{"wp", "plugin", "install", "x"}, FailOnSet: true}, true}},
 		{"rereview", []string{"all", "--rereview"}, nil, func(p *plan) any { return p.req.Rereview }, true},
 		{"no rereview", []string{"all"}, nil, func(p *plan) any { return p.req.Rereview }, false},
 		{"soundcheck-fail-on default", []string{"plugin", "a"}, nil, func(p *plan) any { return p.soundcheck.FailOn }, "broke"},

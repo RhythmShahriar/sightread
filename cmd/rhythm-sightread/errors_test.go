@@ -191,8 +191,23 @@ var errorCases = []errorCase{
 	{code: core.EBadFlag, exit: cli.ExitUsage, setup: func(*testing.T, *runtest.World) []string {
 		return []string{"all", "--fail-on", "severe"}
 	}, stderr: "{prog}: --fail-on \"severe\": want none, info, low, medium, high or critical\n"},
-	{code: core.EProduction, skip: "--soundcheck lands with item 10 (stage); its table rows come with it"},
-	{code: core.ESoundcheckMissing, skip: "--soundcheck lands with item 10 (stage); its table rows come with it"},
+	{code: core.EProduction, exit: cli.ExitUsage, setup: func(t *testing.T, w *runtest.World) []string {
+		dir := t.TempDir()
+		chdir(t, dir)
+		if err := os.MkdirAll(filepath.Join(dir, ".soundcheck"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, ".soundcheck", "config.yaml"), []byte("production:\n  - shop.example.com\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return soundcheckUpdate(w, "https://shop.example.com", "wp --path=/srv/staging")
+	}, stderr: "{prog} plugin: shop.example.com is listed as production in .soundcheck/config.yaml\n" +
+		"  --soundcheck applies the update to the site; point it at a staging copy (rhythm roadie copy makes one)\n"},
+	{code: core.ESoundcheckMissing, exit: cli.ExitUnavailable, setup: func(t *testing.T, w *runtest.World) []string {
+		t.Setenv("PATH", t.TempDir())
+		chdir(t, t.TempDir())
+		return soundcheckUpdate(w, "https://staging.shop.test", "wp --path=/srv/staging")
+	}, stderr: "{prog}: --soundcheck needs rhythm-soundcheck and rhythm-roadie\n  install them with: rhythm install soundcheck roadie\n"},
 	{code: core.EGitHubLimit, exit: cli.ExitUnavailable, setup: func(t *testing.T, w *runtest.World) []string {
 		w.Publish(core.Composer, "monolog/monolog", "3.0.0", "3.1.0")
 		failFetch(t, w, core.Composer, "monolog/monolog", stageErr(core.EGitHubLimit, cli.ExitUnavailable, "composer",
@@ -201,7 +216,13 @@ var errorCases = []errorCase{
 		return []string{"composer", "monolog/monolog", "--from", "3.0.0"}
 	}, stderr: "{prog} composer: api.github.com allows 60 requests an hour without a token and this run needs about 111\n" +
 		"  set GITHUB_TOKEN (sent only to api.github.com); 23 of 111 packages were reviewed\n"},
-	{code: core.ESoundcheckOnHold, skip: "--soundcheck lands with item 10 (stage); its table rows come with it"},
+	{code: core.ESoundcheckOnHold, exit: cli.ExitFindings, setup: func(t *testing.T, w *runtest.World) []string {
+		chdir(t, t.TempDir())
+		args := soundcheckUpdate(w, "https://staging.shop.test", "wp --path=/srv/staging")
+		w.Detector.Set("countdown-timer-ultimate", "remote-fetch-exec")
+		return args
+	}, stderr: "{prog} plugin: countdown-timer-ultimate 2.6.8 is on HOLD, so --soundcheck won't install it\n" +
+		"  review the findings first; --soundcheck-anyway installs it on the staging copy regardless\n"},
 	{code: core.EAllowUnverified, exit: cli.ExitUsage, setup: func(t *testing.T, w *runtest.World) []string {
 		t.Setenv("PATH", t.TempDir())
 		w.Publish(core.NPM, "left-pad", "1.4.0")
@@ -214,9 +235,23 @@ var errorCases = []errorCase{
 		w.Install(core.WPPlugin, "akismet", "5.3.5")
 		return []string{"plugin", "akismet", "--to", "5.3.1"}
 	}, stderr: "{prog} plugin: --to 5.3.1 is older than the installed 5.3.5\n  add --allow-downgrade to review a downgrade\n"},
+	{code: core.ERemoteWPSoundcheck, exit: cli.ExitUsage, setup: func(t *testing.T, w *runtest.World) []string {
+		chdir(t, t.TempDir())
+		return soundcheckUpdate(w, "https://staging.shop.test", "ssh deploy@staging -- wp --path=/srv/www")
+	}, stderr: "{prog} plugin: --soundcheck can install the verified zip only through a local wp command\n" +
+		"  for a remote staging site give --apply \"<command that installs countdown-timer-ultimate 2.6.8>\"; " +
+		"the report then says the applied bytes were not checked\n"},
 	{code: core.EUnknownCommand, exit: cli.ExitUsage, setup: func(*testing.T, *runtest.World) []string {
 		return []string{"plugn"}
 	}, stderr: "{prog}: unknown command \"plugn\"\n  did you mean: {prog} plugin\n  run '{prog} help' to see the commands\n"},
+}
+
+// soundcheckUpdate publishes countdown-timer-ultimate 2.6.7 and 2.6.8
+// with 2.6.7 installed and returns the --soundcheck command line for it.
+func soundcheckUpdate(w *runtest.World, staging, wp string) []string {
+	w.Publish(core.WPPlugin, "countdown-timer-ultimate", "2.6.7", "2.6.8")
+	w.Install(core.WPPlugin, "countdown-timer-ultimate", "2.6.7")
+	return []string{"plugin", "countdown-timer-ultimate", "--soundcheck", staging, "--wp", wp}
 }
 
 // siteDir is a site folder whose absolute path the E1 text names.

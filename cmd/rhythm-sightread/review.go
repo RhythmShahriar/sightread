@@ -124,6 +124,9 @@ func (c *reviewCommand) parse(args []string, stdout, stderr io.Writer) (*plan, [
 	if err := c.positional(p, f, pos); err != nil {
 		return nil, nil, err
 	}
+	if err := c.checkSoundcheck(p); err != nil {
+		return nil, nil, err
+	}
 	return p, pos, nil
 }
 
@@ -180,10 +183,6 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	if p.req.To == run.ToList {
 		return c.list(ctx, p, stdout)
 	}
-	if p.soundcheck.Staging != "" {
-		return &core.Error{Code: core.ESoundcheckMissing, Exit: cli.ExitUnavailable, Command: c.name,
-			What: "--soundcheck is not built in this version yet", Hint: []string{"review without it, then run rhythm soundcheck yourself"}}
-	}
 	if cli.IsTerminal(stderr) && !p.write.Quiet && p.stdout == core.FormatTerminal {
 		p.req.Progress = stderr
 	}
@@ -204,6 +203,12 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	if err != nil {
 		return err
 	}
+	// --soundcheck runs before the report is written, so the report holds
+	// what the staging site did; a refusal is returned once it is written.
+	tripped, scErr := false, error(nil)
+	if p.soundcheck.Staging != "" {
+		tripped, scErr = c.runSoundcheck(ctx, p, rep)
+	}
 	if p.stdout == core.FormatTerminal && nothingElse(rep) {
 		for _, n := range rep.Notes {
 			if strings.HasSuffix(n, run.NothingToCompare) {
@@ -218,6 +223,9 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	if p.open {
 		openReport(ctx, p, stderr)
 	}
+	if scErr != nil {
+		return scErr
+	}
 	if len(rep.Updates) == 0 && probs.any() {
 		// Nothing could be checked at all: that is a failed run, not a
 		// run with gaps, whatever --fail-on says (PRD 10, E7 to E16).
@@ -227,6 +235,13 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	err = gate(rep, p.gate)
 	if ee := (*cli.ExitError)(nil); errors.As(err, &ee) && ee.Code == cli.ExitUnavailable {
 		probs.print(stderr, rep)
+		if tripped {
+			// Findings beat gaps (PRD 10): the Soundcheck gate is 1.
+			return cli.ErrFindings
+		}
+	}
+	if err == nil && tripped {
+		return cli.ErrFindings
 	}
 	return err
 }

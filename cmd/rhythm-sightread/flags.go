@@ -288,6 +288,8 @@ type soundcheckPlan struct {
 	Staging, Apply, FailOn string
 	Rollback, Anyway, Skip bool
 	Args                   []string
+	ApplyArgv              []string // Apply split into argv
+	FailOnSet              bool     // --soundcheck-fail-on was given, so it beats the config
 }
 
 // formatOf maps an -o extension to its writer format.
@@ -436,9 +438,23 @@ func (f *reviewFlags) plan(c *reviewCommand, env func(string) string, version st
 		return nil, badFlag("--soundcheck-fail-on %q: want broke, new or changed", f.scFailOn)
 	}
 	p.soundcheck = soundcheckPlan{Staging: f.soundcheck, Apply: f.apply, FailOn: f.scFailOn, Rollback: f.rollback,
-		Anyway: f.scAnyway, Skip: f.skipRoadieVerify, Args: slices.Clone(f.passthrough)}
+		Anyway: f.scAnyway, Skip: f.skipRoadieVerify, Args: slices.Clone(f.passthrough), FailOnSet: f.set["soundcheck-fail-on"]}
 	if f.soundcheck == "" && len(f.passthrough) > 0 {
 		return nil, badFlag("the arguments after -- go to rhythm-soundcheck, so they need --soundcheck <staging-url>")
+	}
+	if f.soundcheck == "" {
+		for _, name := range []string{"apply", "rollback", "soundcheck-anyway", "skip-roadie-verify", "soundcheck-fail-on"} {
+			if f.set[name] {
+				return nil, badFlag("--%s goes with --soundcheck <staging-url>", name)
+			}
+		}
+	}
+	if f.apply != "" {
+		argv, err := run.SplitCommand(f.apply)
+		if err != nil {
+			return nil, badFlag("--apply %q: %v", f.apply, err)
+		}
+		p.soundcheck.ApplyArgv = argv
 	}
 	p.write.Soundcheck = f.soundcheck != ""
 	return p, nil
