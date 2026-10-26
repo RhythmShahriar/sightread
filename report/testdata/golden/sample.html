@@ -500,7 +500,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
 <article class="finding">
 <h4><span class="sev sev-medium">MEDIUM</span> Hidden or bidirectional characters in code <span class="tag">unicode-hidden</span></h4>
 <div class="where">includes/admin.php:12</div>
-<pre>\x1b[31mredtxt.php &lt;script&gt;alert(1)&lt;/script&gt; [link](hxxps://evil[.]example) @team token npm_•••••</pre>
+<pre>\x1b[31mred\u202etxt.php &lt;script&gt;alert(1)&lt;/script&gt; [link](hxxps://evil[.]example) @team token npm_•••••</pre>
 <p>→ Review unicode-hidden before you update.</p>
 </article>
 

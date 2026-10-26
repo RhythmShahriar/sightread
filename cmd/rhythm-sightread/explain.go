@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"io/fs"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
@@ -31,7 +33,8 @@ var explainCommand = &simpleCommand{
 	long: "With a signal ID, prints what the signal means, why it matters, how to review it, its usual false alarms and " +
 		"the incidents it is built on. It needs no network. With a saved JSON report and a finding's number (as the " +
 		"report counts them, from 1) or fingerprint, prints that finding, its evidence and the diff hunk with 6 lines of " +
-		"context, read from the archives the review cached.",
+		"context, read from the archives the review cached. A review of a local file (--from-file, --to-file) or one " +
+		"whose archives are no longer cached shows the hunk the report saved.",
 	examples: []string{"explain remote-fetch-exec", "explain review.json 3", "explain review.json 9f2c41aa07d3b6e1"},
 	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
 		asJSON := fs.Bool("json", false, "print the kind explain JSON document")
@@ -106,12 +109,34 @@ func pickFinding(rep *core.Report, path, sel string) (*core.Update, *core.Findin
 	return nil, nil, &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: "explain", What: what}
 }
 
-// findingHunks diffs the finding's file between the cached archives of
-// both sides with explainContext lines of context. It returns nil when
-// either archive is no longer cached; the renderer then says so.
+// findingHunks returns the hunks of the finding's file: diffed again
+// between the cached archives of both sides with explainContext lines
+// of context, else the flagged hunks the report holds. A side read from
+// a local file is never cached; a cached tree whose sha256 is not the
+// one the report names is not the same release. Both fall back to the
+// report. It returns nil when neither has the file; the renderer
+// then says why.
 func findingHunks(ctx context.Context, u *core.Update, f *core.Finding) []core.Hunk {
+	if f.File == "" || f.InLockfile() {
+		return nil
+	}
+	if hunks := cachedHunks(ctx, u, f); hunks != nil {
+		return hunks
+	}
+	var hunks []core.Hunk
+	for _, h := range u.Hunks {
+		if h.Path == f.File {
+			hunks = append(hunks, h)
+		}
+	}
+	return hunks
+}
+
+// cachedHunks diffs the finding's file between the cached archives of
+// both sides; nil when either side is local or no longer cached.
+func cachedHunks(ctx context.Context, u *core.Update, f *core.Finding) []core.Hunk {
 	differ := core.GetDiffer()
-	if differ == nil || f.File == "" || f.InLockfile() {
+	if differ == nil || u.To.Local() || u.From.Local() {
 		return nil
 	}
 	cache, err := run.CacheDir("")
@@ -122,13 +147,13 @@ func findingHunks(ctx context.Context, u *core.Update, f *core.Finding) []core.H
 	if err != nil {
 		return nil
 	}
-	cur, ok := run.CachedTree(cache, core.Ref{Eco: u.Eco, Name: u.Name, Version: u.To.Version}, blobs)
+	cur, ok := cachedSide(cache, u, u.To, blobs)
 	if !ok {
 		return nil
 	}
 	var old *core.Tree
 	if u.From.Version != "" {
-		if old, ok = run.CachedTree(cache, core.Ref{Eco: u.Eco, Name: u.Name, Version: u.From.Version}, blobs); !ok {
+		if old, ok = cachedSide(cache, u, u.From, blobs); !ok {
 			return nil
 		}
 	}
@@ -141,6 +166,16 @@ func findingHunks(ctx context.Context, u *core.Update, f *core.Finding) []core.H
 		return nil
 	}
 	return hunks
+}
+
+// cachedSide is the cached tree of one side, when its sha256 is the
+// one the report names (or the report names none).
+func cachedSide(cache string, u *core.Update, s core.Side, blobs core.BlobStore) (*core.Tree, bool) {
+	t, ok := run.CachedTree(cache, core.Ref{Eco: u.Eco, Name: u.Name, Version: s.Version}, blobs)
+	if !ok || s.SHA256 != "" && !strings.EqualFold(hex.EncodeToString(t.SHA256[:]), s.SHA256) {
+		return nil, false
+	}
+	return t, true
 }
 
 // colorOn reports whether terminal output to w may use colour.

@@ -14,6 +14,7 @@ import (
 
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
+	"github.com/RhythmShahriar/sightread/run"
 	"github.com/RhythmShahriar/sightread/run/runtest"
 	"github.com/RhythmShahriar/sightread/source/changelog"
 )
@@ -137,5 +138,40 @@ func TestLocalDeclaredVersion(t *testing.T) {
 				t.Errorf("%s → %s, want %s → %s", u.From.Version, u.To.Version, c.wantFrom, c.wantTo)
 			}
 		})
+	}
+}
+
+// TestLocalUnverifiedHint: without --allow-unverified a local file is
+// not diffed; its E5 hint says why running again won't help.
+func TestLocalUnverifiedHint(t *testing.T) {
+	w := runtest.Install(t)
+	src := readmeSource{w.Sources[core.WPPlugin]}
+	t.Cleanup(core.SwapSource(core.WPPlugin, func(*core.Env) core.Source { return src }))
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "new.zip"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(core.SwapLocalArchive(func(context.Context, string, core.BlobStore, core.Limits) (*core.Tree, error) {
+		tr := coretest.Tree(map[string]string{"p.php": "<?php\n"})
+		tr.HashKind = core.HashArchive
+		return tr, nil
+	}))
+	w.Publish(core.WPPlugin, "p", "1.0.0")
+	w.Install(core.WPPlugin, "p", "1.0.0")
+	req := request(t, "plugin")
+	req.Eco, req.Names = core.WPPlugin, []string{"p"}
+	req.ToFile = filepath.Join(dir, "new.zip")
+	var hints []string
+	req.OnProblem = func(e *core.Error) {
+		if e.Code == core.EUnverifiable {
+			hints = append(hints, e.Hint...)
+		}
+	}
+	review(t, req)
+	if len(hints) != 1 || hints[0] != run.LocalUnverifiedHint {
+		t.Errorf("E5 hints %q, want the local file one", hints)
+	}
+	if strings.Contains(run.LocalUnverifiedHint, "later") {
+		t.Error("the local hint still says to run again later")
 	}
 }

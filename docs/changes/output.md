@@ -234,8 +234,17 @@ More
   then Update, Severity (with `(raised by ...)` or `(demoted: ...)`),
   Confidence, Where, Domains, Fingerprint, Counted, Evidence, Advice and
   Diff. Findings are numbered from 1 in report order.
-- Without the cached archives the Diff section reads
-  `archive not in cache: run the review again (it is cached for 30 days)`.
+- Without the cached archives (or when a cached tree's sha256 is not the
+  report's) the Diff section shows the flagged hunk the report saved.
+  With neither it reads
+  `archive not in cache: run the review again (it is cached for 30 days)`,
+  or for a --from-file or --to-file review, which is never cached,
+  `a local file's diff is never cached and the report holds no hunk of this file: run the review again with the same local files, with -o review.html for the full diff`.
+- A package that failed to download is one Not checked line carrying its
+  error's code (`date-utils-lite 1.4.0 (npm): could not download (...) (E7)`)
+  and counts once in `Incomplete review: 1 package wasn't checked`.
+- `unicode-hidden` evidence shows the bidi control it reports as an escape
+  (`\u202e`) in every format.
 - An unknown ID is E13 (exit 2):
   `rhythm sightread explain: no signal "evil" (did you mean eval-dynamic?)`.
 - `--json` writes kind `explain`; `complete` is false when explain text

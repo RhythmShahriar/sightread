@@ -20,6 +20,7 @@ import (
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/rhythm/kit/ui"
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/fetch"
 	"github.com/RhythmShahriar/sightread/internal/proc"
 	"github.com/RhythmShahriar/sightread/run"
 )
@@ -293,7 +294,7 @@ func (d *doctor) github(ctx context.Context, gc core.GetterConfig, offline bool)
 	var rl rateLimit
 	rctx, cancel := context.WithTimeout(ctx, doctorTimeout)
 	defer cancel()
-	err = get.JSON(rctx, strings.TrimRight(gc.Bases[core.BaseGitHubAPI], "/")+"/rate_limit", &rl, "rate")
+	err = get.JSON(rctx, strings.TrimRight(gc.Bases[core.BaseGitHubAPI], "/")+"/rate_limit", &rl, fetch.KindRate)
 	left := ""
 	if err == nil {
 		left = fmt.Sprintf("%d of %d requests left this hour", rl.Resources.Core.Remaining, rl.Resources.Core.Limit)

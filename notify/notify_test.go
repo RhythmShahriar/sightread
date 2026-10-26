@@ -68,8 +68,13 @@ func TestText(t *testing.T) {
 	}
 	// A run that left packages out says so even with nothing to list.
 	got := New("", "", "high", "r.json", "Partial: 2 packages were not checked", nil).Text(func(s string) string { return s })
-	if got != "Sightread: nothing new\nPartial: 2 packages were not checked\n\n\nReport: r.json\n" {
+	if got != "Sightread: the review is incomplete\nPartial: 2 packages were not checked\n\n\nReport: r.json\n" {
 		t.Errorf("incomplete:\n%q", got)
+	}
+	// A failed run has no report to name.
+	got = New("w", "", "high", "", "Failed: the review exited 3 without a report; see /w/x.log", nil).Text(func(s string) string { return s })
+	if got != "Sightread w: the review is incomplete\nFailed: the review exited 3 without a report; see /w/x.log\n\n" {
+		t.Errorf("failed:\n%q", got)
 	}
 }
 

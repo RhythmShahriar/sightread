@@ -20,6 +20,7 @@ import (
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
+	"github.com/RhythmShahriar/sightread/fetch"
 )
 
 // lanePorts are the 127.0.0.1 ports this package's fixture servers use.
@@ -169,7 +170,11 @@ func (g loopGetter) do(ctx context.Context, method, url string) (*http.Response,
 	return resp, nil
 }
 
-func (g loopGetter) JSON(ctx context.Context, url string, v any, _ string) error {
+func (g loopGetter) JSON(ctx context.Context, url string, v any, kind string) error {
+	// The real getter refuses a kind it has no cache for; so does this.
+	if _, ok := fetch.TTL(kind); !ok {
+		return fmt.Errorf("fetch: unknown cache kind %q", kind)
+	}
 	resp, err := g.do(ctx, http.MethodGet, url)
 	if err != nil {
 		return err

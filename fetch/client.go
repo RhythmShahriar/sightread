@@ -192,11 +192,21 @@ func (c *Client) JSON(ctx context.Context, rawURL string, v any, kind string) er
 	if err != nil {
 		return err
 	}
+	var raw json.RawMessage
+	if kind == KindRate {
+		if c.offline {
+			return networkError(u.Hostname(), "offline", hintOffline, cache.ErrOffline)
+		}
+		if raw, err = c.getJSON(ctx, u, kind); err != nil {
+			return err
+		}
+		return decodeJSON(u, raw, v)
+	}
 	store, ok := c.stores[kind]
 	if !ok {
 		return fmt.Errorf("fetch: unknown cache kind %q", kind)
 	}
-	raw, _, err := cache.Load(store, ctx, kind, u.String(), func(ctx context.Context) (json.RawMessage, error) {
+	raw, _, err = cache.Load(store, ctx, kind, u.String(), func(ctx context.Context) (json.RawMessage, error) {
 		return c.getJSON(ctx, u, kind)
 	})
 	if errors.Is(err, cache.ErrOffline) {
@@ -205,6 +215,11 @@ func (c *Client) JSON(ctx context.Context, rawURL string, v any, kind string) er
 	if err != nil {
 		return err
 	}
+	return decodeJSON(u, raw, v)
+}
+
+// decodeJSON decodes an answer of u into v.
+func decodeJSON(u *url.URL, raw json.RawMessage, v any) error {
 	if err := json.Unmarshal(raw, v); err != nil {
 		return fmt.Errorf("decode the answer of %s: %w", u.Hostname(), err)
 	}

@@ -2201,7 +2201,7 @@
             }
           ],
           "partialFingerprints": {
-            "sightreadFinding/v1": "0c8293df2aadd5cc"
+            "sightreadFinding/v1": "6aed59eb5ea8017f"
           },
           "properties": {
             "ecosystem": "npm",

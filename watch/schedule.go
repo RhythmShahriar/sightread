@@ -60,7 +60,7 @@ func (s Schedule) Validate() error {
 	case s.Every != 0 && len(s.At) > 0:
 		return fmt.Errorf("pick one of --every and --at")
 	case s.Every != 0 && s.Every < MinEvery:
-		return fmt.Errorf("--every %s is too often; the shortest interval is %s", s.Every, MinEvery)
+		return fmt.Errorf("--every %s is too often; the shortest interval is %s", DurationText(s.Every), DurationText(MinEvery))
 	}
 	return nil
 }
@@ -129,4 +129,17 @@ func sleepUntil(ctx context.Context, c Clock, until time.Time) error {
 			return err
 		}
 	}
+}
+
+// DurationText is d as a person writes it: 1m, 90s as 1m30s, 2h, never
+// Go's 1m0s or 2h0m0s.
+func DurationText(d time.Duration) string {
+	s := d.String()
+	if strings.HasSuffix(s, "m0s") {
+		s = strings.TrimSuffix(s, "0s")
+	}
+	if strings.HasSuffix(s, "h0m") {
+		s = strings.TrimSuffix(s, "0m")
+	}
+	return s
 }

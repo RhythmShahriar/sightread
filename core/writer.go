@@ -22,6 +22,10 @@ type WriteOptions struct {
 	// (--path, --from, --to-file, ...), as arguments: the terminal's
 	// "the full diff" command repeats them so it reviews the same thing.
 	RerunFlags []string
+	// Demo marks the built-in demo's report: its packages are made up,
+	// so no next step or allow line names them for a real registry; the
+	// rerun step reruns the demo.
+	Demo bool
 }
 
 // Output formats of Writer.Format.

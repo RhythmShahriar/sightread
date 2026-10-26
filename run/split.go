@@ -5,6 +5,7 @@ package run
 
 import (
 	"errors"
+	"runtime"
 	"strings"
 )
 
@@ -15,7 +16,15 @@ import (
 // escape " and \; a backslash outside quotes escapes the next
 // character. Nothing is expanded ($, *, ~ and ; are plain characters), so
 // a value can never start a second command.
-func SplitCommand(s string) ([]string, error) {
+//
+// On Windows a backslash is a path separator, so it is literal
+// everywhere except before a double quote: --wp "C:\tools\wp.bat
+// --path=C:\site" keeps its paths.
+func SplitCommand(s string) ([]string, error) { return splitCommand(s, runtime.GOOS == "windows") }
+
+// splitCommand is SplitCommand with Windows' backslash rule when windows
+// is set.
+func splitCommand(s string, windows bool) ([]string, error) {
 	var (
 		args    []string
 		cur     strings.Builder
@@ -39,12 +48,15 @@ func SplitCommand(s string) ([]string, error) {
 			switch {
 			case c == '"':
 				quote = 0
-			case c == '\\' && i+1 < len(s) && (s[i+1] == '"' || s[i+1] == '\\'):
+			case c == '\\' && i+1 < len(s) && (s[i+1] == '"' || s[i+1] == '\\' && !windows):
 				i++
 				cur.WriteByte(s[i])
 			default:
 				cur.WriteByte(c)
 			}
+		case c == '\\' && windows && (i+1 == len(s) || s[i+1] != '"'):
+			cur.WriteByte(c)
+			inWord = true
 		case c == '\\':
 			escaped, inWord = true, true
 		case c == '\'' || c == '"':

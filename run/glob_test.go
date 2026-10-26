@@ -5,6 +5,7 @@ package run_test
 
 import (
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -64,20 +65,24 @@ func TestSelected(t *testing.T) {
 
 func TestSplitCommand(t *testing.T) {
 	cases := []struct {
-		in   string
-		want []string
-		err  string
+		in    string
+		want  []string
+		err   string
+		posix bool // a backslash escape, which Windows keeps literal
 	}{
 		{in: "wp --path=/srv/www", want: []string{"wp", "--path=/srv/www"}},
 		{in: `ssh deploy@host -- wp --path='/srv/my site'`, want: []string{"ssh", "deploy@host", "--", "wp", "--path=/srv/my site"}},
-		{in: `wp "a \"b\" c" d\ e`, want: []string{"wp", `a "b" c`, "d e"}},
+		{in: `wp "a \"b\" c" d\ e`, want: []string{"wp", `a "b" c`, "d e"}, posix: true},
 		{in: "wp; rm -rf ~ $HOME", want: []string{"wp;", "rm", "-rf", "~", "$HOME"}},
 		{in: `''`, want: []string{""}},
 		{in: "wp 'open", err: "a quote is not closed"},
-		{in: `wp \`, err: "it ends with a backslash"},
+		{in: `wp \`, err: "it ends with a backslash", posix: true},
 		{in: "  ", err: "it is empty"},
 	}
 	for _, c := range cases {
+		if c.posix && runtime.GOOS == "windows" {
+			continue
+		}
 		got, err := run.SplitCommand(c.in)
 		switch {
 		case c.err != "":

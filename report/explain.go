@@ -29,6 +29,10 @@ const (
 	// archiveMissing is printed when the cached archives of a finding's
 	// update are gone, so its hunk can't be shown (PRD 6.5).
 	archiveMissing = "archive not in cache: run the review again (it is cached for 30 days)"
+	// localMissing is printed instead when a side was a local file,
+	// which is never cached; the report holds no hunk of the file either.
+	localMissing = "a local file's diff is never cached and the report holds no hunk of this file: " +
+		"run the review again with the same local files, with -o review.html for the full diff"
 	// inLockfile follows the lockfile path of a finding there: it is
 	// not in the package, so no archive has a diff of it.
 	inLockfile = " is the project's lockfile, not a file in the package, so there is no package diff to show"
@@ -60,7 +64,8 @@ func (Explainer) RenderSignal(w io.Writer, id string, o core.WriteOptions, asJSO
 // signal's explain text. sel is the finding's 1-based number in report
 // order (updates as listed, then their findings) or its fingerprint.
 // hunks are the changed file's hunks with 6 lines of context, read from
-// the cached archives; nil means the archives are no longer cached. A
+// the cached archives, or the report's own hunks of the file; nil means
+// neither had them (a local file is never cached, so it says so). A
 // finding in the project's lockfile has no hunks and says so.
 func (Explainer) RenderFinding(w io.Writer, r *core.Report, sel string, hunks []core.Hunk, o core.WriteOptions, asJSON bool) error {
 	u, f, n, total, err := selectFinding(r, sel)
@@ -84,6 +89,8 @@ func (Explainer) RenderFinding(w io.Writer, r *core.Report, sel string, hunks []
 	case f.File == "":
 	case f.InLockfile():
 		ew.section("Diff", where(f)+inLockfile)
+	case hunks == nil && (u.From.Local() || u.To.Local()):
+		ew.section("Diff", localMissing)
 	case hunks == nil:
 		ew.section("Diff", archiveMissing)
 	case len(shown) == 0:

@@ -82,7 +82,7 @@ Changelog: none for this version.
 | medium | First release after a long silence | `includes/dormant-release.php:10` | `dormant-release evidence` |
 | medium | No matching tag in the repository | `includes/git-tag-missing.php:10` | `git-tag-missing evidence` |
 | medium | Code grew far more than usual | `includes/size-jump.php:10` | `size-jump evidence` |
-| medium | Hidden or bidirectional characters in code | `includes/admin.php:12` | `\x1b[31mredtxt.php <script>alert(1)</script> [link](hxxps://evil[.]example) @team token npm_•••••` |
+| medium | Hidden or bidirectional characters in code | `includes/admin.php:12` | `\x1b[31mred\u202etxt.php <script>alert(1)</script> [link](hxxps://evil[.]example) @team token npm_•••••` |
 | medium | Adds a credential to the code | `includes/config.php:3` | `define('API_KEY', 'sk_l•••••');` |
 | medium | Adds a large encoded or scrambled blob (demoted: vendored path) | `assets/js/vendor.min.js:1` | `var _0x1a2b=['\x65\x76\x61\x6c'];` |
 

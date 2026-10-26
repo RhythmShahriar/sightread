@@ -383,3 +383,28 @@ func TestExplainFindingInLockfile(t *testing.T) {
 		t.Errorf("lockfile finding JSON is not complete:\n%s", b.String())
 	}
 }
+
+// TestExplainFindingLocalFile: a finding of a --to-file review whose
+// report holds no hunk of its file says the local file must be given
+// again, not that a rerun brings the archive back.
+func TestExplainFindingLocalFile(t *testing.T) {
+	withStandIns(t)
+	n, _ := remoteFetchIndex(t)
+	r := coretest.SampleReport()
+	seen := 0
+	for i := range r.Updates {
+		seen += len(r.Updates[i].Findings)
+		if seen >= n {
+			r.Updates[i].To.Source = core.SourceLocalFile
+			break
+		}
+	}
+	var b bytes.Buffer
+	if err := explainer(t).RenderFinding(&b, r, strconv.Itoa(n), nil, testOpts, false); err != nil {
+		t.Fatal(err)
+	}
+	out := strings.Join(strings.Fields(b.String()), " ")
+	if strings.Contains(out, archiveMissing) || !strings.Contains(out, localMissing) {
+		t.Errorf("local file message:\n%s", b.String())
+	}
+}

@@ -32,6 +32,10 @@ const (
 	// minutes, like a version list, since every publish changes it). It
 	// asks for plain JSON, not the abbreviated form.
 	KindPackument = "packument"
+	// KindRate is an answer that is never cached, such as GitHub's
+	// /rate_limit, whose point is what is left right now. Offline it
+	// fails with E7.
+	KindRate = "rate"
 )
 
 // forever is the TTL of answers that never change. kit cache refreshes
@@ -54,8 +58,11 @@ var ttls = map[string]time.Duration{
 }
 
 // TTL returns how long answers of kind are reused; false for a kind
-// JSON does not know.
+// JSON does not know. KindRate is known and never reused.
 func TTL(kind string) (time.Duration, bool) {
+	if kind == KindRate {
+		return 0, true
+	}
 	d, ok := ttls[kind]
 	return d, ok
 }

@@ -57,6 +57,21 @@ func TestDemoFlow(t *testing.T) {
 		t.Errorf("SIGHTREAD_NPM_EXTRA_KEYS left set to %q", v)
 	}
 
+	// -o writes the report as a review does; --open needs an HTML one.
+	md := filepath.Join(t.TempDir(), "demo.md")
+	if code, _, errOut := execute(t, "demo", "-o", md); code != cli.ExitOK {
+		t.Fatalf("-o: exit %d %q", code, errOut)
+	}
+	if b, err := os.ReadFile(md); err != nil || len(b) == 0 {
+		t.Errorf("-o wrote %q %v", b, err)
+	}
+	if code, _, errOut := execute(t, "demo", "--open"); code != cli.ExitUsage || !strings.Contains(errOut, "--open opens the HTML report") {
+		t.Errorf("--open alone: exit %d %q", code, errOut)
+	}
+	if code, _, errOut := execute(t, "demo", "-o", "demo.txt"); code != cli.ExitUsage || !strings.Contains(errOut, `-o "demo.txt"`) {
+		t.Errorf("-o demo.txt: exit %d %q", code, errOut)
+	}
+
 	code, _, errOut = execute(t, "demo", "--keep")
 	kept, ok := strings.CutPrefix(strings.TrimSpace(errOut), "kept the demo archives, cache and site in ")
 	if code != cli.ExitOK || !ok {

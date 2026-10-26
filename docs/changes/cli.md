@@ -28,7 +28,7 @@ order:
 | `verify-report <report.json>` | check a signed report | `verify-report <report.json> [--key <pub>]` |
 | `init [ci] [--force]` | write .sightread/config.yaml or a CI workflow | the same |
 | `doctor [--json]` | check sources, cache, tokens and helpers | `doctor [--offline] [--json]` |
-| `demo [--keep]` | try it on built-in packages, no network | the same |
+| `demo [--keep]` | try it on built-in packages, no network | `demo [--keep] [-o <file>]... [--open]` |
 | `signals [--json]` | list every signal with its default severity | the same |
 | `cache prune` | remove cached archives nothing uses | `cache prune [--older <d>]` |
 | `update [--json]` | refresh signal and name data, never packages | `update [--json] [--pin <name=version,...>]` |
@@ -303,7 +303,8 @@ when compare has changes at `--soundcheck-fail-on`.
 - `signals [--json]`: table `ID  SEVERITY  CONFIDENCE  ECOSYSTEMS  NAME`, unignorable IDs marked
   ` (can't be ignored)`.
 - `cache prune [--older <d>]` (default `30d`): `removed 2 archive indexes older than 30 days and
-  14 cached files nothing uses (3.0 MiB)`.
+  14 cached files nothing uses (3.0 MiB)`. Ages under an hour read in minutes or seconds (`older
+  than 45 minutes`); `--older 0` reads `removed 96 archive indexes (all of them) and ...`.
 - `update [--json] [--pin name=version,...]`: one `name version` line per data pack; `update
   failed: <reason>` exits 3; `--pin: "x" isn't name=version` exits 2.
 - `doctor [--offline] [--json] [--plain]`: lines `  ✓ Name             detail` (plain: `ok
@@ -343,13 +344,17 @@ when compare has changes at `--soundcheck-fail-on`.
 
 ## demo
 
-`demo [--keep] [--plain] [--no-color]` serves three fictional updates on a free 127.0.0.1 port and
+`demo [--keep] [-o <file>]... [--open] [--plain] [--no-color]` serves three fictional updates on a free 127.0.0.1 port and
 reviews them with the normal terminal report: `comment-guard` 4.1.2 → 4.1.3 (ROUTINE),
 `share-kit` 3.2.0 → 3.2.1 (new committer, unserialize of a remote body, open REST route,
 blockchain RPC host: HOLD) and npm `date-utils-lite` 1.4.0 → 1.4.1 (new postinstall that would
 fetch and eval code plus the look-alike dependency `axois`: HOLD). It ends with `→ on your site:
 rhythm sightread all /path/to/wordpress` and `→ in CI: rhythm sightread init ci`. `--keep` keeps
-the temp folder and prints `kept the demo archives, cache and site in <dir>`. Anything that tries
+the temp folder and prints `kept the demo archives, cache and site in <dir>`. `-o` writes the
+report as a review does (.json, .md, .html or .sarif) and `--open` opens the HTML one. Its next
+steps are `→ every finding and the full diff: rhythm sightread demo -o review.html --open` and
+`→ explain a finding: ...`; it never suggests an update or allow command for its made-up
+packages. Anything that tries
 another host fails the demo: `demo: something tried to leave the machine (<requests>); please
 report it`.
 
@@ -361,8 +366,10 @@ report it`.
   <level>` (high), `--notify-strict`, `--fail-on-new <level>`, `--html`, `-v`, review flags after
   `--`.
 - One line per run: `2026-10-27 02:00 AEST: 6 sites, 14 updates available, 2 to review (1 hold);
-  report <dir>/20261026T160000Z.json`. Without a report: `<stamp>: the review exited 3 without a
-  report; see <dir>/<stamp>.log`. Problems follow indented: `  couldn't notify <scheme://host>:
+  report <dir>/20261026T160000Z.json`. A review that left something out, or exited other than 0
+  or 1, adds `; incomplete: 2 not checked, 1 unverified, 1 error (see <dir>/<stamp>.log)` (or
+  `the run hit its --deadline`, `the review exited 3`). Without a report: `<stamp>: the review
+  exited 3 without a report; see <dir>/<stamp>.log`. Problems follow indented: `  couldn't notify <scheme://host>:
   <error>`.
 - Loop mode: `Watching the sites in <file>, every 24h; reports go to <dir>` (or `daily at 02:00,
   14:00`), `Next run 2026-10-27 02:00 AEST`, `Stopped.`. First Ctrl-C: `<prog>: stopping once
@@ -381,10 +388,14 @@ report it`.
   version you already run: ...`, `owner change: share-kit 3.2.0 on 2 sites: added
   growth-partners; removed alice`, `closed on wordpress.org: gone 2.0.0 on shop: security
   issue`), at most 25 then `…and N more`, then `Report: <path>` and, for a partial run, `Partial:
-  2 packages were not checked`. Webhook payload schema `rhythm-sightread-notify/v1`.
+  2 not checked, 1 error; see <log>`. A failed or incomplete run is notified even with nothing
+  new: `Sightread <watch>: the review is incomplete` with that line, or `Failed: the review
+  exited 3 without a report; see <log>`. A failed run (no report, an error, a stop, exit 3) is
+  notified every time; a run that only leaves packages out is notified when what it leaves out
+  changes. Webhook payload schema `rhythm-sightread-notify/v1`.
 - Usage errors (exit 2): `watch needs a sites file: <prog> watch -l <sites.yaml> --every 24h`,
   `pick a schedule: --every <interval> or --at <HH:MM>`, `pick one of --every and --at`, `--every
-  10s is too often; the shortest interval is 1m0s`, `--at "2am": want a 24-hour time like 02:00
+  10s is too often; the shortest interval is 1m`, `--at "2am": want a 24-hour time like 02:00
   (several separated by commas)`, `--once runs a single review; drop --every, --at and --now, or
   drop --once`, `--now goes with --at; --every already starts with a run`, `the watch sets -o
   itself; drop it after --`, `--notify-min=low is a watch flag; put it before --`, `watch takes no

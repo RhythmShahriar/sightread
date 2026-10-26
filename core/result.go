@@ -33,6 +33,16 @@ type Side struct {
 	Constraint string
 }
 
+// Side.Source of a side read from disk instead of a registry.
+const (
+	SourceLocalFile     = "local file"     // --from-file, --to-file
+	SourceInstalledCopy = "installed copy" // the copy on the site, for --to-file
+)
+
+// Local reports whether the side was read from disk. Such a side is
+// never in the archive cache: explain has only the report's hunks.
+func (s Side) Local() bool { return s.Source == SourceLocalFile || s.Source == SourceInstalledCopy }
+
 // InstalledInfo is where the installed version lives.
 type InstalledInfo struct {
 	Path       string
@@ -129,3 +139,45 @@ const Schema = "rhythm-sightread/v1"
 
 // FingerprintKey is the SARIF partialFingerprints key.
 const FingerprintKey = "sightreadFinding/v1"
+
+// PairErrors matches the report's errors with its Not checked entries.
+// A package that failed to download is a fetch-failed Not checked entry
+// and an error carrying its code: one problem, which writers list and
+// count once. codes[i] is the code of the error NotChecked[i] stands
+// for ("" when none); rest are the errors no entry stands for, in order.
+func (r *Report) PairErrors() (codes []ErrorCode, rest []ErrorEntry) {
+	codes = make([]ErrorCode, len(r.NotChecked))
+	used := make([]bool, len(r.Errors))
+	for i, nc := range r.NotChecked {
+		if nc.Reason != FetchFailed {
+			continue
+		}
+		for j, e := range r.Errors {
+			if !used[j] && e.Eco == nc.Eco && e.Name == nc.Name {
+				used[j], codes[i] = true, e.Code
+				break
+			}
+		}
+	}
+	for j, e := range r.Errors {
+		if !used[j] {
+			rest = append(rest, e)
+		}
+	}
+	return codes, rest
+}
+
+// ErrorCount is how many errors the report's incomplete line counts:
+// the errors no Not checked entry stands for, plus the errors of the
+// updates that were reviewed. An unverified update's error is its
+// verdict, which the line counts on its own.
+func (r *Report) ErrorCount() int {
+	_, rest := r.PairErrors()
+	n := len(rest)
+	for i := range r.Updates {
+		if r.Updates[i].Verdict != Unverified {
+			n += len(r.Updates[i].Errors)
+		}
+	}
+	return n
+}

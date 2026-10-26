@@ -103,6 +103,15 @@ func TestSnippetMasks(t *testing.T) {
 	if !strings.Contains(s, `\x1b`) {
 		t.Errorf("snippet %q doesn't show the escape byte as \\x1b", s)
 	}
+	// A bidi control is shown as its escape, not dropped: it is what a
+	// unicode-hidden finding reports.
+	if s != `a\x1b[2Jb\u202ec\u2066d` {
+		t.Errorf("snippet %q, want the bidi controls escaped", s)
+	}
+	var back core.Snippet
+	if err := back.UnmarshalJSON([]byte(`"a\\u202eb"`)); err != nil || back.String() != `a\u202eb` {
+		t.Errorf("read back %q %v", back.String(), err)
+	}
 }
 
 func TestSnippetCut(t *testing.T) {

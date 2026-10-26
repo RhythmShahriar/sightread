@@ -66,8 +66,9 @@ type Message struct {
 	Summary     string `json:"summary"`
 	Report      string `json:"report"` // the run's JSON report on the watching machine
 	Items       []Item `json:"items"`
-	// Incomplete says the run left packages out, so nobody reads a short
-	// list as a clean bill of health.
+	// Incomplete says the run left packages out or failed, so nobody
+	// reads a short (or empty) list as a clean bill of health. A message
+	// with no items and this set is about the run itself.
 	Incomplete string `json:"incomplete,omitempty"`
 }
 
@@ -115,7 +116,10 @@ func summary(m Message) string {
 	if m.Watch != "" {
 		who += " " + m.Watch
 	}
-	if len(parts) == 0 {
+	switch {
+	case len(parts) == 0 && m.Incomplete != "":
+		return who + ": the review is incomplete"
+	case len(parts) == 0:
 		return who + ": nothing new"
 	}
 	return who + ": " + strings.Join(parts, ", ")
@@ -140,7 +144,9 @@ func (m Message) Text(esc func(string) string) string {
 			b.WriteString(esc("  top finding: "+it.Top) + "\n")
 		}
 	}
-	b.WriteString("\n" + esc("Report: "+m.Report) + "\n")
+	if m.Report != "" {
+		b.WriteString("\n" + esc("Report: "+m.Report) + "\n")
+	}
 	return b.String()
 }
 

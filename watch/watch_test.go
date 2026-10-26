@@ -307,7 +307,7 @@ func isWindows() bool { return filepath.Separator == '\\' }
 // TestLineWithoutHold and without a report.
 func TestLineVariants(t *testing.T) {
 	at := time.Date(2026, 10, 27, 2, 0, 0, 0, time.FixedZone("AEST", 10*3600))
-	r := Run{Started: at, Report: "/w/x.json", Sites: 1, Updates: 1, Review: 1}
+	r := Run{Started: at, Report: "/w/x.json", Sites: 1, Updates: 1, Review: 1, Complete: true}
 	if got := r.Line(); got != "2026-10-27 02:00 AEST: 1 site, 1 update available, 1 to review; report /w/x.json" {
 		t.Errorf("%q", got)
 	}
@@ -315,7 +315,7 @@ func TestLineVariants(t *testing.T) {
 	if got := r.Line(); got != "2026-10-27 02:00 AEST: the review exited 3 without a report; see /w/x.log" {
 		t.Errorf("%q", got)
 	}
-	r = Run{Started: at, Report: "/w/x.json", SendErrors: []string{"slack://hooks.slack.com: receiver answered 500"}, Warnings: []string{"w"}}
+	r = Run{Started: at, Report: "/w/x.json", Complete: true, SendErrors: []string{"slack://hooks.slack.com: receiver answered 500"}, Warnings: []string{"w"}}
 	if got := r.Lines(); !strings.HasSuffix(got, "\n  couldn't notify slack://hooks.slack.com: receiver answered 500\n  w") {
 		t.Errorf("%q", got)
 	}
@@ -792,5 +792,149 @@ func TestOutcomeCodes(t *testing.T) {
 		if got := c.o.Code(c.strict); got != c.want {
 			t.Errorf("%+v strict %v: %d, want %d", c.o, c.strict, got, c.want)
 		}
+	}
+}
+
+// writeReport writes rep as the next review's report.
+func (wd *world) writeReport(t *testing.T, rep core.Report) {
+	t.Helper()
+	b, err := json.Marshal(rep)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(wd.main, b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestIncompleteRun: a review that exits 3 with every package Not
+// checked and an E7 says so on its line and in a notification, every
+// run; a run that only leaves the same package out is notified once.
+func TestIncompleteRun(t *testing.T) {
+	wd := fake(t)
+	h := newHook(t)
+	wd.w.Notifiers = []notify.Notifier{h.notifier(t)}
+	t.Setenv("FAKE_SR_EXIT", "3")
+	down := core.Report{Kind: core.KindReview, Target: core.Target{Kind: "fleet", Sites: []string{"shop", "blog"}},
+		NotChecked: []core.NotChecked{{Eco: core.NPM, Name: "date-utils-lite", Version: "1.4.0", Reason: core.FetchFailed}},
+		Errors:     []core.ErrorEntry{{Eco: core.NPM, Name: "date-utils-lite", Code: "E7", Message: "can't reach registry.npmjs.org"}}}
+	down.Summary.NotChecked = 1
+	wd.writeReport(t, down)
+	for i := range 2 {
+		r, err := wd.w.RunOnce(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		// The E7 is the Not checked entry's own error: counted once.
+		want := "2 sites, 0 updates available, 0 to review; report " + r.Report + "; incomplete: 1 not checked (see " + r.LogFile + ")"
+		if !strings.HasSuffix(r.Line(), want) {
+			t.Errorf("run %d: line %q, want suffix %q", i+1, r.Line(), want)
+		}
+		if r.Outcome().Code(false) != cli.ExitUnavailable {
+			t.Errorf("run %d: code %d", i+1, r.Outcome().Code(false))
+		}
+		msgs := h.messages()
+		if len(msgs) != i+1 {
+			t.Fatalf("run %d: %d messages, want %d", i+1, len(msgs), i+1)
+		}
+		m := msgs[i]
+		if m.Summary != "Sightread agency: the review is incomplete" || m.Incomplete != "Partial: 1 not checked; see "+r.LogFile {
+			t.Errorf("run %d: message %+v", i+1, m)
+		}
+		wd.w.Clock.(*fakeClock).advance(time.Hour)
+	}
+
+	// Only a package left out, the review otherwise fine: told once.
+	t.Setenv("FAKE_SR_EXIT", "0")
+	partial := down
+	partial.Errors = nil
+	partial.NotChecked = []core.NotChecked{{Eco: core.WPPlugin, Name: "premium-forms", Reason: core.NotWPOrg},
+		{Eco: core.WPPlugin, Name: "premium-seo", Reason: core.NotWPOrg}}
+	wd.writeReport(t, partial)
+	for range 2 {
+		r, err := wd.w.RunOnce(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.HasSuffix(r.Line(), "; incomplete: 2 not checked (see "+r.LogFile+")") {
+			t.Errorf("line %q", r.Line())
+		}
+		wd.w.Clock.(*fakeClock).advance(time.Hour)
+	}
+	if msgs := h.messages(); len(msgs) != 3 || msgs[2].Incomplete == "" {
+		t.Errorf("partial runs: %d messages, want 3: %+v", len(msgs), msgs)
+	}
+
+	// A complete run clears it; the line has no incomplete part.
+	wd.report(t, "2026.10.01")
+	r, err := wd.w.RunOnce(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(r.Line(), "incomplete") {
+		t.Errorf("complete run: %q", r.Line())
+	}
+}
+
+// TestFailedReviewNotifies: a review that exits 3 without a report is
+// notified on every run.
+func TestFailedReviewNotifies(t *testing.T) {
+	wd := fake(t)
+	h := newHook(t)
+	wd.w.Notifiers = []notify.Notifier{h.notifier(t)}
+	t.Setenv("FAKE_SR_NO_REPORT", "1")
+	t.Setenv("FAKE_SR_EXIT", "3")
+	for range 2 {
+		if _, err := wd.w.RunOnce(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		wd.w.Clock.(*fakeClock).advance(time.Hour)
+	}
+	msgs := h.messages()
+	if len(msgs) != 2 {
+		t.Fatalf("%d messages, want 2", len(msgs))
+	}
+	for _, m := range msgs {
+		if m.Summary != "Sightread agency: the review is incomplete" ||
+			!strings.HasPrefix(m.Incomplete, "Failed: the review exited 3 without a report; see ") || len(m.Items) != 0 {
+			t.Errorf("message %+v", m)
+		}
+	}
+}
+
+// TestRunGap covers the incomplete part of the line.
+func TestRunGap(t *testing.T) {
+	for _, c := range []struct {
+		r    Run
+		want string
+	}{
+		{Run{Complete: true}, ""},
+		{Run{Complete: true, Exit: 1}, ""},
+		{Run{Complete: false}, "the review is not complete"},
+		{Run{Complete: true, Exit: 3}, "the review exited 3"},
+		{Run{Complete: true, Exit: -1}, "the review was stopped"},
+		{Run{NotChecked: 2, Errors: 2, Unverified: 1, Exit: 3}, "2 not checked, 1 unverified, 2 errors"},
+		{Run{StoppedBy: "deadline", Exit: 3}, "the run hit its --deadline"},
+		{Run{StoppedBy: "interrupted", Exit: 3}, "the run was interrupted"},
+	} {
+		if got := c.r.gap(); got != c.want {
+			t.Errorf("%+v: %q, want %q", c.r, got, c.want)
+		}
+	}
+}
+
+// TestDurationText: no Go-style zero units in what users read.
+func TestDurationText(t *testing.T) {
+	for d, want := range map[time.Duration]string{
+		time.Minute: "1m", 90 * time.Second: "1m30s", 10 * time.Second: "10s", 2 * time.Hour: "2h",
+		2*time.Hour + 30*time.Minute: "2h30m", time.Hour + time.Second: "1h0m1s",
+	} {
+		if got := DurationText(d); got != want {
+			t.Errorf("%v: %q, want %q", d, got, want)
+		}
+	}
+	err := Schedule{Every: 10 * time.Second}.Validate()
+	if err == nil || err.Error() != "--every 10s is too often; the shortest interval is 1m" {
+		t.Errorf("validate: %v", err)
 	}
 }

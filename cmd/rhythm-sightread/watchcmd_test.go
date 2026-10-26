@@ -37,7 +37,7 @@ func TestWatchUsage(t *testing.T) {
 	}{
 		{[]string{"--every", "24h"}, "rhythm-sightread: watch needs a sites file: rhythm-sightread watch -l <sites.yaml> --every 24h"},
 		{[]string{"-l", sites}, "rhythm-sightread: pick a schedule: --every <interval> or --at <HH:MM>"},
-		{[]string{"-l", sites, "--every", "10s"}, "rhythm-sightread: --every 10s is too often; the shortest interval is 1m0s"},
+		{[]string{"-l", sites, "--every", "10s"}, "rhythm-sightread: --every 10s is too often; the shortest interval is 1m"},
 		{[]string{"-l", sites, "--every", "soon"}, `rhythm-sightread: --every "soon": want a duration such as 30s, 10m, 72h or 3d`},
 		{[]string{"-l", sites, "--at", "2am"}, `rhythm-sightread: --at "2am": want a 24-hour time like 02:00 (several separated by commas)`},
 		{[]string{"-l", sites, "--once", "--every", "1h"}, "rhythm-sightread: --once runs a single review; drop --every, --at and --now, or drop --once"},

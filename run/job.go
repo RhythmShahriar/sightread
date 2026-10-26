@@ -241,6 +241,19 @@ func (r *reviewer) failure(t *target, err error) *result {
 // UnverifiedHint is the fix line of E5 (PRD section 10).
 const UnverifiedHint = "not diffed; run again later, or --allow-unverified to review it anyway (the report marks it unverified)"
 
+// LocalUnverifiedHint is the fix line of E5 for a side read from disk:
+// running again later can never verify it.
+const LocalUnverifiedHint = "not diffed; a local file has nothing to check it against: " +
+	"add --allow-unverified to review it (the report marks it unverified)"
+
+// unverifiedHint is the E5 fix line for side s.
+func unverifiedHint(s core.Side) string {
+	if s.Local() {
+		return LocalUnverifiedHint
+	}
+	return UnverifiedHint
+}
+
 // problem hands a coded error to Request.OnProblem, its text masked
 // like everything else a package or registry can put into output.
 func (r *reviewer) problem(err error) {
@@ -350,7 +363,7 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 				msg := fmt.Sprintf("couldn't verify %s %s: %s", t.name, s.info.Version, cmp.Or(s.in.Detail, "nothing to check it against"))
 				u.Errors = append(u.Errors, core.ErrorEntry{Eco: t.eco, Name: t.name, Code: core.EUnverifiable, Message: msg})
 				r.problem(&core.Error{Code: core.EUnverifiable, Exit: cli.ExitUnavailable, Command: r.req.Command, What: msg,
-					Hint: []string{UnverifiedHint}})
+					Hint: []string{unverifiedHint(s.info)}})
 			}
 		}
 		// Not diffed. What the archive itself showed still counts: a
@@ -506,9 +519,9 @@ func (r *reviewer) side(ctx context.Context, src core.Source, t *target, isNew b
 			// declare names the side, as on the site after an install.
 			ref.Version = cmp.Or(tv.TreeVersion(t.eco, t.name, tree), core.LocalVersion)
 		}
-		what := "local file"
+		what := core.SourceLocalFile
 		if dir != "" {
-			what = "installed copy"
+			what = core.SourceInstalledCopy
 		}
 		in := core.Integrity{By: core.ByNone, Method: what + "; nothing to check it against", Detail: what}
 		// The changelog, composer.json and readme facts come from the

@@ -440,6 +440,9 @@ func (m mdReport) section(b *strings.Builder, u *core.Update, t mdTrim) {
 	if t.hunks {
 		m.hunks(b, u, fs)
 	}
+	if m.o.Demo {
+		return // the demo's packages are made up: nothing to allow
+	}
 	if why := allowRefusal(u); why != "" {
 		b.WriteString(why + "\n\n")
 		return
@@ -690,7 +693,8 @@ func (m mdReport) notChecked(b *strings.Builder) {
 		return
 	}
 	b.WriteString("### Not checked\n\n")
-	for _, n := range m.r.NotChecked {
+	codes, rest := m.r.PairErrors()
+	for i, n := range m.r.NotChecked {
 		line := "- " + md(n.Name)
 		if n.Version != "" {
 			line += " " + mdInline(n.Version)
@@ -699,12 +703,15 @@ func (m mdReport) notChecked(b *strings.Builder) {
 			line += " (" + md(string(n.Eco)) + ")"
 		}
 		line += ": " + md(n.Text)
+		if codes[i] != "" {
+			line += " (" + md(string(codes[i])) + ")"
+		}
 		if n.Hint != "" {
 			line += ". " + md(capitalise(n.Hint))
 		}
 		b.WriteString(line + "\n")
 	}
-	for _, e := range m.r.Errors {
+	for _, e := range rest {
 		line := "- " + md(e.Name)
 		if e.Eco != "" {
 			line += " (" + md(string(e.Eco)) + ")"

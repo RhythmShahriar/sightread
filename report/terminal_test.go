@@ -672,3 +672,64 @@ func TestTerminalSoundcheckFacts(t *testing.T) {
 		}
 	}
 }
+
+// TestFetchFailureListedOnce: a package that failed to download is one
+// Not checked line carrying its error's code in every format; the
+// incomplete line counts it once.
+func TestFetchFailureListedOnce(t *testing.T) {
+	r := &core.Report{Kind: core.KindReview, Target: core.Target{Path: "/srv/app", Kind: "npm"},
+		NotChecked: []core.NotChecked{{Eco: core.NPM, Name: "date-utils-lite", Version: "1.4.0", Reason: core.FetchFailed,
+			Text: "could not download (can't reach registry.npmjs.org)", Hint: "run again; -v shows the request"}},
+		Errors: []core.ErrorEntry{
+			{Eco: core.NPM, Name: "date-utils-lite", Code: core.ENetwork, Message: "can't reach registry.npmjs.org"},
+			{Eco: core.NPM, Name: "other", Code: core.ENetwork, Message: "can't reach registry.npmjs.org"},
+		}}
+	r.Summary.NotChecked = 1
+	term := writeTerm(t, r, termOpts(120))
+	for _, want := range []string{
+		"  NOT CHECKED  2 ─",
+		"    date-utils-lite 1.4.0 (npm): could not download (can't reach registry.npmjs.org) (E7)\n",
+		"    other (npm): can't reach registry.npmjs.org (E7)\n",
+		"Incomplete review: 1 package wasn't checked and 1 error.",
+	} {
+		if !strings.Contains(term, want) {
+			t.Errorf("terminal: missing %q in\n%s", want, term)
+		}
+	}
+	if strings.Contains(term, "date-utils-lite (npm): can't reach") {
+		t.Errorf("terminal lists the failure twice:\n%s", term)
+	}
+	md := writeMD(t, r)
+	if !strings.Contains(md, "**Incomplete review:** 1 package wasn't checked and 1 error.") ||
+		strings.Count(md, "date-utils-lite") != 1 || !strings.Contains(md, "(E7)") {
+		t.Errorf("markdown:\n%s", md)
+	}
+	if h := writeHTML(t, r); strings.Count(h, "date-utils-lite") != 1 || !strings.Contains(h, "1 package wasn&#39;t checked and 1 error") {
+		t.Errorf("html lists the failure %d times", strings.Count(h, "date-utils-lite"))
+	}
+}
+
+// TestDemoNextSteps: the demo's report reruns the demo for the full
+// diff and never offers an update or allow command for its made-up
+// packages, in any format.
+func TestDemoNextSteps(t *testing.T) {
+	o := termOpts(120)
+	o.Demo = true
+	out := writeTerm(t, coretest.SampleReport(), o)
+	if !strings.Contains(out, "  → every finding and the full diff: rhythm sightread demo -o review.html --open\n") {
+		t.Errorf("no demo rerun step:\n%s", out)
+	}
+	for _, not := range []string{"run again with -o", "update the routine ones", "record a review", " allow "} {
+		if strings.Contains(out, not) {
+			t.Errorf("demo report offers %q:\n%s", not, out)
+		}
+	}
+	if !strings.Contains(out, "→ explain a finding:") {
+		t.Error("the demo lost its explain step")
+	}
+	md := string(writeWith(t, core.FormatMarkdown, coretest.SampleReport(), o))
+	h := string(writeWith(t, core.FormatHTML, coretest.SampleReport(), o))
+	if strings.Contains(md, "Record your review:") || strings.Contains(h, "<h3>Record your review</h3>") {
+		t.Error("the demo's Markdown or HTML offers an allow command")
+	}
+}

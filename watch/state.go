@@ -50,6 +50,10 @@ type state struct {
 	// Closed holds the site, package and version of every closure that
 	// was notified.
 	Closed map[string]bool `json:"closed"`
+	// Partial is the incomplete line last notified, "" after a complete
+	// run. A run that only leaves the same packages out again is not
+	// notified again.
+	Partial string `json:"partial,omitempty"`
 }
 
 func newState() *state {

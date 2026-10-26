@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -30,33 +31,63 @@ const demoTimeout = 10 * time.Second
 // demoCommand is `demo` (PRD 6.9): three built-in updates reviewed by
 // the normal pipeline against a server on 127.0.0.1.
 var demoCommand = &simpleCommand{
-	name: "demo", args: "[--keep]", summary: "try it on built-in packages, no network",
+	name: "demo", args: "[--keep] [-o <file>]... [--open]", brief: "[--keep]", summary: "try it on built-in packages, no network",
 	long: "Reviews three updates of built-in example packages: a routine plugin update, a plugin update in the pattern " +
 		"of the 2025 Essential Plugin takeover and an npm update that adds an install script and a typosquatted " +
 		"dependency. A server on 127.0.0.1 publishes them the way WordPress.org and npm do, so the demo runs the real " +
 		"review with no network. Nothing is installed and no package code runs. --keep keeps the archives, the cache " +
-		"and the example site in a temporary folder and prints where.",
-	examples: []string{"demo", "demo --keep"},
-	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
+		"and the example site in a temporary folder and prints where. -o writes the report to a file as a review " +
+		"does; --open opens the HTML one.",
+	examples: []string{"demo", "demo --keep", "demo -o review.html --open"},
+	flags: func(fs *flag.FlagSet, sf *simpleFlags) runFunc {
 		keep := fs.Bool("keep", false, "keep the generated archives, cache and site and print their folder")
+		var outputs cli.RepeatFlag
+		fs.Var(&outputs, "output", "also write the report to this `file` (repeatable; .json, .md, .html or .sarif)")
+		sf.short(fs, "o", "output")
+		open := fs.Bool("open", false, "open the HTML report in the browser when done")
 		plain := fs.Bool("plain", false, "no colour or symbols (also when stdout is not a terminal)")
 		noColor := fs.Bool("no-color", false, "no colour (also NO_COLOR)")
 		return func(ctx context.Context, pos []string, stdout, stderr io.Writer) error {
 			if len(pos) > 0 {
 				return cli.Usagef("demo takes no arguments, got %q", pos[0])
 			}
+			var files []output
+			for _, path := range outputs {
+				format, ok := formatOf(path)
+				if !ok || format == core.FormatJSONL {
+					return badFlag("-o %q: want a file ending in .json, .md, .html or .sarif", path)
+				}
+				files = append(files, output{path: path, format: format})
+			}
+			if *open && !slices.ContainsFunc(files, func(o output) bool { return o.format == core.FormatHTML }) {
+				return badFlag("--open opens the HTML report, so write one with -o <file>.html")
+			}
 			terminal := cli.IsTerminal(stdout)
 			o := core.WriteOptions{Program: cli.Name(), Version: version, MaxFindings: defaultMaxFindings,
-				Plain: *plain || !terminal}
+				Plain: *plain || !terminal, Demo: true}
 			o.Color = !o.Plain && !*noColor && os.Getenv("NO_COLOR") == ""
-			return runDemo(ctx, *keep, o, stdout, stderr)
+			if err := runDemo(ctx, demoRun{keep: *keep, files: files}, o, stdout, stderr); err != nil {
+				return err
+			}
+			if *open {
+				openFirstHTML(ctx, files, nil, stderr)
+			}
+			return nil
 		}
 	},
 }
 
+// demoRun is what the demo flags ask for besides the output options.
+type demoRun struct {
+	keep  bool
+	files []output // -o
+}
+
 // runDemo serves the demo packages, reviews the demo site against them
-// and prints the report and the two next steps.
-func runDemo(ctx context.Context, keep bool, o core.WriteOptions, stdout, stderr io.Writer) (err error) {
+// and prints the report and the two next steps. Each -o file gets the
+// report in its format.
+func runDemo(ctx context.Context, d demoRun, o core.WriteOptions, stdout, stderr io.Writer) (err error) {
+	keep := d.keep
 	dir, err := os.MkdirTemp("", "sightread-demo-*")
 	if err != nil {
 		return err
@@ -91,6 +122,7 @@ func runDemo(ctx context.Context, keep bool, o core.WriteOptions, stdout, stderr
 
 	rep, err := run.Review(ctx, run.Request{
 		Command: "demo", Version: version, NoConfig: true, NoSignalUpdates: true, CacheDir: cache,
+		AllHunks:  slices.ContainsFunc(d.files, func(o output) bool { return o.format == core.FormatHTML }),
 		Inventory: core.InventoryRequest{Root: site, MaxDepth: 6}, Set: map[string]bool{"path": true},
 		Getter: core.GetterConfig{Bases: srv.Bases(), Proxy: srv.Proxy(), Timeout: demoTimeout, Retries: -1,
 			UserAgent: "rhythm-sightread/" + version + " (+https://github.com/RhythmShahriar/sightread)"},
@@ -104,6 +136,15 @@ func runDemo(ctx context.Context, keep bool, o core.WriteOptions, stdout, stderr
 	w := core.WriterFor(core.FormatTerminal)
 	if w == nil {
 		return fmt.Errorf("terminal writer %w", core.ErrNotLinked)
+	}
+	for _, f := range d.files {
+		b, err := render(f.format, rep, o)
+		if err != nil {
+			return err
+		}
+		if err := run.WriteFile(f.path, b); err != nil {
+			return fmt.Errorf("-o %s: %w", f.path, err)
+		}
 	}
 	if err := w.Write(stdout, rep, o); err != nil {
 		return err

@@ -169,18 +169,9 @@ func ownerChange(before, after []string) string {
 	return strings.Join(parts, "; ")
 }
 
-// incomplete is the line a message carries when the run left packages
-// out, so a short list isn't read as all clear.
-func incomplete(rep *core.Report) string {
-	switch {
-	case rep.StoppedBy != "":
-		return fmt.Sprintf("Partial: the review was stopped (%s) before it finished", rep.StoppedBy)
-	case core.CountNotChecked(rep.NotChecked) == 1:
-		return "Partial: 1 package was not checked"
-	case core.CountNotChecked(rep.NotChecked) > 1:
-		return fmt.Sprintf("Partial: %d packages were not checked", core.CountNotChecked(rep.NotChecked))
-	case !rep.Complete:
-		return "Partial: the review is not complete"
-	}
-	return ""
+// partialLine is the line a message carries when the run left packages
+// out or went wrong, so a short list isn't read as all clear: "Partial:
+// 2 not checked, 1 error; see <log>".
+func partialLine(gap, log string) string {
+	return fmt.Sprintf("Partial: %s; see %s", gap, log)
 }

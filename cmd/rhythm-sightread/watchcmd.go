@@ -292,14 +292,7 @@ func watchLoop(ctx context.Context, w *watch.Watcher, o watchOptions, stdout, st
 // describeSchedule reads "every 24h" or "daily at 02:00, 14:00".
 func describeSchedule(s watch.Schedule) string {
 	if s.Every > 0 {
-		d := s.Every.String() // 24h0m0s, 1h30m0s, 1m30s
-		if strings.HasSuffix(d, "m0s") {
-			d = strings.TrimSuffix(d, "0s")
-		}
-		if strings.HasSuffix(d, "h0m") {
-			d = strings.TrimSuffix(d, "0m")
-		}
-		return "every " + d
+		return "every " + watch.DurationText(s.Every)
 	}
 	times := make([]string, len(s.At))
 	for i, t := range s.At {

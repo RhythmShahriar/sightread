@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -19,7 +20,15 @@ import (
 // quotes escapes the next character. Nothing is expanded (no variables,
 // ~ or globs). An unquoted ; | & < > ` or $( is refused, since the
 // command runs without a shell and would get them as words.
-func SplitCommand(s string) ([]string, error) {
+//
+// On Windows a backslash is a path separator, so it is literal
+// everywhere except before a double quote: "C:\tools\wp.bat
+// --path=C:\site" keeps its paths.
+func SplitCommand(s string) ([]string, error) { return splitCommand(s, runtime.GOOS == "windows") }
+
+// splitCommand is SplitCommand with Windows' backslash rule when windows
+// is set.
+func splitCommand(s string, windows bool) ([]string, error) {
 	var (
 		words   []string
 		cur     strings.Builder
@@ -44,6 +53,9 @@ func SplitCommand(s string) ([]string, error) {
 			} else {
 				cur.WriteRune(r)
 			}
+		case r == '\\' && windows && (i+1 == len(runes) || runes[i+1] != '"'):
+			cur.WriteRune(r)
+			inWord = true
 		case r == '\\':
 			escaped, inWord = true, true
 		case quote == '"':

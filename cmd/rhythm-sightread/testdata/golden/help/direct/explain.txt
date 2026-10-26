@@ -4,7 +4,9 @@ With a signal ID, prints what the signal means, why it matters, how to review
 it, its usual false alarms and the incidents it is built on. It needs no
 network. With a saved JSON report and a finding's number (as the report counts
 them, from 1) or fingerprint, prints that finding, its evidence and the diff
-hunk with 6 lines of context, read from the archives the review cached.
+hunk with 6 lines of context, read from the archives the review cached. A review
+of a local file (--from-file, --to-file) or one whose archives are no longer
+cached shows the hunk the report saved.
 
 Flags:
   --json   print the kind explain JSON document

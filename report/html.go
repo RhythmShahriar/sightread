@@ -204,7 +204,8 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 				Counts: fmt.Sprintf("%d broke, %d new, %d changed", sc.Broke, sc.New, sc.Changed)})
 		}
 	}
-	for _, n := range r.NotChecked {
+	codes, rest := r.PairErrors()
+	for i, n := range r.NotChecked {
 		line := text(n.Name)
 		if n.Version != "" {
 			line += " " + text(n.Version)
@@ -213,12 +214,15 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 			line += " (" + text(string(n.Eco)) + ")"
 		}
 		line += ": " + p.text(text(n.Text))
+		if codes[i] != "" {
+			line += " (" + text(string(codes[i])) + ")"
+		}
 		if n.Hint != "" {
 			line += ". " + capitalise(p.text(text(n.Hint)))
 		}
 		v.NotChecked = append(v.NotChecked, line)
 	}
-	for _, e := range r.Errors {
+	for _, e := range rest {
 		line := text(e.Name)
 		if e.Eco != "" {
 			line += " (" + text(string(e.Eco)) + ")"
@@ -299,13 +303,7 @@ func incompleteParts(r *core.Report) []string {
 	if n := core.CountNotChecked(r.NotChecked); n > 0 {
 		parts = append(parts, plural(n, "package wasn't checked", "packages weren't checked"))
 	}
-	errs := len(r.Errors)
-	for i := range r.Updates {
-		if r.Updates[i].Verdict != core.Unverified {
-			errs += len(r.Updates[i].Errors)
-		}
-	}
-	if errs > 0 {
+	if errs := r.ErrorCount(); errs > 0 {
 		parts = append(parts, plural(errs, "error", "errors"))
 	}
 	switch r.StoppedBy {
@@ -362,7 +360,7 @@ func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) ht
 	c.Flagged, c.Rest, c.RestCount = diffFiles(u)
 	// HOLD, REVIEW and UNVERIFIED are what someone reviews; ALLOWED is
 	// already on record and ROUTINE has nothing to accept.
-	if (u.Verdict == core.Hold || u.Verdict == core.Review || u.Verdict == core.Unverified) && u.To.Version != "" {
+	if (u.Verdict == core.Hold || u.Verdict == core.Review || u.Verdict == core.Unverified) && u.To.Version != "" && !o.Demo {
 		c.Allow = allowLine(o.Program, u)
 		why := allowRefusal(u)
 		//nolint:gosec // a fixed text of this package, kept unescaped so the apostrophes stay as typed

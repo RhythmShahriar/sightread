@@ -135,10 +135,34 @@ func TestExplainFinding(t *testing.T) {
 		t.Errorf("no such finding: exit %d %q", code, errOut)
 	}
 
+	// A cached tree that isn't the release the report names (another
+	// sha256) is not used: the report's own hunk of the file is.
+	other := *rep
+	other.Updates = slices.Clone(rep.Updates)
+	u := &other.Updates[1]
+	u.To.SHA256 = strings.Repeat("0", 64)
+	u.Hunks = []core.Hunk{{Path: "main.php", Lines: []string{"+saved"}}, {Path: "other.php", Lines: []string{"+no"}}}
+	saved := saveReport(t, &other)
+	asked := len(hunks.asked)
+	if code, out, _ := execute(t, "explain", saved, "1"); code != cli.ExitOK || out != "explain finding 1 (1 hunks)\n" || len(hunks.asked) != asked {
+		t.Errorf("other sha256: exit %d %q, differ asked %q", code, out, hunks.asked[asked:])
+	}
+
+	// A --to-file side is never cached: the report's hunk, no diff.
+	u.To.SHA256, u.To.Source = rep.Updates[1].To.SHA256, core.SourceLocalFile
+	saved = saveReport(t, &other)
+	if code, out, _ := execute(t, "explain", saved, "1"); code != cli.ExitOK || out != "explain finding 1 (1 hunks)\n" || len(hunks.asked) != asked {
+		t.Errorf("local file: exit %d %q, differ asked %q", code, out, hunks.asked[asked:])
+	}
+
 	// Without the cached archives the renderer gets no hunks and says so.
 	t.Setenv("RHYTHM_CACHE_DIR", t.TempDir())
 	if code, out, _ := execute(t, "explain", path, "1"); code != cli.ExitOK || out != "explain finding 1 (0 hunks)\n" {
 		t.Errorf("no cache: exit %d %q", code, out)
+	}
+	// ...unless the report saved the hunk.
+	if code, out, _ := execute(t, "explain", saved, "1"); code != cli.ExitOK || out != "explain finding 1 (1 hunks)\n" {
+		t.Errorf("no cache, saved hunk: exit %d %q", code, out)
 	}
 }
 
@@ -422,10 +446,27 @@ func TestCachePrune(t *testing.T) {
 		t.Errorf("kept %d blobs, want both versions' files", len(pb.kept))
 	}
 	code, out, _ = execute(t, "cache", "prune", "--older", "0s")
-	if code != cli.ExitOK || !strings.HasPrefix(out, "removed 2 archive indexes") || len(pb.kept) != 0 {
+	if code != cli.ExitOK || !strings.HasPrefix(out, "removed 2 archive indexes (all of them) and ") || len(pb.kept) != 0 {
 		t.Errorf("--older 0s: exit %d %q, kept %d", code, out, len(pb.kept))
 	}
 	if code, _, _ := execute(t, "cache"); code != cli.ExitUsage {
 		t.Errorf("cache with no action: exit %d", code)
+	}
+}
+
+// TestOlderText words --older for any age, never Go's duration form
+// or "less than an hour".
+func TestOlderText(t *testing.T) {
+	for age, want := range map[time.Duration]string{
+		0:                   "(all of them)",
+		time.Second:         "older than 1 second",
+		45 * time.Second:    "older than 45 seconds",
+		time.Minute:         "older than 1 minute",
+		30 * time.Minute:    "older than 30 minutes",
+		30 * 24 * time.Hour: "older than 30 days",
+	} {
+		if got := olderText(age); got != want {
+			t.Errorf("%v: %q, want %q", age, got, want)
+		}
 	}
 }

@@ -155,9 +155,8 @@ func (t *termView) render() {
 // tt is text for the terminal (see termText).
 func tt(s string) string { return termText(s) }
 
-// isBidi reports whether r is a bidirectional embedding, override or
-// isolate, the characters of Trojan Source.
-func isBidi(r rune) bool { return r >= 0x202A && r <= 0x202E || r >= 0x2066 && r <= 0x2069 }
+// isBidi reports whether r is a bidi control (core.IsBidi).
+func isBidi(r rune) bool { return core.IsBidi(r) }
 
 // termText is text for the terminal. SR-50 wants bidi controls shown,
 // not dropped: a reviewer must see that a changelog or a name holds one.
@@ -1059,12 +1058,15 @@ func (t *termView) item(s, hint string) {
 
 // notChecked lists what the run did not check and the report's errors.
 func (t *termView) notChecked() {
-	n := len(t.r.NotChecked) + len(t.r.Errors)
+	// A package that failed to download is one entry with its error's
+	// code, not an entry and an error.
+	codes, rest := t.r.PairErrors()
+	n := len(t.r.NotChecked) + len(rest)
 	if n == 0 {
 		return
 	}
 	t.sectionHead("NOT CHECKED", n, t.mutedBold)
-	for _, nc := range t.r.NotChecked {
+	for i, nc := range t.r.NotChecked {
 		s := tt(nc.Name)
 		if nc.Version != "" {
 			s += " " + tt(nc.Version)
@@ -1072,9 +1074,13 @@ func (t *termView) notChecked() {
 		if nc.Eco != "" {
 			s += " (" + tt(string(nc.Eco)) + ")"
 		}
-		t.item(s+": "+tt(nc.Text), tt(nc.Hint))
+		s += ": " + tt(nc.Text)
+		if codes[i] != "" {
+			s += " (" + tt(string(codes[i])) + ")"
+		}
+		t.item(s, tt(nc.Hint))
 	}
-	for _, e := range t.r.Errors {
+	for _, e := range rest {
 		s := tt(e.Name)
 		if e.Eco != "" {
 			s += " (" + tt(string(e.Eco)) + ")"
@@ -1295,7 +1301,11 @@ func (t *termView) next() {
 	var steps [][2]string
 	worst := t.worstFinding()
 	if worst != nil {
-		if t.single() {
+		switch {
+		case t.o.Demo:
+			// Only the demo reaches the demo's packages.
+			steps = append(steps, [2]string{"every finding and the full diff", tt(programName(t.o.Program)) + " demo -o review.html --open"})
+		case t.single():
 			u := &t.r.Updates[0]
 			c := tt(programName(t.o.Program)) + " " + ecoCommand(u.Eco) + " " + shellArg(tt(u.Name))
 			for _, a := range t.o.RerunFlags {
@@ -1304,10 +1314,16 @@ func (t *termView) next() {
 				c += " " + shellArg(tt(a))
 			}
 			steps = append(steps, [2]string{"the full diff", c + " -o review.html --open"})
-		} else {
+		default:
 			steps = append(steps, [2]string{"every finding and the full diff", "run again with -o review.html --open"})
 		}
 		steps = append(steps, [2]string{"explain a finding", tt(programName(t.o.Program)) + " explain " + shellArg(tt(worst.ID))})
+	}
+	if t.o.Demo {
+		// The demo's packages are made up: an update or allow command
+		// would ask a real registry for them.
+		t.writeSteps(steps)
+		return
 	}
 	label := "update the routine ones"
 	if t.single() {
@@ -1322,6 +1338,11 @@ func (t *termView) next() {
 			break
 		}
 	}
+	t.writeSteps(steps)
+}
+
+// writeSteps writes the → next steps, each a label and a command.
+func (t *termView) writeSteps(steps [][2]string) {
 	for _, s := range steps {
 		if t.o.Plain {
 			t.line("next: " + s[0] + ": " + s[1])

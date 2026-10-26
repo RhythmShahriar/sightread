@@ -97,6 +97,13 @@ type Run struct {
 
 	Sites, Updates, Review, Hold int
 
+	// Complete is the report's complete flag. NotChecked, Errors,
+	// Unverified and StoppedBy say what an incomplete review left out,
+	// counted as the report's own incomplete line counts them.
+	Complete                       bool
+	NotChecked, Errors, Unverified int
+	StoppedBy                      string
+
 	// New is what this run notified (or would have, without notifiers).
 	New []notify.Item
 	// FailNew is set when a new finding reached Watcher.FailOnNew.
@@ -228,7 +235,52 @@ func (r Run) Line() string {
 		fmt.Fprintf(&b, " (%d hold)", r.Hold)
 	}
 	fmt.Fprintf(&b, "; report %s", r.Report)
+	if gap := r.gap(); gap != "" {
+		fmt.Fprintf(&b, "; incomplete: %s (see %s)", gap, r.LogFile)
+	}
 	return b.String()
+}
+
+// gap says what a run with a report left out, "" for a complete review
+// that exited 0 or 1: "2 not checked, 1 error".
+func (r Run) gap() string {
+	var parts []string
+	if r.NotChecked > 0 {
+		parts = append(parts, fmt.Sprintf("%d not checked", r.NotChecked))
+	}
+	if r.Unverified > 0 {
+		parts = append(parts, fmt.Sprintf("%d unverified", r.Unverified))
+	}
+	if r.Errors > 0 {
+		parts = append(parts, plural(r.Errors, "error"))
+	}
+	switch r.StoppedBy {
+	case "":
+	case "deadline":
+		parts = append(parts, "the run hit its --deadline")
+	default:
+		parts = append(parts, "the run was "+r.StoppedBy)
+	}
+	failed := r.Exit != exitOK && r.Exit != exitFindings
+	switch {
+	case len(parts) > 0:
+		return strings.Join(parts, ", ")
+	case failed && r.Exit < 0:
+		return "the review was stopped"
+	case failed:
+		return fmt.Sprintf("the review exited %d", r.Exit)
+	case !r.Complete:
+		return "the review is not complete"
+	}
+	return ""
+}
+
+// failed reports whether the run went wrong rather than only leaving
+// packages out: no report, an error, a stop or a review that exited
+// neither 0 nor 1. Such a run is notified every time; a run that only
+// left packages out is notified when what it left out changes.
+func (r Run) failed() bool {
+	return r.Report == "" || r.Errors > 0 || r.StoppedBy != "" || r.Exit != exitOK && r.Exit != exitFindings
 }
 
 // Lines is Line plus one indented line per failed notification and
@@ -308,12 +360,20 @@ func (w *Watcher) RunOnce(ctx context.Context) (Run, error) {
 		return r, fmt.Errorf("%w (exit 2); see %s", ErrReviewUsage, r.LogFile)
 	}
 	if !fileExists(report) {
+		w.tellFailure(ctx, st, fmt.Sprintf("the review exited %d without a report", r.Exit), &r)
+		if err := st.save(w.Dir, c.Now()); err != nil {
+			return r, err
+		}
 		w.prune(st.Report)
 		return r, nil
 	}
 	rep, err := w.read(report)
 	if err != nil {
 		r.Warnings = append(r.Warnings, fmt.Sprintf("couldn't read the report: %v", err))
+		w.tellFailure(ctx, st, "the review's report couldn't be read", &r)
+		if err := st.save(w.Dir, c.Now()); err != nil {
+			return r, err
+		}
 		return r, nil
 	}
 	r.Report = report
@@ -322,6 +382,8 @@ func (w *Watcher) RunOnce(ctx context.Context) (Run, error) {
 	}
 	r.Sites, r.Updates = len(rep.Target.Sites), rep.Summary.Updates
 	r.Review, r.Hold = rep.Summary.Review, rep.Summary.Hold
+	r.Complete, r.StoppedBy = rep.Complete, rep.StoppedBy
+	r.NotChecked, r.Errors, r.Unverified = core.CountNotChecked(rep.NotChecked), rep.ErrorCount(), rep.Summary.Unverified
 
 	now := c.Now()
 	var n news
@@ -340,11 +402,19 @@ func (w *Watcher) RunOnce(ctx context.Context) (Run, error) {
 	}
 	r.New = n.items
 	r.FailNew = n.failNew
-	sent := w.send(ctx, rep, report, n.items, &r)
+	// What the run left out is told with what is new. It is told on its
+	// own when the run failed or left out something else than last time.
+	gap, partial := r.gap(), ""
+	if gap != "" {
+		partial = partialLine(gap, r.LogFile)
+	}
+	tell := len(n.items) > 0 || gap != "" && (r.failed() || gap != st.Partial)
+	sent := !tell || w.send(ctx, report, partial, n.items, &r)
 	if sent {
 		for _, k := range n.keys {
 			st.Seen[k] = now
 		}
+		st.Partial = gap
 	}
 	for _, k := range n.always {
 		st.Seen[k] = now
@@ -385,14 +455,24 @@ func newerPack(now, before string) bool {
 	return now != "" && before != "" && now > before
 }
 
-// send hands what is new to every notifier. It reports whether the news
-// may be recorded as told: there was nothing to send, no notifier or
-// every send went through. A failed send leaves it for the next run.
-func (w *Watcher) send(ctx context.Context, rep *core.Report, report string, items []notify.Item, r *Run) bool {
-	if len(items) == 0 || len(w.Notifiers) == 0 {
+// tellFailure notifies a run that left no report to read. It is sent
+// on every such run, so a nightly watch that keeps failing keeps
+// saying so.
+func (w *Watcher) tellFailure(ctx context.Context, st *state, why string, r *Run) {
+	if w.send(ctx, "", "Failed: "+why+"; see "+r.LogFile, nil, r) {
+		st.Partial = why
+	}
+}
+
+// send hands what is new (and what the run left out) to every notifier.
+// It reports whether the news may be recorded as told: there was no
+// notifier or every send went through. A failed send leaves it for the
+// next run.
+func (w *Watcher) send(ctx context.Context, report, partial string, items []notify.Item, r *Run) bool {
+	if len(w.Notifiers) == 0 {
 		return true
 	}
-	m := notify.New(w.Name, w.Version, w.NotifyMin.String(), report, incomplete(rep), items)
+	m := notify.New(w.Name, w.Version, w.NotifyMin.String(), report, partial, items)
 	ok := true
 	for _, nt := range w.Notifiers {
 		sctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), sendTimeout)

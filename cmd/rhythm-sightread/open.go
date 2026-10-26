@@ -23,8 +23,13 @@ const openTimeout = 30 * time.Second
 // When there is none, or it fails, it says where the report is instead:
 // the report is written either way.
 func openReport(ctx context.Context, p *plan, stderr io.Writer) {
+	openFirstHTML(ctx, p.files, p.req.Log, stderr)
+}
+
+// openFirstHTML opens the first HTML file of files, as openReport does.
+func openFirstHTML(ctx context.Context, files []output, log, stderr io.Writer) {
 	path := ""
-	for _, f := range p.files {
+	for _, f := range files {
 		if f.format == core.FormatHTML {
 			path = f.path
 			break
@@ -35,7 +40,7 @@ func openReport(ctx context.Context, p *plan, stderr io.Writer) {
 	}
 	argv := opener(runtime.GOOS, path)
 	if _, err := proc.LookPath(argv[0]); err == nil {
-		res, err := proc.Run(ctx, proc.Spec{Argv: argv, Purpose: proc.PurposeOpen, Timeout: openTimeout, Log: p.req.Log})
+		res, err := proc.Run(ctx, proc.Spec{Argv: argv, Purpose: proc.PurposeOpen, Timeout: openTimeout, Log: log})
 		if err == nil && res.Code == 0 {
 			return
 		}

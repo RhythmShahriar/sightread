@@ -36,7 +36,7 @@ It reads the plugin and theme headers (`Plugin Name`, `Theme Name`, `Version`, `
 
 ### The --wp command
 
-`--wp "<prefix>"` reads a site through WP-CLI. The prefix is split like a shell would split it, without running a shell: `;`, `|`, `&`, `<`, `>`, a backtick and `$(` are refused. Sightread runs only these four commands, each with a 60 second timeout and a 16 MiB output cap:
+`--wp "<prefix>"` reads a site through WP-CLI. The prefix is split like a shell would split it, without running a shell: `;`, `|`, `&`, `<`, `>`, a backtick and `$(` are refused. On Windows a backslash is a path separator and stays as written (only `\"` escapes a quote), so `--wp "C:\tools\wp.bat --path=C:\site"` works; the same holds for `--apply` and `soundcheck.wp`. Sightread runs only these four commands, each with a 60 second timeout and a 16 MiB output cap:
 
 ```
 <prefix> plugin list --format=json --fields=name,status,version,update_version,auto_update

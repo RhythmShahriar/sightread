@@ -299,13 +299,13 @@ func TestSplitCommand(t *testing.T) {
 		`"" x`:                                  {"", "x"},
 		`lando wp --url=https://shop.lndo.site`: {"lando", "wp", "--url=https://shop.lndo.site"},
 	} {
-		got, err := SplitCommand(in)
+		got, err := splitCommand(in, false)
 		if err != nil || !slices.Equal(got, want) {
 			t.Errorf("SplitCommand(%q) = %q, %v; want %q", in, got, err, want)
 		}
 	}
 	for _, in := range []string{"", "   ", `wp; rm -rf /`, `wp | tee`, `wp && x`, "wp `id`", `wp $(id)`, `wp > out`, `"open`, `x\`} {
-		if got, err := SplitCommand(in); err == nil {
+		if got, err := splitCommand(in, false); err == nil {
 			t.Errorf("SplitCommand(%q) = %q, want an error", in, got)
 		}
 	}
@@ -344,5 +344,40 @@ func writeFile(t *testing.T, dir, name, data string) {
 	t.Helper()
 	if err := os.WriteFile(filepath.Join(dir, name), []byte(data), 0o600); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestSplitCommandWindows: on Windows a backslash is a path separator,
+// literal unless it escapes a double quote; the shell operators are
+// still refused.
+func TestSplitCommandWindows(t *testing.T) {
+	for in, want := range map[string][]string{
+		`C:\tools\wp.bat --path=C:\site`:      {`C:\tools\wp.bat`, `--path=C:\site`},
+		`"C:\Program Files\wp\wp.bat" plugin`: {`C:\Program Files\wp\wp.bat`, "plugin"},
+		`wp --title=\"x\"`:                    {"wp", `--title="x"`},
+		`wp "a\"b"`:                           {"wp", `a"b`},
+		`\\server\share\wp.bat`:               {`\\server\share\wp.bat`},
+		`wp x\`:                               {"wp", `x\`},
+	} {
+		got, err := splitCommand(in, true)
+		if err != nil || !slices.Equal(got, want) {
+			t.Errorf("windows %q = %q, %v; want %q", in, got, err, want)
+		}
+	}
+	for _, in := range []string{`C:\wp.bat; del x`, `wp | x`, `"open`} {
+		if got, err := splitCommand(in, true); err == nil {
+			t.Errorf("windows %q = %q, want an error", in, got)
+		}
+	}
+}
+
+// TestSplitCommandOnWindows runs SplitCommand itself on a Windows host.
+func TestSplitCommandOnWindows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows only")
+	}
+	got, err := SplitCommand(`C:\tools\wp.bat --path=C:\site`)
+	if err != nil || !slices.Equal(got, []string{`C:\tools\wp.bat`, `--path=C:\site`}) {
+		t.Errorf("got %q, %v", got, err)
 	}
 }

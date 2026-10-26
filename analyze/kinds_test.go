@@ -143,6 +143,10 @@ func TestUnicodeEvidence(t *testing.T) {
 			if strings.Contains(f.Ev.Snippet.String(), "\u202e") {
 				t.Errorf("snippet holds the raw bidi control: %q", f.Ev.Snippet)
 			}
+			// The evidence still shows the control it reports, escaped.
+			if !strings.Contains(f.Ev.Snippet.String(), `\u202e`) {
+				t.Errorf("snippet %q drops the bidi control; want it as \\u202e", f.Ev.Snippet)
+			}
 			return
 		}
 	}

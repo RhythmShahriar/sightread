@@ -68,9 +68,23 @@ func prune(age time.Duration, now time.Time, stdout io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("cache prune: %w", err)
 	}
-	fmt.Fprintf(stdout, "removed %s older than %s and %s nothing uses (%s)\n",
-		plural(indexes, "archive index", "archive indexes"), update.FormatAge(age), plural(files, "cached file"), byteSize(size))
+	fmt.Fprintf(stdout, "removed %s %s and %s nothing uses (%s)\n",
+		plural(indexes, "archive index", "archive indexes"), olderText(age), plural(files, "cached file"), byteSize(size))
 	return nil
+}
+
+// olderText says which indexes --older took: "older than 30 days",
+// "older than 45 minutes", or "(all of them)" for --older 0.
+func olderText(age time.Duration) string {
+	switch {
+	case age <= 0:
+		return "(all of them)"
+	case age < time.Minute:
+		return "older than " + plural(int(age/time.Second), "second")
+	case age < time.Hour:
+		return "older than " + plural(int(age/time.Minute), "minute")
+	}
+	return "older than " + update.FormatAge(age)
 }
 
 // byteSize writes n in the largest binary unit that keeps it at or above
