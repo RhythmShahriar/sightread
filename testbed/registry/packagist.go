@@ -55,7 +55,10 @@ func (r *Registry) composerVersions(p *builtPkg, req *http.Request, dev bool) []
 	versions := r.publishedVersions(p)
 	for i := len(versions) - 1; i >= 0; i-- {
 		v := versions[i]
-		bv := p.versions[v]
+		bv, ok := r.servedVersion(p, v)
+		if !ok {
+			continue
+		}
 		dist := map[string]any{
 			"type":      "zip",
 			"url":       r.githubBase(req) + "/repos/" + owner + "/" + repo + "/zipball/" + bv.meta.Reference,

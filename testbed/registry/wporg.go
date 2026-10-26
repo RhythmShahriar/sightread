@@ -147,7 +147,7 @@ func (r *Registry) wpDownload(eco, prefix string) http.HandlerFunc {
 // candidate is withheld in the good state.
 func (r *Registry) servedVersion(p *builtPkg, version string) (*builtVersion, bool) {
 	bv, ok := p.versions[version]
-	if !ok {
+	if !ok || bv.meta.Unpublished {
 		return nil, false
 	}
 	if p.republishAlt != nil && version == p.installed {

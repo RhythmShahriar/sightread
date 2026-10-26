@@ -5,6 +5,7 @@ package registry
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -31,7 +32,7 @@ type builtVersion struct {
 	// state only for npm versions.
 	signature string
 	// tampered holds the archive bytes served in the bad state when the
-	// version's meta sets Tamper: the same archive with one byte flipped,
+	// version's meta sets Tamper: the same archive with one file changed,
 	// so it no longer matches the published checksums or signature.
 	tampered []byte
 }
@@ -112,7 +113,9 @@ func build(packagesDir, id string, m *PackageMeta, now time.Time) (*builtPkg, er
 			return nil, fmt.Errorf("%s %s: %w", id, v.Version, err)
 		}
 		if v.Tamper {
-			bv.tampered = tamperBytes(bv.archive)
+			if bv.tampered, err = tamperedArchive(m, bv); err != nil {
+				return nil, fmt.Errorf("%s %s (tampered): %w", id, v.Version, err)
+			}
 		}
 		bp.versions[v.Version] = bv
 		bp.order = append(bp.order, v.Version)
@@ -144,23 +147,39 @@ func buildRepublishAlt(packagesDir, id string, m *PackageMeta, v VersionMeta, no
 	if err != nil {
 		return nil, err
 	}
+	// The moved tag points at another commit in the bad state.
 	alt := &builtVersion{meta: v, published: pub, files: files, checksums: checksumsFor(files)}
+	if v.RepublishReference != "" {
+		alt.meta.Reference = v.RepublishReference
+	}
 	if err := buildArchive(m, alt); err != nil {
 		return nil, fmt.Errorf("%s %s (new): %w", id, v.Version, err)
 	}
 	return alt, nil
 }
 
-// tamperBytes returns a copy of b with its last byte flipped, enough to
-// break every published hash while staying a readable archive header.
-func tamperBytes(b []byte) []byte {
-	if len(b) == 0 {
-		return b
+// tamperedArchive builds the archive of bv with one file changed: a
+// valid archive that no longer matches the checksums, integrity or
+// signature the registry publishes, as a mirror or a man in the middle
+// would serve it. The file is the first by name other than readme.txt,
+// which WordPress.org rebuilds and Sightread does not hold against a
+// release. The change is a comment, so the bytes differ and nothing new
+// runs (b17 forbids remote-fetch-exec).
+func tamperedArchive(m *PackageMeta, bv *builtVersion) ([]byte, error) {
+	files := make([]treeFile, len(bv.files))
+	copy(files, bv.files)
+	for i, f := range files {
+		if strings.EqualFold(path.Base(f.Name), "readme.txt") {
+			continue
+		}
+		files[i].Data = append(append([]byte(nil), f.Data...), "\n// changed in transit\n"...)
+		break
 	}
-	out := make([]byte, len(b))
-	copy(out, b)
-	out[len(out)-1] ^= 0xff
-	return out
+	alt := &builtVersion{meta: bv.meta, files: files}
+	if err := buildArchive(m, alt); err != nil {
+		return nil, err
+	}
+	return alt.archive, nil
 }
 
 // buildArchive packs and hashes one version's archive by ecosystem. A

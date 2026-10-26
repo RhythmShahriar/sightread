@@ -4,6 +4,7 @@
 package registry
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 )
@@ -96,6 +97,13 @@ func (r *Registry) packument(w http.ResponseWriter, req *http.Request, p *builtP
 		writeJSON(w, http.StatusNotFound, map[string]any{"error": "Not found"})
 		return
 	}
+	// An unpublished version stays in the time map, which is how npm
+	// (and Sightread) can tell it was there once.
+	for _, v := range p.order {
+		if bv := p.versions[v]; bv.meta.Unpublished {
+			times[v] = bv.published.Format(timeFmt)
+		}
+	}
 	times["created"] = p.installedAt(lv.published).Format(timeFmt)
 	times["modified"] = lv.published.Format(timeFmt)
 	doc := map[string]any{
@@ -145,6 +153,14 @@ func (r *Registry) versionDoc(req *http.Request, p *builtPkg, bv *builtVersion, 
 		"name":    p.meta.Name,
 		"version": bv.meta.Version,
 		"dist":    dist,
+	}
+	if p.meta.Repository != "" {
+		doc["repository"] = map[string]string{"type": "git", "url": "git+https://" + p.meta.Repository + ".git"}
+	}
+	// npm copies the dependencies of the version's package.json into
+	// its document; dependency-new compares them between versions.
+	for k, v := range manifestDeps(bv.files) {
+		doc[k] = v
 	}
 	if len(bv.meta.Scripts) > 0 {
 		doc["scripts"] = bv.meta.Scripts
@@ -205,3 +221,29 @@ func oneNPMUser(names []string) map[string]string {
 
 // timeFmt is the npm packument time format.
 const timeFmt = "2006-01-02T15:04:05.000Z"
+
+// manifestDeps reads dependencies and devDependencies from a version's
+// package.json, by the document key npm gives them. A tree without one,
+// or with one that does not parse, has none.
+func manifestDeps(files []treeFile) map[string]map[string]string {
+	out := map[string]map[string]string{}
+	for _, f := range files {
+		if f.Name != "package.json" {
+			continue
+		}
+		var pj struct {
+			Deps    map[string]string `json:"dependencies"`
+			DevDeps map[string]string `json:"devDependencies"`
+		}
+		if json.Unmarshal(f.Data, &pj) != nil {
+			return out
+		}
+		if len(pj.Deps) > 0 {
+			out["dependencies"] = pj.Deps
+		}
+		if len(pj.DevDeps) > 0 {
+			out["devDependencies"] = pj.DevDeps
+		}
+	}
+	return out
+}

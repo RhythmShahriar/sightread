@@ -89,15 +89,24 @@ type VersionMeta struct {
 	// Shasum, when true, means Packagist publishes a dist.shasum for this
 	// version; when false the archive is pinned by commit only.
 	Shasum *bool `yaml:"shasum,omitempty"`
-	// Tamper, in the bad state, serves archive bytes that do not match
-	// the checksums, integrity or signature the registry publishes, so
-	// the download fails its integrity check (integrity-mismatch).
+	// Tamper, in the bad state, serves a valid archive with one file
+	// changed, so it no longer matches the checksums, integrity or
+	// signature the registry publishes and the download fails its
+	// integrity check (integrity-mismatch).
 	Tamper bool `yaml:"tamper,omitempty"`
 	// Republish marks a version that is both installed and candidate: the
 	// same version number is served with the old tree in the good state
 	// and the new tree (fresh bytes) in the bad state, the shape of a
 	// re-published release (version-republished, approved-version-changed).
 	Republish bool `yaml:"republish,omitempty"`
+	// RepublishReference is the commit a republished Composer version's
+	// tag points at in the bad state (the tag was moved); Reference is
+	// the one it pointed at before, which the lockfile records.
+	RepublishReference string `yaml:"republish_reference,omitempty"`
+	// Unpublished marks a version that was published and then
+	// unpublished: the npm packument's time map still lists it, nothing
+	// else serves it (e12).
+	Unpublished bool `yaml:"unpublished,omitempty"`
 	// Hazard replaces the built archive with a crafted one that exercises
 	// the archive limits and path checks: "zipbomb" (ratio and entry
 	// count) or "badentries" (traversal, absolute, link and collision

@@ -231,12 +231,10 @@ func (r *Registry) state(id string) string { return readState(r.opts.StateDir, i
 func (r *Registry) publishedVersions(p *builtPkg) []string {
 	// A republished version keeps its number in both states; only its
 	// bytes change, so it is always published.
-	if r.state(p.id) == StateBad || p.republishAlt != nil {
-		return p.order
-	}
+	all := r.state(p.id) == StateBad || p.republishAlt != nil
 	out := make([]string, 0, len(p.order))
 	for _, v := range p.order {
-		if v == p.candidate {
+		if (v == p.candidate && !all) || p.versions[v].meta.Unpublished {
 			continue
 		}
 		out = append(out, v)

@@ -598,3 +598,120 @@ versions:
 		t.Errorf("bad state packument: %v", got)
 	}
 }
+
+// TestTamperedArchiveIsValid: b17's bad state serves a zip that opens
+// and lists the same files, one of which no longer matches the
+// published checksums; readme.txt is left alone.
+func TestTamperedArchiveIsValid(t *testing.T) {
+	dir := t.TempDir()
+	writeScenario(t, dir, "tampered", strings.TrimSpace(`
+ecosystem: wp-plugin
+name: tampered
+versions:
+  - version: "1.0.0"
+    installed: true
+    author: vendor
+  - version: "1.0.1"
+    candidate: true
+    author: vendor
+    tamper: true
+`), map[string]string{"tampered.php": "<?php // 1.0.0\n"},
+		map[string]string{"tampered.php": "<?php // 1.0.1\n", "readme.txt": "=== Tampered ===\n"})
+	reg, c := startPlain(t, dir)
+	sums := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugin-checksums/tampered/1.0.1.json")["files"].(map[string]any)
+	zipBytes := fetch(t, c, baseOf(reg, ports.WPOrg)+"/plugin/tampered.1.0.1.zip")
+	zr, err := zip.NewReader(bytes.NewReader(zipBytes), int64(len(zipBytes)))
+	if err != nil {
+		t.Fatalf("the tampered archive does not open: %v", err)
+	}
+	var differ []string
+	for _, f := range zr.File {
+		rc, err := f.Open()
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, err := io.ReadAll(rc)
+		_ = rc.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		name := strings.TrimPrefix(f.Name, "tampered/")
+		want := sums[name].(map[string]any)["sha256"]
+		if got := sha256hex(b); got != want {
+			differ = append(differ, name)
+		}
+	}
+	if len(differ) != 1 || differ[0] != "tampered.php" {
+		t.Errorf("files that differ from the checksums: %q, want [tampered.php]", differ)
+	}
+	p, _ := reg.find("wp-plugin", "tampered")
+	if bytes.Equal(p.versions["1.0.1"].archive, zipBytes) {
+		t.Error("the bad state served the honest archive")
+	}
+}
+
+// TestUnpublishedAndMovedTag: an unpublished npm version stays in the
+// time map only; a republished Composer version's reference is the
+// lockfile's in the good state and the moved one in the bad state.
+func TestUnpublishedAndMovedTag(t *testing.T) {
+	dir := t.TempDir()
+	writeScenario(t, dir, "gone", strings.TrimSpace(`
+ecosystem: npm
+name: gone
+versions:
+  - version: "1.0.0"
+    installed: true
+  - version: "1.0.1"
+    candidate: true
+    unpublished: true
+`), map[string]string{"index.js": "1\n"}, map[string]string{"index.js": "2\n"})
+	writeScenario(t, dir, "moved", strings.TrimSpace(`
+ecosystem: composer
+name: acme/moved
+repository: github.com/acme/moved
+versions:
+  - version: "1.5.0"
+    republish: true
+    reference: aaaa111bbbb222cccc333
+    republish_reference: dddd444eeee555ffff666
+`), map[string]string{"composer.json": `{"name":"acme/moved"}`}, map[string]string{"composer.json": `{"name":"acme/moved","x":1}`})
+	reg, c := startPlain(t, dir)
+
+	full := getJSON(t, c, baseOf(reg, ports.NPM)+"/gone")
+	if _, ok := full["versions"].(map[string]any)["1.0.1"]; ok {
+		t.Error("the unpublished version is listed")
+	}
+	if _, ok := full["time"].(map[string]any)["1.0.1"]; !ok {
+		t.Error("the unpublished version left the time map")
+	}
+	resp, err := c.Get(baseOf(reg, ports.NPM) + "/gone/1.0.1") //nolint:noctx // test
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("unpublished version document: HTTP %d", resp.StatusCode)
+	}
+
+	ref := func() string {
+		t.Helper()
+		got := getJSON(t, c, baseOf(reg, ports.Packagist)+"/p2/acme/moved.json")
+		b, _ := json.Marshal(got)
+		switch {
+		case strings.Contains(string(b), "dddd444eeee555ffff666"):
+			return "moved"
+		case strings.Contains(string(b), "aaaa111bbbb222cccc333"):
+			return "locked"
+		}
+		return "none"
+	}
+	if got := ref(); got != "moved" {
+		t.Errorf("bad state reference: %s", got)
+	}
+	if err := WriteState(reg.opts.StateDir, "moved", StateGood); err != nil {
+		t.Fatal(err)
+	}
+	if got := ref(); got != "locked" {
+		t.Errorf("good state reference: %s", got)
+	}
+}
