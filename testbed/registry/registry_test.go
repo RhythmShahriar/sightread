@@ -542,3 +542,59 @@ func propfind(t *testing.T, c *http.Client, url string) string {
 	b, _ := io.ReadAll(resp.Body)
 	return string(b)
 }
+
+// TestWithheldOnlyVersion: a package whose one version is the candidate
+// (a dependency a bad scenario adds) offers nothing in the good state.
+// The packument and the info API say so instead of failing the request,
+// which Sightread would report as a network error.
+func TestWithheldOnlyVersion(t *testing.T) {
+	dir := t.TempDir()
+	writeScenario(t, dir, "added-dep", strings.TrimSpace(`
+ecosystem: npm
+name: added-dep
+versions:
+  - version: "1.0.0"
+    installed: true
+    maintainers: [someone]
+  - version: "1.0.0"
+    candidate: true
+    maintainers: [someone]
+`), map[string]string{"index.js": "1\n"}, map[string]string{"index.js": "1\n"})
+	writeScenario(t, dir, "added-plugin", strings.TrimSpace(`
+ecosystem: wp-plugin
+name: added-plugin
+versions:
+  - version: "1.0.0"
+    installed: true
+    author: someone
+    committer: someone
+  - version: "1.0.0"
+    candidate: true
+    author: someone
+    committer: someone
+`), map[string]string{"added-plugin.php": "<?php\n"}, map[string]string{"added-plugin.php": "<?php\n"})
+	reg, c := startPlain(t, dir)
+	for _, id := range []string{"added-dep", "added-plugin"} {
+		if err := WriteState(reg.opts.StateDir, id, StateGood); err != nil {
+			t.Fatal(err)
+		}
+	}
+	resp, err := c.Get(baseOf(reg, ports.NPM) + "/added-dep") //nolint:noctx // test
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("withheld packument: HTTP %d, want 404", resp.StatusCode)
+	}
+	info := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=added-plugin")
+	if info["error"] != "Plugin not found." {
+		t.Errorf("withheld plugin info: %v", info)
+	}
+	if err := WriteState(reg.opts.StateDir, "added-dep", StateBad); err != nil {
+		t.Fatal(err)
+	}
+	if got := getJSON(t, c, baseOf(reg, ports.NPM)+"/added-dep"); got["dist-tags"].(map[string]any)["latest"] != "1.0.0" {
+		t.Errorf("bad state packument: %v", got)
+	}
+}

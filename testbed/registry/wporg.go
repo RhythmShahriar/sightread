@@ -56,6 +56,11 @@ func (r *Registry) wpInfo(eco string) http.HandlerFunc {
 		}
 		latest := r.latestVersion(p)
 		lv := p.versions[latest]
+		if lv == nil {
+			// Only a withheld candidate: nothing is offered.
+			writeJSON(w, http.StatusOK, map[string]any{"error": "Plugin not found."})
+			return
+		}
 		versions := map[string]string{}
 		for _, v := range r.publishedVersions(p) {
 			versions[v] = fmt.Sprintf("%s/%s/%s.%s.zip", r.baseURL(req), strings.TrimPrefix(eco, "wp-"), slug, v)
@@ -75,7 +80,7 @@ func (r *Registry) wpInfo(eco string) http.HandlerFunc {
 			"tested":         "6.8",
 			"requires_php":   "7.4",
 			"last_updated":   lv.published.Format("2006-01-02 3:04pm MST"),
-			"added":          p.versions[p.installed].published.Format("2006-01-02"),
+			"added":          p.installedAt(lv.published).Format("2006-01-02"),
 			"download_link":  versions[latest],
 			"versions":       versions,
 			"sections":       map[string]string{"changelog": changelogHTML(p, r.publishedVersions(p))},
@@ -93,7 +98,7 @@ func (r *Registry) wpInfo(eco string) http.HandlerFunc {
 				"author_url":    "",
 			}
 			resp["last_updated_time"] = lv.published.Format("2006-01-02 15:04:05")
-			resp["creation_time"] = p.versions[p.installed].published.Format("2006-01-02 15:04:05")
+			resp["creation_time"] = p.installedAt(lv.published).Format("2006-01-02 15:04:05")
 			resp["homepage"] = "https://wordpress.org/themes/" + slug + "/"
 			resp["preview_url"] = "https://wp-themes.com/" + slug + "/"
 			delete(resp, "author_profile")

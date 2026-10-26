@@ -51,6 +51,15 @@ type builtPkg struct {
 	republishAlt *builtVersion
 }
 
+// installedAt is when the installed version was published, or fallback
+// for a package that has no installed version (only a candidate).
+func (p *builtPkg) installedAt(fallback time.Time) time.Time {
+	if v := p.versions[p.installed]; v != nil {
+		return v.published
+	}
+	return fallback
+}
+
 // archiveTop returns the top folder name a version's archive carries.
 func archiveTop(m *PackageMeta, v VersionMeta) string {
 	switch m.Ecosystem {

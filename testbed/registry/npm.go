@@ -76,8 +76,10 @@ func npmNamePath(rest string) (name, tail string) {
 // map.
 func (r *Registry) packument(w http.ResponseWriter, req *http.Request, p *builtPkg) {
 	abbreviated := strings.Contains(req.Header.Get("Accept"), "install-v1")
+	latest := r.latestVersion(p)
+	lv := p.versions[latest]
 	versions := map[string]any{}
-	times := map[string]string{"created": p.versions[p.installed].published.Format(timeFmt)}
+	times := map[string]string{}
 	for _, v := range r.publishedVersions(p) {
 		bv, ok := r.servedVersion(p, v)
 		if !ok {
@@ -86,16 +88,25 @@ func (r *Registry) packument(w http.ResponseWriter, req *http.Request, p *builtP
 		versions[v] = r.versionDoc(req, p, bv, abbreviated)
 		times[v] = bv.published.Format(timeFmt)
 	}
-	times["modified"] = p.versions[r.latestVersion(p)].published.Format(timeFmt)
+	if lv == nil || len(versions) == 0 {
+		// Nothing is served in this state: a package that is only a
+		// withheld candidate. npm answers 404 for a name with no
+		// version, and Sightread reports it as unknown, not as a
+		// network error.
+		writeJSON(w, http.StatusNotFound, map[string]any{"error": "Not found"})
+		return
+	}
+	times["created"] = p.installedAt(lv.published).Format(timeFmt)
+	times["modified"] = lv.published.Format(timeFmt)
 	doc := map[string]any{
 		"name":      p.meta.Name,
-		"dist-tags": map[string]string{"latest": r.latestVersion(p)},
+		"dist-tags": map[string]string{"latest": latest},
 		"versions":  versions,
 		"modified":  times["modified"],
 	}
 	if !abbreviated {
 		doc["time"] = times
-		doc["maintainers"] = npmPeople(p.versions[r.latestVersion(p)].meta.Maintainers)
+		doc["maintainers"] = npmPeople(lv.meta.Maintainers)
 	}
 	writeJSON(w, http.StatusOK, doc)
 }
