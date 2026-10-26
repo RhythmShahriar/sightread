@@ -178,6 +178,18 @@ func authError(e *ErrAuth, hint string) *core.Error {
 	}
 }
 
+// IsOffline reports whether e is E7 for an --offline run that found
+// something not cached, rather than a network failure.
+func IsOffline(e *core.Error) bool {
+	return e != nil && e.Code == core.ENetwork && len(e.Hint) > 0 && e.Hint[0] == hintOffline
+}
+
+// OfflineHint is the fix line of an offline E7 as run prints it once it
+// knows how many of the run's packages weren't cached.
+func OfflineHint(notCached, total int) string {
+	return fmt.Sprintf("with --offline only cached data and archives are used and %d of %d aren't cached; run once without it to fill the cache", notCached, total)
+}
+
 // GitHubLimitError is E16 as run prints it once it knows how far it got:
 // reviewed of total packages.
 func GitHubLimitError(command string, limit, needed, reviewed, total int) *core.Error {
