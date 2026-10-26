@@ -21,6 +21,7 @@ make -C testbed bench                  # every scenario; writes docs/benchmark.m
 make -C testbed bench BENCH="-only b01,g05,env"
 make -C testbed bench TOOLS=all        # also the Soundcheck column (slow)
 make -C testbed reproduce              # the benchmark twice, outcomes diffed
+make -C testbed test-bench             # the tagged bench tests (after up-wp for the Docker checks)
 make -C testbed toggle ID=b01 STATE=good
 make -C testbed down
 make test-integrated                   # every test; a stage not linked fails
@@ -32,10 +33,22 @@ webhook, probes, fronts and proxy guard (stop a `make up` first). Flags:
 `-bin`, `-build`, `-out` (default `docs/benchmark.md`), `-work` (default
 `testbed/bench/work`), `-results`, `-only` (ids, `bad`, `good` or `env`),
 `-tools` (`auto`, `all`, `none` or names), `-rounds` (default 10),
-`-timeout` (default 2m), `-large`, `-diff a.json b.json`. It prints
-`bench: NOT MET: <target> (<detail>)` per failed target or
-`bench: every 1.0 target met`. Exit codes: 0 every target met, 1 a target
-not met, 2 a setup error.
+`-timeout` (default 2m), `-large`, `-plain-http` (default on Windows),
+`-diff a.json b.json`. It prints `bench: NOT MET: <target> (<detail>)`
+per failed target or `bench: every 1.0 target met`. Exit codes: 0 every
+target met, 1 a target not met, 2 a setup error. A partial run (`-only`)
+never claims the targets: it prints `bench: partial run (-only): every
+scenario that ran passed; the 1.0 targets are not claimed` and exits 0,
+or `bench: partial run (-only): failed: <ids>` and exits 1.
+
+`-plain-http` serves the registry and the fronts over plain HTTP on
+loopback, sets every base to `http://127.0.0.1:<port>`, leaves
+`SSL_CERT_FILE` unset and runs no compared tool. Go ignores
+`SSL_CERT_FILE` on Windows, so e13 runs this way there.
+
+A scenario whose run wrote no report (a crash, a usage error, a
+timeout) has the status `no-report`, shown as `NO REPORT` in its own
+scoreboard section and never as a miss or a false alarm.
 
 ## Ports
 
@@ -141,10 +154,11 @@ them in this order.
 |---|---|
 | Every non-pending bad scenario caught | each listed signal at or above its severity in the JSON report |
 | Zero false alarms on good scenarios | nothing at or above the gate beyond the listed signals |
+| Every run wrote a report | no scenario with the status `no-report` |
 | Exit codes, verdicts and Not checked as expected | the manifest's `expect` per scenario |
 | Zero false alarms in the control pass | 10 rounds of every good scenario |
-| Zero canary, egress and outside-write events | canary connections and files, proxy guard lines, tree snapshots |
-| Every environment scenario passes | each `env` block, e15's eight cases |
+| Zero canary, egress, outside-write and unmasked-key events | canary connections and files, proxy guard lines, tree snapshots, the fixtures' fake keys found in full in any output or report |
+| Every environment scenario passes | each `env` block, e15's eight cases; e13 is "not run" on Linux and runs in the nightly `bench-windows` job |
 | Cold and warm runs agree | the same outcome from an empty and a warm cache |
 | p01-large under 10 s warm and 512 MB RSS | 4,000 files of about 10 KB, rusage of the child |
 | Full benchmark under 10 minutes | wall time of the whole run |
@@ -170,7 +184,7 @@ The rest:
 | `SIGHTREAD_NPM_REGISTRY` | `https://127.0.0.1:18903`; e01 `:23311`, e02 `:23320`, e03 and e08 `:23321` | fetch (source/npm) |
 | `SIGHTREAD_OSV_API` | `https://127.0.0.1:18904` | fetch (source/osv) |
 | `SIGHTREAD_NPM_EXTRA_KEYS` | `testbed/state/npm-keys.json`, the run's npm signing key | fetch (source/npm) |
-| `SSL_CERT_FILE` | `testbed/state/ca.pem`, the registry's CA | fetch (Go's system pool reads it on Linux only; macOS and Windows use the OS store, so the bench and the Action test run on Linux) |
+| `SSL_CERT_FILE` | `testbed/state/ca.pem`, the registry's CA | fetch (Go's system pool reads it on Linux only; macOS and Windows use the OS store, so the bench and the Action test run on Linux and e13 runs on Windows with `-plain-http`, where every base is `http://127.0.0.1:<port>` and this is unset) |
 | `HTTPS_PROXY`, `HTTP_PROXY`, `ALL_PROXY` and lower case | `http://127.0.0.1:23399` | fetch: a forgotten base must reach the guard |
 | `NO_PROXY`, `no_proxy` | `127.0.0.1,localhost,::1` | fetch: loopback bases bypass the proxy |
 | `RHYTHM_CACHE_DIR` | `testbed/bench/work/cache/<id>` | cli, fetch (blobs under a `blobs` folder; e06 tampers there) |
@@ -207,7 +221,10 @@ keeps the copies equal). Jobs:
   review, `updates` 2, `findings` at least 3, `report` (a
   `rhythm-sightread/v1` JSON with both packages), `sarif-file` (SARIF
   2.1.0 with results) and `version` `0.0.0-actiontest`; the `summary`
-  output and the job summary hold a `## Sightread: ` heading.
+  output and the job summary hold a `## Sightread: ` heading. The
+  report's envelope `verdict` must be `findings` and the `verdict`
+  output must equal the worst per-update verdict in
+  `.data.updates[].verdict` (hold before review).
 - `pr-allow` (SR-61): the head adds `.sightread/allowed.yaml` with both
   reviewed hashes. Without `trust-pr-allow`: `exit-code` 1, verdict not
   allowed, `summary.allowed` 0 and `allowed in this change, not counted`
@@ -222,7 +239,10 @@ keeps the copies equal). Jobs:
   the untouched release installs from the same kind of mirror.
 - `comment-read-only` (pull requests only, `contents: read` alone):
   `comment: true` with `fail-on: none` passes with `exit-code` 0 and no
-  `comment-id`.
+  `comment-id`. The job then runs the Action's `scripts/comment.sh post`
+  again with the same token and fails unless it printed a line starting
+  `::warning::Sightread: couldn't` and ending `on the pull request` and
+  wrote no `comment-id`.
 
 ## Nightly (`.github/workflows/nightly.yml`)
 
@@ -233,10 +253,15 @@ Daily at 02:41 UTC and on demand, read-only token:
 - `integrated`: `SIGHTREAD_REQUIRE_LINKED=1 go test -race ./...` (what
   `make test-integrated` runs; Windows runners have no make) on Ubuntu,
   macOS and Windows.
-- `bench`: `make -C testbed up-wp`, `make -C testbed bench`,
-  `make -C testbed reproduce`, then `docs/benchmark.md` and the results
-  JSON uploaded as the artifact `benchmark` (never committed), then
-  `make -C testbed down`.
+- `bench`: `make -C testbed up-wp`, `make -C testbed test-bench` (the
+  tagged bench tests, including the sealed Docker egress check),
+  `make -C testbed bench`, `make -C testbed reproduce`, then
+  `docs/benchmark.md` and the results JSON uploaded as the artifact
+  `benchmark` (never committed), then `make -C testbed down`.
+- `bench-windows`: on windows-latest, `go run -tags testbed
+  ./testbed/bench -only e13 -plain-http -tools none -rounds 0
+  -large=false`, then fails unless e13's result is `pass`; the page and
+  results are uploaded as the artifact `benchmark-windows`.
 
 ## Link check and headless HTML check
 
