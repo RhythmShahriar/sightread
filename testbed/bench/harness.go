@@ -181,6 +181,11 @@ func (h *harness) start() error {
 // Close stops every server that started, last first; errors are
 // ignored, the run is over.
 func (h *harness) Close() {
+	// Leave every candidate published, the registry's default, so a
+	// make up after the bench serves the full scenarios.
+	if h.reg != nil {
+		_ = h.setStates(h.reg.IDs())
+	}
 	for i := len(h.closers) - 1; i >= 0; i-- {
 		_ = h.closers[i]()
 	}

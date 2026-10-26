@@ -196,7 +196,6 @@ func (h *harness) compare(ctx context.Context, res *benchdoc.Results) {
 			}
 		}
 	}
-	_ = h.setStates(nil)
 }
 
 // toolLabel turns a tool's answer into its cell.

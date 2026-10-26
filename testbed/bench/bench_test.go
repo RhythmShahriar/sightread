@@ -147,7 +147,7 @@ func TestCanaryNeverFires(t *testing.T) {
 }
 
 // TestNoEgress proves both seals: from inside the sealed Docker network
-// a public address has no route, and outside Docker a run that forgets
+// a public address has no route; outside Docker a run that forgets
 // a base URL is stopped by the proxy guard instead of going out.
 func TestNoEgress(t *testing.T) {
 	h := testHarness(t)
