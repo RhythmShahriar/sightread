@@ -77,7 +77,7 @@ func indexPath(cache string, ref core.Ref) string {
 }
 
 // loadIndex returns the cached tree of ref when its index exists and
-// every blob it names is still in blobs.
+// every blob it names is still in blobs with its own bytes.
 func loadIndex(cache string, ref core.Ref, blobs core.BlobStore) (*core.Tree, core.Integrity, bool) {
 	path := indexPath(cache, ref)
 	if path == "" {
@@ -101,7 +101,7 @@ func loadIndex(cache string, ref core.Ref, blobs core.BlobStore) (*core.Tree, co
 		if !decodeSum(e.SHA256, &file.SHA256) {
 			return nil, core.Integrity{}, false
 		}
-		if hasContent(file) && !blobs.Has(file.SHA256) {
+		if hasContent(file) && !blobSound(blobs, file.SHA256) {
 			return nil, core.Integrity{}, false
 		}
 		t.Files = append(t.Files, file)
@@ -109,6 +109,23 @@ func loadIndex(cache string, ref core.Ref, blobs core.BlobStore) (*core.Tree, co
 	t.SortFiles()
 	in := core.Integrity{By: idx.Integrity.By, Method: idx.Integrity.Method, Mismatch: idx.Integrity.Mismatch, Detail: idx.Integrity.Detail}
 	return t, in, true
+}
+
+// blobSound reports whether the store holds sum with the bytes that hash
+// to it. A blob changed on disk would otherwise fail the review that
+// reads it; reading it here lets the store drop it (Open deletes a
+// corrupt blob) and the run fetch the archive again.
+func blobSound(blobs core.BlobStore, sum [32]byte) bool {
+	if !blobs.Has(sum) {
+		return false
+	}
+	rc, err := blobs.Open(sum)
+	if err != nil {
+		return false
+	}
+	defer func() { _ = rc.Close() }()
+	_, err = io.Copy(io.Discard, rc)
+	return err == nil
 }
 
 // saveIndex records t and in for ref. A failure only costs a download
