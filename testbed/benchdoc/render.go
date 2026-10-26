@@ -26,10 +26,10 @@ const Framing = "We wrote Sightread and the testbed, so read this as a regressio
 // KnownGaps are what the scoreboard does not cover (qa.md section 10 and
 // PRD 18), printed on every page so a green board is not read as more.
 var KnownGaps = []string{
-	"Logic that waits for a date, a domain or a visitor count, and code fetched at run time from a server that serves clean code to scanners: the fixtures cannot show what a payload does later.",
+	"Logic that waits for a date, a domain or a visitor count; code fetched at run time from a server that serves clean code to scanners: the fixtures cannot show what a payload does later.",
 	"Obfuscation beyond the layered decodes in b05 and b23, compiled assets and binaries: unanalysed is reported, not what they do.",
 	"Evasions written against the published detectors: the metamorphic fuzz targets cover rewrites of known shapes only.",
-	"Owner changes that keep the same account, and sales WordPress.org does not show (PRD 18 point 6).",
+	"Owner changes that keep the same account; sales WordPress.org does not show (PRD 18 point 6).",
 	"Typosquats of niche packages that are not on the popular-names list.",
 	"Case and Unicode collisions on macOS and Windows file systems: e05 runs on Linux, where only the report is checked.",
 	"Windows-only behaviour (e13) unless the benchmark runs on Windows.",
