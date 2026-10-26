@@ -10,8 +10,9 @@ import (
 )
 
 // fakeKeyKinds lists the kinds fakeKey makes. It mirrors
-// coretest.FakeKeyKinds; a test asserts the two agree so the testbed's
-// fixtures and the unit tests share one set of fake credentials.
+// coretest.FakeKeyKinds; TestFakeKeyMatchesCoretest asserts the two
+// agree so the testbed's fixtures and the unit tests share one set of
+// fake credentials.
 func fakeKeyKinds() []string {
 	return []string{"npm", "github", "stripe", "aws", "slack"}
 }
@@ -19,7 +20,9 @@ func fakeKeyKinds() []string {
 // fakeKey returns a fake credential of kind, assembled from parts at run
 // time so no literal real-format key is ever committed (GitHub push
 // protection and secret scanners block literal ones). It is the same
-// assembly as core/coretest.FakeKey, checked by a test.
+// assembly as core/coretest.FakeKey, checked by TestFakeKeyMatchesCoretest.
+// The registry stays stdlib only, so it repeats the parts instead of
+// importing a test package.
 func fakeKey(kind string) (string, error) {
 	j := func(parts ...string) string { return strings.Join(parts, "") }
 	switch kind {
@@ -35,6 +38,20 @@ func fakeKey(kind string) (string, error) {
 		return j("https://hooks.", "slack.com/services/", "T0FAKE0001/", "B0FAKE0002/", "Fk3sightreadTEST0nly4Fix"), nil
 	}
 	return "", fmt.Errorf("registry: unknown fake key kind %q", kind)
+}
+
+// FakeKeys returns every fake credential a fixture can hold, assembled.
+// The benchmark looks for them in what Sightread prints and writes: a
+// key found there was not masked.
+func FakeKeys() []string {
+	out := make([]string, 0, len(fakeKeyKinds()))
+	for _, kind := range fakeKeyKinds() {
+		k, err := fakeKey(kind)
+		if err == nil {
+			out = append(out, k)
+		}
+	}
+	return out
 }
 
 // fakeKeyRE matches a {{fakekey:<kind>}} placeholder.

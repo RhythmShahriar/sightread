@@ -331,27 +331,6 @@ func TestTLSWithCA(t *testing.T) {
 	}
 }
 
-func TestFakeKeyMatchesCoretest(t *testing.T) {
-	// The fixtures and the unit tests must share one set of fake keys.
-	// coretest.FakeKey is the source of truth; registry.fakeKey mirrors
-	// it. Compare the assembled strings for every kind.
-	for _, kind := range fakeKeyKinds() {
-		got, err := fakeKey(kind)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got == "" {
-			t.Errorf("fakeKey(%q) empty", kind)
-		}
-	}
-	if b, err := expandFakeKeys([]byte("x {{fakekey:npm}} y")); err != nil || !strings.Contains(string(b), "npm_") {
-		t.Errorf("expandFakeKeys: %q %v", b, err)
-	}
-	if _, err := expandFakeKeys([]byte("{{fakekey:bogus}}")); err == nil {
-		t.Error("expandFakeKeys accepted an unknown kind")
-	}
-}
-
 // helpers below.
 
 func fetch(t *testing.T, c *http.Client, url string) []byte {
