@@ -864,7 +864,7 @@ func TestChanges(t *testing.T) {
 	from := core.Installed{Ref: core.Ref{Eco: core.NPM, Name: "axios", Version: "1.14.0"}, Lockfile: "package-lock.json"}
 	w.Inventory.Bumps = []core.Bump{
 		{From: &from, To: core.Installed{Ref: core.Ref{Eco: core.NPM, Name: "axios", Version: "1.14.1"}, Lockfile: "package-lock.json"}},
-		{To: core.Installed{Ref: core.Ref{Eco: core.NPM, Name: "plain-crypto-js", Version: "4.2.1"}}},
+		{To: core.Installed{Ref: core.Ref{Eco: core.NPM, Name: "plain-crypto-js", Version: "4.2.1"}, Lockfile: "package-lock.json", LockLine: 9}},
 	}
 	w.Detector.Set("plain-crypto-js", "npm-install-script-new")
 	req := request(t, "changes")
@@ -877,6 +877,11 @@ func TestChanges(t *testing.T) {
 		if s.Update.Name == "plain-crypto-js" && (s.Old != nil || s.OldTree != nil || s.NewLock == nil) {
 			t.Errorf("added package subject %+v", s)
 		}
+	}
+	// The added package points at the head lockfile line that pins it,
+	// so SARIF has a file and a line rather than the repository root.
+	if got := rep.Updates[1].Installed; got.Lockfile != "package-lock.json" || got.LockLine != 9 || got.Path != "" {
+		t.Errorf("added package installed %+v", got)
 	}
 }
 

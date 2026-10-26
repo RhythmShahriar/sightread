@@ -67,6 +67,20 @@ func (t *target) installed() *core.Installed {
 	return nil
 }
 
+// installedInfo is where the report says the package lives. A package
+// a lockfile change adds has no installed copy yet: its lockfile and
+// line are the head lockfile's, the line that pins it (SARIF points
+// there).
+func (t *target) installedInfo() core.InstalledInfo {
+	if inst := t.installed(); inst != nil {
+		return core.InstalledInfo{Path: inst.Path, Lockfile: inst.Lockfile, LockLine: inst.LockLine}
+	}
+	if n := t.newLock; n != nil && n.Lockfile != "" {
+		return core.InstalledInfo{Lockfile: n.Lockfile, LockLine: n.LockLine}
+	}
+	return core.InstalledInfo{}
+}
+
 func (r *reviewer) resolve(ctx context.Context, rep *core.Report) ([]*target, error) {
 	if r.req.To == ToInstalled && (r.req.Changes != nil || len(r.req.Names) == 0) {
 		return nil, &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: r.req.Command,

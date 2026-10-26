@@ -164,9 +164,7 @@ func (r *reviewer) reviewSame(ctx context.Context, src core.Source, t *target) *
 			u.Sites = append(u.Sites, mb.site)
 		}
 	}
-	if inst := t.installed(); inst != nil {
-		u.Installed = core.InstalledInfo{Path: inst.Path, Lockfile: inst.Lockfile, LockLine: inst.LockLine}
-	}
+	u.Installed = t.installedInfo()
 	s := &core.Subject{Update: ref, Old: m, New: m, OldLock: t.oldLock, Config: r.cfg, Now: r.req.now()}
 	u.To = core.Side{Version: ref.Version, URL: m.Archive.URL, Released: m.Published, Source: sourceName(t.eco)}
 	if r.allowed(t) {
@@ -311,9 +309,7 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 			u.Sites = append(u.Sites, m.site)
 		}
 	}
-	if inst := t.installed(); inst != nil {
-		u.Installed = core.InstalledInfo{Path: inst.Path, Lockfile: inst.Lockfile, LockLine: inst.LockLine}
-	}
+	u.Installed = t.installedInfo()
 	if drift != nil {
 		u.Installed.Drift = len(drift.Differ)+len(drift.Missing) > 0
 		u.Installed.DriftFiles = append(slices.Clone(drift.Differ), drift.Missing...)
