@@ -4,70 +4,64 @@ importers:
   .:
     dependencies:
       'leftpadplus':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'colorlib':
-        specifier: 2.1.0
+        specifier: ^2.1.0
         version: 2.1.0
       'dateutil':
-        specifier: 3.4.0
+        specifier: ^3.4.0
         version: 3.4.0
       'squatapp':
-        specifier: 1.0.0
-        version: 1.0.0
-      'expresss':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'fetchkit':
-        specifier: 1.2.0
+        specifier: ^1.2.0
         version: 1.2.0
       'axios-wrap':
-        specifier: 1.0.0
-        version: 1.0.0
-      'axios-helper':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'bidilib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'downlib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'retrylib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'stalllib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'cachelib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'sharedlib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'interruptlib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'offlinelib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'rohomelib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'unpublib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'winlib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'patchlib':
-        specifier: 2.0.0
+        specifier: ^2.0.0
         version: 2.0.0
       'nativelib':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       'depapp':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
 
 packages:
@@ -75,10 +69,8 @@ packages:
   'colorlib@2.1.0': {}
   'dateutil@3.4.0': {}
   'squatapp@1.0.0': {}
-  'expresss@1.0.0': {}
   'fetchkit@1.2.0': {}
   'axios-wrap@1.0.0': {}
-  'axios-helper@1.0.0': {}
   'bidilib@1.0.0': {}
   'downlib@1.0.0': {}
   'retrylib@1.0.0': {}

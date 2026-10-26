@@ -1,11 +1,11 @@
 {
   "_readme": ["testbed fixture"],
   "packages": [
-    {"name": "acme/helper", "version": "1.0.0", "source": {"type": "git", "url": "https://github.com/acme/helper.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "reference": "aaaa111bbbb222cccc333", "shasum": ""}},
-    {"name": "acme/installer", "version": "2.0.0", "source": {"type": "git", "url": "https://github.com/acme/installer.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "reference": "aaaa111bbbb222cccc333", "shasum": ""}},
-    {"name": "acme/lib", "version": "1.5.0", "source": {"type": "git", "url": "https://github.com/acme/lib.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "reference": "aaaa111bbbb222cccc333", "shasum": ""}},
-    {"name": "acme/commit", "version": "1.0.0", "source": {"type": "git", "url": "https://github.com/acme/commit.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "reference": "aaaa111bbbb222cccc333", "shasum": ""}},
-    {"name": "acme/minor", "version": "2.0.0", "source": {"type": "git", "url": "https://github.com/acme/minor.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "reference": "aaaa111bbbb222cccc333", "shasum": ""}}
+    {"name": "acme/helper", "version": "1.0.0", "source": {"type": "git", "url": "https://github.com/acme/helper.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/acme/helper/zipball/aaaa111bbbb222cccc333", "reference": "aaaa111bbbb222cccc333", "shasum": ""}, "notification-url": "https://packagist.org/downloads/"},
+    {"name": "acme/installer", "version": "2.0.0", "source": {"type": "git", "url": "https://github.com/acme/installer.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/acme/installer/zipball/aaaa111bbbb222cccc333", "reference": "aaaa111bbbb222cccc333", "shasum": ""}, "notification-url": "https://packagist.org/downloads/"},
+    {"name": "acme/lib", "version": "1.5.0", "source": {"type": "git", "url": "https://github.com/acme/lib.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/acme/lib/zipball/aaaa111bbbb222cccc333", "reference": "aaaa111bbbb222cccc333", "shasum": ""}, "notification-url": "https://packagist.org/downloads/"},
+    {"name": "acme/commit", "version": "1.0.0", "source": {"type": "git", "url": "https://github.com/acme/commit.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/acme/commit/zipball/aaaa111bbbb222cccc333", "reference": "aaaa111bbbb222cccc333", "shasum": ""}, "notification-url": "https://packagist.org/downloads/"},
+    {"name": "acme/minor", "version": "2.0.0", "source": {"type": "git", "url": "https://github.com/acme/minor.git", "reference": "aaaa111bbbb222cccc333"}, "dist": {"type": "zip", "url": "https://api.github.com/repos/acme/minor/zipball/aaaa111bbbb222cccc333", "reference": "aaaa111bbbb222cccc333", "shasum": ""}, "notification-url": "https://packagist.org/downloads/"}
   ],
   "packages-dev": []
 }

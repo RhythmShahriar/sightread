@@ -132,14 +132,14 @@ never be checked.
 | b10 | bad | new postinstall that downloads and runs a script | HOLD: npm-install-script-new, remote-fetch-exec |
 | b11 | bad | postinstall bundle reads .npmrc and the token | HOLD: npm-install-script-new, credential-access |
 | b12 | bad | all maintainers replaced, a patch adds network code | REVIEW: owner-change, outbound-new-domain |
-| b13 | bad | lock gains a typosquat with an install script | REVIEW: typosquat, dependency-new, npm-install-script-new |
+| b13 | bad | lock gains a typosquat with an install script | HOLD: typosquat, dependency-new, npm-install-script-new |
 | b14 | bad | lock resolved moved off the registry | REVIEW: lockfile-source-change |
 | b15 | bad | new autoload.files that fetches and runs remote code | HOLD: composer-autoload-files, remote-fetch-exec |
 | b16 | bad | becomes a composer-plugin with a post-install-cmd | REVIEW: composer-plugin-new |
 | b17 | bad | registry serves a tampered archive | HOLD: integrity-mismatch |
 | b18 | bad | same version, fresh bytes after an allow | HOLD: approved-version-changed |
 | b19 | bad | composer tag moved to another commit | HOLD: version-republished |
-| b20 | bad | fresh dependency with a postinstall, no provenance, no tag | HOLD: dependency-new, fresh-release, provenance-dropped, git-tag-missing |
+| b20 | bad | fresh dependency with a postinstall, no provenance, no tag | REVIEW: dependency-new, fresh-release, provenance-dropped, git-tag-missing |
 | b21 | bad | Essential Plugin replay | HOLD: input-unserialize, eval-dynamic, rest-open-route, changelog-mismatch, owner-change |
 | b22 | bad | Gravity Forms pattern reviewed from a vendor zip | UNVERIFIED: admin-user-create, update-suppression, outbound-new-domain |
 | b23 | bad | Trojan Source bidi plus an obfuscated blob | REVIEW: unicode-hidden, obfuscation |
@@ -153,7 +153,7 @@ never be checked.
 | g08 | good | line endings switched to LF | nothing at or above medium |
 | g09 | good | npm patch, same maintainers, no scripts | nothing at or above medium |
 | g10 | good | native addon, unchanged node-gyp install | nothing at or above medium |
-| g11 | good | popular dependencies added | nothing at or above medium |
+| g11 | good | popular dependencies added | dependency-new medium, no typosquat |
 | g12 | good | GitHub dist with empty shasum, source unchanged | nothing at or above medium |
 | g13 | good | composer minor with a new class and tests | nothing at or above medium |
 | g14 | good | whole site, every package on its good candidate | nothing at or above medium |

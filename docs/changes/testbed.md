@@ -95,14 +95,14 @@ listed.
 | b10 | bad | new postinstall that downloads and runs a script | HOLD: npm-install-script-new, remote-fetch-exec |
 | b11 | bad | postinstall bundle reads .npmrc and the token | HOLD: npm-install-script-new, credential-access |
 | b12 | bad | all maintainers replaced, a patch adds network code | REVIEW: owner-change, outbound-new-domain |
-| b13 | bad | lock gains a typosquat with an install script | REVIEW: typosquat, dependency-new, npm-install-script-new |
+| b13 | bad | lock gains a typosquat with an install script | HOLD: typosquat, dependency-new, npm-install-script-new |
 | b14 | bad | lock resolved moved off the registry | REVIEW: lockfile-source-change |
 | b15 | bad | new autoload.files that fetches and runs remote code | HOLD: composer-autoload-files, remote-fetch-exec |
 | b16 | bad | becomes a composer-plugin with a post-install-cmd | REVIEW: composer-plugin-new |
 | b17 | bad | registry serves a tampered archive | HOLD: integrity-mismatch |
 | b18 | bad | same version, fresh bytes after an allow | HOLD: approved-version-changed |
 | b19 | bad | composer tag moved to another commit | HOLD: version-republished |
-| b20 | bad | fresh dependency with a postinstall, no provenance, no tag | HOLD: dependency-new, fresh-release, provenance-dropped, git-tag-missing |
+| b20 | bad | fresh dependency with a postinstall, no provenance, no tag | REVIEW: dependency-new, fresh-release, provenance-dropped, git-tag-missing |
 | b21 | bad | Essential Plugin replay | HOLD: input-unserialize, eval-dynamic, rest-open-route, changelog-mismatch, owner-change |
 | b22 | bad | Gravity Forms pattern reviewed from a vendor zip | UNVERIFIED: admin-user-create, update-suppression, outbound-new-domain |
 | b23 | bad | Trojan Source bidi plus an obfuscated blob | REVIEW: unicode-hidden, obfuscation |
@@ -116,10 +116,10 @@ listed.
 | g08 | good | line endings switched to LF | ROUTINE |
 | g09 | good | npm patch, same maintainers, no scripts | ROUTINE |
 | g10 | good | native addon, unchanged node-gyp install | ROUTINE |
-| g11 | good | popular dependencies added | ROUTINE |
+| g11 | good | popular dependencies added | REVIEW: dependency-new only, no typosquat |
 | g12 | good | GitHub dist with empty shasum, source unchanged | ROUTINE |
 | g13 | good | composer minor with a new class and tests | ROUTINE |
-| g14 | good | whole site, every package on its good candidate | ROUTINE |
+| g14 | good | whole site, every package on its good candidate | ROUTINE, exit 3: b22 not-wporg and core Not checked |
 | g15 | good | official takeover, code unchanged, owner-change only | REVIEW: owner-change |
 | e01 | env | registry down | exit 3 |
 | e02 | env | 429 then success | exit 0 |
@@ -132,7 +132,7 @@ listed.
 | e09 | env | offline with a warm cache | exit 0 |
 | e10 | env | read-only HOME | exit 0 |
 | e11 | env | private host namesake and private npm scope | exit 0 |
-| e12 | env | version unpublished from npm | exit 0 |
+| e12 | env | version unpublished from npm | exit 2, says the version was unpublished |
 | e13 | env | Windows run catches b10 | exit 0 |
 | e14 | env | bidi and ANSI escapes in the name and changelog | exit 0 |
 | e15 | env | --soundcheck on the Docker WordPress with the Roadie stub | exit 0 |

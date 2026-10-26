@@ -141,10 +141,12 @@ scenarios:
     kind: bad
     title: "lock gains a typosquat with an install script"
     package: b13-app
+    # The pull request also bumps leftpadplus to b10's candidate, whose
+    # postinstall fetches and runs a script: that alone is HOLD.
     extra_packages: ["b13-dep", "b10-leftpadplus"]
     command: ["changes", "--before", "projects/changes/base/package-lock.json", "--after", "projects/changes/head/package-lock.json"]
     expect:
-      verdict: REVIEW
+      verdict: HOLD
       exit: 1
       signals:
         - {id: typosquat, min_severity: high}
@@ -154,7 +156,9 @@ scenarios:
     kind: bad
     title: "lock resolved moved off the registry"
     package: b14-fetchkit
-    command: ["npm", "fetchkit", "--path", "projects/wp"]
+    # A lockfile change that moves resolved to a foreign host; the
+    # installed lock alone can't show a move (it is Not checked vcs).
+    command: ["changes", "--before", "projects/changes/b14/base/package-lock.json", "--after", "projects/changes/b14/head/package-lock.json"]
     expect:
       verdict: REVIEW
       exit: 1
@@ -196,7 +200,9 @@ scenarios:
     kind: bad
     title: "same version, fresh bytes after an allow"
     package: b18-approved
-    command: ["plugin", "b18-approved", "--path", "projects/wp"]
+    # The allow entry is read from the config's .sightread folder; the
+    # config is found from the working folder or named, as here.
+    command: ["plugin", "b18-approved", "--path", "projects/wp", "--config", "projects/wp/.sightread/config.yaml"]
     expect:
       verdict: HOLD
       exit: 1
@@ -219,7 +225,8 @@ scenarios:
     extra_packages: ["b20-dep"]
     command: ["npm", "axios-wrap", "--transitive", "--path", "projects/wp"]
     expect:
-      verdict: HOLD
+      # High, not critical: HOLD needs a critical finding (PRD 5.6).
+      verdict: REVIEW
       exit: 1
       signals:
         - {id: dependency-new, min_severity: high}
@@ -351,8 +358,14 @@ scenarios:
     package: g11-deps
     command: ["npm", "depapp", "--path", "projects/wp"]
     expect:
-      verdict: ROUTINE
-      exit: 0
+      # A new runtime dependency is medium whoever publishes it (PRD
+      # 12.1); what this scenario holds is that names close to popular
+      # ones, being popular themselves, are not typosquat.
+      verdict: REVIEW
+      exit: 1
+      signals:
+        - {id: dependency-new, min_severity: medium}
+    forbid: ["typosquat"]
   - id: g12
     kind: good
     title: "GitHub dist with empty shasum, source unchanged"
@@ -374,12 +387,17 @@ scenarios:
     title: "whole site, every package on its good candidate"
     package: g14-site
     # Every good update the site pins is offered; every bad scenario's
-    # candidate is withheld (g15 too: its owner change is high).
-    extra_packages: [g01-feature, g02-bundle, g03-i18n, g04-vendor, g05-cron, g06-contrib, g07-theme, g08-eol, g09-patch, g10-native, g11-deps, g12-commit, g13-minor]
+    # candidate is withheld (g15 too: its owner change is high, and g11:
+    # its new dependencies are medium).
+    extra_packages: [g01-feature, g02-bundle, g03-i18n, g04-vendor, g05-cron, g06-contrib, g07-theme, g08-eol, g09-patch, g10-native, g12-commit, g13-minor]
     command: ["all", "projects/wp"]
     expect:
       verdict: ROUTINE
-      exit: 0
+      # The premium plugin (b22) has no official source and WordPress
+      # core is out of scope: both are Not checked, which makes the run
+      # partial (exit 3 under --fail-on, PRD 10).
+      exit: 3
+      not_checked_reasons: [not-wporg, core]
   - id: g15
     kind: good
     title: "official takeover, code unchanged, owner-change only"
@@ -490,8 +508,10 @@ scenarios:
     kind: env
     title: "version unpublished from npm"
     package: e12-unpub
-    command: ["npm", "unpublib", "--to", "9.9.9", "--path", "projects/wp"]
+    command: ["npm", "unpublib", "--to", "1.0.1", "--path", "projects/wp"]
     env:
+      # The version is named on the command line, so it is a usage error.
+      exit: 2
       says: ["unpublished"]
       note: "says the version was unpublished"
   - id: e13

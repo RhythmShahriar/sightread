@@ -7,8 +7,13 @@ repository: github.com/example/axios-wrap
 versions:
   - version: "1.0.0"
     installed: true
+    provenance: slsa
     maintainers: [goodmaintainer]
+  # The axios 1.14.1 shape: published by hand, without the provenance
+  # earlier releases had and without a git tag.
   - version: "1.0.1"
     candidate: true
     published: -3h
+    provenance: none
+    git_tag: false
     maintainers: [goodmaintainer]

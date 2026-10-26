@@ -1,0 +1,5 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# The testbed site's config: b18 names it with --config so the allow
+# entry next to it counts.
+allow_file: .sightread/allowed.yaml

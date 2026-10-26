@@ -10,5 +10,5 @@ versions:
     maintainers: [goodmaintainer]
   - version: "1.1.0"
     candidate: true
-    published: -3h
+    published: -10d
     maintainers: [goodmaintainer]

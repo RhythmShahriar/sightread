@@ -7,5 +7,8 @@ repository: github.com/acme/lib
 versions:
   - version: "1.5.0"
     republish: true
-    reference: dddd444eeee555ffff666
+    # The lockfile pins this commit; in the bad state the tag points at
+    # republish_reference instead.
+    reference: aaaa111bbbb222cccc333
+    republish_reference: dddd444eeee555ffff666
     maintainers: [vendoruser]
