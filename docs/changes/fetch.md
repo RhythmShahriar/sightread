@@ -50,7 +50,7 @@ Each credential goes only to its own host and port, on every hop. An `Authorizat
 - `COMPOSER_AUTH` (read as Composer reads it): `http-basic` and `bearer` per host (`host` means port 443, `host:port` is exact). `github-oauth` for `github.com` is used as the GitHub token when `GITHUB_TOKEN` is unset.
 - `SIGHTREAD_NPM_TOKEN_<SCOPE>` (`@acme` reads `SIGHTREAD_NPM_TOKEN_ACME`; other characters become `_`): Bearer to that scope's registry only.
 
-Without a token api.github.com allows 60 requests an hour. Sightread stops before sending once GitHub said none are left.
+Without a token api.github.com allows 60 requests an hour. Sightread stops before sending once GitHub said none are left, or once what the run still plans to send (its estimate less what it sent) is more than GitHub said is left.
 
 Example (E16, exit 3): `rhythm sightread composer: api.github.com allows 60 requests an hour without a token and this run needs about 111` / `set GITHUB_TOKEN (sent only to api.github.com); 23 of 111 packages were reviewed`.
 
@@ -95,12 +95,12 @@ Example: `rhythm sightread theme twentytwentyfour --svn-check` reports `svn` whe
 | One analysed entry | 4 MiB |
 | One JSON answer | 32 MiB |
 | Entries per archive | 100,000 |
-| Expansion ratio per entry | 200:1 (once over 1 MiB) |
+| Expansion ratio per entry | 200:1 (once over 1 MiB), on the compressed bytes actually read, never a header's claimed size |
 | Request timeout (`--timeout`) | 30s; a download may take 20 timeouts and stops after one timeout without a byte |
 | Retries (`--retries`) | 2 |
 | Requests per host at once | 4 |
 
-An entry past a per-entry limit, the ratio or the entry count is a finding and the package is not fully analysed. A whole archive past a cap is E11. Archive entries are never written by their own names: paths that escape the package, symlinks, hard links and devices are reported and not followed. Nested archives are stored, never opened.
+An entry past a per-entry limit, the ratio or the entry count is a finding and the package is not fully analysed. A whole archive past a cap is E11. Archive entries are never written by their own names: paths that escape the package, symlinks, hard links and devices are reported and not followed. A name with a colon or a Windows device name is refused too, with its own detail (`name has a colon, which Windows reads as a stream or drive`, `name is a Windows device such as NUL or COM1`) instead of `outside the package`. Nested archives are stored, never opened.
 
 E11 (exit 3), download: `rhythm sightread npm: the 1.4.0 tarball of huge-pkg is over 256 MiB` / `raise --max-size if you expect that; a size jump this big is worth a look on its own`. Unpacked: `rhythm sightread npm: the 1.4.0 archive of huge-pkg unpacks to over 1 GiB` with the same hint. A JSON answer: `the answer of registry.npmjs.org is over 32 MiB`. A local file: `rhythm sightread: big.zip is over 256 MiB`.
 
@@ -133,7 +133,7 @@ Under the Sightread cache folder (kit `config.CacheDir("sightread")`):
 
 - `meta/<kind>/<name>-<hash>.json`: registry answers. A key that could carry a credential (a query string, `@`, `=`) gets no readable name prefix.
 - `meta/downloads/`: which stored blob each downloaded URL became, so `--offline` can reuse it.
-- `blobs/<first two hex>/<sha256>`: file contents, stored once by SHA-256. Folders 0700, files 0600, never executable. Every read re-hashes; a blob that no longer matches is deleted and fetched again.
+- `blobs/<first two hex>/<sha256>`: file contents, stored once by SHA-256. Folders 0700, files 0600, never executable. Every read re-hashes; a blob that no longer matches is deleted and fetched again. A downloaded zip is checked before it is read. Storing the same bytes again replaces a torn or changed blob, so a bad one fails one run at most.
 
 | Kind | Holds | Reused for |
 | --- | --- | --- |
