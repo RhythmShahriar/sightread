@@ -241,7 +241,8 @@ func Between(entries []core.ChangelogEntry, from, to string, scheme core.Version
 var phrases = []string{
 	"check compatibility", "compatible with wordpress", "tested up to", "tested with", "minor fixes",
 	"bug fixes", "small fixes", "performance improvements", "improvements", "maintenance release",
-	"updated dependencies", "version bump",
+	"updated dependencies", "version bump", "improved compatibility", "improved performance",
+	"stability improvements", "enhancements",
 }
 
 // filler are the words a boilerplate bullet may have around a phrase:
@@ -253,6 +254,7 @@ var filler = map[string]bool{
 	"general": true, "other": true, "few": true, "minor": true, "small": true,
 	"plugin": true, "theme": true, "core": true, "compatibility": true, "tested": true,
 	"fix": true, "fixed": true, "update": true, "updated": true, "tweak": true, "misc": true,
+	"performance": true, "stability": true, "improved": true,
 }
 
 // Generic reports whether a changelog entry says nothing a reviewer can

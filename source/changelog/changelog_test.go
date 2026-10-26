@@ -162,6 +162,10 @@ func TestGeneric(t *testing.T) {
 		"Updated dependencies.":                              true,
 		"[Fix] Version bump":                                 true,
 		"Removed the `eval` call":                            false,
+		"* Improved compatibility and performance.":          true,
+		"Performance and stability improvements":             true,
+		"Improved performance of the REST sync":              false,
+		"Enhancements to the license check":                  false,
 	} {
 		if got := Generic(text); got != want {
 			t.Errorf("Generic(%q) = %v, want %v", text, got, want)
