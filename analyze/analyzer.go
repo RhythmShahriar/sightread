@@ -215,7 +215,7 @@ func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits) f
 			// once by merge.
 			r.un = append(r.un, core.Unanalysed{Path: p, Reason: reasonTimeLimit})
 		} else {
-			r.feats = append(r.feats, secretFeatures(p, src)...)
+			r.feats = append(r.feats, secretFeatures(p, src, code)...)
 		}
 	}
 	sortFeatures(r.feats)
@@ -324,12 +324,29 @@ func readFile(t *core.Tree, f core.File, limit int64, keepTail bool) (head, tail
 	}
 }
 
+// nameRules are the kit secrets rules that judge a value by the name
+// it is given (a variable, a header, a form field) rather than by a
+// provider's token format. In code they fire on `credentials:
+// 'same-origin'` and the like, so code keeps only the format rules.
+var nameRules = map[string]bool{
+	"assignment": true, "header-token": true, "form-field": true, "json-field": true, "cookie": true,
+	"authorization": true, "yaml": true, "env": true, "key-path-token": true, "reset-link-token": true,
+	"oauth-code": true, "wp-reset-key": true, "php-serialized": true,
+}
+
 // secretFeatures returns FSecret for every hard-coded credential kit
-// secrets finds, one per line and secret. The key and attributes hold
-// the masked value only and the snippet is masked by core.NewSnippet,
-// so no raw secret leaves the analyzer.
-func secretFeatures(p string, src []byte) []core.Feature {
-	if len(secrets.FindSecrets(src)) == 0 {
+// secrets finds, one per line and secret; in code (PHP, JavaScript)
+// only the rules that know a token's format count. The key and
+// attributes hold the masked value only and the snippet is masked by
+// core.NewSnippet, so no raw secret leaves the analyzer.
+func secretFeatures(p string, src []byte, code bool) []core.Feature {
+	keep := func(ss []secrets.Secret) []secrets.Secret {
+		if code {
+			ss = slices.DeleteFunc(ss, func(s secrets.Secret) bool { return nameRules[s.Kind] })
+		}
+		return ss
+	}
+	if len(keep(secrets.FindSecrets(src))) == 0 {
 		return nil
 	}
 	col := newCollector(p, pathContext(p), newLineIndex(src))
@@ -340,7 +357,7 @@ func secretFeatures(p string, src []byte) []core.Feature {
 		if n < 0 {
 			n = len(rest)
 		}
-		for _, s := range secrets.FindSecrets(rest[:n]) {
+		for _, s := range keep(secrets.FindSecrets(rest[:n])) {
 			col.add(core.FSecret, s.Kind+":"+attrText(s.String()), line, line, "", map[string]string{
 				"kind":   s.Kind,
 				"name":   attrText(s.Name),

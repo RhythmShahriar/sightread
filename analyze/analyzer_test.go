@@ -235,8 +235,11 @@ func TestTimeBudget(t *testing.T) {
 	if got := reasons(set, "slow.php"); !slices.Equal(got, []string{"analysis time limit"}) {
 		t.Errorf("reasons %q, want the time limit", got)
 	}
-	// The default budget is ample for the same file.
-	set = analyzeAll(t, coretest.Tree(map[string]string{"slow.php": featureDense(2000)}), core.DefaultLimits())
+	// The default budget is ample for the same kind of file (widened
+	// under the race detector).
+	lim = core.DefaultLimits()
+	lim.FileBudget *= time.Duration(raceSlowdown)
+	set = analyzeAll(t, coretest.Tree(map[string]string{"slow.php": featureDense(2000)}), lim)
 	if got := reasons(set, "slow.php"); len(got) != 0 {
 		t.Errorf("reasons %q under the default budget", got)
 	}
@@ -353,7 +356,7 @@ func TestSecrets(t *testing.T) {
 func TestSecretsNegative(t *testing.T) {
 	set := analyzeAll(t, coretest.Tree(map[string]string{
 		"a.php":        "<?php\n$key = get_option('api_key');\n$pass = $_POST['password'];\n",
-		"b.js":         "const token = process.env.GITHUB_TOKEN;\n",
+		"b.js":         "const token = process.env.GITHUB_TOKEN;\nfetch(u, { credentials: 'same-origin', headers: { 'X-WP-Nonce': cfg.nonce } });\n$password = 'not-a-format';\n",
 		"package.json": `{"name":"x","version":"1.0.0"}`,
 	}), core.DefaultLimits())
 	for k := range set.ByKey {
