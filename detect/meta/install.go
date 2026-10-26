@@ -74,6 +74,11 @@ func (installDetector) Detect(ctx context.Context, s *core.Subject, emit func(co
 			f.File = bindingGyp
 			out.send(f)
 		}
+		if ev := changedGypCommands(s, keys); ev != "" {
+			f := newFinding(SigInstallScriptNew, ev)
+			f.File = bindingGyp
+			out.send(f)
+		}
 		if len(keys) > 0 || gyp {
 			installCode(ctx, s, keys, emit)
 		}
@@ -170,16 +175,23 @@ func hasShellMeta(script string) bool {
 // plainFlags reports whether args are only flags ("--release",
 // "--target=20", "-j") plus the one value right after a flag without
 // "=" ("-O build"), all in a plain character set. A loose word such as
-// "node-gyp rebuild node x.js" is refused.
+// "node-gyp rebuild node x.js" is refused, as is any URL and any flag
+// that picks where the build or binary comes from: prebuild-install
+// --download https://host/x.tgz fetches a native binary from anywhere
+// and require loads it.
 func plainFlags(args []string) bool {
 	prevFlag := false
 	for _, a := range args {
-		if !plainWord(a) {
+		if !plainWord(a) || strings.Contains(a, "://") {
 			return false
 		}
 		switch {
 		case strings.HasPrefix(a, "-"):
-			prevFlag = !strings.Contains(a, "=")
+			name, _, hasValue := strings.Cut(a, "=")
+			if sourceFlags[name] {
+				return false
+			}
+			prevFlag = !hasValue
 		case prevFlag:
 			prevFlag = false
 		default:
@@ -187,6 +199,15 @@ func plainFlags(args []string) bool {
 		}
 	}
 	return true
+}
+
+// sourceFlags are native build flags that name a download, a host or a
+// directory to build or load from. A build command using one is no
+// longer the plain build of the package's own sources.
+var sourceFlags = map[string]bool{
+	"--download": true, "-d": true, "--path": true, "--directory": true, "-C": true,
+	"--dist-url": true, "--disturl": true, "--nodedir": true, "--devdir": true, "--tarball": true,
+	"--host": true, "--hosted-path": true, "--module_path": true, "--proxy": true,
 }
 
 // plainWord reports whether w has only letters, digits and . _ , / : = @ + -.
@@ -237,6 +258,89 @@ func newBindingGyp(s *core.Subject) bool {
 		return false
 	}
 	return s.New.Scripts["install"] == "" && s.New.Scripts["preinstall"] == ""
+}
+
+// maxGypFile is the most of a binding.gyp that is read for command
+// expansions.
+const maxGypFile = 1 << 20
+
+// changedGypCommands describes the gyp command expansions ("<!(cmd)"
+// and "<!@(cmd)") a changed binding.gyp adds, or is "" when there are
+// none. node-gyp runs each expansion as a shell command during the
+// build npm starts on its own, so new ones are new install time code
+// even with no script changed. An install or preinstall script that is
+// already reported covers the build.
+func changedGypCommands(s *core.Subject, keys []string) string {
+	if slices.Contains(keys, "install") || slices.Contains(keys, "preinstall") {
+		return ""
+	}
+	if s.OldTree == nil || s.NewTree == nil {
+		return ""
+	}
+	of, ok := s.OldTree.Lookup(bindingGyp)
+	if !ok {
+		return ""
+	}
+	nf, ok := s.NewTree.Lookup(bindingGyp)
+	if !ok || nf.SHA256 == of.SHA256 {
+		return ""
+	}
+	ob, ok := readFile(s.OldTree, of, maxGypFile)
+	if !ok {
+		return ""
+	}
+	nb, ok := readFile(s.NewTree, nf, maxGypFile)
+	if !ok {
+		return ""
+	}
+	before := map[string]bool{}
+	for _, c := range gypCommands(string(ob)) {
+		before[c] = true
+	}
+	var added []string
+	for _, c := range gypCommands(string(nb)) {
+		if !before[c] && !slices.Contains(added, c) {
+			added = append(added, c)
+		}
+	}
+	if len(added) == 0 {
+		return ""
+	}
+	return "binding.gyp runs new commands at build: " + strings.Join(added, "; ")
+}
+
+// gypCommands returns each "<!" command expansion of a gyp file, from
+// "<!" to its balanced closing parenthesis (or the end of the line when
+// it never closes), with white space collapsed.
+func gypCommands(text string) []string {
+	var out []string
+	for {
+		i := strings.Index(text, "<!")
+		if i < 0 {
+			return out
+		}
+		text = text[i:]
+		end, depth := len(text), 0
+	scan:
+		for j := 2; j < len(text); j++ {
+			switch text[j] {
+			case '(':
+				depth++
+			case ')':
+				if depth--; depth <= 0 {
+					end = j + 1
+					break scan
+				}
+			case '\n':
+				if depth <= 0 {
+					end = j
+					break scan
+				}
+			}
+		}
+		out = append(out, collapse(text[:end]))
+		text = text[end:]
+	}
 }
 
 // prepareTools are build tools a prepare script runs, by the package

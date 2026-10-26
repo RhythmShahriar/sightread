@@ -730,11 +730,11 @@ None recorded yet.
 
 ### Fires when
 
-The package adds or changes a preinstall, install, postinstall or prepare script, or a binding.gyp that makes npm build on install. These scripts run on every machine that installs the package, CI included, before anyone reads the code. Sightread reads the script and the files it calls.
+The package adds or changes a preinstall, install, postinstall or prepare script, a binding.gyp that makes npm build on install, or a binding.gyp command node-gyp runs during that build. These scripts run on every machine that installs the package, CI included, before anyone reads the code. Sightread reads the script and the files it calls.
 
 ### False alarms
 
-An unchanged node-gyp install and a prepare that only runs husky or build tools the package already used do not fire.
+An unchanged node-gyp install, a swap to another native build with plain flags only, a binding.gyp edit that runs no new command and a prepare that only runs husky or build tools the package already used do not fire. A build that downloads from a URL or builds from another directory does.
 
 ### How to review
 

