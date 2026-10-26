@@ -23,7 +23,7 @@ TOOLS    ?= auto
 
 export GOWORK := off
 
-.PHONY: up up-wp down bench reproduce corpus toggle status good bad wp logs
+.PHONY: up up-wp down test-bench bench reproduce corpus toggle status good bad wp logs
 
 up: ## start the registry, canary and webhook on 127.0.0.1 in the background
 	@mkdir -p $(BIN) $(PIDS)
@@ -53,6 +53,9 @@ up-wp: ## start the sealed Docker WordPress on 127.0.0.1:18907 and seed it (e15)
 down: ## stop everything up and up-wp started (the WordPress volume is removed)
 	@for f in $(PIDS)/*; do [ -f "$$f" ] || continue; kill "$$(cat "$$f")" 2>/dev/null || true; rm -f "$$f"; done
 	-$(COMPOSE) down -v --remove-orphans 2>/dev/null
+
+test-bench: ## run the tagged bench tests (canary, egress, sealed Docker check, p01-large); up-wp first for the Docker parts
+	cd .. && $(GO) test -tags testbed -count=1 -timeout 60m ./testbed/bench/
 
 bench: ## run every scenario; writes ../docs/benchmark.md and bench/work/results.json (stop make up first)
 	cd .. && $(GO) run -tags testbed ./testbed/bench -tools "$(TOOLS)" $(BENCH)

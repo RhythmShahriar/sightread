@@ -3,9 +3,9 @@
 
 # The slow suites, every night and on demand: each fuzz target for ten
 # minutes; every test with every stage required to be linked on Linux,
-# macOS and Windows; the testbed benchmark run twice. The benchmark
-# page is uploaded as an artifact for a person to read; CI never commits
-# it (the token can only read).
+# macOS and Windows; the tagged bench tests; the testbed benchmark run
+# twice; e13 on Windows. The benchmark page is uploaded as an artifact
+# for a person to read; CI never commits it (the token can only read).
 name: nightly
 on:
   schedule:
@@ -79,7 +79,13 @@ jobs:
           go-version-file: go.mod
       - name: Start the Docker WordPress for e15
         run: make -C testbed up-wp
+      # The tagged bench tests: the canary stays silent, nothing reaches
+      # past the proxy guard or out of the sealed Docker network, the good
+      # states are clean and p01-large is within its limits.
+      - name: Bench tests
+        run: make -C testbed test-bench
       - name: Benchmark
+        if: success() || failure()
         run: make -C testbed bench
       - name: Run it twice and compare the outcomes
         if: success() || failure()
@@ -97,3 +103,33 @@ jobs:
       - name: Stop the Docker WordPress
         if: always()
         run: make -C testbed down
+
+  # e13: the Windows run catches b10. Go ignores SSL_CERT_FILE on
+  # Windows, so the registry serves plain HTTP on loopback, which
+  # Sightread accepts for a loopback mirror only.
+  bench-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: e13 on Windows
+        shell: bash
+        env:
+          GOWORK: "off"
+        run: |
+          go run -tags testbed ./testbed/bench -only e13 -plain-http -tools none -rounds 0 -large=false \
+            -out "$RUNNER_TEMP/benchmark-windows.md" -results "$RUNNER_TEMP/results-windows.json"
+          jq -e '[.environment[] | select(.id == "e13" and .result == "pass")] | length == 1' "$RUNNER_TEMP/results-windows.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: benchmark-windows
+          path: |
+            ${{ runner.temp }}/benchmark-windows.md
+            ${{ runner.temp }}/results-windows.json
+          if-no-files-found: warn

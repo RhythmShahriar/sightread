@@ -27,6 +27,7 @@ make -C testbed bench BENCH="-only b01,g05,env"
 make -C testbed up-wp                  # the Docker WordPress for e15
 make -C testbed bench TOOLS=all        # also the Soundcheck column (slow)
 make -C testbed reproduce              # the benchmark twice, outcomes diffed
+make -C testbed test-bench             # the tagged bench tests (after up-wp for the Docker checks)
 make -C testbed down
 ```
 
@@ -35,14 +36,25 @@ The benchmark (`go run -tags testbed ./testbed/bench`) builds
 canary, webhook receiver, probes, fronts and proxy guard, so stop a
 `make up` first. It exits non-zero until every 1.0 target is met: every
 non-pending bad scenario caught, zero false alarms on the good scenarios
-and in a 10-round control pass, zero canary, egress and outside-write
-events, every environment scenario passing, cold and warm runs agreeing,
-p01-large under 10 s warm and 512 MB RSS, the whole run under 10
-minutes.
+and in a 10-round control pass, every run writing a report, zero
+canary, egress, outside-write and unmasked-key events, every environment
+scenario passing, cold and warm runs agreeing, p01-large under 10 s warm
+and 512 MB RSS, the whole run under 10 minutes. A run that wrote no
+report (a crash, a usage error, a timeout) is shown as NO REPORT, apart
+from misses and false alarms. A partial run (`-only`) never claims the
+targets; it exits 0 when every scenario that ran passed.
+
+e13 runs only on Windows, where Go ignores `SSL_CERT_FILE`. There the
+registry serves plain HTTP on loopback (`-plain-http`, the default on
+Windows), which Sightread accepts for a loopback mirror only. The
+nightly `bench-windows` job runs
+`go run -tags testbed ./testbed/bench -only e13 -plain-http`.
 
 The tests behind it run the same way: `go test -tags testbed
-./testbed/bench` (TestGoodStateIsClean, TestCanaryNeverFires,
-TestNoEgress, TestManifest, TestLargeFixture, TestSoundcheckE15). The
+./testbed/bench` or `make -C testbed test-bench` (TestGoodStateIsClean,
+TestCanaryNeverFires, TestNoEgress, TestManifest, TestLargeFixture,
+TestSoundcheckE15, TestRSSIsMeasured). The nightly bench job runs them
+after `up-wp`, so the sealed Docker check runs there too. The
 library parts (the registry, the manifest, the scoreboard, the page)
 have ordinary tests that run with `go test ./...`.
 
@@ -154,7 +166,7 @@ gate beyond what is listed.
 | e10 | env | read-only HOME | clear error or a temp cache fallback |
 | e11 | env | private host namesake and private npm scope | no request names the private host, the namesake or the scope |
 | e12 | env | version unpublished from npm | says the version was unpublished |
-| e13 | env | Windows run catches b10 | runs on Windows only |
+| e13 | env | Windows run catches b10 | runs on Windows only (nightly bench-windows) |
 | e14 | env | bidi and ANSI escapes in the name and changelog | prints the escapes escaped, never raw |
 | e15 | env | --soundcheck on the Docker WordPress with the Roadie stub | applied only on the staging copy; each refusal exits before any change |
 
@@ -191,8 +203,11 @@ Some payloads steal a token, so the fixtures need key-shaped strings. No
 real-format key is ever committed: GitHub push protection blocks them
 and only the owner can allow one. A fixture writes a placeholder such as
 `{{fakekey:npm}}`; the registry expands it when it builds the archive,
-with the same runtime assembly as `coretest.FakeKey`. A test scans every
-fixture for literal key prefixes.
+with the same runtime assembly as `coretest.FakeKey` (a test compares
+the two for every kind). b11's payload falls back to `{{fakekey:npm}}`.
+A test scans every fixture for literal key prefixes. The benchmark
+searches every output and report for the assembled keys: one found in
+full is counted as an unmasked key.
 
 ## Why archives are never committed
 
