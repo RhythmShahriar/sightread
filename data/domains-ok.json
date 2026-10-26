@@ -1,0 +1,12 @@
+{
+ "version": "2026.10.26",
+ "domains": [
+  "wordpress.org",
+  "w.org",
+  "gravatar.com",
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+  "schema.org",
+  "w3.org"
+ ]
+}

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 
@@ -282,4 +283,32 @@ func FuzzParseRule(f *testing.F) {
 			t.Fatalf("error does not name the file: %v", err)
 		}
 	})
+}
+
+func TestActiveRulesFallBackToShipped(t *testing.T) {
+	rulePack.RLock()
+	before := rulePack.f
+	rulePack.RUnlock()
+	t.Cleanup(func() { SetRulePack(before) })
+	shipped := len(BuiltinRules())
+
+	SetRulePack(func() (string, fs.FS) { return "", nil })
+	if got := len(ActiveRules()); got != shipped {
+		t.Errorf("no pack: %d rules, want the %d shipped", got, shipped)
+	}
+	// A pack this binary can't parse (a newer rule format) is ignored.
+	bad := fstest.MapFS{"x.yaml": {Data: []byte("id: x\nfuture_key: 1\n")}}
+	SetRulePack(func() (string, fs.FS) { return "bad-pack", bad })
+	if got := len(ActiveRules()); got != shipped {
+		t.Errorf("bad pack: %d rules, want the %d shipped", got, shipped)
+	}
+	rule, err := fs.ReadFile(EmbeddedRules(), "webshell.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	good := fstest.MapFS{"webshell.yaml": {Data: rule}}
+	SetRulePack(func() (string, fs.FS) { return "good-pack", good })
+	if got := ActiveRules(); len(got) != 1 || got[0].ID != "webshell" {
+		t.Errorf("good pack: %d rules", len(got))
+	}
 }

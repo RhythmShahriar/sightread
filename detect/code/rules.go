@@ -543,6 +543,66 @@ var builtinRules = sync.OnceValue(func() []*Rule {
 // BuiltinRules returns the shipped rules.
 func BuiltinRules() []*Rule { return builtinRules() }
 
+// EmbeddedRules returns the shipped rule files (rules/*.yaml) as a file
+// system, for package data, which packs them into the sightread-signals
+// release asset.
+func EmbeddedRules() fs.FS {
+	sub, err := fs.Sub(embeddedRules, "rules")
+	if err != nil {
+		panic(err)
+	}
+	return sub
+}
+
+// RulePack returns the rule files of a newer verified signal pack and
+// its version, or a nil fs.FS to use the shipped rules.
+type RulePack func() (version string, files fs.FS)
+
+// rulePack is the provider package data registers; nil until it does.
+var rulePack struct {
+	sync.RWMutex
+	f RulePack
+}
+
+// packRules caches the parsed rules of each pack version.
+var packRules sync.Map // string -> []*Rule
+
+// SetRulePack makes the detector take its rules from f instead of the
+// shipped ones whenever f returns files. Package data calls it at init
+// so a pack fetched by `update` replaces the rules without a new binary,
+// and --no-signal-updates (data.UseEmbedded) brings the shipped ones
+// back. A pack whose rules don't parse, such as one written for a newer
+// rule format, is ignored; the shipped rules stay.
+func SetRulePack(f RulePack) {
+	rulePack.Lock()
+	defer rulePack.Unlock()
+	rulePack.f = f
+}
+
+// ActiveRules returns the rules in force: a verified newer pack's, or the
+// shipped ones.
+func ActiveRules() []*Rule {
+	rulePack.RLock()
+	f := rulePack.f
+	rulePack.RUnlock()
+	if f == nil {
+		return builtinRules()
+	}
+	version, files := f()
+	if files == nil {
+		return builtinRules()
+	}
+	if v, ok := packRules.Load(version); ok {
+		return v.([]*Rule)
+	}
+	rs, err := LoadRules(files, "sightread-signals")
+	if err != nil {
+		rs = builtinRules()
+	}
+	packRules.Store(version, rs)
+	return rs
+}
+
 // extraRules caches the rules of each --signals folder list.
 var extraRules sync.Map // string -> []*Rule
 
@@ -559,7 +619,7 @@ func LoadRuleDirs(dirs []string) ([]*Rule, error) {
 	}
 	var out []*Rule
 	seen := map[string]string{}
-	for _, r := range builtinRules() {
+	for _, r := range ActiveRules() {
 		seen[r.ID] = r.File
 	}
 	for _, dir := range dirs {
@@ -607,7 +667,7 @@ func (ruleDetector) Detect(ctx context.Context, s *core.Subject, emit func(core.
 	if s.NewTree == nil || s.NewTree.Blobs == nil {
 		return
 	}
-	rules := builtinRules()
+	rules := ActiveRules()
 	if s.Config != nil {
 		// run reads and checks the folders before any download
 		// (LoadRuleDirs), so this is a cache hit that reads no file; a
