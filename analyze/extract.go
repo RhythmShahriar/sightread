@@ -7,6 +7,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/RhythmShahriar/rhythm/kit/secrets"
 
@@ -298,15 +299,46 @@ func (e *extractor) callFeature(kind core.FeatureKind, key string, c *callSite, 
 }
 
 // argAttrs returns the folded string and number arguments of a call as
-// arg0, arg1, ... (the first four), for FCall.
+// arg0, arg1, ... (the first four), for FCall. Two kinds of argument
+// keep only their size, as argN_bytes. One is the encoded input of a
+// decoder (base64_decode, gzinflate and the like): its text would carry
+// a secret past masking in encoded form. The other is binary text such
+// as a decoded gzip stream, which is not valid UTF-8 or holds control
+// bytes.
+// The decoder's name is then argN_encoding.
 func argAttrs(c *callSite) map[string]string {
 	a := map[string]string{}
 	for i := 0; i < len(c.args) && i < 4; i++ {
-		if v, ok := c.args[i].v.str(); ok {
-			a["arg"+strconv.Itoa(i)] = attrText(v)
+		v, ok := c.args[i].v.str()
+		if !ok {
+			continue
+		}
+		k := "arg" + strconv.Itoa(i)
+		switch {
+		case i == 0 && decoderNames[c.name]:
+			a[k+"_bytes"] = strconv.Itoa(len(v))
+			a[k+"_encoding"] = c.name
+		case !textArg(v):
+			a[k+"_bytes"] = strconv.Itoa(len(v))
+		default:
+			a[k] = attrText(v)
 		}
 	}
 	return a
+}
+
+// textArg reports whether s reads as text: valid UTF-8 with no control
+// bytes besides tab and line breaks.
+func textArg(s string) bool {
+	if !utf8.ValidString(s) {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; (c < 0x20 && c != '\t' && c != '\n' && c != '\r') || c == 0x7f {
+			return false
+		}
+	}
+	return true
 }
 
 // argStr is argument i of c when folding knows it as a string.

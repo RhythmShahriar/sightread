@@ -142,6 +142,11 @@ padding or a broken construct can never hide code silently.
 - Folding: 16 steps and 64 KiB of result per expression.
 - Results are the same on every run: files are analysed on one worker
   per CPU and merged sorted by path, line, kind and key.
+- Arguments: FCall attributes `arg0` to `arg3` hold folded text
+  arguments with secrets masked. A decoder's encoded input
+  (`base64_decode`, `gzinflate`, `atob` and the like) and binary text
+  keep only their size as `argN_bytes`, with the decoder in
+  `argN_encoding`.
 
 ## How the lexers read tricky input
 

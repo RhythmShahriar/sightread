@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
@@ -541,5 +542,49 @@ func TestUpdateFilterOwnFolder(t *testing.T) {
 	set := analyzeAll(t, tree, core.DefaultLimits())
 	if fs := set.ByKey[string(core.FUpdateFilter)+":site_transient_update_plugins"]; len(fs) != 1 || fs[0].Attrs["scope"] != "own" {
 		t.Errorf("under its own top folder: %v", fs)
+	}
+}
+
+// A secret inside an encoded payload never leaves in encoded form: a
+// decoder's input and binary arguments keep only their size.
+func TestEncodedArgs(t *testing.T) {
+	key := coretest.FakeKey(coretest.FakeKeyKinds()[0])
+	enc := b64([]byte("$k = '" + key + "';"))
+	gz := b64(deflateRaw([]byte("echo 'hello';")))
+	src := "<?php\n$a = base64_decode('" + enc + "');\n$b = gzinflate(base64_decode('" + gz + "'));\n$c = curl_init('https://api.example.com/');\n"
+	fs := codeFeatures(langPHP, "x.php", []byte(src), core.CtxCode)
+	var calls int
+	for _, f := range fs {
+		if f.Kind != core.FCall {
+			continue
+		}
+		for k, v := range f.Attrs {
+			if strings.Contains(v, enc) || strings.Contains(v, key) {
+				t.Errorf("%s attr %s carries the payload", f.Key, k)
+			}
+			if !utf8.ValidString(v) {
+				t.Errorf("%s attr %s is not UTF-8", f.Key, k)
+			}
+		}
+		switch f.Key {
+		case "base64_decode":
+			calls++
+			if f.Attrs["arg0_encoding"] != "base64_decode" || f.Attrs["arg0_bytes"] == "" || f.Attrs["arg0"] != "" {
+				t.Errorf("base64_decode attrs %v", f.Attrs)
+			}
+		case "gzinflate":
+			calls++
+			if f.Attrs["arg0_bytes"] == "" || f.Attrs["arg0"] != "" {
+				t.Errorf("gzinflate attrs %v", f.Attrs)
+			}
+		case "curl_init":
+			calls++
+			if f.Attrs["arg0"] != "https://api.example.com/" {
+				t.Errorf("a text argument is lost: %v", f.Attrs)
+			}
+		}
+	}
+	if calls < 4 {
+		t.Errorf("%d calls checked, want base64_decode twice, gzinflate and curl_init: %q", calls, describe(fs))
 	}
 }
