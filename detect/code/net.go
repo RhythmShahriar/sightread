@@ -298,11 +298,19 @@ func ownHosts(s *core.Subject) []string {
 	}
 	var out []string
 	for _, u := range []string{m.Homepage, m.Repository} {
-		if h := urlHost(u); h != "" {
-			out = append(out, strings.TrimPrefix(h, "www."))
+		if h := strings.TrimPrefix(urlHost(u), "www."); h != "" && !codeHosts[h] {
+			out = append(out, h)
 		}
 	}
 	return out
+}
+
+// codeHosts serve everyone's repositories, so a repository there makes
+// no host the package's own: github.com/attacker/x is not the package.
+// Feature keys hold the host only, so the owner path can't be compared.
+var codeHosts = map[string]bool{
+	"github.com": true, "gitlab.com": true, "bitbucket.org": true, "codeberg.org": true,
+	"sourceforge.net": true, "git.sr.ht": true,
 }
 
 // urlHost returns the host of a homepage or repository field: a URL,

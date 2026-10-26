@@ -1,0 +1,11 @@
+eco: npm
+note: the repository is on github.com, which vouches for no other github.com account the code now calls
+meta_old:
+  ref:
+    version: 1.0.0
+  repository: git+https://github.com/acme/forms.git
+features_old: []
+features_new:
+- {kind: domain, key: github.com, path: lib/update.js, line: 4}
+expect:
+- {id: outbound-new-domain, min_severity: medium}

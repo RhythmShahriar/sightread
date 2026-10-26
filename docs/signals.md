@@ -926,7 +926,7 @@ New code names a host the old version never did. Raw IP addresses, blockchain RP
 
 ### False alarms
 
-Hosts already in the old version, the package's own homepage and repository, your domains_ok and the shipped list of well-known hosts are info. So are URLs in readmes, comments and docs folders.
+Hosts already in the old version, the package's own homepage and repository hosts (not shared code hosts such as github.com), your domains_ok and the shipped list of well-known hosts are info. So are URLs in readmes, comments and docs folders.
 
 ### How to review
 

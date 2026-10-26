@@ -12,8 +12,9 @@ how_to_review:
   - "Read what the code sends there and what it does with the answer."
 false_alarms: >-
   Hosts already in the old version, the package's own homepage and
-  repository, your domains_ok and the shipped list of well-known hosts
-  are info. So are URLs in readmes, comments and docs folders.
+  repository hosts (not shared code hosts such as github.com), your
+  domains_ok and the shipped list of well-known hosts are info. So are
+  URLs in readmes, comments and docs folders.
 incidents:
   - name: "Essential Plugin 2025"
     line: "The code found its server through an Ethereum contract over public RPC hosts."

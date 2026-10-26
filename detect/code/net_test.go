@@ -233,3 +233,17 @@ func TestWPConfigRead(t *testing.T) {
 		t.Error("an SSH key read always counts")
 	}
 }
+
+// A repository on a code host vouches for no host: anyone has a
+// github.com/attacker repository.
+func TestOwnHostsSkipCodeHosts(t *testing.T) {
+	s := subject(core.NPM, nil, nil)
+	s.Old = &core.Meta{Homepage: "https://www.acme.test/x", Repository: "git+https://github.com/acme/x.git"}
+	if got := ownHosts(s); !slices.Equal(got, []string{"acme.test"}) {
+		t.Errorf("ownHosts = %q", got)
+	}
+	s.Old = &core.Meta{Repository: "gitlab:acme/x", Homepage: "https://bitbucket.org/acme/x"}
+	if got := ownHosts(s); len(got) != 0 {
+		t.Errorf("ownHosts = %q, want none", got)
+	}
+}

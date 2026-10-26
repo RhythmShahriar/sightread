@@ -81,7 +81,7 @@ update fixes is info with the title `fixes <id>` and the advice
 |---|---|---|
 | `outbound-new-domain`, `unicode-hidden` | `not in code (comment, docs or tests)` | info |
 | `outbound-new-domain` | `listed in signals.domains_ok` | info |
-| `outbound-new-domain` | `the package's own host` | info |
+| `outbound-new-domain` | `the package's own host` (homepage or repository host of the installed version; github.com, gitlab.com, bitbucket.org, codeberg.org, sourceforge.net and git.sr.ht never count) | info |
 | `outbound-new-domain` | `known host` (the shipped known-safe list) | info |
 | `secret-added` | `test or fixture path` | info |
 | `secret-added` | `documented example value` | info |
