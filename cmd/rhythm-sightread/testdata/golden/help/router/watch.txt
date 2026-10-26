@@ -1,0 +1,42 @@
+Usage: rhythm sightread watch -l <sites.yaml> --every <d> | --at <HH:MM> [flags] [-- <review flags>]
+
+Reviews every site of a sites file on a schedule and tells you what is new: an
+update with findings at or above --notify-min, a new signal on a version a site
+already runs (after a signal data update), an owner change or a WordPress.org
+closure of an installed plugin. Each version is notified once. Each run is its
+own rhythm sightread all --sites process, so the watch stays small however long
+it runs; it writes <dir>/<UTC time>.json and prints one line. Ctrl-C lets a
+review in progress finish, then stops; a second Ctrl-C stops the review too.
+Arguments after -- go to every review, e.g. -- --jobs 2.
+
+Flags:
+  --at <time>             run every day at this local time; several separated by
+                          commas, e.g. 02:00,14:00
+  --dir <folder>          folder for reports, logs and state (default: the user
+                          cache, rhythm/sightread/watch/<name>)
+  --every <duration>      run now, then every duration, e.g. 24h or 6h (at least
+                          <dur>)
+  --fail-on-new <level>   exit 1 when a run finds a new finding at or above this
+                          level
+  --html                  also write each run's report as HTML next to its JSON
+  --keep <n>              n runs to keep, oldest deleted first (0 keeps all)
+                          (default 30)
+  -l, --list <file>       the sites.yaml file to review (read again on every
+                          run)
+  --name <name>           the watch's name, in notifications and its folder
+                          (default: the sites file's name)
+  --notify <url>          tell this url what is new: slack://, discord://,
+                          webhook+https:// or smtp:// (repeatable; the SMTP
+                          password comes from SIGHTREAD_SMTP_PASSWORD)
+  --notify-min <level>    lowest finding level notified: info, low, medium, high
+                          or critical (default high)
+  --notify-strict         exit 3 when a notification can't be sent
+  --now                   with --at, also run once right away
+  --once                  run once now and exit (for cron and CI)
+  -v, --verbose           every program started and notification sent to stderr,
+                          secrets masked
+
+Examples:
+  rhythm sightread watch -l sites.yaml --at 02:00 --notify slack://hooks.slack.com/services/T0/B0/XXXX
+  rhythm sightread watch -l sites.yaml --every 24h --notify-min medium --html
+  rhythm sightread watch -l sites.yaml --once --fail-on-new high

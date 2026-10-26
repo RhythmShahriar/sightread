@@ -1,0 +1,3 @@
+Usage: rhythm sightread
+
+On a terminal, asks what to review and prints the command it runs.

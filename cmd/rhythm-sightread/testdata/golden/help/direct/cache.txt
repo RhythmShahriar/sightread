@@ -1,0 +1,13 @@
+Usage: rhythm-sightread cache prune [--older <d>]
+
+prune removes the archive indexes saved more than --older ago and then every
+cached blob no remaining index names. Reviews of those versions download them
+again. The signal data and metadata caches are left alone.
+
+Flags:
+  --older <duration>   remove archives cached longer ago than this duration
+                       (default 30d)
+
+Examples:
+  rhythm-sightread cache prune
+  rhythm-sightread cache prune --older 7d

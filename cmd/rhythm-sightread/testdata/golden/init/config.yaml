@@ -1,0 +1,46 @@
+# Sightread settings for this project. Commit this file.
+# Every key is optional and flags on the command line win.
+# All keys: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Config
+
+# Fail the run (exit 1) on findings at or above this severity:
+# none, info, low, medium, high or critical.
+fail_on: high
+
+# Count only findings at this confidence or surer: confirmed or likely.
+min_confidence: likely
+
+# A release younger than this gets the fresh-release signal.
+min_age: 72h
+
+# What "all" reviews here. These were found when this file was written.
+ecosystems: [wp-plugin, composer]
+
+# Also review packages you don't require directly.
+transitive: false
+
+# Look versions up on OSV for known-malicious and known-vulnerable.
+osv: true
+
+# Versions someone reviewed. Protect this file with CODEOWNERS.
+allow_file: .sightread/allowed.yaml
+
+# Mirrors and private registries, https only. Tokens come from the
+# environment (SIGHTREAD_NPM_TOKEN_<SCOPE>, COMPOSER_AUTH), never from here.
+# sources:
+#   npm:
+#     scopes:
+#       "@acme": https://npm.acme.example
+#   composer:
+#     repositories: [https://repo.acme.example]
+
+# Premium plugins have no official source: say where their zips are.
+# local_files:
+#   gravityforms: ~/vendor-zips/gravityforms-{version}.zip
+
+# Hide a finding someone reviewed. id and reason are required.
+# ignore:
+#   - id: outbound-new-domain
+#     package: wp-plugin:woocommerce
+#     path: src/Internal/Admin/RemoteInboxNotifications/*
+#     reason: WooCommerce inbox notes, reviewed
+#     until: 2027-03-31

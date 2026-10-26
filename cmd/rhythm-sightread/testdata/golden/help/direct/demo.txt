@@ -1,0 +1,19 @@
+Usage: rhythm-sightread demo [--keep]
+
+Reviews three updates of built-in example packages: a routine plugin update, a
+plugin update in the pattern of the 2025 Essential Plugin takeover and an npm
+update that adds an install script and a typosquatted dependency. A server on
+127.0.0.1 publishes them the way WordPress.org and npm do, so the demo runs the
+real review with no network. Nothing is installed and no package code runs.
+--keep keeps the archives, the cache and the example site in a temporary folder
+and prints where.
+
+Flags:
+  --keep       keep the generated archives, cache and site and print their
+               folder
+  --no-color   no colour (also NO_COLOR)
+  --plain      no colour or symbols (also when stdout is not a terminal)
+
+Examples:
+  rhythm-sightread demo
+  rhythm-sightread demo --keep

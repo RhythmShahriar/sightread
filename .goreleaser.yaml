@@ -1,0 +1,81 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Release config. The archive and checksum names are a contract with
+# rhythm/kit/update and the install script: <binary>_<os>_<arch>.tar.gz
+# (.zip on Windows) plus checksums.txt.
+version: 2
+project_name: rhythm-sightread
+
+builds:
+  - main: ./cmd/rhythm-sightread
+    binary: rhythm-sightread
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    # actionSHA is the release commit: init ci pins the Action to it.
+    ldflags: ["-s -w -X main.version={{ .Version }} -X main.actionSHA={{ .FullCommit }}"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    # The binary embeds the Public Suffix List (MPL-2.0) through
+    # golang.org/x/net/publicsuffix, so its license and source ship beside
+    # it.
+    files:
+      - README.md
+      - LICENSE
+      - src: THIRD_PARTY/publicsuffix/*
+        dst: THIRD_PARTY/publicsuffix
+        strip_parent: true
+
+# The data packs (sightread-names.json and sightread-signals.tar.gz,
+# written by go run ./data/gen --pack and committed) are release assets
+# too, listed in the signed checksums.txt: rhythm-sightread update
+# downloads them and checks them against it.
+checksum:
+  name_template: checksums.txt
+  extra_files:
+    - glob: ./data/release/*
+
+# A tag like v1.0.0-rc1 is published as a prerelease, which GitHub never
+# reports as "latest", so rhythm update and the installers don't offer it.
+release:
+  prerelease: auto
+  extra_files:
+    - glob: ./data/release/*
+
+# Keyless Sigstore signature over checksums.txt. The release workflow is
+# called at master, the only identity rhythm update accepts. Verify with
+# scripts/verify-release.sh, which runs:
+#   cosign verify-blob --bundle checksums.txt.sigstore.json \
+#     --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+#     --certificate-identity https://github.com/RhythmShahriar/.github/.github/workflows/release-go.yml@refs/heads/master \
+#     --certificate-github-workflow-repository RhythmShahriar/sightread checksums.txt
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    signature: "${artifact}.sigstore.json"
+    args: [sign-blob, "--bundle=${signature}", "${artifact}", --yes]
+
+changelog:
+  use: github
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Performance
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other
+      order: 999
+  filters:
+    exclude: ['^(docs|test|ci|chore|style)(\(.+\))?!?:']

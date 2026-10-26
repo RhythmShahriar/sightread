@@ -1,0 +1,19 @@
+name: Sightread
+on:
+  pull_request:
+    paths: ["**/composer.lock", "**/package-lock.json", "**/npm-shrinkwrap.json", "**/pnpm-lock.yaml", "**/yarn.lock", "**/bun.lock"]
+  schedule:
+    - cron: "17 3 * * 1"
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  sightread:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: {fetch-depth: 0}
+      - uses: RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below
+        with:
+          fail-on: high
+          comment: true

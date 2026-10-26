@@ -1,0 +1,147 @@
+Usage: rhythm-sightread plugin <slug>... [flags]
+
+Reviews a WordPress.org plugin update before you install it. Sightread fetches
+the installed version and the one WordPress.org offers, checks both against
+WordPress.org's checksums, diffs them and ranks what is new. Without --from it
+reads the installed version under --path. It never runs the code.
+
+Versions:
+  --to <version>                 the candidate version: latest (plugins,
+                                 themes), wanted (composer, npm), installed,
+                                 x.y.z, an npm dist-tag, or list to print the
+                                 published versions
+  --from <version>               the installed version (default: read from
+                                 --path, --wp, --from-tuner or the lockfile)
+  --to-file <file>               the candidate from a local zip, tgz or folder
+                                 (file; premium plugins, vendor downloads);
+                                 marked unverified
+  --from-file <file>             the installed version from a local zip, tgz or
+                                 folder (file)
+  --path <folder>                the site or project folder: a WordPress root or
+                                 a folder with lockfiles (default .)
+  --wp <command>                 read installed WordPress versions with this
+                                 WP-CLI command, e.g. "ssh deploy@host -- wp
+                                 --path=/srv/www"
+  --from-tuner <report>          read installed plugin and theme versions from a
+                                 rhythm-tuner JSON report
+  --allow-downgrade              review a --to older than the installed version
+  --pre                          let latest and wanted pick pre-releases
+  --transitive                   composer and npm: review transitive
+                                 dependencies too
+  --only <packages>              only these packages: ecosystem IDs or
+                                 <eco>:<name> globs, e.g.
+                                 wp-plugin:*,npm:@acme/*
+  --skip <packages>              leave these packages out (same form as --only)
+
+Sources and integrity:
+  --offline                      use cached archives only (RHYTHM_OFFLINE=1 does
+                                 the same)
+  --allow-unverified             review packages whose integrity couldn't be
+                                 checked and let --fail-on pass them
+  --allow-partial                let --fail-on pass a run with packages not
+                                 checked, fetch failures or timeouts
+  --svn-check                    verify themes file by file against
+                                 themes.svn.wordpress.org
+  --no-osv                       don't ask api.osv.dev for known malicious and
+                                 vulnerable versions
+  --check-confusion              ask the public registry about private names
+                                 (this sends them there)
+  --max-size <size>              largest archive to download, a size in KB, MB
+                                 or GB (KiB, MiB, GiB); unpacked it may be 4
+                                 times that, at most 1GiB (default 256MB)
+  --timeout <duration>           how long one request may take (a duration such
+                                 as <dur>) (default <dur>)
+  --deadline <duration>          how long the whole run may take (a duration
+                                 such as <dur>) (default <dur>)
+  --retries <n>                  n retries after network errors, 429 and 503
+                                 (default 2)
+  --jobs <n>                     n packages reviewed in parallel (at most 4
+                                 requests per host) (default 4)
+  --proxy <url>                  HTTP proxy url (default HTTPS_PROXY)
+  -A, --user-agent <header>      the User-Agent header (default
+                                 rhythm-sightread/<version>
+                                 (+https://github.com/RhythmShahriar/sightread))
+
+Signals:
+  --signals <folder>             load extra signal YAML from this folder
+                                 (repeatable)
+  --no-signal-updates            use the built-in signals and names, not a newer
+                                 downloaded pack
+  --id <ids>                     only findings with these signal ids (globs)
+  --exclude-id <ids>             drop findings with these signal ids (globs);
+                                 integrity and allow signals always stay
+  --severity <level>             hide findings below this level: info, low,
+                                 medium, high or critical (default info)
+  --min-confidence <confidence>
+                                 confidence a finding needs to count: confirmed
+                                 or likely (config min_confidence) (default
+                                 likely)
+  --min-age <duration>           fresh-release fires for a candidate younger
+                                 than this duration (config min_age) (default
+                                 72h)
+
+Gate:
+  --fail-on <level>              exit 1 on a finding at or above this level:
+                                 none, info, low, medium, high or critical
+                                 (config fail_on; default none)
+  --baseline <report>            hide findings already in this saved JSON report
+  --no-allow                     ignore .sightread/allowed.yaml for this run
+  --config <file>                config file (default: the nearest
+                                 .sightread/config.yaml here or above)
+  --no-config                    read no config, for folders you don't trust
+
+Output:
+  --json                         print the rhythm-sightread/v1 JSON report
+  --jsonl                        print one JSON line per update as it finishes,
+                                 then the summary
+  --md                           print Markdown for pull requests and job
+                                 summaries
+  --html                         print a standalone HTML report with the full
+                                 diff
+  --sarif                        print SARIF 2.1.0 for GitHub code scanning
+  -o, --output <file>            also write the report to this file, format from
+                                 .json .jsonl .md .html or .sarif (repeatable;
+                                 written once complete)
+  --open                         open the HTML report when done
+  --diff                         print every changed hunk, not just the ones
+                                 findings point at
+  --max-findings <n>             n findings shown per update on the terminal
+                                 (default 10)
+  --sign                         sign the JSON report (<file>.json.sig, Ed25519)
+  --redact-paths                 write paths relative to the target or ~
+                                 (default on when CI is set)
+  -q, --quiet                    verdicts and findings only
+  --plain                        no color, boxes or glyphs (also when stdout is
+                                 not a terminal)
+  --no-color                     no color (NO_COLOR does the same)
+  -v, --verbose                  every request, hash and program started to
+                                 stderr, header values masked
+
+Soundcheck:
+  --soundcheck <url>             install the update on this staging url and
+                                 compare it before and after with
+                                 rhythm-soundcheck
+  --apply <command>              composer and npm, or a remote --wp: the command
+                                 that installs the update on staging
+  --rollback                     reinstall the reviewed old version when
+                                 Soundcheck finds changes at
+                                 --soundcheck-fail-on
+  --soundcheck-fail-on <class>   Soundcheck change class that fails: broke, new
+                                 or changed (default broke)
+  --soundcheck-anyway            install on staging even when the update is on
+                                 HOLD
+  --skip-roadie-verify           don't check the staging copy with rhythm-roadie
+                                 verify (the report says so)
+
+Examples:
+  rhythm-sightread plugin akismet --from 5.3.3
+  rhythm-sightread plugin woocommerce --path /var/www/shop -o review.html --open
+  rhythm-sightread plugin akismet --to list
+  rhythm-sightread plugin gravityforms --to-file ~/zips/gravityforms-2.9.1.zip
+
+Contacts: api.wordpress.org, downloads.wordpress.org, plugins.svn.wordpress.org,
+themes.svn.wordpress.org, repo.packagist.org, packagist.org, api.github.com,
+codeload.github.com, registry.npmjs.org and api.osv.dev. It sends package names
+and versions only and never uploads site files.
+
+Arguments after -- go to rhythm-soundcheck snapshot.

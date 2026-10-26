@@ -1,0 +1,32 @@
+Usage: rhythm-sightread allow <eco:name@version>... --reason <text> | --from <report.json> | list | remove <ref> | import <file>
+
+Records that someone reviewed a version, so later reviews show its findings as
+allowed. An entry is bound to the sha256 of the archive that was verified: allow
+fetches and verifies the version itself, or takes the hash from a saved report
+with --from. It refuses a version that couldn't be verified or doesn't match its
+published hash. list prints the entries, remove drops one and import merges
+another allowed.yaml. Commit the file and protect it with CODEOWNERS.
+
+Flags:
+  --by <name>       the name of who reviewed it (default git config user.name,
+                    else $USER)
+  --config <file>   read this config file instead of the nearest
+                    .sightread/config.yaml
+  --file <file>     the allow file (default .sightread/allowed.yaml next to the
+                    config)
+  --from <report>   take every update of this saved JSON report
+  --json            allow list: print the kind allowed JSON document
+  --no-config       read no config
+  --offline         use only cached archives (also RHYTHM_OFFLINE)
+  --reason <text>   why it is accepted, in text the next person understands
+                    (required when adding)
+  --signals <IDs>   only these signal IDs (default every finding of that
+                    version)
+  --until <date>    date (YYYY-MM-DD) after which the entry no longer counts
+
+Examples:
+  rhythm-sightread allow npm:sharp@0.33.5 --reason "known install script" --signals npm-install-script-new
+  rhythm-sightread allow --from review.json --reason "reviewed in PR 412"
+  rhythm-sightread allow list --json
+  rhythm-sightread allow remove npm:sharp@0.33.5
+  rhythm-sightread allow import ~/agency/allowed.yaml

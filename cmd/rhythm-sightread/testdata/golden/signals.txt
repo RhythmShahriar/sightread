@@ -1,0 +1,49 @@
+ID                        SEVERITY  CONFIDENCE  ECOSYSTEMS                       NAME
+integrity-mismatch        critical  confirmed   wp-plugin,wp-theme,composer,npm  Archive does not match the published hash (can't be ignored)
+version-republished       critical  confirmed   npm,composer                     Same version, different bytes than the lockfile recorded (can't be ignored)
+approved-version-changed  critical  confirmed   wp-plugin,wp-theme,composer,npm  Allowed version now has a different hash (can't be ignored)
+known-malicious           critical  confirmed   npm,composer                     Listed as malicious by OSV (can't be ignored)
+wporg-closed              critical  confirmed   wp-plugin,wp-theme               Closed on WordPress.org
+archive-path-escape       critical  confirmed   wp-plugin,wp-theme,composer,npm  Archive entry points outside the package (can't be ignored)
+remote-fetch-exec         critical  confirmed   wp-plugin,wp-theme,composer,npm  Fetches remote code and runs it
+decode-exec               critical  confirmed   wp-plugin,wp-theme,composer,npm  Decodes hidden code and runs it
+admin-user-hidden         critical  confirmed   wp-plugin,wp-theme               Hides users from the admin user list
+lockfile-source-change    high      confirmed   npm,composer                     Lockfile entry moved off the registry
+archive-link              high      confirmed   wp-plugin,wp-theme,composer,npm  Archive holds a link or special file
+archive-collision         high      confirmed   wp-plugin,wp-theme,composer,npm  Archive holds two entries with the same name
+unanalysed                high      confirmed   wp-plugin,wp-theme,composer,npm  Code that could not be analysed
+eval-dynamic              high      confirmed   wp-plugin,wp-theme,composer,npm  Runs code built at run time
+obfuscation               high      likely      wp-plugin,wp-theme,composer,npm  Adds a large encoded or scrambled blob
+input-unserialize         high      likely      wp-plugin,wp-theme,composer      Unserializes request or remote data
+write-outside-package     high      likely      wp-plugin,wp-theme,composer,npm  Writes files outside its own folder
+admin-user-create         high      confirmed   wp-plugin,wp-theme               Creates an administrator account
+capability-change         high      likely      wp-plugin,wp-theme               Grants admin capabilities to another role
+update-suppression        high      likely      wp-plugin,wp-theme               Blocks updates of other plugins or themes
+bot-cloaking              high      likely      wp-plugin,wp-theme,npm           Shows search engines different content
+credential-access         high      likely      wp-plugin,wp-theme,composer,npm  Reads credentials or tokens
+data-exfil                high      likely      wp-plugin,wp-theme,composer,npm  Sends site data to a new host
+code-in-asset             high      confirmed   wp-plugin,wp-theme,composer,npm  Hides code in an image, font or text file
+npm-install-script-new    high      confirmed   npm                              Adds or changes an install script
+composer-plugin-new       high      confirmed   composer                         Runs code when Composer installs it
+owner-change              high      confirmed   wp-plugin,wp-theme,composer,npm  New owner or publisher
+provenance-dropped        high      confirmed   npm                              Release lost its build provenance
+typosquat                 high      likely      npm,composer                     New dependency named like a popular package
+known-vulnerable          high      confirmed   npm,composer                     Has a known vulnerability
+dependency-confusion      critical  confirmed   npm,composer                     Private name also published publicly
+outbound-new-domain       medium    confirmed   wp-plugin,wp-theme,composer,npm  Contacts a new domain
+rest-open-route           medium    likely      wp-plugin,wp-theme               Adds a REST route anyone can call
+changelog-mismatch        medium    likely      wp-plugin,wp-theme,composer,npm  Changelog does not mention what the code adds
+dependency-new            medium    confirmed   npm,composer                     Adds a runtime dependency
+composer-autoload-files   medium    confirmed   composer                         Adds a file that runs on every request
+fresh-release             medium    likely      wp-plugin,wp-theme,composer,npm  Released very recently
+dormant-release           medium    likely      wp-plugin,wp-theme,composer,npm  First release after a long silence
+git-tag-missing           medium    likely      npm                              No matching tag in the repository
+size-jump                 medium    likely      wp-plugin,wp-theme,composer,npm  Code grew far more than usual
+unicode-hidden            medium    confirmed   wp-plugin,wp-theme,composer,npm  Hidden or bidirectional characters in code
+secret-added              medium    confirmed   wp-plugin,wp-theme,composer,npm  Adds a credential to the code
+cron-new-hook             low       confirmed   wp-plugin,wp-theme               Schedules a new background task
+license-change            low       confirmed   wp-plugin,wp-theme,composer,npm  License changed
+abandoned                 low       confirmed   wp-plugin,wp-theme,composer      Marked abandoned or not updated in years
+local-drift               info      confirmed   wp-plugin,wp-theme,composer      Installed copy differs from the official one
+php-requirement           info      confirmed   wp-plugin,wp-theme,composer      PHP requirement changed
+files-removed             info      confirmed   wp-plugin,wp-theme,composer,npm  Removes security-relevant files

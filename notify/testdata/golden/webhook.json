@@ -1,0 +1,75 @@
+{
+  "schema": "rhythm-sightread-notify/v1",
+  "tool": "rhythm-sightread",
+  "version": "<version>",
+  "watch": "agency",
+  "min_severity": "high",
+  "summary": "Sightread agency: 1 update to look at, 1 new signal on a version you already run, 1 owner change, 1 closed plugin or theme",
+  "report": "/home/ann/.cache/rhythm/sightread/watch/agency/20261026T160000Z.json",
+  "items": [
+    {
+      "kind": "update",
+      "ecosystem": "wp-plugin",
+      "name": "wpforms-lite",
+      "from": "1.9.1",
+      "to": "1.9.2",
+      "verdict": "hold",
+      "sites": [
+        "site01",
+        "site02",
+        "site03",
+        "site04",
+        "site05",
+        "site06",
+        "site07",
+        "site08",
+        "site09",
+        "site10",
+        "site11",
+        "site12",
+        "site13",
+        "site14"
+      ],
+      "severity": "critical",
+      "findings": 3,
+      "top": "Remote code fetched and run with sk_l•••••�]0;PWNED�"
+    },
+    {
+      "kind": "new-signal",
+      "ecosystem": "npm",
+      "name": "left-pad",
+      "from": "1.2.0",
+      "to": "1.3.0",
+      "verdict": "review",
+      "sites": [
+        "api"
+      ],
+      "severity": "high",
+      "findings": 1,
+      "top": "New install script \u003c@everyone\u003e **bold**"
+    },
+    {
+      "kind": "owner-change",
+      "ecosystem": "wp-plugin",
+      "name": "share-kit",
+      "to": "3.2.0",
+      "sites": [
+        "shop",
+        "blog"
+      ],
+      "findings": 0,
+      "detail": "now growth-partners (was alice)"
+    },
+    {
+      "kind": "closed",
+      "ecosystem": "wp-plugin",
+      "name": "gone",
+      "to": "2.0.0",
+      "sites": [
+        "shop"
+      ],
+      "findings": 0,
+      "detail": "security issue"
+    }
+  ]
+}
