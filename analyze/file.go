@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/lex/js"
@@ -46,17 +47,32 @@ func reasonUnterminated(construct string, line int) string {
 const checkEvery = 64 << 10
 
 // clock is one file's analysis time budget (Limits.FileBudget). The
-// walk ticks it with the tokens it reads and looks at the context's
-// deadline every checkEvery tokens; once over, every phase stops and
-// the file is Unanalysed with reasonTimeLimit. A nil clock never runs
-// out. One file's analysis runs on one goroutine, so it needs no lock.
+// walk ticks it with the tokens it reads and looks at the deadline and
+// the context every checkEvery tokens; once over, every phase stops and
+// the file is Unanalysed with reasonTimeLimit. Time spent waiting for
+// other files (pause) moves the deadline, so the result never depends
+// on how busy the other workers were. A nil clock never runs out. One
+// file's analysis runs on one goroutine, so it needs no lock.
 type clock struct {
-	ctx   context.Context
-	count int
-	over  bool
+	ctx      context.Context
+	deadline time.Time // zero: only ctx ends the budget
+	count    int
+	over     bool
 }
 
-func newClock(ctx context.Context) *clock { return &clock{ctx: ctx} }
+// newClock starts a budget of d from now; d <= 0 has no deadline.
+func newClock(ctx context.Context, d time.Duration) *clock {
+	c := &clock{ctx: ctx}
+	if d > 0 {
+		c.deadline = time.Now().Add(d)
+	}
+	return c
+}
+
+// done reports whether the context ended or the deadline passed.
+func (c *clock) done() bool {
+	return c.ctx.Err() != nil || !c.deadline.IsZero() && time.Now().After(c.deadline)
+}
 
 // tick counts n tokens and reports whether the budget is spent.
 func (c *clock) tick(n int) bool {
@@ -69,7 +85,7 @@ func (c *clock) tick(n int) bool {
 	c.count += n
 	if c.count >= checkEvery {
 		c.count = 0
-		c.over = c.ctx.Err() != nil
+		c.over = c.done()
 	}
 	return c.over
 }
@@ -79,10 +95,20 @@ func (c *clock) expired() bool {
 	if c == nil {
 		return false
 	}
-	if !c.over && c.ctx.Err() != nil {
+	if !c.over && c.done() {
 		c.over = true
 	}
 	return c.over
+}
+
+// pause stops the budget until the returned func runs, for a wait on
+// other files.
+func (c *clock) pause() func() {
+	if c == nil || c.deadline.IsZero() {
+		return func() {}
+	}
+	start := time.Now()
+	return func() { c.deadline = c.deadline.Add(time.Since(start)) }
 }
 
 // analyzeCode is codeFeatures with a decode budget shared by a package

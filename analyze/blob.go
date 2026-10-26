@@ -16,8 +16,11 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"unicode/utf8"
+
+	"golang.org/x/sync/semaphore"
 
 	"github.com/RhythmShahriar/sightread/core"
 )
@@ -62,14 +65,35 @@ const (
 	decodedNone = "none"
 )
 
-// decodeBudget is what a package may still decode, shared by the
-// workers of one analysis.
-type decodeBudget struct{ left atomic.Int64 }
+// decodeBudget is what a file may still decode. A file of a tree gets
+// what the files before it in path order left of the package's
+// maxPackageOut (see decodeOrder), learnt through ready on its first
+// decode; text outside a tree gets the whole of it. One file decodes on
+// one goroutine, so the budget needs no lock beyond the atomic.
+type decodeBudget struct {
+	left atomic.Int64
+	// ready, when set, runs once before the first decode and returns
+	// the bytes the file may decode. It may wait for other files.
+	ready func() int64
+	once  sync.Once
+	start int64 // what the budget held when it started
+}
 
 func newDecodeBudget() *decodeBudget {
-	b := &decodeBudget{}
+	b := &decodeBudget{start: maxPackageOut}
 	b.left.Store(maxPackageOut)
 	return b
+}
+
+// begin runs ready once, so the budget holds what is left for the file.
+func (b *decodeBudget) begin() {
+	if b == nil || b.ready == nil {
+		return
+	}
+	b.once.Do(func() {
+		b.start = max(b.ready(), 0)
+		b.left.Store(b.start)
+	})
 }
 
 // take reserves n bytes and reports whether the budget had them.
@@ -77,11 +101,20 @@ func (b *decodeBudget) take(n int) bool {
 	if b == nil {
 		return true
 	}
+	b.begin()
 	if b.left.Add(-int64(n)) < 0 {
 		b.left.Store(-1)
 		return false
 	}
 	return true
+}
+
+// used is how many bytes the budget let decode.
+func (b *decodeBudget) used() int64 {
+	if b == nil {
+		return 0
+	}
+	return b.start - max(b.left.Load(), 0)
 }
 
 // errLimit is a decode step that would pass a limit.
@@ -92,6 +125,11 @@ type decodeEnv struct {
 	budget *decodeBudget
 	layers int    // decode layers left for payloads found in this file
 	clk    *clock // the file's time budget, shared with its payloads
+	// mem, when set, is the analysis' budget of decoded bytes in
+	// analysis at once (decodeInflight). A payload holds its size from
+	// it while it is analysed; payloads nested inside it run with mem
+	// nil, inside that hold.
+	mem *semaphore.Weighted
 	// own names the package's own plugin folders (see ownDirs), so an
 	// update filter can tell its own entry from another plugin's.
 	own []string
@@ -597,14 +635,41 @@ func (b *blobScan) found(i, j int, enc string, data []byte, text string, chain [
 	})
 }
 
+// decodeInflight is how many decoded bytes the workers of one analysis
+// hold in analysis at once. A decoded payload costs about a hundred
+// times its size to analyse, like source (see inflight); a few KiB
+// of source can decode to a MiB, so payloads take turns on a budget of
+// their own instead of riding on their file's source size.
+const decodeInflight = 2 << 20
+
+// analyzeDecoded analyses a decoded payload in Context decoded with the
+// layers left, holding its size from env.mem while it does. The wait
+// for that hold does not count against the file's time budget. It
+// reports false when the analysis was canceled while waiting.
+func analyzeDecoded(l lang, p string, text []byte, layers int, env decodeEnv) ([]core.Feature, []core.Unanalysed, bool) {
+	inner := decodeEnv{budget: env.budget, layers: layers, clk: env.clk, own: env.own}
+	if env.mem != nil && env.clk != nil {
+		w := min(max(int64(len(text)), 1), decodeInflight)
+		resume := env.clk.pause()
+		err := env.mem.Acquire(env.clk.ctx, w)
+		resume()
+		if err != nil {
+			return nil, nil, false
+		}
+		defer env.mem.Release(w)
+	}
+	fs, un := analyzeCode(l, p, text, core.CtxDecoded, inner)
+	return fs, un, true
+}
+
 // payload analyses decoded code as a file of its own in Context
 // decoded, then moves its evidence to the blob's lines.
 func (b *blobScan) payload(l lang, text []byte, line, end, layers int) {
 	if l == langPHP && !bytes.Contains(text, []byte("<?")) {
 		text = append([]byte("<?php "), text...)
 	}
-	fs, un := analyzeCode(l, b.path, text, core.CtxDecoded, decodeEnv{budget: b.env.budget, layers: layers, clk: b.env.clk, own: b.env.own})
-	if len(un) > 0 {
+	fs, un, ok := analyzeDecoded(l, b.path, text, layers, b.env)
+	if !ok || len(un) > 0 {
 		b.un = true
 	}
 	for _, f := range fs {
@@ -685,8 +750,8 @@ func assetFeatures(p string, src []byte, env decodeEnv) ([]core.Feature, []core.
 		}
 		line := strings.Count(s[:k], "\n") + 1
 		addDataURI(col, env, p, s[k:e], k, line, line, func(l lang, text []byte, layers int) {
-			fs, un := analyzeCode(l, p, text, core.CtxDecoded, decodeEnv{budget: env.budget, layers: layers, clk: env.clk, own: env.own})
-			limit = limit || len(un) > 0
+			fs, un, ok := analyzeDecoded(l, p, text, layers, env)
+			limit = limit || !ok || len(un) > 0
 			for _, f := range fs {
 				f.Ev.Line, f.Ev.EndLine = line, line
 				payloads = append(payloads, f)

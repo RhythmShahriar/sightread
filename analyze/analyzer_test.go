@@ -254,7 +254,7 @@ func TestClock(t *testing.T) {
 		t.Error("a nil clock ran out")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	c := newClock(ctx)
+	c := newClock(ctx, 0)
 	if c.tick(checkEvery) {
 		t.Error("ran out before the deadline")
 	}
@@ -265,6 +265,23 @@ func TestClock(t *testing.T) {
 	if !c.tick(1) || !c.expired() || !c.tick(0) {
 		t.Error("did not run out after the deadline")
 	}
+}
+
+// A paused clock does not spend its budget; an unpaused one runs out.
+func TestClockPause(t *testing.T) {
+	c := newClock(context.Background(), 20*time.Millisecond)
+	resume := c.pause()
+	time.Sleep(40 * time.Millisecond)
+	resume()
+	if c.expired() {
+		t.Error("the pause counted against the budget")
+	}
+	time.Sleep(40 * time.Millisecond)
+	if !c.expired() {
+		t.Error("did not run out after the deadline")
+	}
+	var nilClock *clock
+	nilClock.pause()()
 }
 
 // T-31: a 50 MiB single-line minified file finishes inside the budget:

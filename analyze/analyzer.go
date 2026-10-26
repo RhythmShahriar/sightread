@@ -69,7 +69,6 @@ type fileResult struct {
 	feats    []core.Feature
 	un       []core.Unanalysed
 	minified bool
-	decoded  int64 // bytes its blobs decoded, for the package budget
 }
 
 // Analyze returns the features of the files at paths in t. Code files
@@ -78,12 +77,14 @@ type fileResult struct {
 // style sheets and SVG files give data URIs; assets, binary files and
 // plain text files are checked for hidden code. Every limit fails
 // closed: a code file over lim.EntryAnalysed, one whose analysis takes
-// longer than lim.FileBudget, one with an unterminated construct and
-// one whose blobs hit a decode limit are listed in Unanalysed with the
-// reason. Files are analysed on GOMAXPROCS workers that together hold
-// at most 4 MiB of source in analysis to bound memory. The result is
-// the same on every run: features sorted by path, line, kind and key.
-// Only a done ctx is an error.
+// longer than lim.FileBudget, one with an unterminated construct or
+// code nested too deep and one whose blobs hit a decode limit are
+// listed in Unanalysed with the reason. Files are analysed on
+// GOMAXPROCS workers that together hold at most 4 MiB of source and
+// 2 MiB of decoded payloads in analysis to bound memory; the whole
+// package decodes at most 16 MiB. The result is the same on every run:
+// features sorted by path, line, kind and key. Only a done ctx is an
+// error.
 func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim core.Limits) (*core.FeatureSet, error) {
 	lim = withDefaults(lim)
 	set := core.NewFeatureSet()
@@ -95,22 +96,44 @@ func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim c
 	slices.Sort(paths)
 	paths = slices.Compact(paths)
 	results := make([]fileResult, len(paths))
-	jobs := make(chan int)
+	type job struct {
+		i      int
+		f      core.File
+		weight int64
+	}
+	jobs := make(chan job)
 	mem := semaphore.NewWeighted(inflight)
+	run := &analysis{t: t, lim: lim, own: own, decodeMem: semaphore.NewWeighted(decodeInflight), order: newDecodeOrder(len(paths))}
 	var wg sync.WaitGroup
 	for range max(1, min(runtime.GOMAXPROCS(0), len(paths))) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for i := range jobs {
+			for j := range jobs {
 				if ctx.Err() == nil {
-					results[i] = analyzeFile(ctx, t, paths[i], lim, mem, own)
+					results[j.i] = run.file(ctx, j.i, paths[j.i], j.f)
 				}
+				mem.Release(j.weight)
 			}
 		}()
 	}
-	for i := range paths {
-		jobs <- i
+	// Files take their share of mem here, in path order, before a
+	// worker starts them: a file that waits in decodeOrder for the
+	// files before it then never holds memory those files still need.
+	for i, p := range paths {
+		f, ok := run.wanted(p)
+		if !ok {
+			run.order.finish(i, 0)
+			continue
+		}
+		// The read and the analysis hold the file's size from mem. The
+		// size the tree records is that of the stored blob, which Open
+		// checks, so the bytes read never exceed it.
+		w := memWeight(f.Size)
+		if err := mem.Acquire(ctx, w); err != nil {
+			break // canceled: Analyze returns ctx's error
+		}
+		jobs <- job{i: i, f: f, weight: w}
 	}
 	close(jobs)
 	wg.Wait()
@@ -121,27 +144,79 @@ func (Analyzer) Analyze(ctx context.Context, t *core.Tree, paths []string, lim c
 	return set, nil
 }
 
-// merge adds the results to set in path order. The package decode
-// budget (16 MiB) is applied here, in path order, rather than shared by
-// the workers as they go, so which file passes it never depends on
-// scheduling: a file whose blobs decode past it loses its decoded
-// features and is Unanalysed with reasonDecodeLimit.
+// analysis is what the workers of one Analyze call share.
+type analysis struct {
+	t         *core.Tree
+	lim       core.Limits
+	own       []string
+	decodeMem *semaphore.Weighted
+	order     *decodeOrder
+}
+
+// decodeOrder hands out the package decode budget (maxPackageOut) in
+// path order, so which file runs out never depends on scheduling and
+// the whole package decodes at most maxPackageOut however many files
+// hold payloads. A file that decodes waits, on its first decode, until
+// every file before it has finished, then gets what they left. Files
+// that decode nothing never wait. Workers take files in path order, so
+// the files waited on are always running or done.
+type decodeOrder struct {
+	mu      sync.Mutex
+	done    []bool
+	used    []int64
+	next    int           // files [0, next) are finished
+	spent   int64         // what files [0, next) decoded
+	changed chan struct{} // closed and replaced when next moves
+}
+
+func newDecodeOrder(n int) *decodeOrder {
+	return &decodeOrder{done: make([]bool, n), used: make([]int64, n), changed: make(chan struct{})}
+}
+
+// finish records that file i is done after decoding used bytes.
+func (o *decodeOrder) finish(i int, used int64) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.done[i], o.used[i] = true, used
+	moved := false
+	for o.next < len(o.done) && o.done[o.next] {
+		o.spent += o.used[o.next]
+		o.next++
+		moved = true
+	}
+	if moved {
+		close(o.changed)
+		o.changed = make(chan struct{})
+	}
+}
+
+// left waits until every file before i has finished and returns what
+// they left of the package budget; 0 when ctx ends first.
+func (o *decodeOrder) left(ctx context.Context, i int) int64 {
+	for {
+		o.mu.Lock()
+		if o.next >= i {
+			left := maxPackageOut - o.spent
+			o.mu.Unlock()
+			return max(left, 0)
+		}
+		ch := o.changed
+		o.mu.Unlock()
+		select {
+		case <-ch:
+		case <-ctx.Done():
+			return 0
+		}
+	}
+}
+
+// merge adds the results to set in path order.
 func merge(set *core.FeatureSet, paths []string, results []fileResult) {
-	var decoded int64
 	for i, r := range results {
-		decoded += r.decoded
-		over := r.decoded > 0 && decoded > maxPackageOut
 		for _, f := range r.feats {
-			if over && f.Context == core.CtxDecoded {
-				continue
-			}
 			set.Add(f)
 		}
-		un := r.un
-		if over {
-			un = append(un, core.Unanalysed{Path: paths[i], Reason: reasonDecodeLimit})
-		}
-		set.Unanalysed = append(set.Unanalysed, un...)
+		set.Unanalysed = append(set.Unanalysed, r.un...)
 		if r.minified {
 			set.Minified = append(set.Minified, paths[i])
 		}
@@ -189,14 +264,40 @@ func manifest(p string) bool {
 // styleExts are the style sheets read for data URIs.
 var styleExts = map[string]bool{".css": true, ".scss": true, ".sass": true, ".less": true}
 
-// analyzeFile analyses one file of t within its time budget, holding
-// its size in bytes (at most the whole budget) from mem while it reads
-// and analyses it. The time budget starts after any wait.
-func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, mem *semaphore.Weighted, own []string) fileResult {
-	f, ok := t.Lookup(p)
+// wanted returns the file at p and whether it is read at all.
+func (a *analysis) wanted(p string) (core.File, bool) {
+	f, ok := a.t.Lookup(p)
 	if !ok || f.Mode&fs.ModeType != 0 {
-		return fileResult{} // removed, or a link: the archive issues cover links
+		return f, false // removed, or a link: the archive issues cover links
 	}
+	switch f.Kind {
+	case core.KindPHP, core.KindJS, core.KindMinified:
+		return f, true
+	case core.KindJSON:
+		return f, true
+	case core.KindText, core.KindAsset, core.KindBinary:
+	default:
+		return f, false // archives are listed, not opened
+	}
+	ext := strings.ToLower(path.Ext(p))
+	doc := f.Kind == core.KindText && pathContext(p) == core.CtxDoc
+	return f, assetChecked(p, f.Kind) || styleExts[ext] || ext == ".svg" || doc || secretText(p, f.Kind)
+}
+
+// file analyses file i of the tree, at p, within its time budget. The
+// caller holds the file's size from the source memory budget and
+// records it as finished in the decode order.
+func (a *analysis) file(ctx context.Context, i int, p string, f core.File) (r fileResult) {
+	lim := a.lim
+	clk := newClock(ctx, lim.FileBudget)
+	budget := &decodeBudget{ready: func() int64 {
+		// Waiting for the files before this one is not this file's
+		// analysis time.
+		resume := clk.pause()
+		defer resume()
+		return a.order.left(ctx, i)
+	}}
+	defer func() { a.order.finish(i, budget.used()) }()
 	ext := strings.ToLower(path.Ext(p))
 	var l lang
 	code := false
@@ -205,52 +306,24 @@ func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, m
 		l, code = langPHP, true
 	case core.KindJS, core.KindMinified:
 		l, code = langJS, true
-	case core.KindJSON, core.KindText, core.KindAsset, core.KindBinary:
-	default:
-		return fileResult{} // archives are listed, not opened
 	}
 	asset := assetChecked(p, f.Kind)
 	style := styleExts[ext] || ext == ".svg"
 	doc := f.Kind == core.KindText && pathContext(p) == core.CtxDoc
-	if !code && !asset && !style && !doc && f.Kind != core.KindJSON && !secretText(p, f.Kind) {
-		return fileResult{}
-	}
-	// The read and the analysis hold the file's size from mem. The size
-	// an archive claims sets the first hold, so a worker waits before it
-	// reads; the bytes actually read can only raise it.
-	weight := memWeight(f.Size)
-	if err := mem.Acquire(ctx, weight); err != nil {
-		return fileResult{} // canceled: Analyze returns ctx's error
-	}
-	defer func() { mem.Release(weight) }()
-	src, tail, over, err := readFile(t, f, lim.EntryAnalysed, asset)
-	if w := memWeight(int64(len(src) + len(tail))); err == nil && w > weight {
-		// Let go before asking for more, so two workers never each
-		// hold part of the budget while waiting for the rest.
-		mem.Release(weight)
-		weight = 0
-		if err := mem.Acquire(ctx, w); err != nil {
-			return fileResult{}
-		}
-		weight = w
-	}
+	src, tail, over, err := readFile(a.t, f, lim.EntryAnalysed, asset)
 	if err != nil {
 		return fileResult{un: []core.Unanalysed{{Path: p, Reason: reasonUnread}}}
 	}
 	if over {
 		return oversized(p, f.Kind, src, tail, lim.EntryAnalysed, code, asset)
 	}
-	fctx, cancel := context.WithTimeout(ctx, lim.FileBudget)
-	defer cancel()
-	budget := newDecodeBudget()
-	env := decodeEnv{budget: budget, layers: maxLayers, clk: newClock(fctx), own: own}
-	var r fileResult
+	env := decodeEnv{budget: budget, layers: maxLayers, clk: clk, own: a.own, mem: a.decodeMem}
 	switch {
 	case code:
 		r.feats, r.un = analyzeCode(l, p, src, pathContext(p), env)
 		r.minified = minified(p, f.Kind, src)
 	case f.Kind == core.KindJSON:
-		_, gyp := t.Lookup(path.Join(path.Dir(p), "binding.gyp"))
+		_, gyp := a.t.Lookup(path.Join(path.Dir(p), "binding.gyp"))
 		r.feats = jsonFeatures(p, src, gyp)
 	case doc:
 		r.feats = docFeatures(p, src)
@@ -274,7 +347,6 @@ func analyzeFile(ctx context.Context, t *core.Tree, p string, lim core.Limits, m
 		}
 	}
 	sortFeatures(r.feats)
-	r.decoded = maxPackageOut - max(budget.left.Load(), 0)
 	return r
 }
 
@@ -494,9 +566,7 @@ func (Analyzer) AnalyzeText(ctx context.Context, kind core.FileKind, p string, s
 		set.Unanalysed = []core.Unanalysed{{Path: p, Reason: reasonTooBig(lim.EntryAnalysed)}}
 		return set, nil
 	}
-	fctx, cancel := context.WithTimeout(ctx, lim.FileBudget)
-	defer cancel()
-	feats, un := analyzeText(kind, p, src, decodeEnv{budget: newDecodeBudget(), layers: maxLayers, clk: newClock(fctx)})
+	feats, un := analyzeText(kind, p, src, decodeEnv{budget: newDecodeBudget(), layers: maxLayers, clk: newClock(ctx, lim.FileBudget)})
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}

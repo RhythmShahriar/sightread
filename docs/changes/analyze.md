@@ -133,6 +133,7 @@ padding or a broken construct can never hide code silently.
 | `file over 4 MiB` | a code file, `package.json` or `composer.json` over the analysis limit (the size follows the limit: `file over <n> MiB`, `KiB` or `bytes`); also an oversized asset whose start or last 1 MiB holds code |
 | `analysis time limit` | analysing one file took longer than its budget (2 s); features found before the limit are kept |
 | `unterminated <construct> at line <n>` | a PHP string, heredoc, nowdoc, comment, attribute or shell string, or a JavaScript comment or template, never ends; the code before it is still analysed. A JavaScript quote that does not close on its line is not reported: the lexer reads the rest of that line as code, so nothing on it is hidden |
+| `code nested too deep to analyse` | brackets, calls or PHP string interpolation nest deeper than the analysis follows (about 60 levels of brackets, 64 of interpolation); PHP accepts such code, so the file fails closed instead of passing as clean |
 | `decode limit reached` | a blob needed more than 8 decode layers, decoded past 1 MiB or the package passed 16 MiB of decoded output |
 | `could not read the file` | the file's bytes could not be read back from the cache |
 
@@ -142,15 +143,21 @@ padding or a broken construct can never hide code silently.
   `unanalysed`; bigger images, media and other non-code files are
   listed, not flagged, unless they hold code.
 - 2 s of analysis per file (Limits.FileBudget), checked every 64Ki
-  tokens of the walk and between phases.
+  tokens of the walk and between phases. Time a file spends waiting
+  for other files (the decode order and the decoded memory budget
+  below) does not count.
 - Decoding: at most 8 layers, 1 MiB of output per blob, 16 MiB per
-  package. The package budget is counted in path order, so the same
-  files pass it on every run.
+  package in total. The package budget is handed out in path order: a
+  file that decodes waits for the files before it and gets what they
+  left, so the same files pass it on every run and a package of many
+  small encoded files never decodes more than 16 MiB.
 - Folding: 16 steps and 64 KiB of result per expression.
 - Memory: the workers hold at most 4 MiB of source in analysis at once
   (a file counts its size, at most the whole 4 MiB). Many small files
   run side by side; large bundles run one after another, so peak memory
-  stays near that of one 4 MiB file whatever the CPU count.
+  stays near that of one 4 MiB file whatever the CPU count. Decoded
+  payloads take turns on a budget of their own (2 MiB in analysis at
+  once), since a few KiB of source can decode to a MiB of code.
 - Results are the same on every run: files are analysed on one worker
   per CPU and merged sorted by path, line, kind and key.
 - Arguments: FCall attributes `arg0` to `arg3` hold folded text
