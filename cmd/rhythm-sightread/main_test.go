@@ -244,6 +244,22 @@ func TestPickArgs(t *testing.T) {
 	}
 }
 
+// TestPickWidth: a writer that is not a terminal, or a terminal with
+// no window size, gets the default width instead of 0.
+func TestPickWidth(t *testing.T) {
+	if got := pickWidth(io.Discard); got != defaultPickWidth {
+		t.Errorf("io.Discard: %d", got)
+	}
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = r.Close(); _ = w.Close() }()
+	if got := pickWidth(w); got != defaultPickWidth {
+		t.Errorf("a pipe: %d", got)
+	}
+}
+
 // TestFoundHere is the picker's "Found here:" line.
 func TestFoundHere(t *testing.T) {
 	inv := &coretest.FakeInventory{Site: &core.Site{Kind: "mixed", WordPress: "6.8.3"}}
@@ -253,9 +269,12 @@ func TestFoundHere(t *testing.T) {
 	inv.Site.Installed = append(inv.Site.Installed,
 		core.Installed{Ref: core.Ref{Eco: core.WPTheme, Name: "a"}}, core.Installed{Ref: core.Ref{Eco: core.WPTheme, Name: "b"}},
 		core.Installed{Ref: core.Ref{Eco: core.Composer, Name: "a/b"}, Lockfile: "composer.lock"},
-		core.Installed{Ref: core.Ref{Eco: core.Composer, Name: "c/d"}, Lockfile: "composer.lock"})
+		core.Installed{Ref: core.Ref{Eco: core.Composer, Name: "c/d"}, Lockfile: "composer.lock"},
+		// A plugin's Lockfile holds its main file, never a lockfile.
+		core.Installed{Ref: core.Ref{Eco: core.WPPlugin, Name: "p"}, Lockfile: "p.php"},
+		core.Installed{Ref: core.Ref{Eco: core.WPTheme, Name: "c"}, Lockfile: "style.css"})
 	inv.Install(t)
-	want := "Found here: a WordPress site (23 plugins, 2 themes) and composer.lock"
+	want := "Found here: a WordPress site (24 plugins, 3 themes) and composer.lock"
 	if got := lookAround(context.Background(), ".").describe(); got != want {
 		t.Errorf("%q, want %q", got, want)
 	}

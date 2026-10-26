@@ -9,12 +9,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/x/term"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
@@ -83,7 +85,7 @@ func runPick(ctx context.Context, args []string, stdout, stderr io.Writer) error
 					return nil
 				}),
 		).WithHideFunc(func() bool { return choice != pickOne }),
-	).WithTheme(huh.ThemeCharm())
+	).WithTheme(huh.ThemeCharm()).WithWidth(pickWidth(stdout))
 	if err := form.RunWithContext(ctx); err != nil {
 		if errors.Is(err, huh.ErrUserAborted) {
 			return &cli.ExitError{Code: cli.ExitInterrupted}
@@ -98,6 +100,21 @@ func runPick(ctx context.Context, args []string, stdout, stderr io.Writer) error
 		}
 	}
 	return fmt.Errorf("pick: no command %s", argv[0])
+}
+
+// defaultPickWidth is the picker's width when the terminal reports none.
+const defaultPickWidth = 80
+
+// pickWidth is the terminal's width, or defaultPickWidth when out is not
+// a terminal or reports a width of 0. A pty with no window size would
+// leave huh's input a negative width, and it panics drawing it.
+func pickWidth(out io.Writer) int {
+	if f, ok := out.(*os.File); ok {
+		if w, _, err := term.GetSize(f.Fd()); err == nil && w > 0 {
+			return w
+		}
+	}
+	return defaultPickWidth
 }
 
 // pickArgs is the command line a picker choice stands for.
@@ -176,7 +193,9 @@ func lookAround(ctx context.Context, dir string) found {
 			f.themes++
 			f.wordpress = true
 		}
-		if in.Lockfile != "" {
+		// A WordPress entry's Lockfile is its main file (kept for SARIF),
+		// not a lockfile.
+		if (in.Ref.Eco == core.Composer || in.Ref.Eco == core.NPM) && in.Lockfile != "" {
 			if name := filepath.Base(in.Lockfile); !slices.Contains(f.lockfiles, name) {
 				f.lockfiles = append(f.lockfiles, name)
 			}
