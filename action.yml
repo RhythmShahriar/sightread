@@ -19,7 +19,9 @@
 #         - uses: actions/checkout@<sha> # v7.0.1
 #           with: {fetch-depth: 0}
 #         - uses: RhythmShahriar/sightread@<sha> # v1.0.0
-#           with: {fail-on: high, comment: true}
+#           with: {version: 1.0.0, fail-on: high, comment: true}
+#
+# It runs on Linux and macOS runners, not Windows.
 #
 # Dependabot and Renovate pull requests get a read-only token: the gate
 # and the job summary still work, the comment and the SARIF upload only
@@ -121,8 +123,8 @@ inputs:
   version:
     description: >
       Sightread version to install, e.g. 1.0.0, or latest. Default the release that matches the
-      action's tag, so results only change when you move the tag. At a branch or a major tag such
-      as @v1 it installs the latest release and warns.
+      action's tag, so results only change when you move the tag. At a branch, a commit or a major
+      tag such as @v1 it installs the latest release and warns, so a commit pin sets this too.
     required: false
     default: ""
   verify-signature:

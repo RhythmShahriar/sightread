@@ -152,7 +152,7 @@ Sightread talks only to the official sources, over HTTPS, with a fixed allowlist
     comment: true
 ```
 
-On a pull request the Action reviews every version the lockfile changes move; on other events it reviews every available update. It installs the release that matches the action tag, checks it with cosign, writes Markdown to the job summary, keeps the JSON and HTML reports as a workflow artifact and with `comment: true` keeps one pull request comment up to date. `sarif: true` uploads findings to code scanning. `rhythm sr init ci` writes the whole workflow, pinned by commit.
+On a pull request the Action reviews every version the lockfile changes move; on other events it reviews every available update. It installs the release that matches the action tag, checks it with cosign, writes Markdown to the job summary, keeps the JSON and HTML reports as a workflow artifact and with `comment: true` keeps one pull request comment up to date. `sarif: true` uploads findings to code scanning. `rhythm sr init ci` writes the whole workflow, pinned by commit with the matching `version` input: a commit doesn't name a release, so without `version` the Action installs the latest one and warns. The Action runs on Linux and macOS runners, not Windows.
 
 Dependabot and Renovate pull requests get a read-only token: the gate and the job summary still work and the comment and SARIF upload are skipped with a notice. To run it only on their pull requests add `if: github.actor == 'dependabot[bot]' || github.actor == 'renovate[bot]'` to the job. Don't use `pull_request_target` with a checkout of the pull request's head. More in the [CI guide](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-CI).
 

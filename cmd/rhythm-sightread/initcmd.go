@@ -223,16 +223,21 @@ func initCI(dir string, o ciOptions, stdout io.Writer) error {
 }
 
 // ciWorkflow is the workflow file. A release build pins the Action to
-// its own commit; a dev build has no commit to pin, so it writes @v1
-// and says to pin it.
+// its own commit and names its version: a commit isn't a release tag,
+// so without the version input the Action would install the latest
+// release. A dev build has no commit to pin, so it writes @v1 and says
+// to pin it.
 func ciWorkflow(o ciOptions, sha, ver string) string {
 	quoted := make([]string, len(lockfilePaths))
 	for i, p := range lockfilePaths {
 		quoted[i] = `"` + p + `"`
 	}
-	action := "RhythmShahriar/sightread@v1 # pin this to a commit SHA"
+	action := "RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below"
+	pinned := ""
 	if sha != "" {
-		action = "RhythmShahriar/sightread@" + sha + " # v" + strings.TrimPrefix(ver, "v")
+		v := strings.TrimPrefix(ver, "v")
+		action = "RhythmShahriar/sightread@" + sha + " # v" + v
+		pinned = "          version: " + v + "\n"
 	}
 	var b strings.Builder
 	b.WriteString("name: Sightread\non:\n  pull_request:\n    paths: [" + strings.Join(quoted, ", ") + "]\n")
@@ -246,6 +251,7 @@ func ciWorkflow(o ciOptions, sha, ver string) string {
 	b.WriteString("jobs:\n  sightread:\n    runs-on: ubuntu-latest\n    steps:\n")
 	b.WriteString("      - uses: " + checkoutPin + "\n        with: {fetch-depth: 0}\n")
 	b.WriteString("      - uses: " + action + "\n        with:\n")
+	b.WriteString(pinned)
 	b.WriteString("          fail-on: " + o.failOn + "\n")
 	if o.sarif {
 		b.WriteString("          sarif: true\n")

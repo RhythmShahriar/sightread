@@ -14,7 +14,8 @@
 # RhythmShahriar/sightread@v1.2.3 always runs Sightread 1.2.3 and a new
 # release can't change a pinned workflow's results. A branch, a commit or
 # a major tag such as @v1 doesn't name a release; then it takes the
-# latest one and warns. Every step of a job installs into the same folder,
+# latest one and warns. A commit pin needs the version input too, which is
+# why rhythm sightread init ci writes both. Every step of a job installs into the same folder,
 # so a second Sightread step finds the version already there and skips
 # the download.
 #
@@ -50,6 +51,9 @@ check() {
   if [ -z "$v" ]; then
     if [[ $ref =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
       v=$ref
+    elif [[ $ref =~ ^[0-9a-f]{40}$ ]]; then
+      echo "::warning::Sightread's version isn't pinned: the action is pinned to commit $ref but a commit doesn't name a release, so the latest release is installed and a new one can change your results. Set the version input to the release of that commit, e.g. version: 1.2.3."
+      v=latest
     else
       echo "::warning::Sightread's version isn't pinned: the action ref \"${ref:-none}\" isn't a release tag such as v1.2.3, so the latest release is installed and a new one can change your results. Use the action at a release tag or set the version input."
       v=latest
@@ -82,6 +86,14 @@ check() {
 
 install() {
   local v=${VERSION:?} arch os
+  # Windows releases are zip files and the Action's scripts need a Unix
+  # shell, so say so instead of failing on a download that isn't there.
+  case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN* | Windows*)
+    echo "::error::the Sightread Action runs on Linux and macOS runners, not Windows: use runs-on: ubuntu-latest or macos-latest"
+    exit 1
+    ;;
+  esac
   case "$(uname -m)" in
   x86_64 | amd64) arch=amd64 ;;
   aarch64 | arm64) arch=arm64 ;;

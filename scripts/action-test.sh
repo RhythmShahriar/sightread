@@ -222,6 +222,18 @@ if [ "$code" = 0 ] && out version=9.8.7 && contains "$work/log" '::warning::Sigh
   ok "a major tag takes the latest release and warns"
 else bad "a major tag takes the latest release and warns"; fi
 
+# init ci pins the Action by commit and writes the version input with it.
+act action-install.sh check ACTION_REF=0123456789abcdef0123456789abcdef01234567 VERSION=1.0.0
+if [ "$code" = 0 ] && out version=1.0.0 && ! contains "$work/log" "::warning::"; then
+  ok "a commit pin with the version input installs that release"
+else bad "a commit pin with the version input installs that release"; fi
+
+act action-install.sh check ACTION_REF=0123456789abcdef0123456789abcdef01234567
+if [ "$code" = 0 ] && out version=9.8.7 && contains "$work/log" "is pinned to commit 0123456789abcdef0123456789abcdef01234567" &&
+  contains "$work/log" "Set the version input"; then
+  ok "a commit pin without the version input warns how to pin it"
+else bad "a commit pin without the version input warns how to pin it"; fi
+
 act action-install.sh check VERSION=v1.0.0 ACTION_REF=v2.3.4
 if out version=1.0.0; then ok "the version input wins"; else bad "the version input wins"; fi
 
@@ -280,6 +292,15 @@ if [ "$code" != 0 ] && contains "$work/log" "doesn't match its signed checksum; 
   [ ! -s "$work/runner/path" ]; then
   ok "a changed archive is refused"
 else bad "a changed archive is refused"; fi
+# A Windows runner gets a clear error, not a 404 for a .tar.gz.
+printf '#!/bin/sh\n[ "$1" = -s ] && echo MINGW64_NT-10.0-20348 || echo x86_64\n' > "$work/bin/uname"
+chmod +x "$work/bin/uname"
+act action-install.sh install VERSION=9.9.9 DOWNLOAD_URL='https://mirror.test/v{version}' VERIFY_SIGNATURE=false
+rm -f "$work/bin/uname"
+if [ "$code" = 1 ] && contains "$work/log" "::error::the Sightread Action runs on Linux and macOS runners, not Windows" &&
+  [ ! -e "$temp/sightread-bin/rhythm-sightread" ]; then
+  ok "a Windows runner is refused with a clear error"
+else bad "a Windows runner is refused with a clear error"; fi
 mirror
 act action-install.sh install VERSION=9.9.9 DOWNLOAD_URL='https://mirror.test/v{version}'
 if [ "$code" != 0 ] && [ ! -e "$temp/sightread-bin/rhythm-sightread" ]; then
