@@ -3,9 +3,10 @@
 # Explain text of archive-path-escape (rhythm-sightread explain archive-path-escape).
 why: >-
   An entry name in the archive points outside the package folder through
-  "..", an absolute path, a drive letter or a backslash. Sightread never
-  extracts it. An unzip tool or package manager might write it anywhere
-  on disk.
+  "..", an absolute path, a drive letter or a backslash, or is a name
+  Windows opens as a device or stream (CON, NUL, a colon). Sightread
+  never extracts it. An unzip tool or package manager might write it
+  anywhere on disk.
 how_to_review:
   - "List the archive's entries with a tool that only lists, never extracts."
   - "Compare with the archive of the previous release."

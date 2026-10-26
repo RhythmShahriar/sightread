@@ -209,7 +209,7 @@ A closure at the author's request is high instead of critical: the author stoppe
 
 ### Fires when
 
-An entry name in the archive points outside the package folder through "..", an absolute path, a drive letter or a backslash. Sightread never extracts it. An unzip tool or package manager might write it anywhere on disk.
+An entry name in the archive points outside the package folder through "..", an absolute path, a drive letter or a backslash, or is a name Windows opens as a device or stream (CON, NUL, a colon). Sightread never extracts it. An unzip tool or package manager might write it anywhere on disk.
 
 ### False alarms
 
