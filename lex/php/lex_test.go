@@ -262,6 +262,44 @@ func TestLexDepthLimit(t *testing.T) {
 	}
 }
 
+// nestedInterp is a closed string with interpolation n deep around a
+// call: "{$a["{$a["...{${f()}}..."]}"]}".
+func nestedInterp(n int) string {
+	in := `${f()}`
+	for range n {
+		in = `{$a["` + in + `"]}`
+	}
+	return `<?php $s = "` + in + `";`
+}
+
+// anyDeep reports whether a token or any of its parts has Deep set.
+func anyDeep(toks []Token) bool {
+	for _, t := range toks {
+		if t.Deep || anyDeep(t.Parts) {
+			return true
+		}
+	}
+	return false
+}
+
+// Positive: interpolation past MaxDepth marks the string Deep, so the
+// analyzer can fail closed on the text it did not lex.
+func TestLexDeepMarked(t *testing.T) {
+	toks := lex(t, nestedInterp(MaxDepth+2))
+	if !anyDeep(toks) {
+		t.Errorf("no token is marked Deep")
+	}
+}
+
+// Negative: nesting under the limit is lexed in full and never Deep.
+func TestLexDeepNotMarked(t *testing.T) {
+	for _, src := range []string{nestedInterp(MaxDepth - 2), `<?php "a {$b} ${c} {$d["{$e}"]}";`} {
+		if anyDeep(lex(t, src)) {
+			t.Errorf("%.40q... marked Deep", src)
+		}
+	}
+}
+
 func TestTokenHelpers(t *testing.T) {
 	toks := lex(t, `<?php \EVAL();`)
 	if !toks[1].Is("eval") {

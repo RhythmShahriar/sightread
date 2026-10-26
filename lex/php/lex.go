@@ -7,7 +7,8 @@ import "strings"
 
 // MaxDepth bounds how deep string interpolation nests ("{$a["{$b}"]}"
 // and so on). Deeper "{$" and "${" are read as literal text, so a
-// crafted file can never exhaust the stack.
+// crafted file can never exhaust the stack; the string that holds them
+// has Deep set so the reader can fail closed.
 const MaxDepth = 64
 
 // stop is why code() returned.
@@ -388,6 +389,7 @@ func (l *lexer) interp(start int, set string, q byte, label string) bool {
 	n := len(s)
 	lit := start // where the pending literal piece starts
 	j := l.pos
+	deep := false // a "{$" or "${" left unread at MaxDepth
 	flush := func(to int) {
 		if to > lit {
 			l.pos = to
@@ -454,6 +456,10 @@ func (l *lexer) interp(start int, set string, q byte, label string) bool {
 				return false
 			}
 			j, lit = l.pos, l.pos
+		case (c == '{' && j+1 < n && s[j+1] == '$') || (c == '$' && j+1 < n && s[j+1] == '{'):
+			// Only reached at MaxDepth: the text stays literal.
+			deep = true
+			j++
 		default:
 			j++
 		}
@@ -469,7 +475,7 @@ done:
 		parts = make([]Token, len(l.toks)-mark)
 		copy(parts, l.toks[mark:])
 	}
-	l.toks = append(l.toks[:mark], Token{Kind: String, Off: start, Line: line, Text: s[start:j], Parts: parts})
+	l.toks = append(l.toks[:mark], Token{Kind: String, Off: start, Line: line, Text: s[start:j], Parts: parts, Deep: deep})
 	l.pos = j
 	l.member = false
 	return true

@@ -67,6 +67,10 @@ type Token struct {
 	// joined is the token's Text. Strings without interpolation have no
 	// parts.
 	Parts []Token
+	// Deep is set on an interpolating string at MaxDepth that holds a
+	// "{$" or "${" the lexer read as literal text. The code there is not
+	// lexed, so a reader must treat the string as not analysed.
+	Deep bool
 }
 
 // End is the offset just past the token.
