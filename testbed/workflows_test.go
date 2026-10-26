@@ -163,3 +163,35 @@ func TestActionTestLockfiles(t *testing.T) {
 		}
 	}
 }
+
+// TestActionTestVerdicts keeps the two verdicts apart: the report's
+// envelope verdict is ok, findings or error (PRD 9.2) and the Action's
+// verdict output is the worst per-update verdict (PRD 16). Comparing
+// one with the other fails on every run.
+func TestActionTestVerdicts(t *testing.T) {
+	_, raw := readWorkflow(t, "action-test.yml")
+	if bytes.Contains(raw, []byte(`'.verdict | ascii_downcase'`)) {
+		t.Error("action-test.yml compares the envelope verdict with the verdict output")
+	}
+	for _, want := range []string{
+		`test "$(jq -r .verdict "$REPORT")" = findings`,
+		`[.data.updates[].verdict | ascii_downcase]`,
+		`test "${VERDICT,,}" = "$worst"`,
+	} {
+		if !bytes.Contains(raw, []byte(want)) {
+			t.Errorf("action-test.yml lacks %q", want)
+		}
+	}
+}
+
+// TestCommentReadOnlyWarns checks that the read-only job asserts the
+// comment degraded to a ::warning:: instead of only an empty comment-id.
+func TestCommentReadOnlyWarns(t *testing.T) {
+	_, raw := readWorkflow(t, "action-test.yml")
+	job := raw[bytes.Index(raw, []byte("  comment-read-only:")):]
+	for _, want := range []string{"./scripts/comment.sh post", `grep -q "^::warning::Sightread: couldn't`, "comment-id="} {
+		if !bytes.Contains(job, []byte(want)) {
+			t.Errorf("comment-read-only lacks %q", want)
+		}
+	}
+}

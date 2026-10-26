@@ -77,7 +77,12 @@ jobs:
           test "$(jq -r .schema "$REPORT")" = rhythm-sightread/v1
           test "$(jq '.data.updates | length' "$REPORT")" = 2
           jq -e '[.data.updates[].name] | sort == ["expresss", "leftpadplus"]' "$REPORT"
-          test "$(jq -r '.verdict | ascii_downcase' "$REPORT")" = "${VERDICT,,}"
+          # The envelope's verdict says whether there are findings; the
+          # output is the worst per-update verdict.
+          test "$(jq -r .verdict "$REPORT")" = findings
+          worst=$(jq -r '[.data.updates[].verdict | ascii_downcase] |
+            if any(. == "hold") then "hold" elif any(. == "review") then "review" else "none" end' "$REPORT")
+          test "${VERDICT,,}" = "$worst"
           test -s "$SARIF"
           test "$(jq -r .version "$SARIF")" = 2.1.0
           jq -e '[.runs[0].results[]] | length > 0' "$SARIF"
@@ -352,3 +357,22 @@ jobs:
           test "$CODE" = 0
           test -z "$COMMENT"
           test -n "$SUMMARY"
+      - name: The comment degraded to a warning
+        # A step can't read another step's log, so this runs the Action's
+        # own comment script again with the same read-only token and
+        # checks what it printed.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUMMARY: ${{ steps.sr.outputs.summary }}
+        run: |
+          md=$SUMMARY
+          if [ ! -f "$md" ]; then
+            md=$RUNNER_TEMP/summary.md
+            printf '%s\n' "$SUMMARY" > "$md"
+          fi
+          out=$RUNNER_TEMP/comment-output
+          : > "$out"
+          log=$(GITHUB_OUTPUT=$out ./scripts/comment.sh post "$md" 2>&1)
+          printf '%s\n' "$log"
+          grep -q "^::warning::Sightread: couldn't .* on the pull request" <<<"$log"
+          if grep -q '^comment-id=' "$out"; then exit 1; fi
