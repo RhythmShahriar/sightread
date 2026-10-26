@@ -17,6 +17,8 @@ func (r *Registry) packagistMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/p2/", r.p2)
 	mux.HandleFunc("/packages/", r.pkgMeta)
+	mux.HandleFunc("/packages.json", r.composerPackagesJSON)
+	mux.HandleFunc("/api/security-advisories/", r.composerAdvisories)
 	return mux
 }
 

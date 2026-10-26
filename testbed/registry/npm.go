@@ -13,6 +13,7 @@ import (
 func (r *Registry) npmMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/-/npm/v1/keys", r.npmKeys)
+	mux.HandleFunc("/-/npm/v1/security/advisories/bulk", r.npmAuditBulk)
 	mux.HandleFunc("/", r.npmRoot)
 	return mux
 }
