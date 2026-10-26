@@ -65,7 +65,7 @@ var reviewCommands = []*reviewCommand{
 			"limit it to those packages. It never runs the code or any install script.",
 		examples: []string{"npm --path web --sarif -o sightread.sarif", "npm axios --to latest", "npm left-pad --to list"},
 		eco:      core.NPM, named: true, soundcheck: true},
-	{name: "all", args: "[<path>] [flags]", summary: "review every available update in a site or project",
+	{name: "all", args: "[<path>] [flags]", summary: "review every update a site or project has",
 		long: "Reviews every available update a folder holds in one report: WordPress plugins and themes (the WordPress root " +
 			"is found up to 6 folders down), composer.lock and npm lockfiles. With --sites it reviews every site of a fleet " +
 			"file once per update.",
@@ -94,7 +94,9 @@ func (c *reviewCommand) flags(stderr io.Writer) (*flag.FlagSet, *reviewFlags) {
 // command is c as a kit command.
 func (c *reviewCommand) command() cli.Command {
 	return cli.Command{
-		Name: c.name, Args: c.args, Summary: c.summary,
+		// The top-level list leaves out [flags]: every review command
+		// takes them and its help page shows them.
+		Name: c.name, Args: strings.TrimSuffix(c.args, " [flags]"), Summary: c.summary,
 		Flags: func() *flag.FlagSet { fs, _ := c.flags(io.Discard); return fs },
 		Run: func(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			p, pos, err := c.parse(args, stdout, stderr)

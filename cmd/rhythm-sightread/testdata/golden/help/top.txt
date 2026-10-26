@@ -1,0 +1,35 @@
+♪ rhythm-sightread  dev
+What will this update really change? Diff it against the official source
+and rank what is new. Never runs the code.
+
+Usage:
+  rhythm-sightread <command> [args]
+
+Commands:
+  plugin <slug>...              review a WordPress.org plugin update
+  theme <slug>...               review a WordPress.org theme update
+  composer [<vendor/pkg>...]    review Composer updates in composer.lock
+  npm [<pkg>...]                review npm updates in the lockfile
+  all [<path>]                  review every update a site or project has
+  changes [--base <ref>]        review every version a lockfile change moves
+  explain <signal-id>           what a signal means and how to review it
+  allow <eco:name@version>...   record a reviewed version
+  watch -l <sites.yaml>         check sites on a schedule
+  report <report.json>...       render saved JSON as Markdown, HTML or SARIF
+  verify-report <report.json>   check a signed report
+  init [ci] [--force]           write .sightread/config.yaml or a CI workflow
+  doctor [--json]               check sources, cache, tokens and helpers
+  demo [--keep]                 try it on built-in packages, no network
+  signals [--json]              list every signal with its default severity
+  cache prune                   remove cached archives nothing uses
+  update [--json]               refresh signal and name data, never packages
+  version [--json]              print the version
+
+Run 'rhythm-sightread help <command>' for a command's flags.
+
+Exit codes:
+  0     success
+  1     findings at or above --fail-on
+  2     usage error
+  3     the run failed, or a site, tool or service couldn't be reached
+  130   interrupted

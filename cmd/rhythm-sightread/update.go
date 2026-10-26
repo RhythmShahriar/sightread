@@ -16,7 +16,7 @@ import (
 
 // updateSummary is the help line PRD 0 asks for, so nobody reads
 // `update` as updating their packages.
-const updateSummary = "refresh the signal and name data (never updates packages)"
+const updateSummary = "refresh signal and name data, never packages"
 
 // updateCommand is `update`, which refreshes the data packs. kit's
 // Tool.Update provides the same command but its help line can't be
@@ -25,7 +25,7 @@ const updateSummary = "refresh the signal and name data (never updates packages)
 // when one can't be had) and a failure exits 3.
 func updateCommand() cli.Command {
 	return cli.Command{
-		Name: "update", Args: "[--json] [--pin <name=version,...>]", Summary: updateSummary,
+		Name: "update", Args: "[--json]", Summary: updateSummary,
 		Flags: func() *flag.FlagSet { fs, _, _ := updateFlags(io.Discard); return fs },
 		Run:   runUpdate,
 	}

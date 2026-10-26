@@ -23,8 +23,9 @@ import (
 // version is set at release time with -ldflags "-X main.version=1.0.0".
 var version = "dev"
 
-// summary is the line under the banner in help.
-const summary = "What will this update really change? Diff it against the official source and rank what is new. Never runs the code."
+// summary is the text under the banner in help.
+// kit prints it as given, so it is broken to fit 80 columns.
+const summary = "What will this update really change? Diff it against the official source\nand rank what is new. Never runs the code."
 
 // firstRunKey names the once-per-machine marker of the first-run note.
 const firstRunKey = "sightread-first-run"

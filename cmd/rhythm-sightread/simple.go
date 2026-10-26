@@ -21,8 +21,11 @@ import (
 // help page with one Flags block and examples.
 type simpleCommand struct {
 	name, args, summary string
-	long                string   // the paragraph under the usage line
-	examples            []string // command lines after the program name
+	// brief is args in the top-level command list, which kit pads to
+	// its longest entry; empty means args. The help page shows args.
+	brief    string
+	long     string   // the paragraph under the usage line
+	examples []string // command lines after the program name
 	// flags registers the command's flags on fs and returns what runs
 	// it with the positional arguments.
 	flags func(fs *flag.FlagSet, s *simpleFlags) runFunc
@@ -58,7 +61,7 @@ func (c *simpleCommand) flagSet(stderr io.Writer) (*flag.FlagSet, *simpleFlags, 
 // command is c as a kit command.
 func (c *simpleCommand) command() cli.Command {
 	return cli.Command{
-		Name: c.name, Args: c.args, Summary: c.summary,
+		Name: c.name, Args: cmp.Or(c.brief, c.args), Summary: c.summary,
 		Flags: func() *flag.FlagSet { fs, _, _ := c.flagSet(io.Discard); return fs },
 		Run: func(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			fs, sf, run := c.flagSet(stderr)

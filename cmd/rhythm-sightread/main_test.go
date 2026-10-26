@@ -14,6 +14,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
@@ -128,6 +129,22 @@ func TestHelpListsEveryCommand(t *testing.T) {
 	}
 	if !strings.Contains(out, updateSummary) || !strings.Contains(out, summary) {
 		t.Errorf("help lacks the update line or the summary:\n%s", out)
+	}
+}
+
+// TestHelpFits80: top-level help is a golden file and every line fits
+// an 80-column terminal; kit pads the command list to its longest
+// entry, so one long usage would push every line past it.
+func TestHelpFits80(t *testing.T) {
+	code, out, _ := child(t, t.TempDir(), "help")
+	if code != cli.ExitOK {
+		t.Fatalf("help exit %d:\n%s", code, out)
+	}
+	coretest.Golden(t, "help/top.txt", []byte(out))
+	for i, l := range strings.Split(out, "\n") {
+		if n := utf8.RuneCountInString(l); n > 80 {
+			t.Errorf("line %d is %d columns: %q", i+1, n, l)
+		}
 	}
 }
 

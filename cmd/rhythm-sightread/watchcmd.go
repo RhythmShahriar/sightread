@@ -4,6 +4,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"flag"
@@ -44,6 +45,7 @@ var watchOnly = []string{"l", "list", "every", "at", "now", "once", "name", "dir
 // with positional arguments.
 var watchCommand = &simpleCommand{
 	name: "watch", args: "-l <sites.yaml> --every <d> | --at <HH:MM> [flags] [-- <review flags>]",
+	brief:   "-l <sites.yaml>",
 	summary: "check sites on a schedule",
 	long: "Reviews every site of a sites file on a schedule and tells you what is new: an update with findings at or above " +
 		"--notify-min, a new signal on a version a site already runs (after a signal data update), an owner change or a " +
@@ -60,7 +62,7 @@ var watchCommand = &simpleCommand{
 func watchCmd() cli.Command {
 	c := watchCommand
 	return cli.Command{
-		Name: c.name, Args: c.args, Summary: c.summary,
+		Name: c.name, Args: cmp.Or(c.brief, c.args), Summary: c.summary,
 		Flags: func() *flag.FlagSet { fs, _, _ := c.flagSet(io.Discard); return fs },
 		Run: func(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 			own, pass := splitPassthrough(args)

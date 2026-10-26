@@ -26,6 +26,7 @@ const explainContext = 6
 // of a saved report with its diff hunk from the archive cache.
 var explainCommand = &simpleCommand{
 	name: "explain", args: "<signal-id> | <report.json> <n|fingerprint>",
+	brief:   "<signal-id>",
 	summary: "what a signal means and how to review it",
 	long: "With a signal ID, prints what the signal means, why it matters, how to review it, its usual false alarms and " +
 		"the incidents it is built on. It needs no network. With a saved JSON report and a finding's number (as the " +

@@ -54,7 +54,7 @@ type keyChecker interface {
 // doctorCommand is `doctor` (PRD 6.9), laid out like rhythm-echo
 // doctor.
 var doctorCommand = &simpleCommand{
-	name: "doctor", args: "[--offline] [--json]", summary: "check sources, cache, tokens and helpers",
+	name: "doctor", args: "[--offline] [--json]", brief: "[--json]", summary: "check sources, cache, tokens and helpers",
 	long: "Checks what a review needs: each source answers, the npm registry's signing keys load and match the set " +
 		"pinned in this build, the cache folder is writable, GITHUB_TOKEN is set (and how many GitHub requests are " +
 		"left), git is on PATH and, when the config has a soundcheck section, rhythm-soundcheck and rhythm-roadie are " +

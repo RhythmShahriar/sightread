@@ -7,29 +7,32 @@ through the router (kit `cli.Name()`). Every message below has a test asserting 
 
 ## Commands and help
 
-Top-level help is the kit usage. Summary line: `What will this update really change? Diff it
-against the official source and rank what is new. Never runs the code.` Commands, in this order:
+Top-level help is the kit usage and fits 80 columns (golden copy
+`cmd/rhythm-sightread/testdata/golden/help/top.txt`). Summary, on two lines: `What will this update
+really change? Diff it against the official source` / `and rank what is new. Never runs the code.`
+The list shows each command's short form; its own help page has the full usage. Commands, in this
+order:
 
-| Command | Help line |
-|---|---|
-| `plugin <slug>... [flags]` | review a WordPress.org plugin update |
-| `theme <slug>... [flags]` | review a WordPress.org theme update |
-| `composer [<vendor/pkg>...] [flags]` | review Composer updates in composer.lock |
-| `npm [<pkg>...] [flags]` | review npm updates in the lockfile |
-| `all [<path>] [flags]` | review every available update in a site or project |
-| `changes [--base <ref>] [flags]` | review every version a lockfile change moves |
-| `explain <signal-id> \| <report.json> <n\|fingerprint>` | what a signal means and how to review it |
-| `allow <eco:name@version>... --reason <text> \| --from <report.json> \| list \| remove <ref> \| import <file>` | record a reviewed version |
-| `watch -l <sites.yaml> --every <d> \| --at <HH:MM> [flags] [-- <review flags>]` | check sites on a schedule |
-| `report <report.json>... -o <file>` | render saved JSON as Markdown, HTML or SARIF |
-| `verify-report <report.json> [--key <pub>]` | check a signed report |
-| `init [ci] [--force]` | write .sightread/config.yaml or a CI workflow |
-| `doctor [--offline] [--json]` | check sources, cache, tokens and helpers |
-| `demo [--keep]` | try it on built-in packages, no network |
-| `signals [--json]` | list every signal with its default severity |
-| `cache prune [--older <d>]` | remove cached archives nothing uses |
-| `update [--json] [--pin <name=version,...>]` | refresh the signal and name data (never updates packages) |
-| `version [--json]` | print the version (kit) |
+| Command | Help line | Full usage on the command's page |
+|---|---|---|
+| `plugin <slug>...` | review a WordPress.org plugin update | `plugin <slug>... [flags]` |
+| `theme <slug>...` | review a WordPress.org theme update | `theme <slug>... [flags]` |
+| `composer [<vendor/pkg>...]` | review Composer updates in composer.lock | `composer [<vendor/pkg>...] [flags]` |
+| `npm [<pkg>...]` | review npm updates in the lockfile | `npm [<pkg>...] [flags]` |
+| `all [<path>]` | review every update a site or project has | `all [<path>] [flags]` |
+| `changes [--base <ref>]` | review every version a lockfile change moves | `changes [--base <ref>] [flags]` |
+| `explain <signal-id>` | what a signal means and how to review it | `explain <signal-id> \| <report.json> <n\|fingerprint>` |
+| `allow <eco:name@version>...` | record a reviewed version | `allow <eco:name@version>... --reason <text> \| --from <report.json> \| list \| remove <ref> \| import <file>` |
+| `watch -l <sites.yaml>` | check sites on a schedule | `watch -l <sites.yaml> --every <d> \| --at <HH:MM> [flags] [-- <review flags>]` |
+| `report <report.json>...` | render saved JSON as Markdown, HTML or SARIF | `report <report.json>... -o <file>` |
+| `verify-report <report.json>` | check a signed report | `verify-report <report.json> [--key <pub>]` |
+| `init [ci] [--force]` | write .sightread/config.yaml or a CI workflow | the same |
+| `doctor [--json]` | check sources, cache, tokens and helpers | `doctor [--offline] [--json]` |
+| `demo [--keep]` | try it on built-in packages, no network | the same |
+| `signals [--json]` | list every signal with its default severity | the same |
+| `cache prune` | remove cached archives nothing uses | `cache prune [--older <d>]` |
+| `update [--json]` | refresh signal and name data, never packages | `update [--json] [--pin <name=version,...>]` |
+| `version [--json]` | print the version (kit) | the same |
 
 Every command answers `--help` and `help <command>` on stdout with exit 0: `Usage: <prog> <cmd>
 <args>`, a paragraph, flag groups and `Examples:`. Pages wrap at 80 columns. Golden copies:

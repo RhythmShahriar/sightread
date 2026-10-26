@@ -24,7 +24,7 @@ import (
 // reportCommand is `report` (PRD 6.8): it renders saved JSON reports,
 // merged into one, to Markdown, HTML, SARIF or JSON without network.
 var reportCommand = &simpleCommand{
-	name: "report", args: "<report.json>... -o <file>", summary: "render saved JSON as Markdown, HTML or SARIF",
+	name: "report", args: "<report.json>... -o <file>", brief: "<report.json>...", summary: "render saved JSON as Markdown, HTML or SARIF",
 	long: "Renders one or more JSON reports a review saved into another format, by the extension of each -o file: " +
 		".md, .html, .sarif or .json. Several reports merge into one, for example the reports of several CI jobs. " +
 		"It needs no network.",
@@ -116,7 +116,7 @@ func mergeReports(reps []*core.Report) *core.Report {
 // signature from a trusted key, 1 for a bad or untrusted one, 2 when a
 // file is missing.
 var verifyCommand = &simpleCommand{
-	name: "verify-report", args: "<report.json> [--key <pub>]", summary: "check a signed report",
+	name: "verify-report", args: "<report.json> [--key <pub>]", brief: "<report.json>", summary: "check a signed report",
 	long: "Checks the signature <report.json>.sig that --sign wrote against this machine's report key, the keys " +
 		"listed in config trusted_keys and --key. Exit 0 means the report is unchanged and signed by one of them, 1 a bad " +
 		"or untrusted signature and 2 a missing file.",

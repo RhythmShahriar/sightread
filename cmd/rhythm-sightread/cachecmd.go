@@ -28,7 +28,7 @@ type pruner interface {
 
 // cacheCommand is `cache prune` (PRD 6.9).
 var cacheCommand = &simpleCommand{
-	name: "cache", args: "prune [--older <d>]", summary: "remove cached archives nothing uses",
+	name: "cache", args: "prune [--older <d>]", brief: "prune", summary: "remove cached archives nothing uses",
 	long: "prune removes the archive indexes saved more than --older ago and then every cached blob no remaining " +
 		"index names. Reviews of those versions download them again. The signal data and metadata caches are left alone.",
 	examples: []string{"cache prune", "cache prune --older 7d"},

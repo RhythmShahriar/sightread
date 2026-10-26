@@ -39,6 +39,7 @@ type allowFlags struct {
 // verified. It also lists, removes and imports entries.
 var allowCommand = &simpleCommand{
 	name: "allow", args: "<eco:name@version>... --reason <text> | --from <report.json> | list | remove <ref> | import <file>",
+	brief:   "<eco:name@version>...",
 	summary: "record a reviewed version",
 	long: "Records that someone reviewed a version, so later reviews show its findings as allowed. An entry is bound to " +
 		"the sha256 of the archive that was verified: allow fetches and verifies the version itself, or takes the hash " +
