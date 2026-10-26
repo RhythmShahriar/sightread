@@ -351,13 +351,16 @@ func (s *Server) wpInfo(w http.ResponseWriter, r *http.Request) {
 		links[v] = s.base + prefixWPDL + "/plugin/" + slug + "." + v + ".zip"
 		log.WriteString("<h4>" + v + "</h4>\n")
 	}
+	// The author profile stays the account that first published the
+	// plugin: a buyer given commit access, as in the takeovers the demo
+	// replays, commits under a new account of their own.
 	contributors := map[string]any{}
 	for _, b := range vers {
 		contributors[b.v.Committer] = map[string]string{"profile": "https://profiles.wordpress.org/" + b.v.Committer}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"name": latest.pkg.Title, "slug": slug, "version": latest.v.Version,
-		"author": latest.pkg.Title, "author_profile": "https://profiles.wordpress.org/" + latest.v.Committer,
+		"author": latest.pkg.Title, "author_profile": "https://profiles.wordpress.org/" + vers[0].v.Committer,
 		"contributors": contributors, "requires": "6.0", "tested": "6.8", "requires_php": "7.4",
 		"last_updated": latest.published.Format("2006-01-02 3:04pm MST"), "added": vers[0].published.Format(time.DateOnly),
 		"download_link": links[latest.v.Version], "versions": links, "sections": map[string]string{"changelog": log.String()},

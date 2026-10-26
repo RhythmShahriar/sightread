@@ -5,8 +5,10 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -72,7 +74,7 @@ func TestDemoFlow(t *testing.T) {
 }
 
 // TestDemoIntegrated runs the real pipeline against the demo server:
-// one ROUTINE, then two HOLDs, in under 3 seconds, with nothing sent off
+// one ROUTINE and two HOLDs, in under 3 seconds, with nothing sent off
 // the machine (runDemo fails if anything tried). It needs every stage,
 // so it runs once the lanes are linked.
 func TestDemoIntegrated(t *testing.T) {
@@ -95,10 +97,13 @@ func TestDemoIntegrated(t *testing.T) {
 	if code != cli.ExitOK || !strings.HasSuffix(out, endLines) {
 		t.Fatalf("exit %d\n%s\n%s", code, out, errOut)
 	}
-	r := strings.Index(out, "ROUTINE")
-	h1 := strings.Index(out, "HOLD")
-	h2 := strings.LastIndex(out, "HOLD")
-	if r < 0 || h1 < r || h2 <= h1 || strings.Count(out, "ROUTINE") < 1 {
-		t.Errorf("want ROUTINE, HOLD, HOLD in that order:\n%s", out)
+	// The update table lists the worst first: one row per package.
+	got := map[string]string{}
+	for _, m := range regexp.MustCompile(`(?m)^\s*(HOLD|REVIEW|ROUTINE|ALLOWED)\s+(\S+)\s+\d`).FindAllStringSubmatch(out, -1) {
+		got[m[2]] = m[1]
+	}
+	want := map[string]string{"comment-guard": "ROUTINE", "share-kit": "HOLD", "date-utils-lite": "HOLD"}
+	if !maps.Equal(got, want) {
+		t.Errorf("verdicts %v, want %v:\n%s", got, want, out)
 	}
 }
