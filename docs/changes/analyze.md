@@ -108,7 +108,8 @@ secrets masked and control characters escaped.
   bytes that spell `<?` do not count.
 - Secrets: hard-coded credentials found by kit secrets are `secret`
   features, one per line and secret, keyed by the rule and the masked
-  value. In PHP and JavaScript only rules that know a token's format
+  value. A PEM private key block that spans lines is reported on its
+  `-----BEGIN` line. In PHP and JavaScript only rules that know a token's format
   count (a Stripe key, a GitHub token, a private key); rules that judge
   a value by its name (`password = ...`, `X-Api-Key: ...`) apply to
   configuration files only. The raw value never appears in a key,
@@ -163,6 +164,10 @@ padding or a broken construct can never hide code silently.
   regular expression. A regular expression right after a closing brace
   may be a division (after a function expression), so its text is also
   read as code and any feature found that way is added.
+- A PHP attribute (`#[ ... ]`) that spans lines is also read as PHP 7
+  reads it: there `#[` starts a `#` line comment, so the lines after it
+  are code. Any feature found that way is added; a real PHP 8
+  attribute adds nothing.
 
 ## No host is ever resolved
 

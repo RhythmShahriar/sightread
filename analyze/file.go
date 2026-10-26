@@ -92,9 +92,11 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	var ptoks []php.Token
 	var jtoks []js.Token
 	var un []core.Unanalysed
-	var amb []int // offsets of regular expressions that may be divisions
+	var amb []int  // offsets of regular expressions that may be divisions
+	var attrs bool // a PHP attribute spans lines
 	if l == langPHP {
 		ptoks = php.Lex(src)
+		attrs = len(multilineAttributes(ptoks)) > 0
 		if t, ok := phpError(ptoks); ok && ctx != core.CtxDecoded {
 			un = append(un, core.Unanalysed{Path: path, Reason: reasonUnterminated(t.Construct(), t.Line)})
 		}
@@ -142,6 +144,9 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	out = append(out, bs.out...)
 	if len(amb) > 0 && !env.clk.expired() {
 		out = unionFeatures(out, rereadJS(path, src, ctx, lines, amb, env.clk))
+	}
+	if attrs && !env.clk.expired() {
+		out = unionFeatures(out, rereadPHP7(path, src, ctx, lines, env.clk))
 	}
 	sortFeatures(out)
 	if bs.un {
@@ -244,6 +249,55 @@ func rereadJS(path string, src []byte, ctx string, lines lineIndex, amb []int, c
 	}
 	ex.finish()
 	ex.jsHosts(toks)
+	return append(out, col.out...)
+}
+
+// maxAttrRounds bounds how often rereadPHP7 lexes a file again for
+// attributes the previous reading uncovered inside an attribute.
+const maxAttrRounds = 8
+
+// multilineAttributes returns the offsets of the PHP attributes ("#[")
+// whose text spans a line break.
+func multilineAttributes(toks []php.Token) []int {
+	var out []int
+	for _, t := range toks {
+		if t.Kind == php.Attribute && strings.ContainsAny(t.Text, "\n\r") {
+			out = append(out, t.Off)
+		}
+	}
+	return out
+}
+
+// rereadPHP7 analyses src again as PHP 7 reads it. Before PHP 8, "#["
+// starts a "#" line comment, so the lines after the first line of an
+// attribute that spans lines are code there; WordPress still runs on
+// PHP 7, so code could hide in such an attribute. The bracket after
+// each such "#" is blanked, which leaves offsets, lines and snippets
+// right, and the file is lexed again until no attribute spans lines.
+// Only the walk and the hosts run again, as in rereadJS.
+func rereadPHP7(path string, src []byte, ctx string, lines lineIndex, clk *clock) []core.Feature {
+	patched := bytes.Clone(src)
+	toks := php.Lex(patched)
+	for range maxAttrRounds {
+		offs := multilineAttributes(toks)
+		if len(offs) == 0 {
+			break
+		}
+		for _, off := range offs {
+			patched[off+1] = ' '
+		}
+		toks = php.Lex(patched)
+	}
+	st := newStream(langPHP, normPHP(toks))
+	st.clk = clk
+	col := newCollector(path, ctx, lines)
+	ex := newExtractor(st, col)
+	out := runFlow(st, lines, path, ctx, ex)
+	if clk.expired() {
+		return append(out, col.out...)
+	}
+	ex.finish()
+	ex.phpHosts(keepPHP(toks))
 	return append(out, col.out...)
 }
 

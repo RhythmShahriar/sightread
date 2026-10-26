@@ -555,6 +555,12 @@ func TestLexerBypasses(t *testing.T) {
 		{"nowdoc closed after a bare CR", "x.php", "<?php\n$a = <<<'EOT'\nx\rEOT;\reval($_POST[\"x\"]);\r$b = 1; // \nEOT;\n", core.FFlow, "request->eval", true},
 		{"heredoc with CRLF lines", "x.php", "<?php\r\n$a = <<<EOT\r\nx\r\nEOT;\r\neval($_POST['x']);\r\n", core.FFlow, "request->eval", true},
 		{"eval inside a CR heredoc", "x.php", "<?php\n$a = <<<EOT\rx eval($_POST['x']);\rEOT;\r", core.FFlow, "request->eval", false},
+		{"eval after a multi-line attribute", "a.php", "<?php\n#[\neval($_GET['x']); # ]\n", core.FFlow, "request->eval", true},
+		{"calls after a multi-line attribute", "b.php", "<?php\n#[\n$f = $_POST['f']; $f($_POST['a']);\nsystem($_GET['c']);\n#]\n", core.FFlow, "request->dyn-call", true},
+		{"system after a multi-line attribute", "b.php", "<?php\n#[\n$f = $_POST['f']; $f($_POST['a']);\nsystem($_GET['c']);\n#]\n", core.FCall, "system", true},
+		{"nested multi-line attributes", "c.php", "<?php\n#[A(\n#[\neval($_GET['x']);\n])]\n", core.FFlow, "request->eval", true},
+		{"eval in a string of a multi-line attribute", "d.php", "<?php\n#[Doc(\n  'eval($_GET[1])'\n)]\nfunction f() {}\n", core.FEval, "eval", false},
+		{"eval on the first line of an attribute", "e.php", "<?php\n#[A] eval($_GET['x']);\n", core.FFlow, "request->eval", true},
 		{"line separator ends a comment", "a.js", "// hi eval(location.hash);\n", core.FEval, "eval", true},
 		{"paragraph separator ends a comment", "a.js", "// hi require('child_process').exec(process.env.CMD);\n", core.FCall, "child_process.exec", true},
 		{"no-break space before eval", "a.js", "var a = 1; eval(location.hash);\n", core.FEval, "eval", true},
@@ -572,6 +578,17 @@ func TestLexerBypasses(t *testing.T) {
 				t.Errorf("%s:%s present = %v, want %v\n%s", tc.kind, tc.key, got, tc.want, dump(set))
 			}
 		})
+	}
+}
+
+// A real PHP 8 attribute that spans lines holds no code in either
+// reading, so it adds no feature.
+func TestMultilineAttributeClean(t *testing.T) {
+	set := analyzeAll(t, coretest.Tree(map[string]string{
+		"r.php": "<?php\nnamespace A;\n#[Route(\n  path: '/x',\n  methods: ['GET'],\n)]\nfunction f() { return 1; }\n",
+	}), core.DefaultLimits())
+	if d := dump(set); d != "minified []\n" {
+		t.Errorf("features from a clean attribute:\n%s", d)
 	}
 }
 
