@@ -539,6 +539,18 @@ var assignOps = map[string]bool{
 // jsRoots are the global objects: window["eval"] is eval.
 var jsRoots = map[string]bool{"window": true, "global": true, "globalThis": true, "self": true}
 
+// jsRequires are the callees that load a module: require and the
+// copies Node hands every module.
+var jsRequires = map[string]bool{"require": true, "module.require": true, "process.mainModule.require": true}
+
+// thisGlobal reports whether this[key] is read as the global key: at
+// the top of a script this is the global object, so this["eval"] is
+// eval. Only the names that run code count, so this[name]() in a class
+// stays a method call.
+func thisGlobal(key string) bool {
+	return jsEvalCalls[key] || jsTimers[key] || key == "require"
+}
+
 // postfix evaluates a primary expression and its calls, indexes, member
 // accesses and assignment.
 func (s *scope) postfix(i, end int, isNew bool) (res, int) {
@@ -578,6 +590,12 @@ func (s *scope) postfix(i, end int, isNew bool) (res, int) {
 				return r, j
 			}
 			n := s.at(j + 1)
+			if t.text == "?." && (n.punct("(") || n.punct("[")) && j+1 < end {
+				// f?.(x) and o?.[k]: an optional call or index runs
+				// like a plain one when its callee exists.
+				j++
+				continue
+			}
 			if j+1 >= end {
 				return r, j + 1
 			}
@@ -660,6 +678,18 @@ func (s *scope) assign(lv, op string, old, rhs res, weak bool) {
 // member reads name from r.
 func (s *scope) member(r res, name string, line int) res {
 	out := res{t: r.t}
+	if s.lang == langJS && name == "constructor" {
+		// Any value's constructor.constructor is Function, as in
+		// [].constructor.constructor(code)().
+		if r.v.kind == vName && (r.v.s == "constructor" || strings.HasSuffix(r.v.s, ".constructor")) {
+			out.v = value{kind: vName, s: "Function"}
+			return out
+		}
+		if r.v.kind != vName {
+			out.v = value{kind: vName, s: "constructor"}
+			return out
+		}
+	}
 	if r.v.kind == vName && name != "" {
 		path := r.v.s + "." + name
 		if s.lang == langPHP {
@@ -686,7 +716,7 @@ func (s *scope) index(r, idx res, line int) res {
 	case vName:
 		key, ok := idx.v.str()
 		switch {
-		case ok && jsRoots[r.v.s] && s.lang == langJS:
+		case ok && s.lang == langJS && (jsRoots[r.v.s] || r.v.s == "this" && thisGlobal(key)):
 			out.v = value{kind: vName, s: key}
 		case ok && s.lang == langJS:
 			out.v = value{kind: vName, s: r.v.s + "." + key}
@@ -794,7 +824,7 @@ func (s *scope) call(callee res, recv *res, method string, args []res, spans [][
 			target = literalTail(s, spans[0])
 		}
 		out.v = value{kind: vName, s: "fopen:" + target}
-	case s.lang == langJS && c.name == "require" && len(args) > 0:
+	case s.lang == langJS && jsRequires[c.name] && len(args) > 0:
 		if m, ok := args[0].v.str(); ok {
 			out.v = value{kind: vName, s: nodeModule(m)}
 		}
@@ -826,6 +856,9 @@ func (s *scope) call(callee res, recv *res, method string, args []res, spans [][
 		}
 		out.t = out.t.union(s.f.h.call(s, d))
 	}
+	if s.lang == langJS {
+		out.t = out.t.union(s.evalArgs(c))
+	}
 	// Function literals among the arguments run now, their parameters
 	// carrying what the call hands them: https.get(url, res => ...) gets
 	// a remote res, res.on("data", d => ...) a remote d.
@@ -837,6 +870,40 @@ func (s *scope) call(callee res, recv *res, method string, args []res, spans [][
 			}
 			out.t = out.t.union(s.runClosure(a.v.cl, ps))
 		}
+	}
+	return out
+}
+
+// evalArgs handles eval or Function handed to another call as a value:
+// Reflect.apply(eval, null, [code]), p.then(Function), arr.map(eval).
+// The receiving call runs it with data, so it counts as a call of eval
+// through that call, with the other arguments as its arguments.
+func (s *scope) evalArgs(c *callSite) taint {
+	var out taint
+	for i, a := range c.args {
+		if a.v.kind != vName {
+			continue
+		}
+		name := trimRoot(a.v.s)
+		if name != "eval" && name != "Function" {
+			continue
+		}
+		via := c.name
+		if via == "" {
+			via = c.method
+		}
+		if via == "" {
+			via = "argument"
+		}
+		d := &callSite{name: name, via: via, callee: a, line: c.line, pos: c.pos, dynamic: true}
+		from := i + 1
+		if c.name == "Reflect.apply" && i == 0 {
+			from = 2 // Reflect.apply(fn, thisArg, args)
+		}
+		if from < len(c.args) {
+			d.args, d.spans = c.args[from:], c.spans[from:]
+		}
+		out = out.union(s.f.h.call(s, d))
 	}
 	return out
 }

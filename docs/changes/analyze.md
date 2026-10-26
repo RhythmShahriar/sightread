@@ -53,7 +53,13 @@ secrets masked and control characters escaped.
   CI files, parent folder); token-like `process.env` reads; network
   sends; `eval`, `Function`, `vm.run*`, timers with a string, dynamic
   `require`. The bundler shim `new Function("return this")` is not
-  reported.
+  reported. Aliases read as the real name: optional calls (`eval?.(x)`),
+  `module.require` and `process.mainModule.require` (imports included,
+  also for a built module name such as `'child' + '_process'`),
+  `x.constructor.constructor(code)` as `Function`, `eval` or `Function`
+  handed to another call (`Reflect.apply(eval, ...)`,
+  `p.then(Function)`, attribute `via` names that call) and
+  `this[built]` for the names that run code.
 - npm: `preinstall`, `install`, `postinstall`, `prepare` and
   `prepublish` scripts (key `npm:<script>`, the masked script text
   attached) and an implicit `node-gyp rebuild`. Script text is read as

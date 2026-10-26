@@ -87,7 +87,12 @@ func (e *extractor) jsCall(_ *scope, c *callSite) {
 		if e.stringArg(c, 0) {
 			e.jsEval(c, name)
 		}
-	case name == "require" || name == "module.require":
+	case jsRequires[name]:
+		if m, ok := argStr(c, 0); ok {
+			// A built name (require('child' + '_process')) or a
+			// require the token scan does not read (module.require).
+			e.jsImport(c.pos, m)
+		}
 		e.jsRequire(c)
 	case jsReads[name]:
 		e.credRead(c, name)
@@ -190,10 +195,11 @@ func (e *extractor) jsDynCall(c *callSite, name string) {
 }
 
 // globalLookup reports whether a call's callee starts at a global
-// object (window, global, globalThis, self) or a built string.
+// object (window, global, globalThis, self, this read as one) or a
+// built string.
 func (e *extractor) globalLookup(c *callSite) bool {
 	t := at(e.toks, c.pos)
-	return jsRoots[t.text] || t.k == tStr || t.punct("(") || t.punct("[")
+	return jsRoots[t.text] || t.is(tName, "this") && thisGlobal(c.name) || t.k == tStr || t.punct("(") || t.punct("[")
 }
 
 // jsScan reads imports and environment reads from the token stream.
