@@ -65,9 +65,17 @@ const (
 	// ProbeUnconfigured is the loopback port ProbeRedirectLoopback points
 	// at; nothing listens there, so a reached redirect fails loudly.
 	ProbeUnconfigured = 23311
+	// FrontRetry stands in front of the npm fixture registry and answers
+	// 429 with Retry-After to the first request for each path (e02).
+	FrontRetry = 23320
+	// FrontStall stands in front of the npm fixture registry and stalls
+	// every tarball body (e03 timeout, e08 Ctrl-C during a fetch).
+	FrontStall = 23321
 )
 
 // ClosedProxy is the port the benchmark sets HTTPS_PROXY and HTTP_PROXY
-// to. Nothing listens there, so any request that forgets a configured
-// loopback base fails instead of reaching the internet.
+// to. The benchmark's proxy guard listens there and closes every
+// connection at once, so a request that forgets a configured loopback
+// base fails instead of reaching the internet, and the guard counts it
+// as an egress attempt.
 const ClosedProxy = 23399
