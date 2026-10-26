@@ -239,8 +239,8 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 		probs.print(stderr, rep)
 		return &cli.ExitError{Code: cli.ExitUnavailable}
 	}
-	err = gate(rep, p.gate)
-	if ee := (*cli.ExitError)(nil); errors.As(err, &ee) && ee.Code == cli.ExitUnavailable {
+	err = gate(rep, p.gate, c.name)
+	if ge := (*core.Error)(nil); errors.As(err, &ge) && ge.ExitCode() == cli.ExitUnavailable {
 		probs.print(stderr, rep)
 		if tripped {
 			// Findings beat gaps (PRD 10): the Soundcheck gate is 1.
@@ -338,8 +338,10 @@ func (c *reviewCommand) list(ctx context.Context, p *plan, stdout io.Writer) err
 	return nil
 }
 
-// gate turns the scorer's gate into the exit code of PRD section 10.
-func gate(rep *core.Report, o core.GateOptions) error {
+// gate turns the scorer's gate into the exit code of PRD section 10. A
+// partial run comes back as a *core.Error of command, so it prints as
+// "<program> <command>: <what>" with the fix indented below it.
+func gate(rep *core.Report, o core.GateOptions, command string) error {
 	s := core.GetScorer()
 	if s == nil {
 		return fmt.Errorf("scorer %w", core.ErrNotLinked)
@@ -351,7 +353,12 @@ func gate(rep *core.Report, o core.GateOptions) error {
 	case cli.ExitFindings:
 		return cli.ErrFindings
 	default:
-		return &cli.ExitError{Code: code, Err: errors.New(reason)}
+		what, hint, _ := strings.Cut(reason, "\n")
+		e := &core.Error{Exit: code, Command: command, What: what}
+		if hint != "" {
+			e.Hint = strings.Split(hint, "\n")
+		}
+		return e
 	}
 }
 

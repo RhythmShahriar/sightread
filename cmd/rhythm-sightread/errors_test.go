@@ -137,7 +137,8 @@ var errorCases = []errorCase{
 		return []string{"plugin", "countdown-timer-ultimate", "--fail-on", "high"}
 	}, stderr: "{prog} plugin: couldn't verify countdown-timer-ultimate 2.6.8: wordpress.org checksums answered 503\n" +
 		"  not diffed; run again later, or --allow-unverified to review it anyway (the report marks it unverified)\n" +
-		"{prog}: the run is partial, so --fail-on high can't pass it\n"},
+		"{prog} plugin: the run is partial, so --fail-on high can't pass it\n" +
+		"  add --allow-partial to accept it\n"},
 	{code: core.EIntegrityMismatch, exit: cli.ExitFindings, setup: func(_ *testing.T, w *runtest.World) []string {
 		w.Publish(core.WPPlugin, "countdown-timer-ultimate", "2.6.7", "2.6.8")
 		w.Install(core.WPPlugin, "countdown-timer-ultimate", "2.6.7")
@@ -166,7 +167,8 @@ var errorCases = []errorCase{
 		return []string{"all", "--fail-on", "high"}
 	}, stderr: "{prog}: api.wordpress.org asked us to slow down (429) and still did after 2 retries\n" +
 		"  reviewed 1 of 2 updates; run again in a few minutes or lower --jobs\n" +
-		"{prog}: the run is partial, so --fail-on high can't pass it\n"},
+		"{prog} all: the run is partial, so --fail-on high can't pass it\n" +
+		"  add --allow-partial to accept it\n"},
 	{code: core.EAuth, exit: cli.ExitUnavailable, setup: func(t *testing.T, w *runtest.World) []string {
 		w.Publish(core.Composer, "acme/billing", "2.0.0", "2.1.0")
 		failFetch(t, w, core.Composer, "acme/billing", stageErr(core.EAuth, cli.ExitUnavailable, "composer",
@@ -303,7 +305,8 @@ func TestErrorMessages(t *testing.T) {
 // TestRunCounts: E16 and an offline E7 from fetch get the run's counts
 // (PRD section 10); without fetch's cause they print as they came.
 func TestRunCounts(t *testing.T) {
-	const partial = "rhythm-sightread: the run is partial, so --fail-on high can't pass it\n"
+	const partial = "rhythm-sightread all: the run is partial, so --fail-on high can't pass it\n" +
+		"  add --allow-partial to accept it\n"
 	for _, c := range []struct {
 		name string
 		err  *core.Error

@@ -296,7 +296,7 @@ func incompleteParts(r *core.Report) []string {
 	if s.Unverified > 0 {
 		parts = append(parts, plural(s.Unverified, "update couldn't be verified", "updates couldn't be verified"))
 	}
-	if n := len(r.NotChecked); n > 0 {
+	if n := core.CountNotChecked(r.NotChecked); n > 0 {
 		parts = append(parts, plural(n, "package wasn't checked", "packages weren't checked"))
 	}
 	errs := len(r.Errors)

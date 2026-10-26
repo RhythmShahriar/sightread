@@ -178,7 +178,7 @@ func (FakeScorer) Score(_ context.Context, u *core.Update, _ *core.Config, allow
 
 // Summarise counts the report.
 func (FakeScorer) Summarise(r *core.Report) {
-	s := core.Summary{Updates: len(r.Updates), NotChecked: len(r.NotChecked)}
+	s := core.Summary{Updates: len(r.Updates), NotChecked: core.CountNotChecked(r.NotChecked)}
 	for _, u := range r.Updates {
 		switch u.Verdict {
 		case core.Hold:
@@ -229,7 +229,8 @@ func (FakeScorer) Summarise(r *core.Report) {
 }
 
 // Gate returns 1 for a counted finding at --fail-on, else 3 for a
-// partial run under --fail-on, else 0.
+// partial run under --fail-on, else 0. Like the real scorer, a partial
+// run's reason is the problem then the fix on a second line.
 func (FakeScorer) Gate(r *core.Report, o core.GateOptions) (int, string) {
 	if o.FailOn == cli.SeverityNone {
 		return cli.ExitOK, ""
@@ -244,7 +245,7 @@ func (FakeScorer) Gate(r *core.Report, o core.GateOptions) (int, string) {
 	unverified := r.Summary.Unverified > 0 && !o.AllowUnverified
 	partial := (r.Summary.NotChecked > 0 || len(r.Errors) > 0 || r.StoppedBy != "") && !o.AllowPartial
 	if unverified || partial {
-		return cli.ExitUnavailable, fmt.Sprintf("the run is partial, so --fail-on %s can't pass it", o.FailOn)
+		return cli.ExitUnavailable, fmt.Sprintf("the run is partial, so --fail-on %s can't pass it\nadd --allow-partial to accept it", o.FailOn)
 	}
 	return cli.ExitOK, ""
 }

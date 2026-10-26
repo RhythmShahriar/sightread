@@ -119,7 +119,7 @@ listed.
 | g11 | good | popular dependencies added | REVIEW: dependency-new only, no typosquat |
 | g12 | good | GitHub dist with empty shasum, source unchanged | ROUTINE |
 | g13 | good | composer minor with a new class and tests | ROUTINE |
-| g14 | good | whole site, every package on its good candidate | ROUTINE, exit 3: b22 not-wporg and core Not checked |
+| g14 | good | whole site, every package on its good candidate | ROUTINE, exit 0 with --allow-partial: b22 is Not checked not-wporg; core is listed but informational |
 | g15 | good | official takeover, code unchanged, owner-change only | REVIEW: owner-change |
 | e01 | env | registry down | exit 3 |
 | e02 | env | 429 then success | exit 0 |

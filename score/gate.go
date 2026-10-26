@@ -15,12 +15,13 @@ import (
 // Summarise counts the report for its header (every count, zero
 // included) and decides whether it is complete: not when an update is
 // UNVERIFIED, a package or the run recorded an error, anything is Not
-// checked or the run stopped early. It also adds the Notes lines Score
+// checked for a reason that is not informational (core and mu-plugin
+// are listed but never make a run partial) or the run stopped early. It also adds the Notes lines Score
 // left for the report's updates. Severity counts are of counted
 // findings only; allowed, ignored and baselined findings have their own
 // counts and below-confidence ones are in none.
 func (s *Scorer) Summarise(r *core.Report) {
-	sum := core.Summary{Updates: len(r.Updates), NotChecked: len(r.NotChecked)}
+	sum := core.Summary{Updates: len(r.Updates), NotChecked: core.CountNotChecked(r.NotChecked)}
 	errs := len(r.Errors)
 	for i := range r.Updates {
 		u := &r.Updates[i]
@@ -85,7 +86,7 @@ func (s *Scorer) Summarise(r *core.Report) {
 // or above o.FailOnNew (a baseline has already set aside the findings
 // that are not new). Else, with o.FailOn set, exit 3 when the run is
 // partial: an UNVERIFIED update without o.AllowUnverified, or a package
-// not checked, a fetch error or a stopped run without o.AllowPartial.
+// not checked (informational reasons aside), a fetch error or a stopped run without o.AllowPartial.
 // Findings win over gaps, so a run with both exits 1. The reason is one
 // or two lines: what happened, then how to accept it.
 func (s *Scorer) Gate(r *core.Report, o core.GateOptions) (int, string) {
@@ -113,7 +114,7 @@ func (s *Scorer) Gate(r *core.Report, o core.GateOptions) (int, string) {
 	}
 
 	var what, flags []string
-	unverified, notChecked, failed := 0, len(r.NotChecked), len(r.Errors)
+	unverified, notChecked, failed := 0, core.CountNotChecked(r.NotChecked), len(r.Errors)
 	for _, u := range r.Updates {
 		if u.Verdict == core.Unverified {
 			unverified++

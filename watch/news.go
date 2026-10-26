@@ -175,10 +175,10 @@ func incomplete(rep *core.Report) string {
 	switch {
 	case rep.StoppedBy != "":
 		return fmt.Sprintf("Partial: the review was stopped (%s) before it finished", rep.StoppedBy)
-	case len(rep.NotChecked) == 1:
+	case core.CountNotChecked(rep.NotChecked) == 1:
 		return "Partial: 1 package was not checked"
-	case len(rep.NotChecked) > 1:
-		return fmt.Sprintf("Partial: %d packages were not checked", len(rep.NotChecked))
+	case core.CountNotChecked(rep.NotChecked) > 1:
+		return fmt.Sprintf("Partial: %d packages were not checked", core.CountNotChecked(rep.NotChecked))
 	case !rep.Complete:
 		return "Partial: the review is not complete"
 	}

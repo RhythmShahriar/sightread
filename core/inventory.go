@@ -25,8 +25,16 @@ const (
 	TooLarge        NotCheckedReason = "too-large"
 )
 
+// Informational reports whether the reason only tells the reader what
+// Sightread never reviews: WordPress core and must-use plugins have no
+// update Sightread could review, so listing them must not make every
+// WordPress run partial and fail --fail-on.
+func (r NotCheckedReason) Informational() bool {
+	return r == Core || r == MUPlugin
+}
+
 // NotChecked is one component the report lists as not checked. It makes
-// the run partial.
+// the run partial unless its reason is informational.
 type NotChecked struct {
 	Eco     Ecosystem
 	Name    string
@@ -34,6 +42,18 @@ type NotChecked struct {
 	Reason  NotCheckedReason
 	Text    string
 	Hint    string
+}
+
+// CountNotChecked counts the entries that make a run partial, leaving
+// out the informational ones. It is summary.not_checked.
+func CountNotChecked(ncs []NotChecked) int {
+	n := 0
+	for _, nc := range ncs {
+		if !nc.Reason.Informational() {
+			n++
+		}
+	}
+	return n
 }
 
 // Installed is one installed package, from a site folder, a --wp

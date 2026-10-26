@@ -620,7 +620,13 @@ func TestSummarise(t *testing.T) {
 		"clean":       {func(*core.Report) {}, true},
 		"unverified":  {func(r *core.Report) { r.Updates[0].Verdict = core.Unverified }, false},
 		"not checked": {func(r *core.Report) { r.NotChecked = []core.NotChecked{{Name: "x"}} }, false},
-		"run error":   {func(r *core.Report) { r.Errors = []core.ErrorEntry{{Code: core.ENetwork}} }, false},
+		"core and mu-plugin only": {func(r *core.Report) {
+			r.NotChecked = []core.NotChecked{{Name: "wordpress", Reason: core.Core}, {Name: "loader", Reason: core.MUPlugin}}
+		}, true},
+		"core and premium": {func(r *core.Report) {
+			r.NotChecked = []core.NotChecked{{Name: "wordpress", Reason: core.Core}, {Name: "gravityforms", Reason: core.NotWPOrg}}
+		}, false},
+		"run error": {func(r *core.Report) { r.Errors = []core.ErrorEntry{{Code: core.ENetwork}} }, false},
 		"update error": {func(r *core.Report) {
 			r.Updates[0].Errors = []core.ErrorEntry{{Code: core.ERateLimited}}
 		}, false},
@@ -631,6 +637,9 @@ func TestSummarise(t *testing.T) {
 		s.Summarise(r)
 		if r.Complete != c.want {
 			t.Errorf("%s: complete %v", name, r.Complete)
+		}
+		if want := core.CountNotChecked(r.NotChecked); r.Summary.NotChecked != want {
+			t.Errorf("%s: summary not_checked %d, want %d", name, r.Summary.NotChecked, want)
 		}
 	}
 }
@@ -740,6 +749,12 @@ func TestGateReasons(t *testing.T) {
 		{"unverified", &core.Report{Updates: []core.Update{unv, unv}},
 			high, 3, "2 updates couldn't be verified, so --fail-on high can't pass it\nadd --allow-unverified to accept them"},
 		{"not checked", &core.Report{NotChecked: []core.NotChecked{{}}},
+			high, 3, "1 package wasn't checked, so --fail-on high can't pass it\nadd --allow-partial to accept them"},
+		{"core and mu-plugin pass", &core.Report{Updates: []core.Update{{Verdict: core.Routine}},
+			NotChecked: []core.NotChecked{{Name: "wordpress", Reason: core.Core}, {Name: "loader", Reason: core.MUPlugin}}},
+			high, 0, ""},
+		{"core does not hide a premium plugin", &core.Report{
+			NotChecked: []core.NotChecked{{Name: "wordpress", Reason: core.Core}, {Name: "gravityforms", Reason: core.NotWPOrg}}},
 			high, 3, "1 package wasn't checked, so --fail-on high can't pass it\nadd --allow-partial to accept them"},
 		{"interrupted", &core.Report{StoppedBy: "interrupted"},
 			high, 3, "the run was interrupted, so --fail-on high can't pass it\nadd --allow-partial to accept a partial run"},

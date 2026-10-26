@@ -68,7 +68,8 @@ func TestReviewExitCodes(t *testing.T) {
 		{"partial with --fail-on", unverifiedTheme, []string{"all", "--fail-on", "high"}, cli.ExitUnavailable,
 			"rhythm-sightread all: couldn't verify astra 4.8.1: nothing to check it against\n" +
 				"  not diffed; run again later, or --allow-unverified to review it anyway (the report marks it unverified)\n" +
-				"rhythm-sightread: the run is partial, so --fail-on high can't pass it\n"},
+				"rhythm-sightread all: the run is partial, so --fail-on high can't pass it\n" +
+				"  add --allow-partial to accept it\n"},
 		{"partial accepted", unverifiedTheme, []string{"all", "--fail-on", "high", "--allow-unverified"}, cli.ExitOK, ""},
 		{"partial without --fail-on", unverifiedTheme, []string{"all"}, cli.ExitOK, ""},
 		{"findings and gaps exit 1", func(w *runtest.World) { routineAndHold(w); unverifiedTheme(w) },

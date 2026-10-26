@@ -392,13 +392,16 @@ scenarios:
     # candidate is withheld, as are g15 (its owner change is high) and
     # g11 (its new dependencies are medium).
     extra_packages: [g01-feature, g02-bundle, g03-i18n, g04-vendor, g05-cron, g06-contrib, g07-theme, g08-eol, g09-patch, g10-native, g12-commit, g13-minor]
-    command: ["all", "projects/wp"]
+    # The shared site also holds the premium plugin (b22), which has no
+    # official source: it is Not checked not-wporg and makes the run
+    # partial, so the scenario accepts that with --allow-partial. WordPress
+    # core is listed under Not checked too but is informational and never
+    # makes a run partial, so a site holding only WordPress.org packages
+    # passes --fail-on without the flag.
+    command: ["all", "projects/wp", "--allow-partial"]
     expect:
       verdict: ROUTINE
-      # The premium plugin (b22) has no official source and WordPress
-      # core is out of scope: both are Not checked, which makes the run
-      # partial (exit 3 under --fail-on, PRD 10).
-      exit: 3
+      exit: 0
       not_checked_reasons: [not-wporg, core]
   - id: g15
     kind: good

@@ -73,6 +73,8 @@ These entries list what Sightread found but did not review, with the reason, the
 | `unsupported-lock` | bun.lockb is Bun's binary lockfile, which Sightread can't read | run bun install --save-text-lockfile once to write bun.lock |
 | `fetch-failed` | the Tuner report has no version for it | give the version with --from <version>, or read the site with --path or --wp |
 
+Every reason but two makes the run partial: it counts in `summary.not_checked`, sets `complete` to false and fails `--fail-on` with exit 3 unless `--allow-partial` is given. `core` and `mu-plugin` are informational. They are listed so the reader knows what Sightread never reviews, but they never make a run partial, so a WordPress site of WordPress.org packages can pass `--fail-on`.
+
 A plugin is `not-wporg` when its `Update URI` points anywhere other than WordPress.org, when it is `Update URI: false` or when its folder name can't be a WordPress.org slug.
 
 ## Changes in a pull request
