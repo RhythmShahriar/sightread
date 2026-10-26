@@ -209,16 +209,20 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	if p.soundcheck.Staging != "" {
 		tripped, scErr = c.runSoundcheck(ctx, p, rep)
 	}
-	if p.stdout == core.FormatTerminal && nothingElse(rep) {
+	// With nothing to compare the terminal says only that, but every -o
+	// file is still written: a CI job reads it and a missing report
+	// would look like a failed run.
+	quiet := p.stdout == core.FormatTerminal && nothingElse(rep)
+	if err := writeOutputs(p, rep, stdout, stream, !quiet); err != nil {
+		return err
+	}
+	if quiet {
 		for _, n := range rep.Notes {
 			if strings.HasSuffix(n, run.NothingToCompare) {
 				fmt.Fprintln(stdout, n)
 			}
 		}
 		return nil
-	}
-	if err := writeOutputs(p, rep, stdout, stream); err != nil {
-		return err
 	}
 	if p.open {
 		openReport(ctx, p, stderr)
@@ -340,9 +344,10 @@ func gate(rep *core.Report, o core.GateOptions) error {
 	}
 }
 
-// writeOutputs writes the report to stdout and to every -o file: JSON
-// first, so --sign can sign it and the other formats can name its hash.
-func writeOutputs(p *plan, rep *core.Report, stdout io.Writer, stream *streams) error {
+// writeOutputs writes the report to every -o file and, when toStdout is
+// set, to stdout: JSON first, so --sign can sign it and the other
+// formats can name its hash.
+func writeOutputs(p *plan, rep *core.Report, stdout io.Writer, stream *streams, toStdout bool) error {
 	files := slices.Clone(p.files)
 	slices.SortStableFunc(files, func(a, b output) int {
 		return cmp.Compare(boolRank(a.format != core.FormatJSON), boolRank(b.format != core.FormatJSON))
@@ -369,6 +374,9 @@ func writeOutputs(p *plan, rep *core.Report, stdout io.Writer, stream *streams) 
 			sum := sha256.Sum256(b)
 			o.Signed = hex.EncodeToString(sum[:])
 		}
+	}
+	if !toStdout {
+		return nil
 	}
 	if p.stdout == core.FormatJSONL {
 		return stream.closeStdout(rep, o)

@@ -318,6 +318,19 @@ func TestNothingToCompare(t *testing.T) {
 	if code != cli.ExitOK || out != "akismet 5.3.5 is already the latest: nothing to compare\n" {
 		t.Errorf("exit %d stdout %q", code, out)
 	}
+	// The -o files are still written, so a CI job finds its report.
+	path := filepath.Join(t.TempDir(), "r.json")
+	code, out, _ = execute(t, "plugin", "akismet", "-o", path)
+	if code != cli.ExitOK || out != "akismet 5.3.5 is already the latest: nothing to compare\n" {
+		t.Errorf("-o: exit %d stdout %q", code, out)
+	}
+	if b, err := os.ReadFile(path); err != nil || string(b) != "fake json: 0 updates\n" { //nolint:gosec // the test's own file
+		t.Errorf("-o file %q, %v", b, err)
+	}
+	code, out, _ = execute(t, "plugin", "akismet", "--json")
+	if code != cli.ExitOK || out != "fake json: 0 updates\n" {
+		t.Errorf("--json: exit %d stdout %q", code, out)
+	}
 }
 
 // TestExcludeIDKeepsIntegrity: --exclude-id can't hide

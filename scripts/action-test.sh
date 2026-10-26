@@ -184,6 +184,17 @@ else bad "package mode reviews each line and merges the reports"; fi
 act action-run.sh run MODE=package PACKAGE=$'npm:left-pad@1.4.0\nnpm:axios@1.8.0' FAKE_EXIT=1
 if out exit-code=1; then ok "package mode keeps the worst exit code"; else bad "package mode keeps the worst exit code"; fi
 
+# A package already at the requested version: Sightread writes a report
+# with no updates and exits 0, which is a pass, not "could not review".
+cat > "$work/empty.json" <<'JSON'
+{"schema": "rhythm-sightread/v1", "kind": "review", "complete": true,
+ "summary": {"updates": 0}, "notes": ["akismet 5.3.5 is already the latest: nothing to compare"], "data": {"updates": []}}
+JSON
+act action-run.sh run MODE=package PACKAGE=wp-plugin:akismet@5.3.5 FAKE_JSON="$work/empty.json"
+if [ "$code" = 0 ] && out exit-code=0 && out verdict=none && out updates=0 && ! contains "$work/log" "::error::"; then
+  ok "a package already at its version passes"
+else bad "a package already at its version passes"; fi
+
 act action-run.sh run MODE=package PACKAGE="left-pad 1.4.0"
 if out exit-code=2 && contains "$work/runner/summary" "package: line 1 isn't eco:name@version" && [ ! -e "$work/args" ]; then
   ok "a package line without eco:name@version is refused"
