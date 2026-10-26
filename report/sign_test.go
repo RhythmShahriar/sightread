@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/RhythmShahriar/rhythm/kit/config"
@@ -284,5 +285,60 @@ func TestSignedFooterHash(t *testing.T) {
 	}
 	if !strings.Contains(html, "<code>"+s.SHA256+"</code>") {
 		t.Error("the HTML footer does not carry the signed hash")
+	}
+}
+
+// TestKeyCreateRace starts many first runs at once: every one must get
+// the same complete key and no temp file may be left behind.
+func TestKeyCreateRace(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "keys", "report-key")
+	const runs = 16
+	keys := make([]ed25519.PrivateKey, runs)
+	errs := make([]error, runs)
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	for i := range runs {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			keys[i], errs[i] = loadOrCreateKey(path)
+		}()
+	}
+	close(start)
+	wg.Wait()
+	for i := range runs {
+		if errs[i] != nil {
+			t.Fatalf("run %d: %v", i, errs[i])
+		}
+		if !keys[i].Equal(keys[0]) {
+			t.Errorf("run %d got a different key", i)
+		}
+	}
+	entries, err := os.ReadDir(filepath.Dir(path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.Name())
+	}
+	if strings.Join(names, " ") != "report-key report-key.pub" {
+		t.Errorf("files left: %v", names)
+	}
+}
+
+// TestKeyBrokenFileKept refuses a key file that is not a key rather
+// than replacing it.
+func TestKeyBrokenFileKept(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "report-key")
+	if err := os.WriteFile(path, []byte("not a key\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadOrCreateKey(path); err == nil || !strings.Contains(err.Error(), "is not a PEM Ed25519 private key") {
+		t.Errorf("err %v, want the not a key message", err)
+	}
+	if b := readAll(t, path)[0]; string(b) != "not a key\n" {
+		t.Errorf("the file was replaced: %q", b)
 	}
 }

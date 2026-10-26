@@ -227,21 +227,33 @@ func loadOrCreateKey(path string) (ed25519.PrivateKey, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, fmt.Errorf("can't create the folder for the signing key: %w", cause(err))
 	}
-	// O_EXCL: two runs signing at once must not each write a key and
-	// leave a report signed by the one that lost.
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600) //nolint:gosec // the path is the key's own
+	// The key is written in full to a temp file, then hard linked into
+	// place. A link never replaces a file, so when two runs sign at once
+	// one wins and the other reads the winner's key, which is already
+	// complete. A plain O_EXCL create would let the loser read it while
+	// it is still empty and call a good key broken.
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*") // mode 0600
+	if err != nil {
+		return nil, fmt.Errorf("can't create the signing key %s: %w", path, cause(err))
+	}
+	defer os.Remove(tmp.Name()) //nolint:errcheck // the link keeps the key
+	if err := pem.Encode(tmp, &pem.Block{Type: "PRIVATE KEY", Bytes: der}); err != nil {
+		_ = tmp.Close()
+		return nil, err
+	}
+	if err := tmp.Sync(); err != nil {
+		_ = tmp.Close()
+		return nil, err
+	}
+	if err := tmp.Close(); err != nil {
+		return nil, err
+	}
+	err = os.Link(tmp.Name(), path)
 	if errors.Is(err, fs.ErrExist) {
 		return loadOrCreateKey(path)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("can't create the signing key %s: %w", path, cause(err))
-	}
-	if err := pem.Encode(f, &pem.Block{Type: "PRIVATE KEY", Bytes: der}); err != nil {
-		_ = f.Close()
-		return nil, err
-	}
-	if err := f.Close(); err != nil {
-		return nil, err
 	}
 	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubDER})
 	if err := writeFileAtomic(path+".pub", pubPEM, 0o644); err != nil {
