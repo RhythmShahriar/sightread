@@ -460,6 +460,15 @@ func TestTerminalShellArg(t *testing.T) {
 	}
 }
 
+func TestCutCells(t *testing.T) {
+	if got := cutCells("  ab  cd", 3); strings.Join(got, "|") != "  a|b  |cd" {
+		t.Errorf("cutCells kept %q", got)
+	}
+	if got := cutCells("", 3); len(got) != 1 || got[0] != "" {
+		t.Errorf("cutCells of nothing = %q", got)
+	}
+}
+
 func TestWrapHard(t *testing.T) {
 	got := wrapHard("short "+strings.Repeat("x", 25), 10)
 	want := []string{"short", "xxxxxxxxxx", "xxxxxxxxxx", "xxxxx"}
@@ -476,5 +485,36 @@ func TestThousands(t *testing.T) {
 		if got := thousands(n); got != want {
 			t.Errorf("thousands(%d) = %q, want %q", n, got, want)
 		}
+	}
+}
+
+// TestTerminalShowDiff: --diff prints every hunk, of sectioned updates
+// and of the others, with package text escaped.
+func TestTerminalShowDiff(t *testing.T) {
+	r := coretest.SampleReport()
+	r.Updates[0].Hunks[0].Lines = append(r.Updates[0].Hunks[0].Lines, "+ x \x1b]52;c;eA==\x07")
+	r.Updates[2].Hunks = []core.Hunk{{Path: "src/Logger.php", OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 1, Lines: []string{"-old", "+new"}}}
+	o := termOpts(80)
+	if out := writeTerm(t, r, o); strings.Contains(out, "DIFF") {
+		t.Error("hunks shown without --diff")
+	}
+	o.ShowDiff = true
+	out := writeTerm(t, r, o)
+	for _, want := range []string{
+		"  DIFF  1 ─",
+		"    @@ -80,2 +80,4 @@ includes/class-wpos-analytics.php\n",
+		"    +  eval($b['body']);\n",
+		`    + x \x1b]52;c;eA==\x07`,
+		"  ROUTINE  monolog/monolog 3.12.0 → 3.12.1 ─",
+		"    @@ -1,1 +1,1 @@ src/Logger.php\n    -old\n    +new\n",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in\n%s", want, out)
+		}
+	}
+	o.Plain = true
+	out = writeTerm(t, r, o)
+	if !strings.Contains(out, "DIFF (1):\n@@ -80,2 +80,4 @@ includes/class-wpos-analytics.php\n function wpos_init() {\n") {
+		t.Errorf("plain diff:\n%s", out)
 	}
 }

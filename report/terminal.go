@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -132,9 +133,7 @@ func (t *termView) single() bool { return len(t.r.Updates) == 1 }
 func (t *termView) render() {
 	if t.o.Quiet {
 		t.table()
-		for _, u := range t.sectioned() {
-			t.updateSection(u)
-		}
+		t.sections()
 		return
 	}
 	t.header()
@@ -142,6 +141,7 @@ func (t *termView) render() {
 		u := &t.r.Updates[0]
 		t.facts(u)
 		t.groups(u)
+		t.diff(u)
 	} else {
 		t.multi()
 	}
@@ -692,9 +692,64 @@ func (t *termView) multi() {
 		return
 	}
 	t.table()
-	for _, u := range t.sectioned() {
+	t.sections()
+}
+
+// sections writes a section per update with findings and, with --diff,
+// one per other update that changed.
+func (t *termView) sections() {
+	secs := t.sectioned()
+	for _, u := range secs {
 		t.updateSection(u)
+		t.diff(u)
 	}
+	if !t.o.ShowDiff {
+		return
+	}
+	for _, u := range byVerdict(t.r) {
+		if len(u.Hunks) > 0 && !slices.Contains(secs, u) {
+			t.updateHeading(u)
+			t.diff(u)
+		}
+	}
+}
+
+// diff writes every hunk of u for --diff. Each hunk line is one line,
+// wrapped at the edge rather than cut, so nothing at the end of a long
+// line is hidden.
+func (t *termView) diff(u *core.Update) {
+	if !t.o.ShowDiff || len(u.Hunks) == 0 {
+		return
+	}
+	t.sectionHead("DIFF", len(u.Hunks), t.mutedBold)
+	add := t.re.NewStyle().Foreground(lipgloss.Color(ui.Ok))
+	del := t.re.NewStyle().Foreground(lipgloss.Color(ui.Danger))
+	for _, h := range u.Hunks {
+		head := fmt.Sprintf("@@ -%d,%d +%d,%d @@ %s", h.OldStart, h.OldLines, h.NewStart, h.NewLines, tt(h.Path))
+		if t.o.Plain {
+			t.line(head)
+		} else {
+			t.line("    " + t.muted.Render(head))
+		}
+		for _, l := range h.Lines {
+			l = strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(tt(l))
+			if t.o.Plain {
+				t.line(l)
+				continue
+			}
+			style := t.re.NewStyle()
+			switch {
+			case strings.HasPrefix(l, "+"):
+				style = add
+			case strings.HasPrefix(l, "-"):
+				style = del
+			}
+			for _, part := range cutCells(l, t.width-2) {
+				t.line("    " + style.Render(part))
+			}
+		}
+	}
+	t.blank()
 }
 
 // sectioned are the updates with their own section: HOLD, REVIEW and an
@@ -868,8 +923,8 @@ func (t *termView) tableRows(widths []int, head []string, rows [][]string, ups [
 	}
 }
 
-// updateSection writes one update's heading and its findings.
-func (t *termView) updateSection(u *core.Update) {
+// updateHeading writes "HOLD  name 1.0 → 1.1 ───".
+func (t *termView) updateHeading(u *core.Update) {
 	name := tt(u.Name) + " " + t.fromTo(u)
 	if n := len(u.Sites); n > 0 {
 		name += " on " + plural(n, "site", "sites")
@@ -877,10 +932,15 @@ func (t *termView) updateSection(u *core.Update) {
 	verdict := strings.ToUpper(string(u.Verdict))
 	if t.o.Plain {
 		t.line(verdict + ": " + name)
-	} else {
-		head := t.verdictStyle(u.Verdict).Render(verdict) + "  " + t.bold.Render(name)
-		t.line("  " + head + " " + t.muted.Render(strings.Repeat("─", max(2, t.width-lipgloss.Width(head)-1))))
+		return
 	}
+	head := t.verdictStyle(u.Verdict).Render(verdict) + "  " + t.bold.Render(name)
+	t.line("  " + head + " " + t.muted.Render(strings.Repeat("─", max(2, t.width-lipgloss.Width(head)-1))))
+}
+
+// updateSection writes one update's heading and its findings.
+func (t *termView) updateSection(u *core.Update) {
+	t.updateHeading(u)
 	fs, more := t.limited(u)
 	for _, f := range fs {
 		t.finding(f)
@@ -1334,6 +1394,32 @@ func wrap(s string, n int) []string {
 	return lines
 }
 
+// cutCells splits s into pieces of at most n cells, keeping every space,
+// for diff lines whose indentation matters.
+func cutCells(s string, n int) []string {
+	if n < 1 {
+		n = 1
+	}
+	var out []string
+	for lipgloss.Width(s) > n {
+		cut, w := 0, 0
+		for i, r := range s {
+			rw := lipgloss.Width(string(r))
+			if w+rw > n {
+				break
+			}
+			w += rw
+			cut = i + len(string(r))
+		}
+		if cut == 0 {
+			break
+		}
+		out = append(out, s[:cut])
+		s = s[cut:]
+	}
+	return append(out, s)
+}
+
 // wrapHard is wrap that also cuts a word longer than n, for paths and
 // evidence, which would otherwise run past the edge.
 func wrapHard(s string, n int) []string {
@@ -1345,23 +1431,7 @@ func wrapHard(s string, n int) []string {
 	}
 	var out []string
 	for _, l := range wrap(s, n) {
-		for lipgloss.Width(l) > n {
-			cut, w := 0, 0
-			for i, r := range l {
-				rw := lipgloss.Width(string(r))
-				if w+rw > n {
-					break
-				}
-				w += rw
-				cut = i + len(string(r))
-			}
-			if cut == 0 {
-				break
-			}
-			out = append(out, l[:cut])
-			l = l[cut:]
-		}
-		out = append(out, l)
+		out = append(out, cutCells(l, n)...)
 	}
 	return out
 }
