@@ -14,6 +14,8 @@ Sightread talks only to these hosts, over https on port 443, plus the host and p
 
 Public hosts are dialed only on public addresses: an allowed name that resolves to 169.254.x.x or a private network is refused. The configured or environment proxy is the one exception.
 
+The same rule covers private registries: a Composer repository or an npm scope registry whose name resolves to a private network (10.x.x.x, 172.16-31.x.x, 192.168.x.x) is refused with `refused: not a public address`. Two ways around it: reach the registry through the proxy (`HTTPS_PROXY` or the configured proxy may sit on the private network), or forward a local port to it and give the registry as a loopback base such as `http://127.0.0.1:8080`, which is dialed on 127.0.0.1 only.
+
 Example: `SIGHTREAD_NPM_REGISTRY=https://169.254.169.254 rhythm sightread npm left-pad` prints `rhythm sightread: can't reach 169.254.169.254 (refused: not a public address)` / `check the connection or HTTPS_PROXY` and exits 3.
 
 ## Mirror variables
