@@ -162,6 +162,8 @@ run() {
       n=$((n + 1))
       [[ $line =~ ^([a-z-]+):(.+)@([^@[:space:]]+)$ ]] || couldnt 2 "package: line $n isn't eco:name@version, e.g. npm:left-pad@1.4.0"
       eco=${BASH_REMATCH[1]} name=${BASH_REMATCH[2]} ver=${BASH_REMATCH[3]}
+      # A name or version starting with - would read as a flag.
+      [[ $name != -* && $ver != -* ]] || couldnt 2 "package: line $n: a name or version can't start with -"
       case "$eco" in
       wp-plugin | plugin) cmd=plugin ;;
       wp-theme | theme) cmd=theme ;;

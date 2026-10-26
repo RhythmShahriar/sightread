@@ -200,6 +200,16 @@ if out exit-code=2 && contains "$work/runner/summary" "package: line 1 isn't eco
   ok "a package line without eco:name@version is refused"
 else bad "a package line without eco:name@version is refused"; fi
 
+act action-run.sh run MODE=package PACKAGE="npm:--config=x@1.0.0"
+if out exit-code=2 && contains "$work/runner/summary" "package: line 1: a name or version can't start with -" && [ ! -e "$work/args" ]; then
+  ok "a name starting with - is refused"
+else bad "a name starting with - is refused"; fi
+
+act action-run.sh run MODE=package PACKAGE="npm:left-pad@-x"
+if out exit-code=2 && contains "$work/runner/summary" "a name or version can't start with -" && [ ! -e "$work/args" ]; then
+  ok "a version starting with - is refused"
+else bad "a version starting with - is refused"; fi
+
 act action-run.sh run MODE=package PACKAGE="pypi:requests@2.0.0"
 if out exit-code=2 && contains "$work/runner/summary" 'unknown ecosystem "pypi"'; then
   ok "an unknown ecosystem is refused"
