@@ -36,7 +36,7 @@ type GetterConfig struct {
 	UserAgent   string
 	Proxy       string
 	Timeout     time.Duration
-	Retries     int
+	Retries     int // 0 means the default (2); a negative value means none
 	PerHost     int
 	GitHubToken string            // sent only to api.github.com
 	ScopeTokens map[string]string // "@acme" to its token, sent only to that registry

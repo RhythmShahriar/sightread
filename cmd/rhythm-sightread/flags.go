@@ -369,12 +369,18 @@ func (f *reviewFlags) plan(c *reviewCommand, env func(string) string, version st
 	q.MaxSize, q.Deadline, q.Jobs = size, deadline, f.jobs
 	q.NoOSV, q.AllowUnverified = f.noOSV, f.allowUnverified
 	q.Options = core.SourceOptions{SVNCheck: f.svnCheck, CheckConfusion: f.checkConfusion}
+	// GetterConfig reads Retries 0 as the default and a negative value
+	// as none, so --retries 0 must reach it as -1.
+	retries := f.retries
+	if retries == 0 {
+		retries = -1
+	}
 	q.Getter = core.GetterConfig{
 		Bases:        mirrors(env),
 		UserAgent:    cmp.Or(f.userAgent, "rhythm-sightread/"+version+" (+https://github.com/RhythmShahriar/sightread)"),
 		Proxy:        proxy,
 		Timeout:      timeout,
-		Retries:      f.retries,
+		Retries:      retries,
 		PerHost:      min(f.jobs, 4),
 		GitHubToken:  cmp.Or(env("GITHUB_TOKEN"), env("RHYTHM_GITHUB_TOKEN")),
 		ScopeTokens:  scopeTokens(),

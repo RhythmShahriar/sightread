@@ -197,7 +197,7 @@ func TestFlagMapping(t *testing.T) {
 		{"RHYTHM_OFFLINE", []string{"plugin", "a"}, map[string]string{cli.OfflineEnv: "1"}, func(p *plan) any { return p.req.Getter.Offline }, true},
 		{"timeout", []string{"plugin", "a", "--timeout", "5s"}, nil, func(p *plan) any { return p.req.Getter.Timeout }, 5 * time.Second},
 		{"timeout default", []string{"plugin", "a"}, nil, func(p *plan) any { return p.req.Getter.Timeout }, 30 * time.Second},
-		{"retries", []string{"plugin", "a", "--retries", "0"}, nil, func(p *plan) any { return p.req.Getter.Retries }, 0},
+		{"retries", []string{"plugin", "a", "--retries", "0"}, nil, func(p *plan) any { return p.req.Getter.Retries }, -1},
 		{"retries default", []string{"plugin", "a"}, nil, func(p *plan) any { return p.req.Getter.Retries }, 2},
 		{"jobs", []string{"all", "--jobs", "8"}, nil, func(p *plan) any { return []int{p.req.Jobs, p.req.Getter.PerHost} }, []int{8, 4}},
 		{"jobs low", []string{"all", "--jobs", "2"}, nil, func(p *plan) any { return []int{p.req.Jobs, p.req.Getter.PerHost} }, []int{2, 2}},
