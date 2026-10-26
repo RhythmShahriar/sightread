@@ -194,7 +194,7 @@ func (h *harness) envScenario(ctx context.Context, s scenario.Scenario, c *envCh
 		cache := filepath.Join(h.work, "cache", s.ID)
 		n := tamperBlobs(cache)
 		if n == 0 {
-			c.fail("no cached blob to tamper with under %s", cache)
+			c.fail("no cached blob to tamper with in the run's cache")
 			return
 		}
 		mark := h.requestCount()

@@ -121,6 +121,34 @@ func moduleRoot() (string, error) {
 	}
 }
 
+// scrub makes the checkout's absolute path relative in every free-text
+// field, so the committed page names no folder of the machine it ran on.
+func scrub(r *benchdoc.Results, root string) {
+	prefix := root + string(filepath.Separator)
+	fix := func(s string) string { return strings.ReplaceAll(strings.ReplaceAll(s, prefix, ""), root, ".") }
+	fixAll := func(ss []string) {
+		for i := range ss {
+			ss[i] = fix(ss[i])
+		}
+	}
+	r.BinErr = fix(r.BinErr)
+	for i := range r.Scenarios {
+		r.Scenarios[i].Problem = fix(r.Scenarios[i].Problem)
+	}
+	for _, list := range [][]benchdoc.EnvResult{r.Env, r.Staging} {
+		for i := range list {
+			fixAll(list[i].Notes)
+		}
+	}
+	fixAll(r.Safety.CanaryFiles)
+	fixAll(r.Safety.Egress)
+	fixAll(r.Safety.OutsideWrites)
+	r.Large.Note = fix(r.Large.Note)
+	for i := range r.Tools {
+		r.Tools[i].NotRun = fix(r.Tools[i].NotRun)
+	}
+}
+
 // run is the whole benchmark.
 func run(ctx context.Context, o options) (*benchdoc.Results, error) {
 	root, err := moduleRoot()
@@ -172,6 +200,7 @@ func run(ctx context.Context, o options) (*benchdoc.Results, error) {
 
 	res.Safety = h.safety()
 	res.Seconds = time.Since(res.Started).Seconds()
+	scrub(res, root)
 
 	resultsPath := o.results
 	if resultsPath == "" {
