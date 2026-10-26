@@ -45,8 +45,13 @@ func zipBomb(top string) ([]byte, error) {
 			return nil, err
 		}
 	}
+	// The padding is empty and stored, not deflated: a flate writer per
+	// entry made the build take minutes under the race detector. Only
+	// the entry count matters here.
 	for i := 0; i < 101000; i++ {
-		if _, err := zipEntry(zw, fmt.Sprintf("%s/pad/%06d", top, i)); err != nil {
+		hdr := &zip.FileHeader{Name: fmt.Sprintf("%s/pad/%06d", top, i), Method: zip.Store, Modified: epoch}
+		hdr.SetMode(0o644)
+		if _, err := zw.CreateHeader(hdr); err != nil {
 			return nil, err
 		}
 	}

@@ -53,11 +53,7 @@ func TestExpandFakeKeys(t *testing.T) {
 // {{fakekey:npm}} placeholder: the served tarball holds the assembled
 // key and no placeholder, while the committed file holds no key.
 func TestFixtureFakeKeyExpanded(t *testing.T) {
-	reg, err := New(Options{PackagesDir: packagesDir, StateDir: t.TempDir(), PlainHTTP: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = reg.Close() })
+	reg := scenarioRegistry(t)
 	tgz, ok := reg.Archive("b11-colorlib", "2.1.1")
 	if !ok {
 		t.Fatal("no b11-colorlib 2.1.1 archive")

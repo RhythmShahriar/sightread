@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -18,18 +19,54 @@ const (
 	projectsDir = "../projects"
 )
 
+var (
+	scenarioOnce sync.Once
+	scenarioReg  *Registry
+	scenarioErr  error
+)
+
+// scenarioRegistry builds every committed scenario once for the package:
+// the build is the slow part of these tests, the more so under -race.
+// It is never started; TestMain closes it.
+func scenarioRegistry(t *testing.T) *Registry {
+	t.Helper()
+	if _, err := os.Stat(packagesDir); err != nil {
+		t.Skipf("no committed packages: %v", err)
+	}
+	scenarioOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "sightread-registry-test-")
+		if err != nil {
+			scenarioErr = err
+			return
+		}
+		scenarioDir = dir
+		scenarioReg, scenarioErr = New(Options{PackagesDir: packagesDir, StateDir: dir})
+	})
+	if scenarioErr != nil {
+		t.Fatalf("building the scenario packages: %v", scenarioErr)
+	}
+	return scenarioReg
+}
+
+// scenarioDir is scenarioRegistry's state folder, removed by TestMain.
+var scenarioDir string
+
+func TestMain(m *testing.M) {
+	code := m.Run()
+	if scenarioReg != nil {
+		_ = scenarioReg.Close()
+	}
+	if scenarioDir != "" {
+		_ = os.RemoveAll(scenarioDir)
+	}
+	os.Exit(code)
+}
+
 // TestScenarioPackagesBuild builds every committed scenario through the
 // registry, which reads each meta.yaml, builds and hashes every archive
 // and signs the npm versions. A broken fixture fails here.
 func TestScenarioPackagesBuild(t *testing.T) {
-	if _, err := os.Stat(packagesDir); err != nil {
-		t.Skipf("no committed packages: %v", err)
-	}
-	reg, err := New(Options{PackagesDir: packagesDir, StateDir: t.TempDir()})
-	if err != nil {
-		t.Fatalf("building the scenario packages: %v", err)
-	}
-	t.Cleanup(func() { _ = reg.Close() })
+	reg := scenarioRegistry(t)
 	if len(reg.pkgs) == 0 {
 		t.Fatal("no scenarios built")
 	}
