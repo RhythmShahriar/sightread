@@ -114,6 +114,10 @@ type Source struct {
 	Delay func() time.Duration
 	// Drift, when set, is what VerifyLocal returns instead of comparing.
 	Drift *core.Drift
+	// TreeMeta, when set, fills a Meta from its tree as the real sources
+	// do (changelog, composer.json, readme contributors). Fetch calls it
+	// and so does run for a tree it had cached.
+	TreeMeta func(m *core.Meta, t *core.Tree)
 
 	mu      sync.Mutex
 	names   []string
@@ -173,8 +177,22 @@ func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 		return nil, core.Integrity{}, err
 	}
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.FakeSource.Fetch(ctx, m)
+	t, in, err := s.FakeSource.Fetch(ctx, m)
+	s.mu.Unlock()
+	if err == nil {
+		s.MetaFromTree(m, t)
+	}
+	return t, in, err
+}
+
+// MetaFromTree runs TreeMeta, when set.
+func (s *Source) MetaFromTree(m *core.Meta, t *core.Tree) {
+	s.mu.Lock()
+	f := s.TreeMeta
+	s.mu.Unlock()
+	if f != nil {
+		f(m, t)
+	}
 }
 
 // Tags returns the package's dist-tags.

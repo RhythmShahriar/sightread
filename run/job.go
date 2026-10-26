@@ -18,6 +18,7 @@ import (
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/source/changelog"
 )
 
 // pick chooses t's candidate, or marks it as nothing to review.
@@ -214,6 +215,15 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 	u.To.Wanted = t.cand.Wanted != "" && cur.info.Version == t.cand.Wanted
 	u.To.Constraint = t.constraint
 	u.FromCache = cur.cached && (old == nil || old.cached)
+	// A release's changelog lists every version; the update is only the
+	// entries newer than the installed side, up to the candidate.
+	if scheme := core.Versions(t.eco); scheme != nil {
+		from := ""
+		if old != nil {
+			from = old.info.Version
+		}
+		cur.meta.Changelog = changelog.Between(cur.meta.Changelog, from, cur.info.Version, scheme)
+	}
 	u.Changelog = cur.meta.Changelog
 
 	if !r.req.AllowUnverified && (cur.in.Partial() || old != nil && old.in.Partial()) {
@@ -402,11 +412,23 @@ func (r *reviewer) readLocal(ctx context.Context, path string, folder bool) (*co
 	return core.ReadLocalArchive(ctx, path, r.blobs, r.env.Limits)
 }
 
+// treeMeta is a source that reads part of a Meta from the release's own
+// files (every source of Sightread's own).
+type treeMeta interface {
+	MetaFromTree(m *core.Meta, t *core.Tree)
+}
+
 // fetch returns the verified tree of m from the archive index, or
 // downloads, verifies and indexes it.
 func (r *reviewer) fetch(ctx context.Context, src core.Source, m *core.Meta) (*core.Tree, core.Integrity, bool, error) {
 	if t, in, ok := loadIndex(r.cache, m.Ref, r.blobs); ok {
 		r.logf("%s: from the archive cache", m.Ref)
+		// Fetch fills part of m from the archive's files (changelog,
+		// composer.json, readme contributors); a cached tree must give
+		// the same, or a second run would report differently.
+		if mf, ok := src.(treeMeta); ok {
+			mf.MetaFromTree(m, t)
+		}
 		return t, in, true, nil
 	}
 	t, in, err := src.Fetch(ctx, m)

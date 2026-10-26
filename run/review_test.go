@@ -301,6 +301,29 @@ func TestArchiveIndexReuse(t *testing.T) {
 	}
 }
 
+// TestTreeMetaFromCache: what a source reads from the release's files
+// is filled again for a cached tree, so a second run reports the same;
+// the changelog keeps only the entries newer than the installed side.
+func TestTreeMetaFromCache(t *testing.T) {
+	w := runtest.Install(t)
+	w.Publish(core.WPPlugin, "akismet", "5.3.3", "5.3.4", "5.3.5")
+	w.Install(core.WPPlugin, "akismet", "5.3.3")
+	w.Sources[core.WPPlugin].TreeMeta = func(m *core.Meta, _ *core.Tree) {
+		m.Changelog = []core.ChangelogEntry{{Version: "5.3.5", Text: "c"}, {Version: "5.3.4", Text: "b"}, {Version: "5.3.3", Text: "a"}}
+	}
+	req := request(t, "all")
+	for i := range 2 {
+		u := review(t, req).Updates[0]
+		var got []string
+		for _, e := range u.Changelog {
+			got = append(got, e.Version)
+		}
+		if u.FromCache != (i == 1) || !slices.Equal(got, []string{"5.3.5", "5.3.4"}) {
+			t.Errorf("run %d: from cache %v, changelog %v", i+1, u.FromCache, got)
+		}
+	}
+}
+
 // TestUnverified: a side with no integrity check is UNVERIFIED and not
 // diffed, unless --allow-unverified, when it is diffed and still marked.
 func TestUnverified(t *testing.T) {
