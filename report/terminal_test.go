@@ -132,6 +132,32 @@ func TestTermText(t *testing.T) {
 	}
 }
 
+// TestInstalledMatchesOnlyWhenCompared: "matches wordpress.org" needs a
+// copy on disk; with --from or --from-tuner no installed file was read.
+func TestInstalledMatchesOnlyWhenCompared(t *testing.T) {
+	r := oneUpdate()
+	if out := writeTerm(t, r, termOpts(120)); !strings.Contains(out, "countdown-timer-ultimate · matches wordpress.org ✓") {
+		t.Errorf("a compared copy doesn't say it matches:\n%s", out)
+	}
+	r.Updates[0].Installed = core.InstalledInfo{}
+	out := writeTerm(t, r, termOpts(120))
+	if !strings.Contains(out, "  ▸ Installed     2.6.7\n") {
+		t.Errorf("installed line without a copy on disk:\n%s", out)
+	}
+}
+
+// TestFullDiffCommandKeepsFlags: the suggested command repeats the
+// flags that chose what was compared, so it works from the same folder.
+func TestFullDiffCommandKeepsFlags(t *testing.T) {
+	o := termOpts(200)
+	o.RerunFlags = []string{"--path", "projects/wp", "--from-file", "old copy.zip", "--allow-unverified"}
+	out := writeTerm(t, oneUpdate(), o)
+	want := "rhythm sightread plugin countdown-timer-ultimate --path projects/wp --from-file 'old copy.zip' --allow-unverified -o review.html --open\n"
+	if !strings.Contains(out, want) {
+		t.Errorf("missing %q in\n%s", want, out)
+	}
+}
+
 // TestTerminalLayout asserts the fixed strings of PRD 9.1 in the
 // one-update layout.
 func TestTerminalLayout(t *testing.T) {

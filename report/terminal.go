@@ -368,7 +368,10 @@ func (t *termView) installedText(u *core.Update) string {
 			d = plural(n, "file differs", "files differ") + " from the " + sourceName(u) + " copy"
 		}
 		v += t.dot() + d + t.mark(false)
-	case u.From.Verified == core.ByChecksums || u.From.Verified == core.BySVN:
+	case u.Installed.Path != "" && (u.From.Verified == core.ByChecksums || u.From.Verified == core.BySVN):
+		// Only a copy on disk was compared with the source. With --from
+		// or --from-tuner the site's files were never read, so the line
+		// says nothing about them (PRD principle 4).
 		v += t.dot() + "matches " + sourceName(u) + t.mark(true)
 	}
 	return v
@@ -1273,7 +1276,13 @@ func (t *termView) next() {
 	if worst != nil {
 		if t.single() {
 			u := &t.r.Updates[0]
-			steps = append(steps, [2]string{"the full diff", tt(programName(t.o.Program)) + " " + ecoCommand(u.Eco) + " " + shellArg(tt(u.Name)) + " -o review.html --open"})
+			c := tt(programName(t.o.Program)) + " " + ecoCommand(u.Eco) + " " + shellArg(tt(u.Name))
+			for _, a := range t.o.RerunFlags {
+				// The run's own flags, so the command reviews the same
+				// copy: without --path it would look in this folder.
+				c += " " + shellArg(tt(a))
+			}
+			steps = append(steps, [2]string{"the full diff", c + " -o review.html --open"})
 		} else {
 			steps = append(steps, [2]string{"every finding and the full diff", "run again with -o review.html --open"})
 		}
