@@ -7,9 +7,13 @@ import (
 	"io"
 	"os"
 	"time"
+
+	"github.com/RhythmShahriar/sightread/core"
 )
 
-// Store loads and edits the Sightread files of a project.
+func init() { core.SetPolicy(New()) }
+
+// Store implements core.Policy over the files of a project.
 type Store struct {
 	// Stderr gets the warning lines, such as an expired ignore entry.
 	Stderr io.Writer
@@ -33,3 +37,5 @@ func (s *Store) stderr() io.Writer {
 	}
 	return s.Stderr
 }
+
+var _ core.Policy = (*Store)(nil)
