@@ -64,8 +64,8 @@ func (d *Disk) path(sum [32]byte) string {
 
 // Put streams r into a temp file next to the blobs, hashing and counting
 // as it goes. More than limit bytes is core.ErrTooLarge and stores
-// nothing; so does a canceled ctx. The temp file is flushed, then
-// linked under its hash only if no blob has that name yet, so two
+// nothing; so does a canceled ctx. The temp file is then linked under
+// its hash only if no blob has that name yet, so two
 // writers of the same content both succeed and a blob another process
 // has open is never replaced (Windows can't rename over an open file).
 func (d *Disk) Put(ctx context.Context, r io.Reader, limit int64) (sum [32]byte, n int64, err error) {
@@ -89,9 +89,9 @@ func (d *Disk) Put(ctx context.Context, r io.Reader, limit int64) (sum [32]byte,
 	if n > limit {
 		return sum, 0, core.ErrTooLarge
 	}
-	if err := tmp.Sync(); err != nil {
-		return sum, 0, fmt.Errorf("blob store: %w", err)
-	}
+	// No fsync: a blob a crash tears is caught by the re-hash in Open and
+	// fetched again, while a flush per file costs about 7 ms, 14 s for a
+	// 2,000-file plugin.
 	if err := tmp.Close(); err != nil {
 		return sum, 0, fmt.Errorf("blob store: %w", err)
 	}
