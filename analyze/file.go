@@ -4,6 +4,7 @@
 package analyze
 
 import (
+	"bytes"
 	"context"
 	"slices"
 	"strconv"
@@ -91,6 +92,7 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	var ptoks []php.Token
 	var jtoks []js.Token
 	var un []core.Unanalysed
+	var amb []int // offsets of regular expressions that may be divisions
 	if l == langPHP {
 		ptoks = php.Lex(src)
 		if t, ok := phpError(ptoks); ok && ctx != core.CtxDecoded {
@@ -103,6 +105,7 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 			un = append(un, core.Unanalysed{Path: path, Reason: reasonUnterminated(t.Construct(), t.Line)})
 		}
 		st = newStream(langJS, normJS(jtoks))
+		amb = ambiguousRegexps(jtoks)
 	}
 	timeUp := func(out []core.Feature) ([]core.Feature, []core.Unanalysed) {
 		sortFeatures(out)
@@ -135,6 +138,9 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 	bs.scan()
 	out = append(out, col.out...)
 	out = append(out, bs.out...)
+	if len(amb) > 0 && !env.clk.expired() {
+		out = unionFeatures(out, rereadJS(path, src, ctx, lines, amb, env.clk))
+	}
 	sortFeatures(out)
 	if bs.un {
 		un = append(un, core.Unanalysed{Path: path, Reason: reasonDecodeLimit})
@@ -143,6 +149,77 @@ func analyzeCode(l lang, path string, src []byte, ctx string, env decodeEnv) ([]
 		un = append(un, core.Unanalysed{Path: path, Reason: reasonTimeLimit})
 	}
 	return out, un
+}
+
+// ambiguousRegexps returns the offsets of the regular expressions that
+// follow a closing brace. Whether such a slash divides depends on what
+// the brace closed: after a block statement it starts a regular
+// expression, after a function expression ("x = function(){} / y") it
+// divides. The lexer reads a regular expression there, so code between
+// two slashes could hide in one; rereadJS reads it the other way too.
+func ambiguousRegexps(toks []js.Token) []int {
+	var out []int
+	prev := ""
+	for _, t := range toks {
+		if !t.Significant() {
+			continue
+		}
+		if t.Kind == js.RegExp && prev == "}" {
+			out = append(out, t.Off)
+		}
+		prev = ""
+		if t.Kind == js.Punct {
+			prev = t.Text
+		}
+	}
+	return out
+}
+
+// rereadJS analyses src again with the slash at each offset in amb
+// blanked, so the text of a regular expression that may have been a
+// division is read as code. One byte becomes another, so offsets,
+// lines and snippets (taken from the original lines) stay right. Only
+// the walk and the hosts run again: the Unicode and blob scans already
+// saw the regular expression's text.
+func rereadJS(path string, src []byte, ctx string, lines lineIndex, amb []int, clk *clock) []core.Feature {
+	patched := bytes.Clone(src)
+	for _, off := range amb {
+		patched[off] = ' '
+	}
+	toks := js.Lex(patched)
+	st := newStream(langJS, normJS(toks))
+	st.clk = clk
+	col := newCollector(path, ctx, lines)
+	ex := newExtractor(st, col)
+	out := runFlow(st, lines, path, ctx, ex)
+	if clk.expired() {
+		return append(out, col.out...)
+	}
+	ex.finish()
+	ex.jsHosts(toks)
+	return append(out, col.out...)
+}
+
+// unionFeatures adds to fs the features of more that fs does not have
+// at the same line.
+func unionFeatures(fs, more []core.Feature) []core.Feature {
+	type key struct {
+		kind      core.FeatureKind
+		key       string
+		line, end int
+	}
+	seen := make(map[key]bool, len(fs))
+	for _, f := range fs {
+		seen[key{f.Kind, f.Key, f.Ev.Line, f.Ev.EndLine}] = true
+	}
+	for _, f := range more {
+		k := key{f.Kind, f.Key, f.Ev.Line, f.Ev.EndLine}
+		if !seen[k] {
+			seen[k] = true
+			fs = append(fs, f)
+		}
+	}
+	return fs
 }
 
 // phpError finds the Error token of a PHP file: the lexer turns the

@@ -156,7 +156,9 @@ padding or a broken construct can never hide code silently.
   expressions) at `\n`, `\r`, U+2028 or U+2029. It reads U+00A0,
   U+FEFF and the other Unicode spaces as whitespace between tokens.
 - A slash after the head of `if`, `while`, `for` or `with` starts a
-  regular expression.
+  regular expression. A regular expression right after a closing brace
+  may be a division (after a function expression), so its text is also
+  read as code and any feature found that way is added.
 
 ## No host is ever resolved
 

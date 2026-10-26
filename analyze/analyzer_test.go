@@ -495,6 +495,7 @@ func TestLexerBypasses(t *testing.T) {
 		{"paragraph separator ends a comment", "a.js", "// hi require('child_process').exec(process.env.CMD);\n", core.FCall, "child_process.exec", true},
 		{"no-break space before eval", "a.js", "var a = 1; eval(location.hash);\n", core.FEval, "eval", true},
 		{"regex after an if head", "a.js", "if (x) /'/.test(s) && eval(location.hash);\n", core.FEval, "eval", true},
+		{"division after a function expression", "a.js", "var x = function () {} / eval(location.hash) / 1;\n", core.FEval, "eval", true},
 		{"quote misread mid-line", "a.js", "var a = b\n/'/; eval(location.hash);\n", core.FEval, "eval", true},
 		{"line separator inside a string", "a.js", "var s = 'a eval(location.hash)';\n", core.FEval, "eval", false},
 		{"eval in a comment", "a.js", "// hi eval(location.hash);\n", core.FEval, "eval", false},
