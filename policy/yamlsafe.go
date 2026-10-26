@@ -268,7 +268,10 @@ func quoteIfOdd(s string) string {
 }
 
 // cleanYAMLError drops yaml.v3's "yaml: " prefix and joins a multi-line
-// unmarshal error into one line.
+// unmarshal error into one line. yaml.v3 quotes the offending value as
+// decoded, so an escape such as "\e" in a double-quoted scalar arrives as
+// a raw control byte; the message is sanitised like every other one so
+// it can't drive the terminal or a CI log, and a secret in it is masked.
 func cleanYAMLError(err error) error {
 	s := strings.TrimPrefix(err.Error(), "yaml: ")
 	s = strings.TrimPrefix(s, "unmarshal errors:\n")
@@ -276,5 +279,5 @@ func cleanYAMLError(err error) error {
 	for i := range lines {
 		lines[i] = strings.TrimSpace(lines[i])
 	}
-	return errors.New(strings.Join(lines, "; "))
+	return errors.New(sanitize(strings.Join(lines, "; ")))
 }

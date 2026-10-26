@@ -96,6 +96,7 @@ func TestConfigRules(t *testing.T) {
 		{"trusted key no prefix", "trusted_keys: [abc]\n", `trusted_keys 1: "abc" is not a key such as ed25519:<base64>; rhythm sightread verify-report prints a report's key`},
 		{"trusted key short", "trusted_keys: [\"ed25519:AAAA\"]\n", `trusted_keys 1: "ed25519:AAAA" is not a key such as ed25519:<base64>; rhythm sightread verify-report prints a report's key`},
 		{"syntax", "fail_on: \"high\n", "line 2: found unexpected end of stream"},
+		{"escape in a bool", "transitive: \"\\e]52;c;abc\\a\"\n", "line 1: cannot unmarshal !!str `\\x1b]52;c;...` into bool"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
