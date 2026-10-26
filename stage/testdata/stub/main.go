@@ -4,7 +4,7 @@
 // Command stub stands in for rhythm-roadie, rhythm-soundcheck, wp and an
 // --apply command in the stage tests: the test builds it once and copies
 // it under each name. It appends what it was asked to STUB_LOG, one JSON
-// line per call, and answers from the fixture files the test names.
+// line per call and answers from the fixture files the test names.
 package main
 
 import (
