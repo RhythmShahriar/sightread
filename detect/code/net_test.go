@@ -262,6 +262,7 @@ func TestExfilTarget(t *testing.T) {
 		want  string
 	}{
 		{"loopback", map[string]string{AttrReads: "env", AttrLocal: "127.0.0.1"}, "sends env to the local address 127.0.0.1: "},
+		{"reserved", map[string]string{AttrReads: "env", AttrLocal: "c2.wpos-cdn.example"}, "sends env to the local or reserved name c2.wpos-cdn.example: "},
 		{"dynamic", map[string]string{AttrReads: "env"}, "sends env to a host built at run time: "},
 		{"literal host", map[string]string{AttrReads: "env", AttrHost: "evil.test", AttrDomain: "evil.test"}, "sends env to evil.test: "},
 	} {

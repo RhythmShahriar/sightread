@@ -482,8 +482,9 @@ func sendHost(c *callSite, channel string) (hostRef, bool) {
 	return hostRef{}, false
 }
 
-// sendLocal is the target of a send call that names a loopback,
-// unspecified, link-local or multicast address, or localhost, as
+// sendLocal is the target of a send call that names a local address
+// (loopback, unspecified, link-local or multicast) or a local or
+// reserved name (localhost, .test, .internal, example.com), as
 // written. sendHost leaves those out (they are not hosts on the
 // internet), so without this the send would read as going to a host
 // built at run time.
@@ -507,9 +508,10 @@ func sendLocal(c *callSite, channel string) (string, bool) {
 	return "", false
 }
 
-// localAddr returns the address of s, a URL, a host with a port or a
-// bare host, when it is local: localhost or an address publicAddr
-// rejects.
+// localAddr returns the host of s, a URL, a host with a port or a bare
+// host, when it is local: an address publicAddr rejects, or a valid
+// name normHost leaves out for its reserved top level domain or as a
+// documentation domain.
 func localAddr(s string) (string, bool) {
 	s = strings.TrimSpace(s)
 	if scheme, rest, ok := strings.Cut(s, "://"); ok {
@@ -532,14 +534,40 @@ func localAddr(s string) (string, bool) {
 	case strings.Count(s, ":") == 1:
 		s, _, _ = strings.Cut(s, ":")
 	}
-	if strings.EqualFold(strings.TrimSuffix(s, "."), "localhost") {
-		return "localhost", true
+	if a, err := netip.ParseAddr(s); err == nil {
+		if a.Zone() != "" || publicAddr(a) {
+			return "", false
+		}
+		return a.String(), true
 	}
-	a, err := netip.ParseAddr(s)
-	if err != nil || a.Zone() != "" || publicAddr(a) {
+	return reservedName(s)
+}
+
+// reservedName returns s in lower case punycode when it is a valid host
+// name that is localhost, ends in a reserved top level domain or is
+// under a documentation domain.
+func reservedName(s string) (string, bool) {
+	s = strings.TrimSuffix(s, ".")
+	if s == "" || len(s) > 253 {
 		return "", false
 	}
-	return a.String(), true
+	ascii, err := idna.Lookup.ToASCII(strings.ToLower(s))
+	if err != nil || ascii == "" {
+		return "", false
+	}
+	labels := strings.Split(ascii, ".")
+	for _, l := range labels {
+		if l == "" || len(l) > 63 || strings.Trim(l, "abcdefghijklmnopqrstuvwxyz0123456789-") != "" || l[0] == '-' || l[len(l)-1] == '-' {
+			return "", false
+		}
+	}
+	if ascii == "localhost" || len(labels) > 1 && reservedTLDs[labels[len(labels)-1]] {
+		return ascii, true
+	}
+	if key, err := publicsuffix.EffectiveTLDPlusOne(ascii); err == nil && exampleDomains[key] {
+		return ascii, true
+	}
+	return "", false
 }
 
 // socketSchemes are the transports PHP's stream_socket_client and

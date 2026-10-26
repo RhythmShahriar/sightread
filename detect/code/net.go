@@ -36,8 +36,9 @@ const (
 	AttrCategory = "category"
 	// AttrHost is the host an FSend goes to, when it could be folded.
 	AttrHost = "host"
-	// AttrLocal is the loopback or other local address (or localhost)
-	// an FSend names as written, when it has no AttrHost.
+	// AttrLocal is the local address (loopback, link-local) or the local
+	// or reserved name (localhost, .test, example.com) an FSend names as
+	// written, when it has no AttrHost.
 	AttrLocal = "local"
 	// AttrDomain is the registrable domain (eTLD+1) of AttrHost, the
 	// key an FDomain feature of the same host has.
@@ -367,7 +368,10 @@ func exfilFinding(s *core.Subject, f core.Feature) (core.Finding, bool) {
 	}
 	to := cmp.Or(host, "a host built at run time")
 	if local := strings.TrimSpace(f.Attrs[AttrLocal]); host == "" && local != "" {
-		to = "the local address " + local
+		to = "the local or reserved name " + local
+		if _, err := netip.ParseAddr(local); err == nil {
+			to = "the local address " + local
+		}
 	}
 	fd.Evidence = core.NewSnippet("sends " + reads + " to " + to + ": " + f.Ev.Snippet.String())
 	return fd, true

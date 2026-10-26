@@ -254,6 +254,8 @@ func TestPHPFeatures(t *testing.T) {
 			map[string]string{"host": "", "local": "127.0.0.1", "channel": "socket"}, true},
 		{"localhost URL", `<?php wp_remote_post('http://LocalHost:8080/in', $d);`, core.FSend, "wp_remote_post",
 			map[string]string{"host": "", "local": "localhost"}, true},
+		{"reserved name", `<?php wp_remote_get('https://analytics.wpos-cdn.example/v2/p');`, core.FSend, "wp_remote_get",
+			map[string]string{"host": "", "local": "analytics.wpos-cdn.example"}, true},
 		{"public host is not local", `<?php $s = fsockopen('203.0.113.9', 4444);`, core.FSend, "fsockopen",
 			map[string]string{"host": "203.0.113.9", "local": ""}, true},
 		{"a URL in the body is not the host", `<?php wp_remote_post($u, array('body' => 'https://other-site.com/x'));`,

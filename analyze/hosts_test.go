@@ -280,13 +280,17 @@ func FuzzExtractURLs(f *testing.F) {
 	})
 }
 
-// TestLocalAddr: only localhost and addresses publicAddr rejects are
-// local; hosts, public and private addresses and zoned ones are not.
+// TestLocalAddr: addresses publicAddr rejects and localhost, reserved
+// and documentation names are local; public hosts, private addresses,
+// zoned addresses and invalid names are not.
 func TestLocalAddr(t *testing.T) {
 	for in, want := range map[string]string{
 		"127.0.0.1": "127.0.0.1", "127.0.0.1:18905": "127.0.0.1", "tcp://[::1]:80": "::1", "http://user@localhost./x": "localhost",
 		"https://[fe80::1]/p": "fe80::1", "0.0.0.0": "0.0.0.0", "udp://224.0.0.1:5353": "224.0.0.1",
-		"evil.test": "", "10.0.0.1": "", "203.0.113.9:80": "", "fe80::1%eth0": "", "gopher://127.0.0.1/": "", "": "",
+		"https://analytics.WPOS-cdn.example/v2/p": "analytics.wpos-cdn.example", "evil.test:80": "evil.test",
+		"http://api.example.com/x": "api.example.com", "db.corp.internal": "db.corp.internal",
+		"evil-host.ru": "", "10.0.0.1": "", "203.0.113.9:80": "", "fe80::1%eth0": "", "gopher://127.0.0.1/": "", "": "",
+		"test": "", "bad_label.test": "", "-x.test": "",
 	} {
 		got, ok := localAddr(in)
 		if got != want || ok != (want != "") {
@@ -301,11 +305,12 @@ func FuzzLocalAddr(f *testing.F) {
 	}
 	f.Fuzz(func(t *testing.T, s string) {
 		if h, ok := localAddr(s); ok {
-			if h != "localhost" {
-				a, err := netip.ParseAddr(h)
-				if err != nil || publicAddr(a) {
-					t.Fatalf("localAddr(%q) = %q, not a local address", s, h)
-				}
+			// Never a host normHost would accept: that one is sendHost's.
+			if _, _, _, public := normHost(h); public {
+				t.Fatalf("localAddr(%q) = %q, a public host", s, h)
+			}
+			if a, err := netip.ParseAddr(h); err == nil && publicAddr(a) {
+				t.Fatalf("localAddr(%q) = %q, a public address", s, h)
 			}
 		} else if h != "" {
 			t.Fatalf("localAddr(%q) = %q without ok", s, h)
