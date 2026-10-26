@@ -149,7 +149,10 @@ func owners(eco core.Ecosystem, m *core.Meta) []ident {
 // profileSlug returns the account of a profiles.wordpress.org URL.
 func profileSlug(raw string) string {
 	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || !strings.HasSuffix(strings.ToLower(u.Hostname()), "wordpress.org") {
+	if err != nil {
+		return ""
+	}
+	if h := strings.ToLower(u.Hostname()); h != "wordpress.org" && !strings.HasSuffix(h, ".wordpress.org") {
 		return ""
 	}
 	parts := strings.Split(strings.Trim(u.Path, "/"), "/")

@@ -105,6 +105,9 @@ func TestProfileSlug(t *testing.T) {
 		"https://profiles.wordpress.org/deliciousbrains/": "deliciousbrains",
 		"https://profiles.wordpress.org/a":                "a",
 		"https://example.test/a":                          "",
+		"https://evilwordpress.org/a":                     "",
+		"https://profiles.wordpress.org.evil.test/a":      "",
+		"https://WordPress.org/a":                         "a",
 		"":                                                "",
 		"::bad":                                           "",
 	} {
