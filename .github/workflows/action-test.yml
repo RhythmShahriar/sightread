@@ -1,0 +1,354 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Runs the Action itself (uses: ./) against the testbed's fixture
+# registry on 127.0.0.1: a pull request that moves two npm packages in a
+# lockfile, an allow entry the pull request adds for itself (SR-61), a
+# release whose checksums.txt was changed (SR-17, SR-81) and a token that
+# can't comment. The release under test is this commit, built and served
+# from 127.0.0.1 through the download-url input. Everything is pinned by
+# commit.
+name: action-test
+on:
+  push:
+    branches: [master]
+  pull_request:
+permissions:
+  contents: read
+env:
+  # What release.sh builds this commit as; the install step takes it
+  # from the version input instead of the action's tag.
+  SR_VERSION: 0.0.0-actiontest
+jobs:
+  # Mode changes on the pull request in $RUNNER_TEMP/pr: every output is
+  # set and the Markdown reaches the job summary.
+  changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build this commit as a release and serve it on 127.0.0.1
+        run: |
+          .github/action-test/release.sh build "$RUNNER_TEMP/release" "$SR_VERSION"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/release" 31130
+      - name: Start the fixture registry
+        run: .github/action-test/serve.sh registry
+      - name: Make the pull request
+        run: .github/action-test/pr.sh make "$RUNNER_TEMP/pr"
+
+      - name: Review the lockfile change
+        id: sr
+        # leftpadplus 1.0.1 and expresss carry high findings, so the gate
+        # fails the step; the next step checks that it did.
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: changes
+          working-directory: ${{ runner.temp }}/pr/repo
+          base: sr-base
+          sarif: "true"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31130
+          verify-signature: "false"
+
+      - name: Check the outputs
+        env:
+          OUTCOME: ${{ steps.sr.outcome }}
+          CODE: ${{ steps.sr.outputs.exit-code }}
+          VERDICT: ${{ steps.sr.outputs.verdict }}
+          UPDATES: ${{ steps.sr.outputs.updates }}
+          FINDINGS: ${{ steps.sr.outputs.findings }}
+          REPORT: ${{ steps.sr.outputs.report }}
+          SARIF: ${{ steps.sr.outputs.sarif-file }}
+          VERSION: ${{ steps.sr.outputs.version }}
+        run: |
+          set -x
+          test "$OUTCOME" = failure
+          test "$CODE" = 1
+          case "${VERDICT,,}" in hold | review) ;; *) exit 1 ;; esac
+          test "$UPDATES" = 2
+          test "$FINDINGS" -ge 3
+          test "$VERSION" = "$SR_VERSION"
+          test -s "$REPORT"
+          test "$(jq -r .schema "$REPORT")" = rhythm-sightread/v1
+          test "$(jq '.data.updates | length' "$REPORT")" = 2
+          jq -e '[.data.updates[].name] | sort == ["expresss", "leftpadplus"]' "$REPORT"
+          test "$(jq -r '.verdict | ascii_downcase' "$REPORT")" = "${VERDICT,,}"
+          test -s "$SARIF"
+          test "$(jq -r .version "$SARIF")" = 2.1.0
+          jq -e '[.runs[0].results[]] | length > 0' "$SARIF"
+      - name: The job summary holds the Markdown report
+        env:
+          SUMMARY: ${{ steps.sr.outputs.summary }}
+        run: |
+          # The summary output is the Markdown the Action wrote to the job
+          # summary (a path, or the text itself).
+          if [ -f "$SUMMARY" ]; then md=$(cat "$SUMMARY"); else md=$SUMMARY; fi
+          grep -q '^## Sightread: ' <<<"$md"
+          # The runner keeps each step's summary file until the job ends;
+          # when it is there, the heading must be in one of them.
+          shopt -s nullglob
+          files=("$RUNNER_TEMP"/_runner_file_commands/step_summary_*)
+          if [ "${#files[@]}" -gt 0 ]; then
+            grep -l '^## Sightread: ' "${files[@]}"
+          else
+            echo "::notice::the runner's step summary files are gone; checked the summary output only"
+          fi
+
+  # SR-61: an allow entry the pull request adds for itself is shown but
+  # not counted; trust-pr-allow counts it.
+  pr-allow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build this commit as a release and serve it on 127.0.0.1
+        run: |
+          .github/action-test/release.sh build "$RUNNER_TEMP/release" "$SR_VERSION"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/release" 31131
+      - name: Start the fixture registry
+        run: .github/action-test/serve.sh registry
+      - name: Make the pull request
+        run: .github/action-test/pr.sh make "$RUNNER_TEMP/pr"
+
+      - name: Review it once to learn the archive hashes
+        id: first
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: changes
+          working-directory: ${{ runner.temp }}/pr/repo
+          base: sr-base
+          upload: "false"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31131
+          verify-signature: "false"
+      - name: The pull request allows both versions in its own head
+        env:
+          REPORT: ${{ steps.first.outputs.report }}
+        run: |
+          cp "$REPORT" "$RUNNER_TEMP/first.json"
+          .github/action-test/pr.sh allow "$RUNNER_TEMP/pr" "$RUNNER_TEMP/first.json"
+
+      - name: Review with the head's allow entries
+        id: untrusted
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: changes
+          working-directory: ${{ runner.temp }}/pr/repo
+          base: sr-base
+          upload: "false"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31131
+          verify-signature: "false"
+      - name: Not counted without trust-pr-allow
+        env:
+          FIRST: ${{ steps.first.outputs.exit-code }}
+          CODE: ${{ steps.untrusted.outputs.exit-code }}
+          VERDICT: ${{ steps.untrusted.outputs.verdict }}
+          REPORT: ${{ steps.untrusted.outputs.report }}
+        run: |
+          set -x
+          test "$FIRST" = 1
+          test "$CODE" = 1
+          test "${VERDICT,,}" != allowed
+          test "$(jq .summary.allowed "$REPORT")" = 0
+          # Shown to the reviewer all the same.
+          jq -r '.. | strings' "$REPORT" | grep -q 'allowed in this change, not counted'
+
+      - name: Review again with trust-pr-allow
+        id: trusted
+        uses: ./
+        with:
+          mode: changes
+          working-directory: ${{ runner.temp }}/pr/repo
+          base: sr-base
+          trust-pr-allow: "true"
+          upload: "false"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31131
+          verify-signature: "false"
+      - name: Counted with trust-pr-allow
+        env:
+          CODE: ${{ steps.trusted.outputs.exit-code }}
+          VERDICT: ${{ steps.trusted.outputs.verdict }}
+          REPORT: ${{ steps.trusted.outputs.report }}
+        run: |
+          set -x
+          test "$CODE" = 0
+          test "${VERDICT,,}" = allowed
+          test "$(jq .summary.allowed "$REPORT")" = 2
+
+  # SR-17 and SR-81: the install step refuses a release whose
+  # checksums.txt was changed and installs nothing.
+  tampered-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Serve the changed releases on 127.0.0.1
+        run: |
+          # A checksum that no longer matches the archive.
+          .github/action-test/release.sh build "$RUNNER_TEMP/bad-sum" "$SR_VERSION"
+          .github/action-test/release.sh bad-sum "$RUNNER_TEMP/bad-sum"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/bad-sum" 31132
+          # Archive and checksum agree, the signature signs neither.
+          .github/action-test/release.sh build "$RUNNER_TEMP/bad-sig" "$SR_VERSION"
+          .github/action-test/release.sh junk-sig "$RUNNER_TEMP/bad-sig"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/bad-sig" 31133
+
+      - name: Install from a release whose checksum is wrong
+        id: bad-sum
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: all
+          upload: "false"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31132
+          verify-signature: "false"
+      - name: Install from a release whose signature is not over its checksums.txt
+        id: bad-sig
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: all
+          upload: "false"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31133
+      - name: Both were refused and nothing was installed
+        env:
+          SUM: ${{ steps.bad-sum.outcome }}
+          SIG: ${{ steps.bad-sig.outcome }}
+          SUM_CODE: ${{ steps.bad-sum.outputs.exit-code }}
+          SIG_CODE: ${{ steps.bad-sig.outputs.exit-code }}
+        run: |
+          set -x
+          test "$SUM" = failure
+          test "$SIG" = failure
+          # The review never ran, so it set no exit code.
+          test -z "$SUM_CODE"
+          test -z "$SIG_CODE"
+          if command -v rhythm-sightread; then exit 1; fi
+
+      # The real case: the latest signed release, then the same release
+      # with its archive and checksums.txt line swapped for this commit's
+      # build. Before the first release there is nothing to fetch.
+      - name: Fetch the latest signed release
+        id: real
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo RhythmShahriar/sightread --json tagName --jq .tagName 2>/dev/null || true)
+          if [ -z "$tag" ]; then
+            echo "::notice::RhythmShahriar/sightread has no release yet; the signed-release case runs from the first one"
+            exit 0
+          fi
+          for d in real swapped; do
+            gh release download "$tag" --repo RhythmShahriar/sightread --dir "$RUNNER_TEMP/$d" \
+              --pattern rhythm-sightread_linux_amd64.tar.gz --pattern checksums.txt --pattern checksums.txt.sigstore.json
+          done
+          .github/action-test/release.sh build "$RUNNER_TEMP/local" "${tag#v}"
+          .github/action-test/release.sh swap "$RUNNER_TEMP/swapped" "$RUNNER_TEMP/local/rhythm-sightread_linux_amd64.tar.gz"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/swapped" 31134
+          .github/action-test/serve.sh release "$RUNNER_TEMP/real" 31135
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+      - name: Install the swapped release
+        id: swapped
+        if: steps.real.outputs.version != ''
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: all
+          upload: "false"
+          version: ${{ steps.real.outputs.version }}
+          download-url: http://127.0.0.1:31134
+      - name: The swapped release was refused
+        if: steps.real.outputs.version != ''
+        env:
+          OUTCOME: ${{ steps.swapped.outcome }}
+        run: |
+          set -x
+          test "$OUTCOME" = failure
+          if command -v rhythm-sightread; then exit 1; fi
+      - name: Install the real release from the same mirror setup
+        id: genuine
+        if: steps.real.outputs.version != ''
+        # Only the install matters here; nothing serves a registry, so
+        # the review after it may fail.
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: all
+          fail-on: none
+          upload: "false"
+          version: ${{ steps.real.outputs.version }}
+          download-url: http://127.0.0.1:31135
+      - name: The real one installed, so the refusals were the tampering
+        if: steps.real.outputs.version != ''
+        env:
+          WANT: ${{ steps.real.outputs.version }}
+        run: |
+          set -x
+          rhythm-sightread --version | grep -qF "$WANT"
+
+  # A read-only token (pull requests from forks and Dependabot get one):
+  # the gate and the summary still work, the comment is only a warning.
+  comment-read-only:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: Build this commit as a release and serve it on 127.0.0.1
+        run: |
+          .github/action-test/release.sh build "$RUNNER_TEMP/release" "$SR_VERSION"
+          .github/action-test/serve.sh release "$RUNNER_TEMP/release" 31136
+      - name: Start the fixture registry
+        run: .github/action-test/serve.sh registry
+      - name: Make the pull request
+        run: .github/action-test/pr.sh make "$RUNNER_TEMP/pr"
+      - name: Review and try to comment
+        id: sr
+        uses: ./
+        with:
+          mode: changes
+          working-directory: ${{ runner.temp }}/pr/repo
+          base: sr-base
+          fail-on: none
+          comment: "true"
+          upload: "false"
+          version: ${{ env.SR_VERSION }}
+          download-url: http://127.0.0.1:31136
+          verify-signature: "false"
+      - name: The step passed without a comment
+        env:
+          OUTCOME: ${{ steps.sr.outcome }}
+          CODE: ${{ steps.sr.outputs.exit-code }}
+          COMMENT: ${{ steps.sr.outputs.comment-id }}
+          SUMMARY: ${{ steps.sr.outputs.summary }}
+        run: |
+          set -x
+          test "$OUTCOME" = success
+          test "$CODE" = 0
+          test -z "$COMMENT"
+          test -n "$SUMMARY"
