@@ -44,11 +44,8 @@ type stub struct {
 	name, args, summary string
 }
 
-// The commands still to come.
-var (
-	watchStub  = stub{"watch", "-l <sites.yaml> --every <d> [flags]", "check sites on a schedule"}
-	demoStub   = stub{"demo", "[--keep]", "try it on built-in packages, no network"}
-)
+// watchStub is the one command still to come.
+var watchStub = stub{"watch", "-l <sites.yaml> --every <d> [flags]", "check sites on a schedule"}
 
 func (s stub) flags(stderr io.Writer) *flag.FlagSet {
 	return cli.NewFlagSet(s.name, "Usage: "+cli.Name()+" "+s.name+" "+s.args+"\n\n"+s.summary, stderr)
@@ -79,8 +76,9 @@ func commands() []cli.Command {
 		out = append(out, c.command())
 	}
 	out = append(out, explainCommand.command(), allowCommand.command(), watchStub.command())
-	out = append(out, reportCommand.command(), verifyCommand.command(), initCommand.command(), doctorCommand.command(), demoStub.command(),
-		signalsCommand.command(), cacheCommand.command())
+	for _, c := range []*simpleCommand{reportCommand, verifyCommand, initCommand, doctorCommand, demoCommand, signalsCommand, cacheCommand} {
+		out = append(out, c.command())
+	}
 	return append(out, updateCommand(), pickCommand())
 }
 
