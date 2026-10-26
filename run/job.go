@@ -606,62 +606,114 @@ func (r *reviewer) hunks(ctx context.Context, d *core.Diff, u *core.Update) []co
 }
 
 // depInfo looks up each dependency new in this version: its age, its
-// install scripts and whether its name is popular, for dependency-new
-// and typosquat.
+// install scripts, its maintainers and whether its name is popular, for
+// dependency-new and typosquat. For a new name close to a popular one
+// it also records the popular package's maintainers, so a sibling
+// package its own maintainers publish is not called a typosquat.
 func (r *reviewer) depInfo(ctx context.Context, src core.Source, t *target, old, cur *side) {
-	if src == nil || (t.eco != core.NPM && t.eco != core.Composer) || len(cur.meta.Deps) == 0 {
+	if src == nil || (t.eco != core.NPM && t.eco != core.Composer) {
 		return
 	}
-	var before map[string]string
-	if old != nil {
-		before = old.meta.Deps
-	}
-	var added []string
-	for name := range cur.meta.Deps {
-		if _, ok := before[name]; !ok {
-			added = append(added, name)
-		}
-	}
-	slices.Sort(added)
-	if len(added) > MaxNewDeps {
-		r.logf("%s:%s: %d new dependencies, looking up the first %d", t.eco, t.name, len(added), MaxNewDeps)
-		added = added[:MaxNewDeps]
-	}
-	vs := core.Versions(t.eco)
 	var names core.NameIndex
 	if dp := core.GetDataPacks(); dp != nil {
 		names = dp.Names()
+	}
+	if old == nil {
+		// An added package: typosquat checks its own name.
+		r.nearInfo(ctx, src, t, cur, names, t.name, cur.meta.Maintainers)
+	}
+	var beforeDeps, beforeDev map[string]string
+	if old != nil {
+		beforeDeps, beforeDev = old.meta.Deps, old.meta.DevDeps
+	}
+	constraint := map[string]string{}
+	for name, c := range cur.meta.Deps {
+		if _, ok := beforeDeps[name]; !ok {
+			constraint[name] = c
+		}
+	}
+	for name, c := range cur.meta.DevDeps {
+		_, wasDev := beforeDev[name]
+		_, wasRuntime := beforeDeps[name]
+		if _, isRuntime := cur.meta.Deps[name]; !wasDev && !wasRuntime && !isRuntime {
+			constraint[name] = c
+		}
+	}
+	added := slices.Sorted(maps.Keys(constraint))
+	if len(added) > MaxNewDeps {
+		r.logf("%s:%s: %d new dependencies, looking up the first %d", t.eco, t.name, len(added), MaxNewDeps)
+		added = added[:MaxNewDeps]
 	}
 	for _, name := range added {
 		if ctx.Err() != nil {
 			return
 		}
-		info := &core.DepInfo{Name: name}
+		info := r.lookupDep(ctx, src, t, name, constraint[name])
 		if names != nil {
-			info.Popular = names.Popular(t.eco, name)
+			info.Popular = info.Popular || names.Popular(t.eco, name)
 		}
 		if cur.meta.DepInfo == nil {
 			cur.meta.DepInfo = map[string]*core.DepInfo{}
 		}
 		cur.meta.DepInfo[name] = info
-		versions, err := src.Versions(ctx, name)
-		if err != nil || vs == nil {
-			r.logf("%s:%s: dependency %s: %v", t.eco, t.name, name, err)
+		if !info.Popular {
+			r.nearInfo(ctx, src, t, cur, names, name, info.Maintainers)
+		}
+	}
+}
+
+// lookupDep returns what the registry says about the newest version of
+// name that meets constraint (the newest at all when none does).
+func (r *reviewer) lookupDep(ctx context.Context, src core.Source, t *target, name, constraint string) *core.DepInfo {
+	info := &core.DepInfo{Name: name}
+	vs := core.Versions(t.eco)
+	versions, err := src.Versions(ctx, name)
+	if err != nil || vs == nil {
+		r.logf("%s:%s: dependency %s: %v", t.eco, t.name, name, err)
+		return info
+	}
+	v := core.Newest(vs, versions, constraint, false)
+	if v == "" {
+		v = core.Newest(vs, versions, "", false)
+	}
+	if v == "" {
+		return info
+	}
+	m, err := src.Meta(ctx, core.Ref{Eco: t.eco, Name: name, Version: v})
+	if err != nil {
+		r.logf("%s:%s: dependency %s %s: %v", t.eco, t.name, name, v, err)
+		return info
+	}
+	info.Version, info.Published, info.HasInstallScript = v, m.Published, m.HasInstallScript
+	info.Maintainers = slices.Clone(m.Maintainers)
+	return info
+}
+
+// maxNearLookups bounds the popular packages looked up for one new
+// name: the typosquat evidence names at most three.
+const maxNearLookups = 3
+
+// nearInfo records, for each popular name close to name, the popular
+// package's maintainers in cur's DepInfo (Popular set). Nothing is
+// looked up when name has no maintainers to compare.
+func (r *reviewer) nearInfo(ctx context.Context, src core.Source, t *target, cur *side, names core.NameIndex, name string, own []core.Person) {
+	if names == nil || len(own) == 0 {
+		return
+	}
+	near := names.Near(t.eco, name)
+	for _, p := range near[:min(len(near), maxNearLookups)] {
+		if ctx.Err() != nil {
+			return
+		}
+		if _, ok := cur.meta.DepInfo[p]; ok {
 			continue
 		}
-		v := core.Newest(vs, versions, cur.meta.Deps[name], false)
-		if v == "" {
-			v = core.Newest(vs, versions, "", false)
+		info := r.lookupDep(ctx, src, t, p, "")
+		info.Popular = true
+		if cur.meta.DepInfo == nil {
+			cur.meta.DepInfo = map[string]*core.DepInfo{}
 		}
-		if v == "" {
-			continue
-		}
-		m, err := src.Meta(ctx, core.Ref{Eco: t.eco, Name: name, Version: v})
-		if err != nil {
-			r.logf("%s:%s: dependency %s %s: %v", t.eco, t.name, name, v, err)
-			continue
-		}
-		info.Version, info.Published, info.HasInstallScript = v, m.Published, m.HasInstallScript
+		cur.meta.DepInfo[p] = info
 	}
 }
 

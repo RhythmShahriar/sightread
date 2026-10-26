@@ -46,6 +46,39 @@ func TestNewDependencyInfo(t *testing.T) {
 	}
 }
 
+// TestNearPopularMaintainers: a new dependency one edit from a popular
+// name carries its maintainers, and the popular package's maintainers
+// are looked up beside it; a new dependency near nothing popular looks
+// up nothing more.
+func TestNearPopularMaintainers(t *testing.T) {
+	w := runtest.Install(t)
+	ann := []core.Person{{Name: "ann", Login: "ann"}}
+	w.Publish(core.NPM, "app", "1.0.0", "1.1.0")
+	w.Publish(core.NPM, "axiox", "1.0.0")
+	w.Publish(core.NPM, "axios", "1.7.0")
+	w.Publish(core.NPM, "zzz-unique", "1.0.0")
+	src := w.Sources[core.NPM]
+	src.Metas[core.Ref{Eco: core.NPM, Name: "app", Version: "1.1.0"}] = &core.Meta{Deps: map[string]string{"axiox": "^1.0.0"},
+		DevDeps: map[string]string{"zzz-unique": "^1.0.0"}}
+	src.Metas[core.Ref{Eco: core.NPM, Name: "axiox", Version: "1.0.0"}] = &core.Meta{Maintainers: ann}
+	src.Metas[core.Ref{Eco: core.NPM, Name: "axios", Version: "1.7.0"}] = &core.Meta{Maintainers: ann}
+	src.Metas[core.Ref{Eco: core.NPM, Name: "zzz-unique", Version: "1.0.0"}] = &core.Meta{Maintainers: ann}
+	w.Install(core.NPM, "app", "1.0.0")
+	req := request(t, "npm")
+	req.Eco = core.NPM
+	review(t, req)
+	info := w.Detector.Subjects()[0].New.DepInfo
+	if d := info["axiox"]; d == nil || len(d.Maintainers) != 1 || d.Popular {
+		t.Errorf("axiox %+v", d)
+	}
+	if d := info["axios"]; d == nil || !d.Popular || len(d.Maintainers) != 1 || d.Version != "1.7.0" {
+		t.Errorf("axios %+v", d)
+	}
+	if d := info["zzz-unique"]; d == nil || len(info) != 3 {
+		t.Errorf("dev dependency or extra lookups: %+v", info)
+	}
+}
+
 // TestGitTagBudget: the tag check runs only for an update that already
 // has owner-change, npm-install-script-new or provenance-dropped;
 // its git-tag-missing finding is added.
