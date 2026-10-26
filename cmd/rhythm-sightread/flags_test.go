@@ -136,6 +136,34 @@ func TestBadFlagValues(t *testing.T) {
 	}
 }
 
+// TestProxyPasswordMasked: a bad proxy URL is named in the error without
+// its password, from the flag and from HTTPS_PROXY.
+func TestProxyPasswordMasked(t *testing.T) {
+	world(t)
+	pw := "hunter" + "2-" + "s3cr3t"
+	cases := []struct {
+		flag, env, want string
+	}{
+		{"bob:" + pw + "@proxy:3128", "", `rhythm-sightread: --proxy "***@proxy:3128": want a URL such as http://proxy.example:3128`},
+		{"", "ftp://bob:" + pw + "@proxy:3128", `rhythm-sightread: --proxy "ftp://proxy:3128": want a URL such as http://proxy.example:3128`},
+		{"", "http://bob:" + pw + "@", `rhythm-sightread: --proxy "***@": want a URL such as http://proxy.example:3128`},
+	}
+	for _, c := range cases {
+		t.Setenv("HTTPS_PROXY", c.env)
+		args := []string{"plugin", "a"}
+		if c.flag != "" {
+			args = append(args, "--proxy", c.flag)
+		}
+		code, out, errOut := execute(t, args...)
+		if strings.Contains(errOut+out, pw) {
+			t.Errorf("%q %q: the password reached the output: %q", c.flag, c.env, errOut)
+		}
+		if code != cli.ExitUsage || errOut != c.want+"\n" {
+			t.Errorf("%q %q: exit %d %q, want %q", c.flag, c.env, code, errOut, c.want)
+		}
+	}
+}
+
 // TestFlagMapping is the table of PRD 7: each flag lands in the field of
 // run.Request, the Getter, the gate, the writers or the stage that uses
 // it.

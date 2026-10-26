@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
+	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/rhythm/kit/update"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/run"
@@ -362,7 +363,7 @@ func (f *reviewFlags) plan(c *reviewCommand, env func(string) string, version st
 	proxy := cmp.Or(f.proxy, env("HTTPS_PROXY"), env("https_proxy"))
 	if proxy != "" {
 		if u, err := url.Parse(proxy); err != nil || u.Host == "" || !slices.Contains([]string{"http", "https", "socks5"}, u.Scheme) {
-			return nil, badFlag("--proxy %q: want a URL such as http://proxy.example:3128", proxy)
+			return nil, badFlag("--proxy %q: want a URL such as http://proxy.example:3128", shownProxy(proxy))
 		}
 	}
 	q.MaxSize, q.Deadline, q.Jobs = size, deadline, f.jobs
@@ -636,4 +637,18 @@ func splitPassthrough(args []string) (own, pass []string) {
 		return args[:i], args[i+1:]
 	}
 	return args, nil
+}
+
+// shownProxy is a proxy URL safe to print: a proxy URL can carry a
+// password and the error lands in CI logs, so the user info is dropped
+// (or, when the value doesn't parse, everything before the last @) and
+// the rest is masked like any other output.
+func shownProxy(raw string) string {
+	if u, err := url.Parse(raw); err == nil && u.Host != "" {
+		return secrets.Redact(u.Scheme + "://" + u.Host)
+	}
+	if i := strings.LastIndex(raw, "@"); i >= 0 {
+		raw = "***" + raw[i:]
+	}
+	return secrets.Redact(raw)
 }
