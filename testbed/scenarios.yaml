@@ -5,6 +5,7 @@
 # bench sets each state, runs the command against the fixture
 # registry and checks the review against expect and forbid. Env
 # scenarios carry their own assertions under env, run by the probes.
+# {testbed} in a command is the absolute path of this folder.
 
 scenarios:
   - id: b01
@@ -532,8 +533,8 @@ scenarios:
     kind: env
     title: "--soundcheck with stub Soundcheck and Roadie"
     package: e15-soundcheck
-    command: ["plugin", "e15-soundcheck", "--soundcheck", "http://127.0.0.1:18907", "--path", "projects/wp"]
+    command: ["plugin", "e15-soundcheck", "--soundcheck", "http://127.0.0.1:18907", "--wp", "{testbed}/bin/wp"]
     expect:
       exit: 0
     env:
-      note: "the update is applied only on the staging copy; refusals leave files byte-identical"
+      note: "the update is applied only on the staging copy; refusals leave files byte-identical (cases in testbed/staging)"
