@@ -54,8 +54,8 @@ var noCodePayload = map[string]bool{"b17": true}
 // TestBadScenariosHaveCanary checks every bad scenario carries a canary
 // tripwire (the port 18905) somewhere in its group (a scenario and its
 // companion dependency share the group prefix, e.g. b13-app and b13-dep),
-// the proof that if its payload ever ran it would be caught, and that
-// good scenarios carry none.
+// the proof that if its payload ever ran it would be caught. Good
+// scenarios must carry none.
 func TestBadScenariosHaveCanary(t *testing.T) {
 	ids, err := scenarioIDs(packagesDir)
 	if err != nil {
