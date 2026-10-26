@@ -35,8 +35,11 @@ func TestYAMLFlatListFailsFast(t *testing.T) {
 			if !errors.Is(err, errYAMLBomb) {
 				t.Fatalf("err = %v, want the YAML bomb error", err)
 			}
-			if d > 2*time.Second {
-				t.Errorf("took %s", d)
+			// The allocation bound below is the exact guarantee. The
+			// time bound only catches a quadratic scan, so it grows with
+			// the race detector's slowdown instead of flaking under it.
+			if limit := 2 * time.Second * raceSlowdown; d > limit {
+				t.Errorf("took %s, limit %s", d, limit)
 			}
 			if alloc := after.TotalAlloc - before.TotalAlloc; alloc > 64<<20 {
 				t.Errorf("allocated %d MiB", alloc>>20)
