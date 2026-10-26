@@ -88,7 +88,7 @@ func (r *reviewer) readSite(ctx context.Context, req core.InventoryRequest) (*co
 		return nil, "", err
 	}
 	req.Root = root
-	req.Command, req.Log = r.req.Command, r.req.Log
+	req.Command, req.Log, req.Sources = r.req.Command, r.req.Log, &r.cfg.Sources
 	site, err := r.inv.Read(ctx, req)
 	if err != nil {
 		return nil, root, withCommand(err, r.req.Command)
@@ -276,6 +276,7 @@ func (r *reviewer) resolveChanges(ctx context.Context, rep *core.Report) ([]*tar
 		return nil, err
 	}
 	cr.Repo = repo
+	cr.Sources = &r.cfg.Sources
 	cs, err := r.inv.Changes(ctx, cr)
 	if err != nil {
 		return nil, withCommand(err, r.req.Command)

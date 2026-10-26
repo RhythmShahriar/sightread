@@ -77,6 +77,10 @@ type InventoryRequest struct {
 	// per --wp call (-v). Both are set by run.
 	Command string
 	Log     io.Writer
+	// Sources is the config's sources: a lockfile entry resolved from
+	// the npm mirror, a configured scope or a Composer repository is a
+	// registry entry, not a tarball. Nil means the public registries.
+	Sources *SourcesConfig
 }
 
 // Site is what one target folder holds.
@@ -97,6 +101,8 @@ type ChangesRequest struct {
 	Before    string
 	After     string
 	Lockfiles []string
+	// Sources is as for InventoryRequest. Set by run.
+	Sources *SourcesConfig
 }
 
 // Bump is one package a lockfile change moves. From is nil for a

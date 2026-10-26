@@ -4,10 +4,12 @@
 package inventory
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -122,7 +124,24 @@ func (rd *Reader) Read(ctx context.Context, req core.InventoryRequest) (*core.Si
 
 // Changes reads what a lockfile change moves (ReadChanges).
 func (rd *Reader) Changes(ctx context.Context, req core.ChangesRequest) (*core.ChangeSet, error) {
-	return ReadChanges(ctx, req, ChangesOptions{Options: rd.Options})
+	return ReadChanges(ctx, req, ChangesOptions{Options: rd.options(req.Sources)})
+}
+
+// options is rd.Options with the run's config sources added: a value set
+// on the Reader itself wins.
+func (rd *Reader) options(src *core.SourcesConfig) Options {
+	o := rd.Options
+	if src == nil {
+		return o
+	}
+	o.NPMRegistry = cmp.Or(o.NPMRegistry, src.NPM.Registry)
+	if len(src.NPM.Scopes) > 0 {
+		scopes := maps.Clone(src.NPM.Scopes)
+		maps.Copy(scopes, o.NPMScopes)
+		o.NPMScopes = scopes
+	}
+	o.ComposerRepos = append(slices.Clone(o.ComposerRepos), src.Composer.Repositories...)
+	return o
 }
 
 // ResolveBase is the ref Changes compares repo with when the request
@@ -287,9 +306,9 @@ func (rd *Reader) readLocks(req core.InventoryRequest, root string, sel ecoSelec
 			e.Command = ""
 			return nil, e
 		case kind == KindComposer:
-			p, err = ReadComposer(dir, rd.Options)
+			p, err = ReadComposer(dir, rd.options(req.Sources))
 		default:
-			p, err = readNPMFile(dir, w.name, rd.Options)
+			p, err = readNPMFile(dir, w.name, rd.options(req.Sources))
 		}
 		if err != nil {
 			return nil, lockError(joinRel(w.dir, w.name), err)

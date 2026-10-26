@@ -319,3 +319,34 @@ func TestReaderChanges(t *testing.T) {
 		t.Errorf("err = %v", err)
 	}
 }
+
+// TestReaderSources: the config's npm mirror and Composer repositories
+// reach the lockfile readers through the request, so a package resolved
+// from the mirror is reviewed (positive); without them it is not a
+// registry entry (negative).
+func TestReaderSources(t *testing.T) {
+	isolateHome(t)
+	root := t.TempDir()
+	mirror := "https://npm.mirror.example/left-pad/-/left-pad-1.3.0.tgz"
+	writeFiles(t, root, map[string]string{
+		"package.json":      packageJSON(map[string]string{"left-pad": "^1"}),
+		"package-lock.json": packageLock(map[string]string{"left-pad": "^1"}, lockPkg{"node_modules/left-pad", "1.3.0", mirror, sri("lp")}),
+	})
+	read := func(src *core.SourcesConfig) []string {
+		s, err := (&Reader{}).Read(context.Background(), core.InventoryRequest{Root: root, Ecosystems: []core.Ecosystem{core.NPM}, Sources: src})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var names []string
+		for _, i := range s.Installed {
+			names = append(names, i.Ref.Name+" "+i.ResolvedKind)
+		}
+		return names
+	}
+	if got := read(&core.SourcesConfig{NPM: core.NPMSourceConfig{Registry: "https://npm.mirror.example/"}}); !slices.Equal(got, []string{"left-pad registry"}) {
+		t.Errorf("with the mirror: %q", got)
+	}
+	if got := read(nil); slices.Contains(got, "left-pad registry") {
+		t.Errorf("without the mirror: %q", got)
+	}
+}
