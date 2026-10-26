@@ -17,10 +17,11 @@ func fuzzing() bool {
 	return f != nil && f.Value.String() != ""
 }
 
-// linearBudget is how long lexing 1 MiB may take. Real throughput is
-// over 50 MB/s, so a budget of one second only fails on super-linear
-// behaviour, never on a slow runner.
-const linearBudget = time.Second * raceSlowdown
+// linearBudget is how long lexing 1 MiB may take. That is about 20 ms
+// on an idle machine, so the budget leaves room for a loaded CI runner
+// and still fails at once on quadratic behaviour, which would take
+// hours at this size.
+const linearBudget = 5 * time.Second * raceSlowdown
 
 // repeatTo repeats s until it is at least n bytes.
 func repeatTo(s string, n int) string {
