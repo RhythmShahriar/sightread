@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of capability-change (rhythm-sightread explain capability-change).
+why: >-
+  New code grants admin-level capabilities (manage_options,
+  edit_plugins, install_plugins, unfiltered_html, promote_users) to a
+  role other than administrator. A new user_has_cap or map_meta_cap
+  filter that grants them counts too. A subscriber with manage_options
+  can take over the site.
+how_to_review:
+  - "Read which role gets which capability."
+  - "Check whether the plugin documents that role."
+  - "Look at the roles on a staging copy after the update."
+false_alarms: >-
+  An install routine that adds the plugin's own custom capability to
+  administrator does not fire.
+incidents: []
+advice: "Check which role gets admin rights and whether the changelog says why."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#capability-change

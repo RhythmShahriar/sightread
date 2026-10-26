@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of update-suppression (rhythm-sightread explain update-suppression).
+why: >-
+  New code filters update checks (site_transient_update_plugins,
+  auto_update_plugin and the like) so other plugins, themes or core stop
+  getting updates. Blocked updates keep a site on versions with known
+  problems. They also keep a changed copy from being replaced.
+how_to_review:
+  - "Read which packages the filter removes."
+  - "Check whether it touches only its own entry."
+  - "Compare the Updates screen on a staging copy."
+false_alarms: >-
+  A plugin that filters only its own update entry (its basename) does
+  not fire.
+incidents:
+  - name: "Gravity Forms 2025"
+    line: "The altered build blocked updates."
+advice: "Hold the update. It stops other packages from updating."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#update-suppression

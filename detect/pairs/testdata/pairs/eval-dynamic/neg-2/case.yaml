@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: assert(true) and eval of a constant string
+lookalike: true
+features_old: []
+features_new:
+- kind: eval
+  key: assert
+  path: tests-lite.php
+  line: 3
+  attrs: {source: literal, arg: 'true'}
+- kind: eval
+  key: eval
+  path: compat.php
+  line: 7
+  attrs: {source: literal, arg: '''return 1;'''}
+forbid: [eval-dynamic]

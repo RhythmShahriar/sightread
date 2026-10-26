@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: request data flows into maybe_unserialize
+features_old: []
+features_new:
+- {kind: flow, key: request->unserialize, path: inc/import.php, line: 30, end_line: 34, func: import}
+expect:
+- {id: input-unserialize, min_severity: high}

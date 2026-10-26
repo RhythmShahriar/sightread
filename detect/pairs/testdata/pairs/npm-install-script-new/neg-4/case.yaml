@@ -1,0 +1,8 @@
+eco: npm
+note: the implicit node-gyp rebuild of binding.gyp is written out as the install script
+old: {binding.gyp: "{ 'targets': [] }\n"}
+new: {binding.gyp: "{ 'targets': [] }\n"}
+features_old: []
+features_new: []
+meta_new: {scripts: {install: node-gyp-build}}
+forbid: [npm-install-script-new]

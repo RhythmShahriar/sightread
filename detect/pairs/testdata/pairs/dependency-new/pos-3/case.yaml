@@ -1,0 +1,9 @@
+eco: npm
+note: a new dependency with an install script is high
+meta_old: {deps: {}}
+meta_new:
+  deps: {sharp: ^0.33.0}
+  dep_info:
+    sharp: {name: sharp, version: 0.33.5, published: '2024-08-16T00:00:00Z', has_install_script: true, popular: true}
+expect:
+- {id: dependency-new, min_severity: high}

@@ -1,0 +1,4 @@
+eco: npm
+note: new scripts that never run at install (test, lint, build)
+meta_new: {scripts: {test: jest, lint: eslint ., build: 'node build.js && curl https://cdn.test/x'}}
+forbid: [npm-install-script-new]

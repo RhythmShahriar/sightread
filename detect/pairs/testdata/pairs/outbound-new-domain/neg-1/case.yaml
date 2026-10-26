@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a CDN URL in the readme is info
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: domain, key: cdn.jsdelivr.net, path: readme.txt, line: 30, context: doc, snippet: 'https://cdn.jsdelivr.net/npm/chart.js'}
+expect:
+- {id: outbound-new-domain, max_severity: info}

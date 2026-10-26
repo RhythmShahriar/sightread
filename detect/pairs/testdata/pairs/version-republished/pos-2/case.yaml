@@ -1,0 +1,15 @@
+eco: npm
+note: the registry serves other sha512 bytes for the locked version
+meta_old:
+  ref:
+    version: 1.0.0
+  archive:
+    integrity: sha512-rBHaoYtl/PncDrRIScmmyRf+oi9WLEdIqg8+qbA4zvbdeunozY+gh5r6XcQ61Y+P1Mf2VgDGEOXDt7Pyw03iIg==
+lock_old:
+  ref:
+    version: 1.0.0
+  integrity: sha512-85SeR7N2rcRe8ieFtVFMb6YFENfIKp8Q+Xf7l5BxMtMGpGvVT1yJs5jycq3svVHUSwn0f7fqjB57weZvnFjm8A==
+  resolved_kind: registry
+expect:
+- id: version-republished
+  min_severity: critical

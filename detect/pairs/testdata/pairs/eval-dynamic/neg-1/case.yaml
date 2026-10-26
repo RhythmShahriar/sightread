@@ -1,0 +1,20 @@
+eco: npm
+note: 'a webpack bundle update: __webpack_require__ calls and new Function("return this")'
+lookalike: true
+features_old:
+  found: []
+  minified: [dist/main.js]
+features_new:
+  found:
+  - kind: dyn-call
+    key: __webpack_require__
+    path: dist/main.js
+    line: 1
+    attrs: {callee: __webpack_require__, source: variable}
+  - kind: eval
+    key: function
+    path: dist/main.js
+    line: 1
+    attrs: {source: literal, arg: '"return this"'}
+  minified: [dist/main.js]
+forbid: [eval-dynamic, obfuscation, decode-exec]

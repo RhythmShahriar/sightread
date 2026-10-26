@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: install routine adding the plugin's own custom capability to administrator
+lookalike: true
+features_old: []
+features_new:
+- {kind: cap, key: 'add_cap:administrator:manage_acme_forms', path: inc/install.php, line: 10}
+- {kind: cap, key: 'add_cap:administrator:manage_options', path: inc/install.php, line: 11}
+forbid: [capability-change]

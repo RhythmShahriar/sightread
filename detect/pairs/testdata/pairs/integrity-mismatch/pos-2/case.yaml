@@ -1,0 +1,15 @@
+eco: npm
+note: 'b17 shape: a flipped byte makes the tarball miss its sha512'
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_old:
+  by: signature
+integrity_new:
+  by: failed
+  mismatch:
+  - sha512
+  detail: tarball sha512 is not dist.integrity
+expect:
+- id: integrity-mismatch
+  min_severity: critical

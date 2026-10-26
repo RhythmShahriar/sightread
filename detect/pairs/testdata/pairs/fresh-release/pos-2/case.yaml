@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: min_age 7d and a release three days old
+config: {min_age: 7d}
+meta_new: {published: '2026-10-23T12:00:00Z'}
+expect:
+- {id: fresh-release, min_severity: medium}

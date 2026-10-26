@@ -1,0 +1,11 @@
+eco: npm
+note: 'event-stream shape: a char-code array carrying an encrypted payload'
+features_old: []
+features_new:
+- kind: blob
+  key: charcode:77e2
+  path: lib/index.js
+  line: 3
+  attrs: {encoding: charcode, size: '900', entropy: '4.7', decoded: data}
+expect:
+- {id: obfuscation, min_severity: high}

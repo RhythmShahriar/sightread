@@ -1,0 +1,10 @@
+eco: composer
+note: a scanner's test image with a PHP tag
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: code-in-asset, key: tests/fixtures/poly.gif, path: tests/fixtures/poly.gif, line: 1, context: test}
+forbid:
+- code-in-asset

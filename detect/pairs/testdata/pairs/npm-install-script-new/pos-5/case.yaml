@@ -1,0 +1,6 @@
+eco: npm
+note: prepare runs a program the installed version never used
+meta_old: {scripts: {build: tsc}, dev_deps: {typescript: ^5.4.0}}
+meta_new: {scripts: {build: tsc, prepare: node tools/fetch-config.js}, dev_deps: {typescript: ^5.4.0}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

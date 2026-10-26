@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: OSV records apply to npm and Composer
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: CVE-2026-1
+forbid:
+- known-vulnerable

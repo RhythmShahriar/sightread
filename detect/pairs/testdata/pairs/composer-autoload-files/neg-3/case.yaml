@@ -1,0 +1,5 @@
+eco: composer
+note: an autoload file removed
+meta_old: {autoload_files: [src/helpers.php, src/legacy.php]}
+meta_new: {autoload_files: [src/helpers.php]}
+forbid: [composer-autoload-files]

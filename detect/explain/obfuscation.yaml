@@ -1,0 +1,22 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of obfuscation (rhythm-sightread explain obfuscation).
+why: >-
+  The update adds a large encoded or scrambled blob (base64, hex, \x
+  chains or char-code arrays with high entropy), or a code file far more
+  random than the rest of the package. Code nobody can read can't be
+  reviewed.
+how_to_review:
+  - "Read the file name and the blob's size in the finding."
+  - "Decode it offline with a tool that only prints."
+  - "Check whether the project publishes the readable source."
+false_alarms: >-
+  Data URIs in CSS and SVG, base64 fonts, .pot and .mo files, source
+  maps and recognised minified bundles do not fire.
+incidents:
+  - name: "event-stream 2018"
+    line: "flatmap-stream carried its payload as an encrypted blob."
+  - name: "intercom-php 2026"
+    line: "The stealer it ran was obfuscated."
+advice: "Hold the update. Nobody can review code that can't be read."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#obfuscation

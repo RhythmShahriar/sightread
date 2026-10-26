@@ -1,0 +1,11 @@
+eco: composer
+note: an encrypted zip entry
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: encrypted
+  path: src/Loader.php
+expect:
+- id: unanalysed
+  min_severity: high

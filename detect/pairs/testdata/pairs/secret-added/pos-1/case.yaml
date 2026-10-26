@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: a live payment key added to the plugin
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: secret, key: stripe-key, path: includes/config.php, line: 4, snippet: '$key = ''{{fakekey:stripe}}'';'}
+expect:
+- {id: secret-added, min_severity: medium}

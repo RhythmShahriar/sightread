@@ -1,0 +1,5 @@
+eco: composer
+note: a plugin that already was one
+meta_old: {type: composer-plugin}
+meta_new: {type: composer-plugin}
+forbid: [composer-plugin-new]

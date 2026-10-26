@@ -1,0 +1,19 @@
+eco: npm
+note: the last release's publisher left the list but published before
+meta_old:
+  ref:
+    version: 1.0.0
+  maintainers:
+  - name: alice
+  publisher:
+    name: bob
+meta_new:
+  ref:
+    version: 2.0.0
+  maintainers:
+  - name: alice
+  - name: bob
+  publisher:
+    name: bob
+forbid:
+- owner-change

@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'Essential Plugin: writes into wp-config.php (critical)'
+features_old: []
+features_new:
+- kind: write
+  key: wp-config
+  path: inc/cache.php
+  line: 70
+  attrs: {ext: php}
+expect:
+- {id: write-outside-package, min_severity: critical}

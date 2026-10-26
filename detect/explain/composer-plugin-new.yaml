@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of composer-plugin-new (rhythm-sightread explain composer-plugin-new).
+why: >-
+  The package becomes a composer-plugin or adds event scripts
+  (post-install-cmd, post-update-cmd, post-autoload-dump, pre-*).
+  Composer runs that code on install and update on every machine, CI
+  included.
+how_to_review:
+  - "Read the plugin class or the scripts in composer.json."
+  - "Check allow-plugins in your root composer.json."
+  - "Install with --no-plugins --no-scripts until it is reviewed."
+false_alarms: >-
+  Scripts for the package's own workflow (test, lint) and
+  scripts-descriptions do not fire.
+incidents:
+  - name: "intercom-php 2026"
+    line: "Version 5.0.2 became a Composer plugin on post-install-cmd and post-update-cmd."
+advice: "Keep it out of allow-plugins until the plugin code is reviewed."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#composer-plugin-new

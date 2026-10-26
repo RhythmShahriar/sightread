@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: no history; the installed version is from 2024
+meta_old: {published: '2024-01-10T00:00:00Z'}
+meta_new: {published: '2026-10-20T00:00:00Z'}
+expect:
+- {id: dormant-release, min_severity: medium}

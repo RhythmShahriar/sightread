@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule gzinflate-base64 (Tuner negative): decode and inflate in two steps'
+new:
+  y.php: <?php $raw = base64_decode($s); $data = gzinflate($raw);
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- decode-exec

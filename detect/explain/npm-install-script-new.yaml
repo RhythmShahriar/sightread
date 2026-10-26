@@ -1,0 +1,27 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of npm-install-script-new (rhythm-sightread explain npm-install-script-new).
+why: >-
+  The package adds or changes a preinstall, install, postinstall or
+  prepare script, a binding.gyp that makes npm build on install, or a
+  binding.gyp command node-gyp runs during that build.
+  These scripts run on every machine that installs the package, CI
+  included, before anyone reads the code. Sightread reads the script and
+  the files it calls.
+how_to_review:
+  - "Read the script in the finding and the files it runs."
+  - "Install with --ignore-scripts until it is reviewed."
+  - "Check that the repository has the same script."
+false_alarms: >-
+  An unchanged node-gyp install, a swap to another native build with
+  plain flags only, a binding.gyp edit that runs no new command and a
+  prepare that only runs husky or build tools the package already used
+  do not fire. A build that downloads from a URL or builds from another
+  directory does.
+incidents:
+  - name: "axios 2026"
+    line: "The new dependency plain-crypto-js dropped a remote access tool from its postinstall script."
+  - name: "Shai-Hulud"
+    line: "Every republished package carried a new install script."
+advice: "Install with --ignore-scripts until someone has read the script."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#npm-install-script-new

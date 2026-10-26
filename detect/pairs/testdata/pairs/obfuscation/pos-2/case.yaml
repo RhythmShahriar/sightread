@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: a hex blob found inside a decoded layer
+features_old: []
+features_new:
+- kind: blob
+  key: hex:31c0
+  path: inc/lib.php
+  line: 9
+  context: decoded
+  attrs: {encoding: hex, size: '1400', entropy: '4.8', decoded: data}
+expect:
+- {id: obfuscation, min_severity: high}

@@ -1,0 +1,6 @@
+eco: npm
+note: plain-crypto-js next to crypto-js (the axios incident)
+meta_old: {deps: {}}
+meta_new: {deps: {plain-crypto-js: ^4.2.1}}
+expect:
+- {id: typosquat, min_severity: high}

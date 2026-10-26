@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: a cron call in the test suite
+features_old: []
+features_new:
+- {kind: cron, key: acme_test_hook, path: tests/test-cron.php, line: 5, context: test}
+forbid: [cron-new-hook]

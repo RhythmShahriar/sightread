@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of git-tag-missing (rhythm-sightread explain git-tag-missing).
+why: >-
+  The GitHub repository has no tag for this version (v<version>,
+  <version> and <name>@<version> were tried). A release with no matching
+  source was likely published by hand, outside the project's usual
+  process. It is checked only when the update also has owner-change,
+  npm-install-script-new or provenance-dropped.
+how_to_review:
+  - "Look at the repository's tags and releases."
+  - "Compare the package contents with the nearest tag."
+  - "Ask the maintainers."
+false_alarms: >-
+  Monorepo tag forms are tried before this fires.
+incidents:
+  - name: "axios 2026"
+    line: "1.14.1 had no matching git tag."
+advice: "Find the source this version was built from."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#git-tag-missing

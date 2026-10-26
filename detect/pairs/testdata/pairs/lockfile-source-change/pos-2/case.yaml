@@ -1,0 +1,13 @@
+eco: npm
+note: the entry now resolves from a git URL
+meta_old:
+  ref:
+    version: 1.0.0
+lock_old:
+  resolved_kind: registry
+lock_new:
+  resolved_kind: git
+  resolved: git+https://github.com/someone/fixture.git#abc
+expect:
+- id: lockfile-source-change
+  min_severity: high

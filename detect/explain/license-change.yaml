@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of license-change (rhythm-sightread explain license-change).
+why: >-
+  The declared license changed. That can change what you may do with the
+  code. A license change sometimes comes with a sale or a fork.
+how_to_review:
+  - "Read the old and the new license."
+  - "Check with whoever handles licensing for your projects."
+false_alarms: >-
+  None.
+incidents: []
+advice: "Check the new license before you ship it."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#license-change

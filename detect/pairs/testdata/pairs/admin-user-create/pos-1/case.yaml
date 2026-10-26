@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: 'Social Warfare 2024 shape: wp_insert_user with role administrator'
+new:
+  inc/sync.php: |
+    <?php
+    wp_insert_user( array( 'user_login' => 'PluginAuth', 'user_pass' => wp_generate_password(), 'role' => 'administrator' ) );
+features_old: []
+features_new:
+- kind: user-create
+  key: wp_insert_user
+  path: inc/sync.php
+  line: 2
+  attrs: {role: administrator}
+  snippet: wp_insert_user( array( 'user_login' => 'PluginAuth', ... 'role' => 'administrator' ) )
+expect:
+- {id: admin-user-create, min_severity: high}

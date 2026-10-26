@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: a bidi isolate inside a comment that hides a return
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: unicode, key: U+2066, path: includes/access.php, line: 12, context: comment}
+expect:
+- {id: unicode-hidden, min_severity: medium}

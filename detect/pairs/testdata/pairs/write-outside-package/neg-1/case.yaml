@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: writes to wp_upload_dir(), the right place
+lookalike: true
+features_old: []
+features_new:
+- kind: write
+  key: uploads
+  path: inc/export.php
+  line: 15
+  attrs: {ext: csv}
+forbid: [write-outside-package]

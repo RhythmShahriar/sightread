@@ -1,0 +1,17 @@
+eco: npm
+note: the lock entry of the pull request disagrees with the registry
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  archive:
+    integrity: sha512-E9vUESTm5915+KH33eXwJO6DJ+aCiLSSQg1AAZ5hwDZeXre/SReZdjItEAFHB2hQqFXfIevpsZs9sadf3MdqiA==
+lock_new:
+  ref:
+    version: 2.0.0
+  integrity: sha512-Ahv83dkexM3VRz2rWV4A9GSVkrezY9PWbu7VCZ43NjAqARy4tLmGmFQJByUf5aWvqEOdNCEk+PIlYQ2Wt+NS0w==
+expect:
+- id: version-republished
+  min_severity: critical

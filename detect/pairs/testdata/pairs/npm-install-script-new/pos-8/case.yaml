@@ -1,0 +1,6 @@
+eco: npm
+note: a new prepare runs the known compiler with NODE_OPTIONS loading a file first
+meta_old: {scripts: {build: tsc}, dev_deps: {typescript: ^5.4.0}}
+meta_new: {scripts: {build: tsc, prepare: 'NODE_OPTIONS=--require=./evil.js tsc'}, dev_deps: {typescript: ^5.4.0}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

@@ -1,0 +1,16 @@
+eco: npm
+note: 'b14: resolved moves to a foreign host'
+meta_old:
+  ref:
+    version: 1.0.0
+lock_old:
+  resolved_kind: registry
+  resolved: https://registry.npmjs.org/fixture/-/fixture-1.0.0.tgz
+lock_new:
+  resolved_kind: foreign
+  resolved: https://cdn.evil.test/fixture-2.0.0.tgz
+  lockfile: package-lock.json
+  lock_line: 42
+expect:
+- id: lockfile-source-change
+  min_severity: high

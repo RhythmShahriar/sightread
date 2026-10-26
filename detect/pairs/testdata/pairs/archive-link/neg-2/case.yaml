@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: a file called symlink.php is a plain file
+new:
+  symlink.php: '<?php
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_new: []
+forbid:
+- archive-link

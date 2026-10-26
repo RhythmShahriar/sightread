@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: remote data reaching unserialize is input-unserialize, not this
+features_old: []
+features_new:
+- {kind: flow, key: remote->unserialize, path: inc/api.php, line: 9}
+forbid: [remote-fetch-exec]

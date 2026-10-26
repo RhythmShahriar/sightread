@@ -1,0 +1,10 @@
+eco: npm
+note: only the installed version was listed
+meta_old:
+  ref:
+    version: 1.0.0
+  advisories:
+  - id: MAL-2025-1
+    malicious: true
+forbid:
+- known-malicious

@@ -1,0 +1,13 @@
+eco: npm
+note: the lock names another version than the metadata
+meta_old:
+  ref:
+    version: 1.0.1
+  archive:
+    integrity: sha512-aFcYF8lsXIMt3z9Oyx7kOgydr7ilp93jeetQopTMOqQvj+Y6YiQyHeXQokzzAGfTejWHBrHtOLAVKCq2jcaa6Q==
+lock_old:
+  ref:
+    version: 1.0.0
+  integrity: sha512-yU0xYvvdZ3PEkOUK/YE8nq4GZE/dFYyJwDo0ul96rOo+SZ51JiDGqQ7VmiAKGBMkEQRbpQ6gbHZnPs1TKY5RUQ==
+forbid:
+- version-republished

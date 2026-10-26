@@ -1,0 +1,11 @@
+eco: wp-theme
+note: the index.php silence guard is deleted
+old:
+  style.css: "/* Theme Name: Acme */\n"
+  inc/index.php: "<?php\n// Silence is golden.\n"
+new:
+  style.css: "/* Theme Name: Acme */\n"
+features_old: []
+features_new: []
+expect:
+- {id: files-removed, min_severity: info}

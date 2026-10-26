@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of admin-user-hidden (rhythm-sightread explain admin-user-hidden).
+why: >-
+  New code filters the admin user list (pre_user_query,
+  users_list_table_query_args or views_users) to leave users out of it.
+  An administrator nobody sees under Users keeps access after a cleanup.
+how_to_review:
+  - "Read the filter callback in the hunk."
+  - "Check which users it removes from the list."
+  - "Compare the users table in the database with what the Users screen shows."
+false_alarms: >-
+  Filters that only add columns or sort the list do not fire.
+incidents: []
+advice: "Hold the update. Check the users table itself for accounts the list hides."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#admin-user-hidden

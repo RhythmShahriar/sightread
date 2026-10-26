@@ -1,0 +1,6 @@
+eco: npm
+note: the native build pointed at another directory than the package's own sources
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: node-gyp rebuild --directory=node_modules/.cache/x}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

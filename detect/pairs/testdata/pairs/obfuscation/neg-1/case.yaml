@@ -1,0 +1,16 @@
+eco: wp-theme
+note: data URIs in CSS and SVG
+lookalike: true
+features_old: []
+features_new:
+- kind: blob
+  key: uri:aa01
+  path: assets/style.css
+  line: 40
+  attrs: {encoding: data-uri, size: '4000', entropy: '5.9', decoded: data}
+- kind: blob
+  key: b64:aa02
+  path: assets/logo.svg
+  line: 2
+  attrs: {encoding: base64, size: '3000', entropy: '5.8', decoded: data}
+forbid: [obfuscation]

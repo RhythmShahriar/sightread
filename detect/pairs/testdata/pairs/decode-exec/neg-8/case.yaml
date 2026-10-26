@@ -1,0 +1,23 @@
+eco: wp-plugin
+note: 'side added: the matched line was in the installed copy, only another line changed'
+old:
+  inc/a.php: '<?php
+
+    eval(base64_decode($x));
+
+    '
+new:
+  inc/a.php: '<?php
+
+    // tidy
+
+    eval(base64_decode($x));
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- decode-exec

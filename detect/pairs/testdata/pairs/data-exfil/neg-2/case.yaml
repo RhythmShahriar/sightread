@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: a send in a comment
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: send, key: wp_remote_post, path: includes/a.php, line: 10, context: comment, attrs: {host: x.test, reads: users}}
+forbid:
+- data-exfil

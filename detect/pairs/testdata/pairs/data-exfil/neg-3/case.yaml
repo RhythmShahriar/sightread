@@ -1,0 +1,11 @@
+eco: npm
+note: the same send was in the installed version
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+- {kind: send, key: fetch, path: src/a.js, line: 3, attrs: {host: api.acme.test, reads: env}}
+features_new:
+- {kind: send, key: fetch, path: src/a.js, line: 9, attrs: {host: api.acme.test, reads: env}}
+forbid:
+- data-exfil

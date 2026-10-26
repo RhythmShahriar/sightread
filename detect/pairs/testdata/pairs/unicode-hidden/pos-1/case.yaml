@@ -1,0 +1,10 @@
+eco: npm
+note: 'Trojan Source: a right-to-left override in code'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: unicode, key: U+202E, path: src/auth.js, line: 31}
+expect:
+- {id: unicode-hidden, min_severity: medium}

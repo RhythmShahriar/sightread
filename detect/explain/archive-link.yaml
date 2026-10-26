@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of archive-link (rhythm-sightread explain archive-link).
+why: >-
+  The archive holds a symbolic link, hard link, device or FIFO entry.
+  Sightread records it and never follows it. A link whose target leaves
+  the package can make an extractor read or write elsewhere; then it is
+  critical.
+how_to_review:
+  - "Read the link target in the finding."
+  - "Check whether the previous release had the same link."
+  - "Prefer an install method that refuses links."
+false_alarms: >-
+  npm packages sometimes ship links that stay inside the package; those
+  stay high.
+incidents: []
+advice: "Check where the link points before installing."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-link

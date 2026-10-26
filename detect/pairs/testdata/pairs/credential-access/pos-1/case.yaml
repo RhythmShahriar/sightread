@@ -1,0 +1,11 @@
+eco: npm
+note: 'Shai-Hulud shape: bundle.js reads ~/.npmrc and GITHUB_TOKEN'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: cred-read, key: .npmrc, path: bundle.js, line: 14, snippet: 'fs.readFileSync(path.join(os.homedir(), ''.npmrc''))'}
+- {kind: env-read, key: GITHUB_TOKEN, path: bundle.js, line: 15, snippet: process.env.GITHUB_TOKEN}
+expect:
+- {id: credential-access, min_severity: high}

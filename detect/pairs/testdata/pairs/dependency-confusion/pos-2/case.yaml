@@ -1,0 +1,13 @@
+eco: composer
+note: a private Composer name on Packagist
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  private: true
+  public_shadow: 9.9.9
+expect:
+- id: dependency-confusion
+  min_severity: critical

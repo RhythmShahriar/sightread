@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: the changelog names the new domain
+meta_old: {}
+lookalike: true
+meta_new:
+  changelog:
+  - {version: 2.0.0, text: 'Send anonymous usage counts to stats.acme.test', generic: true}
+features_old: []
+features_new:
+- {kind: domain, key: stats.acme.test, path: inc/stats.php, line: 3}
+- {kind: send, key: wp_remote_post, path: inc/stats.php, line: 9, attrs: {host: stats.acme.test}}
+forbid: [changelog-mismatch]

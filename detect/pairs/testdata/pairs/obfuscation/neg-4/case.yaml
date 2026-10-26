@@ -1,0 +1,15 @@
+eco: npm
+note: 'short or low-entropy strings: a 300-byte token and a long readable string'
+features_old: []
+features_new:
+- kind: blob
+  key: b64:s1
+  path: lib/a.js
+  line: 3
+  attrs: {encoding: base64, size: '300', entropy: '5.9', decoded: data}
+- kind: blob
+  key: b64:s2
+  path: lib/b.js
+  line: 5
+  attrs: {encoding: base64, size: '4000', entropy: '3.9', decoded: data}
+forbid: [obfuscation]

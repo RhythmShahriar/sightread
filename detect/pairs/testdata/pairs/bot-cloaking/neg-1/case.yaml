@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: an SEO plugin printing a robots meta tag for bots
+lookalike: true
+features_old: []
+features_new:
+- kind: ua-check
+  key: googlebot
+  path: inc/meta.php
+  line: 10
+  attrs: {prints: literal}
+forbid: [bot-cloaking]

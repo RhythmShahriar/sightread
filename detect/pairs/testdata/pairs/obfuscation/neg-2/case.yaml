@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: a base64 font and a .pot translation template
+lookalike: true
+features_old: []
+features_new:
+- kind: blob
+  key: b64:f001
+  path: fonts/icons.woff
+  line: 1
+  attrs: {encoding: base64, size: '30000', entropy: '5.9', decoded: data}
+- kind: blob
+  key: b64:f002
+  path: languages/acme.pot
+  line: 1
+  attrs: {encoding: base64, size: '600', entropy: '4.9', decoded: data}
+forbid: [obfuscation]

@@ -1,0 +1,9 @@
+eco: npm
+note: '"Bug fixes" while a postinstall appears'
+meta_old: {scripts: {}}
+meta_new:
+  scripts: {postinstall: node setup.js}
+  changelog:
+  - {version: 2.0.0, text: Bug fixes, generic: true}
+expect:
+- {id: changelog-mismatch, min_severity: high}

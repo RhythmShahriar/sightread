@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of archive-path-escape (rhythm-sightread explain archive-path-escape).
+why: >-
+  An entry name in the archive points outside the package folder through
+  "..", an absolute path, a drive letter or a backslash. Sightread never
+  extracts it. An unzip tool or package manager might write it anywhere
+  on disk.
+how_to_review:
+  - "List the archive's entries with a tool that only lists, never extracts."
+  - "Compare with the archive of the previous release."
+  - "Report it to the registry."
+false_alarms: >-
+  None known: release tools never write such names.
+incidents: []
+advice: "Don't extract or install this archive."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-path-escape

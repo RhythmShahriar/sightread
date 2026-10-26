@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of decode-exec (rhythm-sightread explain decode-exec).
+why: >-
+  New code decodes a hidden string (base64, gzinflate, rot13, hex and
+  the like) and runs the result. Readable code has no reason to hide
+  from the people who read it. Built names such as 'ev'.'al' and
+  comments between tokens are folded before matching.
+how_to_review:
+  - "Read the hunk with explain."
+  - "Decode the string offline with a tool that only prints the result."
+  - "Never run the decoded text to see what it does."
+false_alarms: >-
+  Decoding into output, a download or json_decode does not fire.
+incidents:
+  - name: "event-stream 2018"
+    line: "flatmap-stream decrypted a payload at load time and ran it."
+  - name: "intercom-php 2026"
+    line: "The script it ran was packed and decoded before it ran."
+advice: "Hold the update. Decode the string offline and read it first."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#decode-exec

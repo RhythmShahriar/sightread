@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of unicode-hidden (rhythm-sightread explain unicode-hidden).
+why: >-
+  New code holds bidirectional control or zero-width characters, or
+  identifiers that mix scripts. They make code read differently from how
+  it runs (Trojan Source).
+how_to_review:
+  - "Open the file in an editor that shows hidden characters."
+  - "Read the lines in the finding."
+  - "Ask for them to be removed from code."
+false_alarms: >-
+  Translation files and i18n strings are info.
+incidents: []
+advice: "Read these lines with hidden characters shown."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#unicode-hidden

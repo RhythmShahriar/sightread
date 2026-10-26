@@ -1,0 +1,5 @@
+eco: npm
+note: published four days ago, past the 72h default
+lookalike: true
+meta_new: {published: '2026-10-22T11:00:00Z'}
+forbid: [fresh-release]

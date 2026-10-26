@@ -1,0 +1,7 @@
+eco: npm
+note: no advisories
+meta_old:
+  ref:
+    version: 1.0.0
+forbid:
+- known-vulnerable

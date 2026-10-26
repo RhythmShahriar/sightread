@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: the hook was scheduled before; only the file moved
+features_old:
+- {kind: cron, key: acme_daily_cleanup, path: cron.php, line: 5}
+features_new:
+- {kind: cron, key: acme_daily_cleanup, path: inc/cron.php, line: 5}
+forbid: [cron-new-hook]

@@ -1,0 +1,10 @@
+eco: composer
+note: downloaded PHP written to a file and included (intercom-php shape)
+features_old:
+- {kind: call, key: file_put_contents, path: src/Cache.php, line: 20}
+features_new:
+- {kind: call, key: file_put_contents, path: src/Cache.php, line: 20}
+- {kind: flow, key: remote->write-code, path: src/Plugin.php, line: 31, end_line: 33, snippet: 'file_put_contents($f,
+    file_get_contents($url)); require $f;', func: onInstall}
+expect:
+- {id: remote-fetch-exec, min_severity: critical}

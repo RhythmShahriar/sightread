@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: right-to-left marks in an Arabic translation
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: unicode, key: U+200F, path: languages/acme-ar.po, line: 120}
+expect:
+- {id: unicode-hidden, max_severity: info}

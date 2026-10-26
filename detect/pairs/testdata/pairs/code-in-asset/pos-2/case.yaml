@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: 'the same icon.png, not included: high'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: code-in-asset, key: assets/icon.png, path: assets/icon.png, line: 1}
+expect:
+- {id: code-in-asset, min_severity: high, max_severity: high}

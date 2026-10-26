@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: automatic_updater_disabled returns true
+features_old: []
+features_new:
+- {kind: update-filter, key: automatic_updater_disabled, path: inc/boot.php, line: 4}
+expect:
+- {id: update-suppression, min_severity: high}

@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: shown in a code comment
+features_old: []
+features_new:
+- {kind: update-filter, key: site_transient_update_plugins, path: inc/a.php, line: 3, context: comment}
+forbid: [update-suppression]

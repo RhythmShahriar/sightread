@@ -1,0 +1,14 @@
+eco: npm
+note: 'axios 2026: no tag with provenance lost'
+meta_old:
+  ref:
+    version: 1.0.0
+  provenance: slsa
+meta_new:
+  ref:
+    version: 2.0.0
+  git_tag: false
+expect:
+- id: git-tag-missing
+  min_severity: medium
+- id: provenance-dropped

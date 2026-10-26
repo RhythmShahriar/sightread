@@ -1,0 +1,15 @@
+eco: composer
+note: fixed only in a later version
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: CVE-2026-1000
+    fixed_in:
+    - 3.0.0
+expect:
+- id: known-vulnerable
+  min_severity: high

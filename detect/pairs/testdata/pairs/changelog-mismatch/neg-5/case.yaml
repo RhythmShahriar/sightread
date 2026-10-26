@@ -1,0 +1,10 @@
+eco: npm
+note: the new eval is in a test file
+meta_old: {}
+meta_new:
+  changelog:
+  - {version: 2.0.0, text: Compatibility, generic: true}
+features_old: []
+features_new:
+- {kind: eval, key: eval, path: test/run.js, line: 3, context: test, attrs: {source: variable}}
+forbid: [changelog-mismatch]

@@ -1,0 +1,6 @@
+eco: wp-plugin
+note: removing a capability is not a grant
+features_old: []
+features_new:
+- {kind: cap, key: 'remove_cap:editor:manage_options', path: inc/upgrade.php, line: 5}
+forbid: [capability-change]

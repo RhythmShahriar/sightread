@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of archive-collision (rhythm-sightread explain archive-collision).
+why: >-
+  The archive holds two entries with the same name, or names that differ
+  only in case or Unicode normalisation. Different tools keep different
+  copies. The file you review may not be the file that gets installed.
+how_to_review:
+  - "Find both entries named in the finding."
+  - "Compare their contents."
+  - "Ask the maintainers to rebuild the archive."
+false_alarms: >-
+  None known: release tools do not write duplicate names.
+incidents: []
+advice: "Don't trust either copy until the archive is rebuilt."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#archive-collision

@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: 'rule mu-hidden-admin (Tuner negative 1): creates a QA admin, hides nothing'
+lookalike: true
+new:
+  mu-plugins/staging.php: '<?php
+
+    if (defined(''WP_CLI'')) { wp_insert_user([''user_login'' => ''qa'', ''role'' => ''administrator'']); }
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- admin-user-hidden

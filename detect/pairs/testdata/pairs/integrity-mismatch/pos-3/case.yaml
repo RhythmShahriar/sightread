@@ -1,0 +1,14 @@
+eco: composer
+note: the installed version's archive no longer matches its shasum
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_old:
+  by: failed
+  mismatch:
+  - shasum
+integrity_new:
+  by: shasum
+expect:
+- id: integrity-mismatch
+  min_severity: critical

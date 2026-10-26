@@ -1,0 +1,17 @@
+eco: composer
+note: a publisher who is neither an old nor a new maintainer
+meta_old:
+  ref:
+    version: 1.0.0
+  maintainers:
+  - name: acme
+meta_new:
+  ref:
+    version: 2.0.0
+  maintainers:
+  - name: acme
+  publisher:
+    name: eve
+expect:
+- id: owner-change
+  min_severity: high

@@ -1,0 +1,10 @@
+eco: npm
+note: a paste site in a decoded payload
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: domain, key: pastebin.com, path: lib/index.js, line: 3, context: decoded, snippet: 'https://pastebin.com/raw/abc'}
+expect:
+- {id: outbound-new-domain, min_severity: high}

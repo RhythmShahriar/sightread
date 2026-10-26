@@ -1,0 +1,6 @@
+eco: npm
+note: an unchanged native build gains a second line that the shell runs on its own
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: "node-gyp rebuild\nnode evil.js"}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

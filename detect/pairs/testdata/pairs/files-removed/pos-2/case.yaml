@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: the .htaccess that denied web access to the uploads folder is deleted
+old:
+  plugin.php: "<?php\n"
+  uploads/.htaccess: "Order Deny,Allow\nDeny from all\n"
+new:
+  plugin.php: "<?php\n"
+features_old: []
+features_new: []
+expect:
+- {id: files-removed, min_severity: info}

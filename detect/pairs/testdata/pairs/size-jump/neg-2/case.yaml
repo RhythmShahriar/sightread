@@ -1,0 +1,73 @@
+eco: wp-plugin
+note: growth of 40 KB stays under 100 KB
+old:
+  plugin.php: &chunk |
+    <?php
+    $strings['msg_0000'] = 'Translated message number 0000 for the plugin screen';
+    $strings['msg_0001'] = 'Translated message number 0001 for the plugin screen';
+    $strings['msg_0002'] = 'Translated message number 0002 for the plugin screen';
+    $strings['msg_0003'] = 'Translated message number 0003 for the plugin screen';
+    $strings['msg_0004'] = 'Translated message number 0004 for the plugin screen';
+    $strings['msg_0005'] = 'Translated message number 0005 for the plugin screen';
+    $strings['msg_0006'] = 'Translated message number 0006 for the plugin screen';
+    $strings['msg_0007'] = 'Translated message number 0007 for the plugin screen';
+    $strings['msg_0008'] = 'Translated message number 0008 for the plugin screen';
+    $strings['msg_0009'] = 'Translated message number 0009 for the plugin screen';
+    $strings['msg_0010'] = 'Translated message number 0010 for the plugin screen';
+    $strings['msg_0011'] = 'Translated message number 0011 for the plugin screen';
+    $strings['msg_0012'] = 'Translated message number 0012 for the plugin screen';
+    $strings['msg_0013'] = 'Translated message number 0013 for the plugin screen';
+    $strings['msg_0014'] = 'Translated message number 0014 for the plugin screen';
+    $strings['msg_0015'] = 'Translated message number 0015 for the plugin screen';
+    $strings['msg_0016'] = 'Translated message number 0016 for the plugin screen';
+    $strings['msg_0017'] = 'Translated message number 0017 for the plugin screen';
+    $strings['msg_0018'] = 'Translated message number 0018 for the plugin screen';
+    $strings['msg_0019'] = 'Translated message number 0019 for the plugin screen';
+    $strings['msg_0020'] = 'Translated message number 0020 for the plugin screen';
+    $strings['msg_0021'] = 'Translated message number 0021 for the plugin screen';
+    $strings['msg_0022'] = 'Translated message number 0022 for the plugin screen';
+    $strings['msg_0023'] = 'Translated message number 0023 for the plugin screen';
+    $strings['msg_0024'] = 'Translated message number 0024 for the plugin screen';
+    $strings['msg_0025'] = 'Translated message number 0025 for the plugin screen';
+    $strings['msg_0026'] = 'Translated message number 0026 for the plugin screen';
+    $strings['msg_0027'] = 'Translated message number 0027 for the plugin screen';
+    $strings['msg_0028'] = 'Translated message number 0028 for the plugin screen';
+    $strings['msg_0029'] = 'Translated message number 0029 for the plugin screen';
+    $strings['msg_0030'] = 'Translated message number 0030 for the plugin screen';
+    $strings['msg_0031'] = 'Translated message number 0031 for the plugin screen';
+    $strings['msg_0032'] = 'Translated message number 0032 for the plugin screen';
+    $strings['msg_0033'] = 'Translated message number 0033 for the plugin screen';
+    $strings['msg_0034'] = 'Translated message number 0034 for the plugin screen';
+    $strings['msg_0035'] = 'Translated message number 0035 for the plugin screen';
+    $strings['msg_0036'] = 'Translated message number 0036 for the plugin screen';
+    $strings['msg_0037'] = 'Translated message number 0037 for the plugin screen';
+    $strings['msg_0038'] = 'Translated message number 0038 for the plugin screen';
+    $strings['msg_0039'] = 'Translated message number 0039 for the plugin screen';
+    $strings['msg_0040'] = 'Translated message number 0040 for the plugin screen';
+    $strings['msg_0041'] = 'Translated message number 0041 for the plugin screen';
+    $strings['msg_0042'] = 'Translated message number 0042 for the plugin screen';
+    $strings['msg_0043'] = 'Translated message number 0043 for the plugin screen';
+    $strings['msg_0044'] = 'Translated message number 0044 for the plugin screen';
+    $strings['msg_0045'] = 'Translated message number 0045 for the plugin screen';
+    $strings['msg_0046'] = 'Translated message number 0046 for the plugin screen';
+    $strings['msg_0047'] = 'Translated message number 0047 for the plugin screen';
+    $strings['msg_0048'] = 'Translated message number 0048 for the plugin screen';
+    $strings['msg_0049'] = 'Translated message number 0049 for the plugin screen';
+    $strings['msg_0050'] = 'Translated message number 0050 for the plugin screen';
+    $strings['msg_0051'] = 'Translated message number 0051 for the plugin screen';
+
+new:
+  plugin.php: *chunk
+  inc/m-00.php: *chunk
+  inc/m-01.php: *chunk
+  inc/m-02.php: *chunk
+  inc/m-03.php: *chunk
+  inc/m-04.php: *chunk
+  inc/m-05.php: *chunk
+  inc/m-06.php: *chunk
+  inc/m-07.php: *chunk
+  inc/m-08.php: *chunk
+  inc/m-09.php: *chunk
+features_old: []
+features_new: []
+forbid: [size-jump]

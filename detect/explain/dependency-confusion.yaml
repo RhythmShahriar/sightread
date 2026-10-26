@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of dependency-confusion (rhythm-sightread explain dependency-confusion).
+why: >-
+  A private package name of yours also exists on the public registry
+  with a higher version. A misconfigured install can take the public
+  one, which anyone could have published.
+how_to_review:
+  - "Check that your registry settings pin the scope or vendor to your private registry."
+  - "Look at who published the public package."
+  - "Claim the name publicly if you can."
+false_alarms: >-
+  Checked only with --check-confusion.
+incidents: []
+advice: "Pin this name to your private registry."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dependency-confusion

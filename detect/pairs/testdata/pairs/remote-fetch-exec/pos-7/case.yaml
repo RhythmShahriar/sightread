@@ -1,0 +1,11 @@
+eco: composer
+note: 'rule webshell (Tuner positive 3): under vendor/'
+new:
+  vendor/acme/lib/src/Cache.php: <?php $default_action = 'FilesMan';
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: remote-fetch-exec, min_severity: critical}

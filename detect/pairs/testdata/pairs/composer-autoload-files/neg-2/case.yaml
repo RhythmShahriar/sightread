@@ -1,0 +1,5 @@
+eco: composer
+note: the same entry written as ./src/helpers.php
+meta_old: {autoload_files: [src/helpers.php]}
+meta_new: {autoload_files: [./src/helpers.php]}
+forbid: [composer-autoload-files]

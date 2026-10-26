@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'Essential Plugin shape: Googlebot sees fetched content'
+features_old: []
+features_new:
+- kind: ua-check
+  key: googlebot
+  path: inc/seo.php
+  line: 18
+  attrs: {prints: fetched}
+expect:
+- {id: bot-cloaking, min_severity: high}

@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: 'E2: $a = "as"."sert"; $a(base64_decode($x))'
+features_old: []
+features_new:
+- kind: dyn-call
+  key: $a
+  path: lib.php
+  line: 3
+  attrs: {callee: assert, built: 'true', source: variable, arg: base64_decode($x)}
+expect:
+- {id: decode-exec, min_severity: critical}
+forbid: [eval-dynamic]

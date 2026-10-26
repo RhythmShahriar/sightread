@@ -1,0 +1,6 @@
+eco: npm
+note: '@type/node, a scope one letter off @types/node, as a dev dependency'
+meta_old: {deps: {}}
+meta_new: {dev_deps: {'@type/node': ^20.0.0}}
+expect:
+- {id: typosquat, min_severity: high}

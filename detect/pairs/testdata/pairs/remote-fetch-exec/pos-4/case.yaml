@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: vendored code fires too; the scorer demotes it, the detector does not
+features_old: []
+features_new:
+- {kind: flow, key: remote->include, path: vendor/acme/loader.php, line: 8, context: vendored, func: load}
+expect:
+- {id: remote-fetch-exec, min_severity: critical}

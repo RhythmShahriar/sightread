@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: unserialize($_COOKIE['cart'])
+features_old: []
+features_new:
+- kind: unserialize
+  key: unserialize
+  path: inc/cart.php
+  line: 12
+  attrs: {source: request, arg: '$_COOKIE[''cart'']'}
+expect:
+- {id: input-unserialize, min_severity: high}

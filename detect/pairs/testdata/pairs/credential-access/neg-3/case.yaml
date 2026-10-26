@@ -1,0 +1,15 @@
+eco: npm
+note: a token the installed version's README documents
+old:
+  README.md: 'Set ACME_API_TOKEN to your Acme key before calling client.connect().
+
+    '
+new:
+  README.md: 'Set ACME_API_TOKEN to your Acme key before calling client.connect().
+
+    '
+features_old: []
+features_new:
+- {kind: env-read, key: ACME_API_TOKEN, path: lib/client.js, line: 8}
+forbid:
+- credential-access

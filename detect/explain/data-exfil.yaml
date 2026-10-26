@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of data-exfil (rhythm-sightread explain data-exfil).
+why: >-
+  New code sends site data (users, admin_email, options, environment
+  variables or files) over the network from the function that reads it.
+  The host is new in this version. Telemetry to a host the old version
+  already used is medium.
+how_to_review:
+  - "Read what is collected and where it goes."
+  - "Look for it in the privacy policy or the changelog."
+  - "Block the host on a staging copy and see what changes."
+false_alarms: >-
+  Telemetry to a host that is already in the old version is medium.
+incidents:
+  - name: "Social Warfare 2024"
+    line: "The new administrator accounts were sent to 94.156.79.8."
+  - name: "phpass 2022"
+    line: "AWS keys from the environment were sent to a remote host."
+advice: "Hold the update until you know what is sent and to whom."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#data-exfil

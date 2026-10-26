@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: the branch existed in the installed version
+features_old:
+- kind: ua-check
+  key: googlebot
+  path: inc/seo.php
+  line: 18
+  attrs: {prints: fetched}
+features_new:
+- kind: ua-check
+  key: googlebot
+  path: inc/seo.php
+  line: 25
+  attrs: {prints: fetched}
+forbid: [bot-cloaking]

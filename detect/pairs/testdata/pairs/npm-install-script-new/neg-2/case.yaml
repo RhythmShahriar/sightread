@@ -1,0 +1,6 @@
+eco: npm
+note: prepare only sets up husky git hooks
+lookalike: true
+meta_old: {scripts: {test: jest}}
+meta_new: {scripts: {test: jest, prepare: husky}}
+forbid: [npm-install-script-new]

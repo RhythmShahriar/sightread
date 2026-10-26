@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: the hook's callback file gains a network send
+features_old: []
+features_new:
+- {kind: cron, key: acme_sync, path: inc/schedule.php, line: 5}
+- {kind: hook, key: acme_sync, path: inc/sync.php, line: 3}
+- kind: send
+  key: wp_remote_post
+  path: inc/sync.php
+  line: 20
+  attrs: {reads: options}
+expect:
+- {id: cron-new-hook, min_severity: medium}

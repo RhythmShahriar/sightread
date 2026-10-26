@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: 'Essential Plugin 2025: "Check compatibility" while the code fetches and runs remote code'
+meta_old: {}
+meta_new:
+  changelog:
+  - {version: 2.0.0, text: 'Check compatibility with WordPress version 6.8.2', generic: true}
+features_old: []
+features_new:
+- {kind: flow, key: remote->eval, path: includes/class-updater.php, line: 40, snippet: "eval(wp_remote_retrieve_body($r))", func: check}
+expect:
+- {id: changelog-mismatch, min_severity: high}
+- {id: remote-fetch-exec, min_severity: critical}

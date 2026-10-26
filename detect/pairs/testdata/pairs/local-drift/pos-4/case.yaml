@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a PHP translation file under languages/ was edited on the site; PHP runs it, so it counts
+meta_old:
+  ref:
+    version: 1.0.0
+drift:
+  differ:
+  - languages/x-de_DE.l10n.php
+  - languages/x-de_DE.po
+expect:
+- {id: local-drift, min_severity: info}

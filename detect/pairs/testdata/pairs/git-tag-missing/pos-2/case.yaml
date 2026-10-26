@@ -1,0 +1,13 @@
+eco: npm
+note: no tag, scoped name
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    name: '@acme/fixture'
+    version: 2.0.0
+  git_tag: false
+expect:
+- id: git-tag-missing
+  min_severity: medium

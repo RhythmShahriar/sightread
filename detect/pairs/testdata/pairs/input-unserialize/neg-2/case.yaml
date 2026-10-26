@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: unserialize of request data with allowed_classes => false
+lookalike: true
+features_old: []
+features_new:
+- kind: unserialize
+  key: unserialize
+  path: inc/cart.php
+  line: 12
+  attrs: {source: request, allowed_classes: 'false'}
+forbid: [input-unserialize]

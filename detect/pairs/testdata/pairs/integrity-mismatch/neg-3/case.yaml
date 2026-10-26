@@ -1,0 +1,9 @@
+eco: npm
+note: an unverified local archive is partial, not a mismatch
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_new:
+  by: none
+forbid:
+- integrity-mismatch

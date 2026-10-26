@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: writes under ABSPATH outside its folder (high)
+features_old: []
+features_new:
+- {kind: write, key: abspath, path: inc/export.php, line: 15}
+expect:
+- {id: write-outside-package, min_severity: high, max_severity: high}

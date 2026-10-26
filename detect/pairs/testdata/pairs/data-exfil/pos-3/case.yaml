@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'telemetry with options to a host the old version used: medium'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+- {kind: domain, key: telemetry.acme.test, path: includes/t.php, line: 3}
+features_new:
+- {kind: send, key: wp_remote_post, path: includes/t.php, line: 30, attrs: {host: telemetry.acme.test, reads: options}}
+expect:
+- {id: data-exfil, min_severity: medium, max_severity: medium}

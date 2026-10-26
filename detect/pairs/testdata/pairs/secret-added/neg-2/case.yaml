@@ -1,0 +1,10 @@
+eco: npm
+note: a fixture key under tests/fixtures
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: secret, key: stripe-key, path: tests/fixtures/keys.js, line: 2, snippet: '''{{fakekey:stripe}}'''}
+expect:
+- {id: secret-added, max_severity: info}

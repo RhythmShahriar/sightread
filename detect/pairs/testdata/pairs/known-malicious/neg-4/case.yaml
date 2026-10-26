@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: OSV records apply to npm and Composer
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: MAL-2026-1
+    malicious: true
+forbid:
+- known-malicious

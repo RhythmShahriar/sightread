@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of bot-cloaking (rhythm-sightread explain bot-cloaking).
+why: >-
+  New code checks for search engine crawlers or logged-in visitors and
+  prints fetched or encoded content in that branch. Owners and visitors
+  see a normal page while search engines index something else.
+how_to_review:
+  - "Read the branch in the hunk."
+  - "Fetch a page of a staging copy with a crawler user agent and compare."
+  - "Look in your search console for pages you don't recognise."
+false_alarms: >-
+  SEO plugins that only add meta tags for bots do not fire: the branch
+  must print fetched or encoded content.
+incidents:
+  - name: "Display Widgets 2017"
+    line: "The new owner's release showed hidden content to visitors who were not logged in."
+  - name: "Essential Plugin 2025"
+    line: "Spam was shown to Googlebot only."
+advice: "Hold the update. It shows search engines what you can't see."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#bot-cloaking

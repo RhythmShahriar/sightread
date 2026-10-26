@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule assert-request (Tuner negative): a boolean assert in a test'
+new:
+  tests/t.php: <?php assert($count === 3); $a = $_POST['x'];
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- eval-dynamic

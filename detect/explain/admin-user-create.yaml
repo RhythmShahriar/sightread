@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of admin-user-create (rhythm-sightread explain admin-user-create).
+why: >-
+  New code creates an administrator account, sets a user's role to
+  administrator, grants super admin or writes wp_capabilities directly.
+  A plugin almost never needs to make administrators on its own.
+how_to_review:
+  - "Read the user name, email and role in the hunk."
+  - "Check when the code runs: activation, a request or a cron job."
+  - "Look at the site's users for accounts created recently."
+false_alarms: >-
+  Creating a user with a role other than administrator does not fire.
+incidents:
+  - name: "Social Warfare 2024"
+    line: "Injected code created the administrators Options and PluginAuth."
+  - name: "Gravity Forms 2025"
+    line: "The altered build added an administrator account."
+advice: "Hold the update. Check the site's users for accounts you don't know."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#admin-user-create

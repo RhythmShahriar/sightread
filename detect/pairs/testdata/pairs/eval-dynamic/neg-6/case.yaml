@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: 'rule create-function-input (Tuner negative): a literal body'
+lookalike: true
+new:
+  y.php: <?php $cmp = create_function('$a,$b', 'return $a - $b;'); $v = $_POST['x'];
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- eval-dynamic

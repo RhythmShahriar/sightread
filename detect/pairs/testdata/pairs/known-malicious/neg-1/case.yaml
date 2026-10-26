@@ -1,0 +1,16 @@
+eco: npm
+note: a vulnerability advisory is not a MAL record
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: GHSA-aaaa-bbbb-cccc
+expect:
+- id: known-vulnerable
+  min_severity: high
+forbid:
+- known-malicious

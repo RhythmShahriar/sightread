@@ -1,0 +1,17 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of cron-new-hook (rhythm-sightread explain cron-new-hook).
+why: >-
+  The update schedules a new background task (wp_schedule_event, Action
+  Scheduler or a new cron interval). Code in a scheduled task runs
+  without anyone visiting a page. It is medium when the hook's file also
+  gains network or code execution.
+how_to_review:
+  - "Read what the scheduled callback does."
+  - "Check how often it runs."
+  - "Look for it in the changelog."
+false_alarms: >-
+  A documented cleanup task stays low.
+incidents: []
+advice: "Check what the new background task does."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#cron-new-hook

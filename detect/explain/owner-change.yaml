@@ -1,0 +1,25 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of owner-change (rhythm-sightread explain owner-change).
+why: >-
+  The people who publish this package changed: no maintainer of the old
+  version remains, or the release came from someone who never published
+  it before. Bought or hijacked packages often ship their first harmful
+  release right after the handover. A change of hands is often normal;
+  the trust you gave the old team simply does not carry over.
+how_to_review:
+  - "Read the old and new maintainers in the evidence."
+  - "Look for an announcement of the handover."
+  - "Review this release more closely than usual."
+false_alarms: >-
+  A team that only grew does not fire. When WordPress.org takes a plugin
+  over, the note says so.
+incidents:
+  - name: "Essential Plugin 2025"
+    line: "A buyer of 31 plugins shipped the changed code in the first release after the sale."
+  - name: "event-stream 2018"
+    line: "The author handed the package to a volunteer who added flatmap-stream."
+  - name: "Display Widgets 2017"
+    line: "Bought for $15,000; the next release added hidden content."
+advice: "Read this release closely. The people behind it changed."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#owner-change

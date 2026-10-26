@@ -1,0 +1,6 @@
+eco: npm
+note: no publish date for the candidate
+meta_new:
+  history:
+  - {version: 1.0.0, published: '2020-01-01T00:00:00Z'}
+forbid: [dormant-release]

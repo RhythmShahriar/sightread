@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: 'rule eval-base64: the pattern in a line comment'
+new:
+  inc/notes.php: '<?php
+
+    // never write eval(base64_decode($x)) here
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- decode-exec

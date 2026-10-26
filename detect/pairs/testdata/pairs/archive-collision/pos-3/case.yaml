@@ -1,0 +1,12 @@
+eco: composer
+note: a duplicate name
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: collision
+  path: src/Boot.php
+  other: src/Boot.php
+expect:
+- id: archive-collision
+  min_severity: high

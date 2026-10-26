@@ -1,0 +1,11 @@
+eco: npm
+note: a host the installed version already used
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+- {kind: domain, key: api.acme.test, path: src/a.js, line: 3}
+features_new:
+- {kind: domain, key: api.acme.test, path: src/b.js, line: 9}
+forbid:
+- outbound-new-domain

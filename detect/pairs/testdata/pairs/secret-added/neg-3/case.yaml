@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: the key was already in the installed version
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+- {kind: secret, key: slack-token, path: includes/notify.php, line: 5}
+features_new:
+- {kind: secret, key: slack-token, path: includes/notify.php, line: 7}
+forbid:
+- secret-added

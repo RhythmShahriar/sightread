@@ -1,0 +1,10 @@
+eco: npm
+note: a send in a test
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: send, key: fetch, path: test/api.test.js, line: 9, context: test, attrs: {host: localhost, reads: env}}
+forbid:
+- data-exfil

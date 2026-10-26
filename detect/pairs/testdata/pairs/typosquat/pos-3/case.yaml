@@ -1,0 +1,6 @@
+eco: composer
+note: laravell/framework, the vendor one letter off
+meta_old: {deps: {}}
+meta_new: {deps: {laravell/framework: ^11.0}}
+expect:
+- {id: typosquat, min_severity: high}

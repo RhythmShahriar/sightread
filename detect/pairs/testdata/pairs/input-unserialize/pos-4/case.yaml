@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: request data with an option only as the fallback still reaches unserialize
+features_old: []
+features_new:
+- kind: unserialize
+  key: unserialize
+  path: inc/cart.php
+  line: 12
+  attrs: {source: request, arg: '$_REQUEST[''d''] ?: get_option( ''x'' )'}
+expect:
+- {id: input-unserialize, min_severity: high}

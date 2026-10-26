@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: a route with a real permission callback
+lookalike: true
+features_old: []
+features_new:
+- kind: route
+  key: acme/v1/settings
+  path: inc/rest.php
+  line: 12
+  attrs: {permission: callback}
+forbid: [rest-open-route]

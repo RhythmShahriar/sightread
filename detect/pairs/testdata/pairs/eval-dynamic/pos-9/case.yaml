@@ -1,0 +1,11 @@
+eco: composer
+note: rule preg-replace-e (Tuner positive 1)
+new:
+  x.php: <?php preg_replace('/.*/e', $_POST['c'], '');
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: eval-dynamic, min_severity: high}

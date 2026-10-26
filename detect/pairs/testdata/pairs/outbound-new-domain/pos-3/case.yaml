@@ -1,0 +1,17 @@
+eco: npm
+note: 'a weather API the changelog announces: medium, and changelog-mismatch stays quiet'
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  changelog:
+  - version: 2.0.0
+    text: Fetch forecasts from api.weatherly.test instead of the bundled table.
+features_old: []
+features_new:
+- {kind: domain, key: api.weatherly.test, path: src/forecast.js, line: 12, snippet: 'fetch(''https://api.weatherly.test/v2/forecast'')'}
+- {kind: send, key: fetch, path: src/forecast.js, line: 12, attrs: {host: api.weatherly.test}}
+expect:
+- {id: outbound-new-domain, min_severity: medium, max_severity: medium}
+forbid:
+- changelog-mismatch

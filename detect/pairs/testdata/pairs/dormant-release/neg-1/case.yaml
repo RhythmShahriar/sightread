@@ -1,0 +1,9 @@
+eco: npm
+note: an old release long ago, but the one just before is 300 days back
+lookalike: true
+meta_new:
+  published: '2026-10-01T00:00:00Z'
+  history:
+  - {version: 0.1.0, published: '2023-01-01T00:00:00Z'}
+  - {version: 0.2.0, published: '2025-12-05T00:00:00Z'}
+forbid: [dormant-release]

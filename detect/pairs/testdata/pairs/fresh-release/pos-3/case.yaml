@@ -1,0 +1,5 @@
+eco: composer
+note: an added package published ten hours ago
+meta_new: {ref: {name: acme/new-thing, version: 0.1.0}, published: '2026-10-26T02:00:00Z'}
+expect:
+- {id: fresh-release, min_severity: medium}

@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of provenance-dropped (rhythm-sightread explain provenance-dropped).
+why: >-
+  The installed version was published with provenance or trusted
+  publishing, which ties it to a CI run in the public repository. This
+  release has none. It may have been published from a laptop with a
+  stolen token.
+how_to_review:
+  - "Compare with the provenance of earlier releases on npmjs.com."
+  - "Check the repository for a matching tag and CI run."
+  - "Ask the maintainers whether the release process changed."
+false_alarms: >-
+  Packages that never had provenance do not fire.
+incidents:
+  - name: "axios 2026"
+    line: "1.14.1 was published outside the project's trusted publishing."
+advice: "Hold the update until the maintainers confirm they published it."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#provenance-dropped

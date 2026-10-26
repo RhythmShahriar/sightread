@@ -1,0 +1,7 @@
+eco: composer
+note: a remote response unserialized in a Composer library
+features_old: []
+features_new:
+- {kind: flow, key: remote->unserialize, path: src/Client.php, line: 50, end_line: 52, func: fetch}
+expect:
+- {id: input-unserialize, min_severity: high}

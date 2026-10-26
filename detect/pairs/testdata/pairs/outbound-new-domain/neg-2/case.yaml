@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: documentation links in comments are info
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: domain, key: developer.wordpress.org, path: includes/api.php, line: 8, context: comment}
+- {kind: domain, key: 203.0.113.9, path: includes/api.php, line: 9, context: comment, snippet: '// e.g. http://203.0.113.9/'}
+expect:
+- {id: outbound-new-domain, max_severity: info}

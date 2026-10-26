@@ -1,0 +1,13 @@
+eco: npm
+note: the tag was found
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  git_tag: true
+  repository: https://github.com/acme/fixture
+forbid:
+- git-tag-missing

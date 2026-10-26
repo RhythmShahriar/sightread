@@ -1,0 +1,14 @@
+eco: wp-plugin
+note: closed by author request is high
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  closed: true
+  closed_reason: Author Request
+expect:
+- id: wporg-closed
+  min_severity: high
+  max_severity: high

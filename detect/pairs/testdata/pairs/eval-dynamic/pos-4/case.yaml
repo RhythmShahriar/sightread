@@ -1,0 +1,11 @@
+eco: npm
+note: new Function with a built body
+features_old: []
+features_new:
+- kind: eval
+  key: function
+  path: lib/template.js
+  line: 30
+  attrs: {source: variable, arg: body}
+expect:
+- {id: eval-dynamic, min_severity: high}

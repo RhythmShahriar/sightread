@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of lockfile-source-change (rhythm-sightread explain lockfile-source-change).
+why: >-
+  The lockfile entry for this package used to come from the registry.
+  Now it resolves to a git URL, a local file, a tarball or another host.
+  Packages from those places skip the registry's integrity and
+  publication records.
+how_to_review:
+  - "Read the resolved URL in the lockfile diff."
+  - "Check whether your team made the change on purpose."
+  - "If nobody did, find the commit that changed it."
+false_alarms: >-
+  An entry that was already off the registry is listed under Not checked
+  (vcs) and does not fire.
+incidents: []
+advice: "Find out who moved this entry off the registry before merging."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#lockfile-source-change

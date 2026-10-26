@@ -1,0 +1,11 @@
+eco: composer
+note: 'a host of no risky category in code: medium'
+meta_old:
+  ref:
+    version: 1.0.0
+  homepage: https://acme.test
+features_old: []
+features_new:
+- {kind: domain, key: metrics.other-vendor.test, path: src/Client.php, line: 40}
+expect:
+- {id: outbound-new-domain, min_severity: medium, max_severity: medium}

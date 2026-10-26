@@ -1,0 +1,15 @@
+eco: wp-plugin
+note: the admin handler that checked nonces and capabilities is deleted
+old:
+  plugin.php: "<?php require __DIR__ . '/admin/save.php';\n"
+  admin/save.php: |
+    <?php
+    if ( ! current_user_can( 'manage_options' ) ) { wp_die(); }
+    check_admin_referer( 'acme_save' );
+    update_option( 'acme', sanitize_text_field( $_POST['acme'] ) );
+new:
+  plugin.php: "<?php require __DIR__ . '/admin/save.php';\n"
+features_old: []
+features_new: []
+expect:
+- {id: files-removed, min_severity: info}

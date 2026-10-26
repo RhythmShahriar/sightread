@@ -1,0 +1,6 @@
+eco: npm
+note: one native build swapped for a prebuilt download with a source fallback, plain flags only
+lookalike: true
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: prebuild-install --runtime napi || node-gyp rebuild --release}}
+forbid: [npm-install-script-new]

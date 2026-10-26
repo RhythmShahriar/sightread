@@ -1,0 +1,11 @@
+eco: npm
+note: npm is not covered by this signal
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  abandoned: true
+forbid:
+- abandoned

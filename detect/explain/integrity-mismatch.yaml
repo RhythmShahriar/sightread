@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of integrity-mismatch (rhythm-sightread explain integrity-mismatch).
+why: >-
+  The bytes Sightread downloaded do not match the hash, checksums or
+  signature the source publishes for this version, or the integrity your
+  lockfile recorded. Something between you and the source changed them,
+  or the release was edited after it was published. Nothing else in the
+  report can be trusted for this copy.
+how_to_review:
+  - "Run the review again later and from another network to rule out a broken mirror or proxy."
+  - "Compare the files listed in the finding with the copy on the registry's own site."
+  - "Report the mismatch to the maintainers or the registry if it stays."
+false_alarms: >-
+  WordPress.org rebuilds readme.txt after a release; a difference in
+  readme.txt only is noted, not flagged. A proxy that rewrites downloads
+  causes this too and is worth fixing.
+incidents: []
+advice: "Someone between you and the source changed it, or the release was edited; don't install this copy."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#integrity-mismatch

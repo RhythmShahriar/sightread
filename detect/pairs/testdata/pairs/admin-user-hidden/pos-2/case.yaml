@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: views_users filter that rewrites the role counts
+features_old: []
+features_new:
+- {kind: user-hide, key: views_users, path: admin/users.php, line: 5}
+expect:
+- {id: admin-user-hidden, min_severity: critical}

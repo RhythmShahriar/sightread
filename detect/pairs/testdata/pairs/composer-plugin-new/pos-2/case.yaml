@@ -1,0 +1,5 @@
+eco: composer
+note: a new post-autoload-dump hook
+meta_new: {composer_scripts: {post-autoload-dump: ['@php bin/patch-vendor.php']}}
+expect:
+- {id: composer-plugin-new, min_severity: high}

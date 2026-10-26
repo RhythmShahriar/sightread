@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule eval-base64 (Tuner positive 3): hidden under vendor/'
+new:
+  vendor/lib/x.php: <?php eval(base64_decode($x));
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: decode-exec, min_severity: critical}

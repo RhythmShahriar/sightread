@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule gzinflate-base64 (Tuner positive): high'
+new:
+  x.php: <?php $c = gzinflate(base64_decode('80jNyclXCM8vykkBAA=='));
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: decode-exec, min_severity: high, max_severity: high}

@@ -1,0 +1,10 @@
+eco: npm
+note: a Hebrew JSON locale file
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: unicode, key: U+200F, path: locales/he.json, line: 3}
+expect:
+- {id: unicode-hidden, max_severity: info}

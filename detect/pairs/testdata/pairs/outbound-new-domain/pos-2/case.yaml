@@ -1,0 +1,10 @@
+eco: wp-plugin
+note: 'Essential Plugin 2025 shape: an Ethereum RPC host in the update code'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: domain, key: cloudflare-eth.com, path: includes/class-update.php, line: 61, snippet: '''https://cloudflare-eth.com/v1/mainnet'''}
+expect:
+- {id: outbound-new-domain, min_severity: high}

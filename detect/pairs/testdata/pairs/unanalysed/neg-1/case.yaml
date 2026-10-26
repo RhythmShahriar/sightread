@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: the installed version had the unanalysed file, the candidate dropped it
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+  unanalysed:
+  - path: includes/big.php
+    reason: timeout
+features_new: []
+forbid:
+- unanalysed

@@ -1,0 +1,7 @@
+eco: npm
+note: not checked (no trigger signal)
+meta_old:
+  ref:
+    version: 1.0.0
+forbid:
+- git-tag-missing

@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of code-in-asset (rhythm-sightread explain code-in-asset).
+why: >-
+  PHP or JS code sits in a file that should hold none (an image, a font,
+  a text file) or after __halt_compiler(). Code hidden there escapes
+  reviews that only read .php and .js files. It is critical when another
+  file includes it.
+how_to_review:
+  - "Open the file with a hex viewer, not an image viewer."
+  - "Search the package for includes of its name."
+  - "Compare it with the same file in the old version."
+false_alarms: >-
+  Real images whose binary data contains the bytes <? do not fire: a PHP
+  open tag must be followed by a statement that parses.
+incidents: []
+advice: "Hold the update. Code doesn't belong in an image or a font."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#code-in-asset

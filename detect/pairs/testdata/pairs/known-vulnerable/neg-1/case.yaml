@@ -1,0 +1,16 @@
+eco: npm
+note: 'the candidate fixes the advisory: info "fixes <id>"'
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+meta_new:
+  ref:
+    version: 2.0.0
+  advisories:
+  - id: GHSA-7777-8888-9999
+    fixed_in:
+    - 2.0.0
+expect:
+- id: known-vulnerable
+  max_severity: info

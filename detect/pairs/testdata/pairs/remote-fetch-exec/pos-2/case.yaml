@@ -1,0 +1,8 @@
+eco: npm
+note: fetch response piped to child_process.exec
+features_old: []
+features_new:
+- {kind: flow, key: remote->child_process, path: lib/setup.js, line: 12, end_line: 14, snippet: const
+    r = await fetch(u); exec(await r.text()), func: setup}
+expect:
+- {id: remote-fetch-exec, min_severity: critical}

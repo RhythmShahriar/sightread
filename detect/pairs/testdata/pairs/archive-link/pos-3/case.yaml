@@ -1,0 +1,12 @@
+eco: composer
+note: a device entry
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: link
+  path: dev/null0
+  detail: character device
+expect:
+- id: archive-link
+  min_severity: high

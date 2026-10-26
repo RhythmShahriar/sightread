@@ -1,0 +1,6 @@
+eco: npm
+note: an unchanged native build hides a command substitution in its arguments
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: 'node-gyp rebuild $(node evil.js)'}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

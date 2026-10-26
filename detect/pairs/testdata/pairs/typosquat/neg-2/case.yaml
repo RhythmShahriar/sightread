@@ -1,0 +1,6 @@
+eco: npm
+note: colors next to color; both are popular
+lookalike: true
+meta_old: {deps: {color: ^4.0.0}}
+meta_new: {deps: {color: ^4.0.0, colors: ^1.4.0}}
+forbid: [typosquat]

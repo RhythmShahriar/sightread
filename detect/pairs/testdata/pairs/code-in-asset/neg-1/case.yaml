@@ -1,0 +1,11 @@
+eco: composer
+note: 'a phar stub: __halt_compiler() followed by archive data'
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: halt-compiler, key: __halt_compiler, path: bin/tool.phar, line: 3, attrs: {trailing: data}}
+forbid:
+- code-in-asset

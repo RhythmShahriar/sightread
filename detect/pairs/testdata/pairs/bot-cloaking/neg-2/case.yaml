@@ -1,0 +1,10 @@
+eco: composer
+note: 'a Composer library: bot-cloaking is for WordPress and npm only'
+features_old: []
+features_new:
+- kind: ua-check
+  key: googlebot
+  path: src/Render.php
+  line: 10
+  attrs: {prints: fetched}
+forbid: [bot-cloaking]

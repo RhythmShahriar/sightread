@@ -1,0 +1,17 @@
+eco: npm
+note: 'a minified bundle gains eval(atob(x)): minifying never hides it'
+features_old:
+  found:
+  - {kind: call, key: map, path: dist/app.min.js, line: 1}
+  minified: [dist/app.min.js]
+features_new:
+  found:
+  - {kind: call, key: map, path: dist/app.min.js, line: 1}
+  - kind: eval
+    key: eval
+    path: dist/app.min.js
+    line: 1
+    attrs: {source: variable, arg: atob(x)}
+  minified: [dist/app.min.js]
+expect:
+- {id: decode-exec, min_severity: critical}

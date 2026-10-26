@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: rule create-function-input (Tuner positive)
+new:
+  x.php: <?php $f = create_function('', $_POST['code']); $f();
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: eval-dynamic, min_severity: high}

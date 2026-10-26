@@ -1,0 +1,16 @@
+eco: wp-plugin
+note: fetches JSON and decodes it with json_decode; nothing runs it
+lookalike: true
+new:
+  api.php: |
+    <?php
+    function get_rates() {
+        $r = wp_remote_get('https://api.example.test/rates');
+        return json_decode(wp_remote_retrieve_body($r), true);
+    }
+features_old: []
+features_new:
+- {kind: call, key: wp_remote_get, path: api.php, line: 3}
+- {kind: call, key: json_decode, path: api.php, line: 4}
+- {kind: domain, key: example.test, path: api.php, line: 3}
+forbid: [remote-fetch-exec, eval-dynamic, decode-exec]

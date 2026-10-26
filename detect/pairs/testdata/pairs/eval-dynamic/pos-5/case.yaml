@@ -1,0 +1,15 @@
+eco: npm
+note: a new eval in a minified bundle still fires
+features_old:
+  found: []
+  minified: [dist/bundle.js]
+features_new:
+  found:
+  - kind: eval
+    key: eval
+    path: dist/bundle.js
+    line: 1
+    attrs: {source: variable, arg: e}
+  minified: [dist/bundle.js]
+expect:
+- {id: eval-dynamic, min_severity: high}

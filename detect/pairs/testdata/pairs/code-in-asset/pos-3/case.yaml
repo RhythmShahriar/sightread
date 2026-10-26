@@ -1,0 +1,10 @@
+eco: composer
+note: code after __halt_compiler()
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: halt-compiler, key: __halt_compiler, path: src/boot.php, line: 80, attrs: {trailing: code}}
+expect:
+- {id: code-in-asset, min_severity: high}

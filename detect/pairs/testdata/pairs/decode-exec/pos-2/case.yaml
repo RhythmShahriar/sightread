@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: 'b05: eval(gzinflate(str_rot13(base64_decode(...)))) split by concatenation and comments'
+features_old: []
+features_new:
+- {kind: flow, key: decode->eval, path: inc/compat.php, line: 14, end_line: 17, snippet: $p = 'gzin'.'flate';
+    eval /* x */ ($p(str_rot13(base64_decode($d))));, func: compat}
+expect:
+- {id: decode-exec, min_severity: critical}

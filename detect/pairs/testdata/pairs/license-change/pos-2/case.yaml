@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: GPL to a proprietary license
+meta_old:
+  ref:
+    version: 1.0.0
+  license: GPLv2 or later
+meta_new:
+  ref:
+    version: 2.0.0
+  license: Proprietary
+expect:
+- id: license-change
+  min_severity: low

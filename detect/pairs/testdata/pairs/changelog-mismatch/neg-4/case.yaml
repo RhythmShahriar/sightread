@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: generic changelog, and nothing new but calls and writes into its own folder
+meta_old: {}
+meta_new:
+  changelog:
+  - {version: 2.0.0, text: Tested up to 6.8, generic: true}
+features_old: []
+features_new:
+- {kind: call, key: strtolower, path: inc/a.php, line: 2}
+- {kind: write, key: own, path: inc/cache.php, line: 7}
+forbid: [changelog-mismatch]

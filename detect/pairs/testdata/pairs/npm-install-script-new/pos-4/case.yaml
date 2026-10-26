@@ -1,0 +1,9 @@
+eco: npm
+note: 'b11: a new preinstall runs bundle.js (Shai-Hulud style; never run, only read)'
+old: {index.js: "module.exports = 1;\n"}
+new: {index.js: "module.exports = 1;\n", bundle.js: "/* payload */\n"}
+features_old: []
+features_new: []
+meta_new: {scripts: {preinstall: node bundle.js}}
+expect:
+- {id: npm-install-script-new, min_severity: high}

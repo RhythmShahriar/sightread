@@ -1,0 +1,12 @@
+eco: wp-plugin
+note: a 2 KB base64 string with high entropy in code
+features_old: []
+features_new:
+- kind: blob
+  key: b64:9a1f
+  path: includes/cache.php
+  line: 4
+  attrs: {encoding: base64, size: '2048', entropy: '5.9', decoded: code}
+  snippet: $c = 'ZXZhbChiYXNlNjRfZGVjb2RlKCRfUE9TVFsnZCddKSk7...
+expect:
+- {id: obfuscation, min_severity: high}

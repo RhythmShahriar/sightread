@@ -1,0 +1,14 @@
+eco: npm
+note: an old lockfile's sha1 against the registry's shasum
+meta_old:
+  ref:
+    version: 1.0.0
+  archive:
+    shasum: d0a126148761a4e71352fbd2f739c347f47e78d8
+lock_old:
+  ref:
+    version: 1.0.0
+  integrity: sha1-Mp4+mEz/cl42SJqlMPg+r2djcl0=
+expect:
+- id: version-republished
+  min_severity: critical

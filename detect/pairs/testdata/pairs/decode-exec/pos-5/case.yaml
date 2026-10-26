@@ -1,0 +1,11 @@
+eco: wp-theme
+note: 'E2: call_user_func(''ev''.''al'', base64_decode($x))'
+features_old: []
+features_new:
+- kind: dyn-call
+  key: call_user_func
+  path: functions.php
+  line: 88
+  attrs: {callee: eval, built: 'true', source: literal, arg: base64_decode($x)}
+expect:
+- {id: decode-exec, min_severity: critical}

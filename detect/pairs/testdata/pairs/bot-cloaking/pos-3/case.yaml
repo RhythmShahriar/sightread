@@ -1,0 +1,11 @@
+eco: npm
+note: an npm SSR helper that serves crawlers fetched HTML
+features_old: []
+features_new:
+- kind: ua-check
+  key: bingbot
+  path: lib/render.js
+  line: 33
+  attrs: {prints: fetched}
+expect:
+- {id: bot-cloaking, min_severity: high}

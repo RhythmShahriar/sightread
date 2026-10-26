@@ -1,0 +1,342 @@
+eco: npm
+note: growth under 30% but far over the size of the last releases
+meta_new:
+  archive: {size: 2600000}
+  history:
+  - {version: 1.0.0, size: 1500000}
+  - {version: 1.1.0, size: 1510000}
+  - {version: 1.2.0, size: 1490000}
+  - {version: 1.3.0, size: 1505000}
+  - {version: 1.4.0, size: 1500000}
+old:
+  lib/base.js: &chunk |
+    //
+    $strings['msg_0000'] = 'Translated message number 0000 for the plugin screen';
+    $strings['msg_0001'] = 'Translated message number 0001 for the plugin screen';
+    $strings['msg_0002'] = 'Translated message number 0002 for the plugin screen';
+    $strings['msg_0003'] = 'Translated message number 0003 for the plugin screen';
+    $strings['msg_0004'] = 'Translated message number 0004 for the plugin screen';
+    $strings['msg_0005'] = 'Translated message number 0005 for the plugin screen';
+    $strings['msg_0006'] = 'Translated message number 0006 for the plugin screen';
+    $strings['msg_0007'] = 'Translated message number 0007 for the plugin screen';
+    $strings['msg_0008'] = 'Translated message number 0008 for the plugin screen';
+    $strings['msg_0009'] = 'Translated message number 0009 for the plugin screen';
+    $strings['msg_0010'] = 'Translated message number 0010 for the plugin screen';
+    $strings['msg_0011'] = 'Translated message number 0011 for the plugin screen';
+    $strings['msg_0012'] = 'Translated message number 0012 for the plugin screen';
+    $strings['msg_0013'] = 'Translated message number 0013 for the plugin screen';
+    $strings['msg_0014'] = 'Translated message number 0014 for the plugin screen';
+    $strings['msg_0015'] = 'Translated message number 0015 for the plugin screen';
+    $strings['msg_0016'] = 'Translated message number 0016 for the plugin screen';
+    $strings['msg_0017'] = 'Translated message number 0017 for the plugin screen';
+    $strings['msg_0018'] = 'Translated message number 0018 for the plugin screen';
+    $strings['msg_0019'] = 'Translated message number 0019 for the plugin screen';
+    $strings['msg_0020'] = 'Translated message number 0020 for the plugin screen';
+    $strings['msg_0021'] = 'Translated message number 0021 for the plugin screen';
+    $strings['msg_0022'] = 'Translated message number 0022 for the plugin screen';
+    $strings['msg_0023'] = 'Translated message number 0023 for the plugin screen';
+    $strings['msg_0024'] = 'Translated message number 0024 for the plugin screen';
+    $strings['msg_0025'] = 'Translated message number 0025 for the plugin screen';
+    $strings['msg_0026'] = 'Translated message number 0026 for the plugin screen';
+    $strings['msg_0027'] = 'Translated message number 0027 for the plugin screen';
+    $strings['msg_0028'] = 'Translated message number 0028 for the plugin screen';
+    $strings['msg_0029'] = 'Translated message number 0029 for the plugin screen';
+    $strings['msg_0030'] = 'Translated message number 0030 for the plugin screen';
+    $strings['msg_0031'] = 'Translated message number 0031 for the plugin screen';
+    $strings['msg_0032'] = 'Translated message number 0032 for the plugin screen';
+    $strings['msg_0033'] = 'Translated message number 0033 for the plugin screen';
+    $strings['msg_0034'] = 'Translated message number 0034 for the plugin screen';
+    $strings['msg_0035'] = 'Translated message number 0035 for the plugin screen';
+    $strings['msg_0036'] = 'Translated message number 0036 for the plugin screen';
+    $strings['msg_0037'] = 'Translated message number 0037 for the plugin screen';
+    $strings['msg_0038'] = 'Translated message number 0038 for the plugin screen';
+    $strings['msg_0039'] = 'Translated message number 0039 for the plugin screen';
+    $strings['msg_0040'] = 'Translated message number 0040 for the plugin screen';
+    $strings['msg_0041'] = 'Translated message number 0041 for the plugin screen';
+    $strings['msg_0042'] = 'Translated message number 0042 for the plugin screen';
+    $strings['msg_0043'] = 'Translated message number 0043 for the plugin screen';
+    $strings['msg_0044'] = 'Translated message number 0044 for the plugin screen';
+    $strings['msg_0045'] = 'Translated message number 0045 for the plugin screen';
+    $strings['msg_0046'] = 'Translated message number 0046 for the plugin screen';
+    $strings['msg_0047'] = 'Translated message number 0047 for the plugin screen';
+    $strings['msg_0048'] = 'Translated message number 0048 for the plugin screen';
+    $strings['msg_0049'] = 'Translated message number 0049 for the plugin screen';
+    $strings['msg_0050'] = 'Translated message number 0050 for the plugin screen';
+    $strings['msg_0051'] = 'Translated message number 0051 for the plugin screen';
+
+  lib/part-00.js: *chunk
+  lib/part-01.js: *chunk
+  lib/part-02.js: *chunk
+  lib/part-03.js: *chunk
+  lib/part-04.js: *chunk
+  lib/part-05.js: *chunk
+  lib/part-06.js: *chunk
+  lib/part-07.js: *chunk
+  lib/part-08.js: *chunk
+  lib/part-09.js: *chunk
+  lib/part-10.js: *chunk
+  lib/part-11.js: *chunk
+  lib/part-12.js: *chunk
+  lib/part-13.js: *chunk
+  lib/part-14.js: *chunk
+  lib/part-15.js: *chunk
+  lib/part-16.js: *chunk
+  lib/part-17.js: *chunk
+  lib/part-18.js: *chunk
+  lib/part-19.js: *chunk
+  lib/part-20.js: *chunk
+  lib/part-21.js: *chunk
+  lib/part-22.js: *chunk
+  lib/part-23.js: *chunk
+  lib/part-24.js: *chunk
+  lib/part-25.js: *chunk
+  lib/part-26.js: *chunk
+  lib/part-27.js: *chunk
+  lib/part-28.js: *chunk
+  lib/part-29.js: *chunk
+  lib/part-30.js: *chunk
+  lib/part-31.js: *chunk
+  lib/part-32.js: *chunk
+  lib/part-33.js: *chunk
+  lib/part-34.js: *chunk
+  lib/part-35.js: *chunk
+  lib/part-36.js: *chunk
+  lib/part-37.js: *chunk
+  lib/part-38.js: *chunk
+  lib/part-39.js: *chunk
+  lib/part-40.js: *chunk
+  lib/part-41.js: *chunk
+  lib/part-42.js: *chunk
+  lib/part-43.js: *chunk
+  lib/part-44.js: *chunk
+  lib/part-45.js: *chunk
+  lib/part-46.js: *chunk
+  lib/part-47.js: *chunk
+  lib/part-48.js: *chunk
+  lib/part-49.js: *chunk
+  lib/part-50.js: *chunk
+  lib/part-51.js: *chunk
+  lib/part-52.js: *chunk
+  lib/part-53.js: *chunk
+  lib/part-54.js: *chunk
+  lib/part-55.js: *chunk
+  lib/part-56.js: *chunk
+  lib/part-57.js: *chunk
+  lib/part-58.js: *chunk
+  lib/part-59.js: *chunk
+  lib/part-60.js: *chunk
+  lib/part-61.js: *chunk
+  lib/part-62.js: *chunk
+  lib/part-63.js: *chunk
+  lib/part-64.js: *chunk
+  lib/part-65.js: *chunk
+  lib/part-66.js: *chunk
+  lib/part-67.js: *chunk
+  lib/part-68.js: *chunk
+  lib/part-69.js: *chunk
+  lib/part-70.js: *chunk
+  lib/part-71.js: *chunk
+  lib/part-72.js: *chunk
+  lib/part-73.js: *chunk
+  lib/part-74.js: *chunk
+  lib/part-75.js: *chunk
+  lib/part-76.js: *chunk
+  lib/part-77.js: *chunk
+  lib/part-78.js: *chunk
+  lib/part-79.js: *chunk
+  lib/part-80.js: *chunk
+  lib/part-81.js: *chunk
+  lib/part-82.js: *chunk
+  lib/part-83.js: *chunk
+  lib/part-84.js: *chunk
+  lib/part-85.js: *chunk
+  lib/part-86.js: *chunk
+  lib/part-87.js: *chunk
+  lib/part-88.js: *chunk
+  lib/part-89.js: *chunk
+  lib/part-90.js: *chunk
+  lib/part-91.js: *chunk
+  lib/part-92.js: *chunk
+  lib/part-93.js: *chunk
+  lib/part-94.js: *chunk
+  lib/part-95.js: *chunk
+  lib/part-96.js: *chunk
+  lib/part-97.js: *chunk
+  lib/part-98.js: *chunk
+  lib/part-99.js: *chunk
+  lib/part-100.js: *chunk
+  lib/part-101.js: *chunk
+  lib/part-102.js: *chunk
+  lib/part-103.js: *chunk
+  lib/part-104.js: *chunk
+  lib/part-105.js: *chunk
+  lib/part-106.js: *chunk
+  lib/part-107.js: *chunk
+  lib/part-108.js: *chunk
+  lib/part-109.js: *chunk
+  lib/part-110.js: *chunk
+  lib/part-111.js: *chunk
+  lib/part-112.js: *chunk
+  lib/part-113.js: *chunk
+  lib/part-114.js: *chunk
+  lib/part-115.js: *chunk
+  lib/part-116.js: *chunk
+  lib/part-117.js: *chunk
+  lib/part-118.js: *chunk
+  lib/part-119.js: *chunk
+new:
+  lib/base.js: *chunk
+  lib/part-00.js: *chunk
+  lib/part-01.js: *chunk
+  lib/part-02.js: *chunk
+  lib/part-03.js: *chunk
+  lib/part-04.js: *chunk
+  lib/part-05.js: *chunk
+  lib/part-06.js: *chunk
+  lib/part-07.js: *chunk
+  lib/part-08.js: *chunk
+  lib/part-09.js: *chunk
+  lib/part-10.js: *chunk
+  lib/part-11.js: *chunk
+  lib/part-12.js: *chunk
+  lib/part-13.js: *chunk
+  lib/part-14.js: *chunk
+  lib/part-15.js: *chunk
+  lib/part-16.js: *chunk
+  lib/part-17.js: *chunk
+  lib/part-18.js: *chunk
+  lib/part-19.js: *chunk
+  lib/part-20.js: *chunk
+  lib/part-21.js: *chunk
+  lib/part-22.js: *chunk
+  lib/part-23.js: *chunk
+  lib/part-24.js: *chunk
+  lib/part-25.js: *chunk
+  lib/part-26.js: *chunk
+  lib/part-27.js: *chunk
+  lib/part-28.js: *chunk
+  lib/part-29.js: *chunk
+  lib/part-30.js: *chunk
+  lib/part-31.js: *chunk
+  lib/part-32.js: *chunk
+  lib/part-33.js: *chunk
+  lib/part-34.js: *chunk
+  lib/part-35.js: *chunk
+  lib/part-36.js: *chunk
+  lib/part-37.js: *chunk
+  lib/part-38.js: *chunk
+  lib/part-39.js: *chunk
+  lib/part-40.js: *chunk
+  lib/part-41.js: *chunk
+  lib/part-42.js: *chunk
+  lib/part-43.js: *chunk
+  lib/part-44.js: *chunk
+  lib/part-45.js: *chunk
+  lib/part-46.js: *chunk
+  lib/part-47.js: *chunk
+  lib/part-48.js: *chunk
+  lib/part-49.js: *chunk
+  lib/part-50.js: *chunk
+  lib/part-51.js: *chunk
+  lib/part-52.js: *chunk
+  lib/part-53.js: *chunk
+  lib/part-54.js: *chunk
+  lib/part-55.js: *chunk
+  lib/part-56.js: *chunk
+  lib/part-57.js: *chunk
+  lib/part-58.js: *chunk
+  lib/part-59.js: *chunk
+  lib/part-60.js: *chunk
+  lib/part-61.js: *chunk
+  lib/part-62.js: *chunk
+  lib/part-63.js: *chunk
+  lib/part-64.js: *chunk
+  lib/part-65.js: *chunk
+  lib/part-66.js: *chunk
+  lib/part-67.js: *chunk
+  lib/part-68.js: *chunk
+  lib/part-69.js: *chunk
+  lib/part-70.js: *chunk
+  lib/part-71.js: *chunk
+  lib/part-72.js: *chunk
+  lib/part-73.js: *chunk
+  lib/part-74.js: *chunk
+  lib/part-75.js: *chunk
+  lib/part-76.js: *chunk
+  lib/part-77.js: *chunk
+  lib/part-78.js: *chunk
+  lib/part-79.js: *chunk
+  lib/part-80.js: *chunk
+  lib/part-81.js: *chunk
+  lib/part-82.js: *chunk
+  lib/part-83.js: *chunk
+  lib/part-84.js: *chunk
+  lib/part-85.js: *chunk
+  lib/part-86.js: *chunk
+  lib/part-87.js: *chunk
+  lib/part-88.js: *chunk
+  lib/part-89.js: *chunk
+  lib/part-90.js: *chunk
+  lib/part-91.js: *chunk
+  lib/part-92.js: *chunk
+  lib/part-93.js: *chunk
+  lib/part-94.js: *chunk
+  lib/part-95.js: *chunk
+  lib/part-96.js: *chunk
+  lib/part-97.js: *chunk
+  lib/part-98.js: *chunk
+  lib/part-99.js: *chunk
+  lib/part-100.js: *chunk
+  lib/part-101.js: *chunk
+  lib/part-102.js: *chunk
+  lib/part-103.js: *chunk
+  lib/part-104.js: *chunk
+  lib/part-105.js: *chunk
+  lib/part-106.js: *chunk
+  lib/part-107.js: *chunk
+  lib/part-108.js: *chunk
+  lib/part-109.js: *chunk
+  lib/part-110.js: *chunk
+  lib/part-111.js: *chunk
+  lib/part-112.js: *chunk
+  lib/part-113.js: *chunk
+  lib/part-114.js: *chunk
+  lib/part-115.js: *chunk
+  lib/part-116.js: *chunk
+  lib/part-117.js: *chunk
+  lib/part-118.js: *chunk
+  lib/part-119.js: *chunk
+  lib/extra-00.js: *chunk
+  lib/extra-01.js: *chunk
+  lib/extra-02.js: *chunk
+  lib/extra-03.js: *chunk
+  lib/extra-04.js: *chunk
+  lib/extra-05.js: *chunk
+  lib/extra-06.js: *chunk
+  lib/extra-07.js: *chunk
+  lib/extra-08.js: *chunk
+  lib/extra-09.js: *chunk
+  lib/extra-10.js: *chunk
+  lib/extra-11.js: *chunk
+  lib/extra-12.js: *chunk
+  lib/extra-13.js: *chunk
+  lib/extra-14.js: *chunk
+  lib/extra-15.js: *chunk
+  lib/extra-16.js: *chunk
+  lib/extra-17.js: *chunk
+  lib/extra-18.js: *chunk
+  lib/extra-19.js: *chunk
+  lib/extra-20.js: *chunk
+  lib/extra-21.js: *chunk
+  lib/extra-22.js: *chunk
+  lib/extra-23.js: *chunk
+  lib/extra-24.js: *chunk
+  lib/extra-25.js: *chunk
+  lib/extra-26.js: *chunk
+  lib/extra-27.js: *chunk
+  lib/extra-28.js: *chunk
+  lib/extra-29.js: *chunk
+features_old: []
+features_new: []
+expect:
+- {id: size-jump, min_severity: medium}

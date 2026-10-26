@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: register_rest_route with __return_true quoted in the docs
+features_old: []
+features_new:
+- kind: route
+  key: acme/v1/example
+  path: docs/rest.md
+  line: 4
+  context: doc
+  attrs: {permission: open}
+forbid: [rest-open-route]

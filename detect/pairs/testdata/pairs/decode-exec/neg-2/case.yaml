@@ -1,0 +1,8 @@
+eco: composer
+note: json_decode(base64_decode($token)) parses data
+lookalike: true
+features_old: []
+features_new:
+- {kind: call, key: base64_decode, path: src/Jwt.php, line: 40}
+- {kind: call, key: json_decode, path: src/Jwt.php, line: 40}
+forbid: [decode-exec]

@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of unanalysed (rhythm-sightread explain unanalysed).
+why: >-
+  Sightread could not read one or more code files: too large, a parse
+  problem, a decode limit or the time budget. Hiding code behind such
+  limits is a known trick. A gap is reported instead of a clean result.
+how_to_review:
+  - "Read the reason in the finding."
+  - "Open the file and see what makes it unusual."
+  - "Raise the limit with --max-size if it is a known large bundle."
+false_alarms: >-
+  Binary and media files over the size cap are listed, not flagged,
+  unless they hold code.
+incidents:
+  - name: "Shai-Hulud 2025"
+    line: "The second wave hid its payload in a 9.7 MB obfuscated file."
+advice: "Read these files by hand. Sightread could not."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#unanalysed

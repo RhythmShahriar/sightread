@@ -1,0 +1,11 @@
+eco: npm
+note: an added package has no one to compare with
+meta_new:
+  ref:
+    version: 2.0.0
+  maintainers:
+  - name: x
+  publisher:
+    name: x
+forbid:
+- owner-change

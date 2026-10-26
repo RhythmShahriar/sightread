@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: the asset was in the installed version too
+meta_old:
+  ref:
+    version: 1.0.0
+features_old:
+- {kind: code-in-asset, key: assets/legacy.txt, path: assets/legacy.txt, line: 1}
+features_new:
+- {kind: code-in-asset, key: assets/legacy.txt, path: assets/legacy.txt, line: 1}
+forbid:
+- code-in-asset

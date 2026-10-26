@@ -1,0 +1,8 @@
+eco: npm
+note: a minified file appears in a package that had none
+old: {index.js: "module.exports = 1;\n"}
+new: {index.js: "module.exports = require('./lib/core.min.js');\n", lib/core.min.js: "!function(){var a=1}();\n"}
+features_old: []
+features_new: []
+expect:
+- {id: size-jump, min_severity: medium}

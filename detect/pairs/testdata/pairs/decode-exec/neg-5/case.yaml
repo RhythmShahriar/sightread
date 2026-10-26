@@ -1,0 +1,18 @@
+eco: wp-plugin
+note: 'rule eval-base64 (Tuner negative): decoded data, never run'
+lookalike: true
+new:
+  inc/class-http.php: '<?php
+
+    $body = base64_decode( $response[''body''] );
+
+    $valid = eval_condition( $x );
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- decode-exec

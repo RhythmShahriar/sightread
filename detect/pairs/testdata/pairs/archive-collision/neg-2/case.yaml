@@ -1,0 +1,15 @@
+eco: npm
+note: two different names
+new:
+  a.js: '1
+
+    '
+  b.js: '2
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_new: []
+forbid:
+- archive-collision

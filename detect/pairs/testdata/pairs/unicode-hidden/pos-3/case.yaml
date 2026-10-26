@@ -1,0 +1,10 @@
+eco: composer
+note: a zero-width space in an identifier
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: unicode, key: U+200B, path: src/Guard.php, line: 40}
+expect:
+- {id: unicode-hidden, min_severity: medium}

@@ -1,0 +1,11 @@
+eco: composer
+note: 'rule preg-replace-e (Tuner negative 2): preg_replace_callback'
+new:
+  w.php: <?php preg_replace_callback('/x/', fn($m) => 1, $s);
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- eval-dynamic

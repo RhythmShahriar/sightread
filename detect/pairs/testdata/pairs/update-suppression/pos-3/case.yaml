@@ -1,0 +1,11 @@
+eco: wp-theme
+note: auto_update_plugin returning false for every plugin
+features_old: []
+features_new:
+- kind: update-filter
+  key: auto_update_plugin
+  path: functions.php
+  line: 9
+  attrs: {scope: other}
+expect:
+- {id: update-suppression, min_severity: high}

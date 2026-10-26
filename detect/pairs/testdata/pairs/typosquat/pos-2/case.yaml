@@ -1,0 +1,10 @@
+eco: npm
+note: 'b13: the lockfile gains lodahs, one swap from lodash, with an install script'
+meta_old: {deps: {lodash: ^4.17.21}}
+meta_new:
+  deps: {lodash: ^4.17.21, lodahs: ^1.0.0}
+  dep_info:
+    lodahs: {name: lodahs, version: 1.0.0, has_install_script: true}
+expect:
+- {id: typosquat, min_severity: high}
+- {id: dependency-new, min_severity: high}

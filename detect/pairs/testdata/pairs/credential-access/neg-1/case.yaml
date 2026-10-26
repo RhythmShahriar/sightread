@@ -1,0 +1,11 @@
+eco: npm
+note: process.env.NODE_ENV
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new:
+- {kind: env-read, key: NODE_ENV, path: lib/index.js, line: 3}
+forbid:
+- credential-access

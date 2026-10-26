@@ -1,0 +1,5 @@
+eco: npm
+note: an added package (a lockfile gained it) named types-node
+meta_new: {ref: {name: types-node, version: 1.0.0}}
+expect:
+- {id: typosquat, min_severity: high}

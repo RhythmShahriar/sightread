@@ -1,0 +1,6 @@
+eco: npm
+note: npm has no PHP unserialize; the signal is for PHP ecosystems
+features_old: []
+features_new:
+- {kind: flow, key: remote->unserialize, path: php/bridge.php, line: 3}
+forbid: [input-unserialize]

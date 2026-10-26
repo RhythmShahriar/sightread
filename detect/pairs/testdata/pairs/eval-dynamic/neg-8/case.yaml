@@ -1,0 +1,11 @@
+eco: composer
+note: 'rule preg-replace-e (Tuner negative 1): other modifiers, e as the pattern'
+new:
+  z.php: <?php $s = preg_replace('/\s+/i', ' ', $s); preg_replace('/e/', 'E', $s);
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- eval-dynamic

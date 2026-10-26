@@ -1,0 +1,6 @@
+eco: npm
+note: a dependency that moves from devDependencies to dependencies now reaches users
+meta_old: {dev_deps: {chalk: ^5.0.0}}
+meta_new: {deps: {chalk: ^5.0.0}}
+expect:
+- {id: dependency-new, min_severity: medium}

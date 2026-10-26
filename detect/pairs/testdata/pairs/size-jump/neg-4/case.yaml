@@ -1,0 +1,8 @@
+eco: npm
+note: a new dist/ folder with a bundle is info
+old: {index.js: "module.exports = 1;\n"}
+new: {index.js: "module.exports = 1;\n", dist/bundle.min.js: "!function(){var a=1}();\n"}
+features_old: []
+features_new: []
+expect:
+- {id: size-jump, max_severity: info}

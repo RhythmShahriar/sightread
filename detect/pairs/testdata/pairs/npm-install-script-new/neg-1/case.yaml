@@ -1,0 +1,10 @@
+eco: npm
+note: 'g10: a native addon whose node-gyp install script is unchanged'
+lookalike: true
+old: {binding.gyp: "{ 'targets': [] }\n", src/addon.cc: "// addon\n"}
+new: {binding.gyp: "{ 'targets': [] }\n", src/addon.cc: "// addon, faster\n"}
+features_old: []
+features_new: []
+meta_old: {scripts: {install: node-gyp rebuild}}
+meta_new: {scripts: {install: node-gyp rebuild}}
+forbid: [npm-install-script-new]

@@ -1,0 +1,5 @@
+eco: composer
+note: an unchanged post-install-cmd
+meta_old: {composer_scripts: {post-install-cmd: ['Acme\Setup::run']}}
+meta_new: {composer_scripts: {post-install-cmd: ['Acme\Setup::run']}}
+forbid: [composer-plugin-new]

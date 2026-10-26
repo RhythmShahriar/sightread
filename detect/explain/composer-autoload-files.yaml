@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of composer-autoload-files (rhythm-sightread explain composer-autoload-files).
+why: >-
+  A new autoload.files entry runs on every request that loads
+  vendor/autoload.php, whether anything uses the package or not. Its
+  code also goes through the code signals.
+how_to_review:
+  - "Read the file."
+  - "Check that it only defines functions."
+  - "Look for anything it does at load time."
+false_alarms: >-
+  A helpers file with only function definitions is low.
+incidents: []
+advice: "Read the file. It runs on every request."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#composer-autoload-files

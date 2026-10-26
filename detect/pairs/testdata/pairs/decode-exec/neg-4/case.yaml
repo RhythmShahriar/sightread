@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: already in the installed version
+features_old:
+- {kind: flow, key: decode->eval, path: a.php, line: 3}
+features_new:
+- {kind: flow, key: decode->eval, path: a.php, line: 5}
+forbid: [decode-exec]

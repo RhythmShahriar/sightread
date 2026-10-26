@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: 'only the installed version had it: noted at info'
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+issues_old:
+- kind: collision
+  path: a.php
+  other: A.php
+expect:
+- id: archive-collision
+  max_severity: info

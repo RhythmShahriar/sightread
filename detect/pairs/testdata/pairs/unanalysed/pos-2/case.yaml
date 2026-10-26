@@ -1,0 +1,12 @@
+eco: npm
+note: 'e04: the archive hit its entry limit'
+meta_old:
+  ref:
+    version: 1.0.0
+issues:
+- kind: limit
+  path: dist/chunk-99999.js
+  detail: 100,000 entries
+expect:
+- id: unanalysed
+  min_severity: high

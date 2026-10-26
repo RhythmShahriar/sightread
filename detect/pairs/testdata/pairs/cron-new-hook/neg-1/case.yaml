@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: unscheduling the plugin's hook on deactivation
+lookalike: true
+features_old: []
+features_new:
+- {kind: call, key: wp_clear_scheduled_hook, path: inc/deactivate.php, line: 4}
+- {kind: hook, key: acme_daily_cleanup, path: inc/deactivate.php, line: 3}
+forbid: [cron-new-hook]

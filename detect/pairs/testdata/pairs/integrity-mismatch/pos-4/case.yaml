@@ -1,0 +1,10 @@
+eco: wp-theme
+note: a failed check with no file list still fires
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_new:
+  by: failed
+expect:
+- id: integrity-mismatch
+  min_severity: critical

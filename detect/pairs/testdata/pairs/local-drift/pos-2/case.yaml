@@ -1,0 +1,13 @@
+eco: composer
+note: a missing file
+meta_old:
+  ref:
+    version: 1.0.0
+drift:
+  missing:
+  - src/Guard.php
+  matched:
+  - src/A.php
+expect:
+- id: local-drift
+  min_severity: info

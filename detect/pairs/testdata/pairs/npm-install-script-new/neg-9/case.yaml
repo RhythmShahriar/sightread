@@ -1,0 +1,8 @@
+eco: npm
+note: binding.gyp changed with a new source file and the same node-addon-api include expansion as before
+lookalike: true
+old: {index.js: "module.exports = 1;\n", binding.gyp: "{\"targets\": [{\"target_name\": \"addon\", \"sources\": [\"addon.cc\"], \"include_dirs\": [\"<!(node -p \\\"require('node-addon-api').include\\\")\"]}]}\n"}
+new: {index.js: "module.exports = 1;\n", binding.gyp: "{\"targets\": [{\"target_name\": \"addon\", \"sources\": [\"addon.cc\", \"util.cc\"], \"include_dirs\": [\"<!(node -p \\\"require('node-addon-api').include\\\")\"]}]}\n"}
+features_old: []
+features_new: []
+forbid: [npm-install-script-new]

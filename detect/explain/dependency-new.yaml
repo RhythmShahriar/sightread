@@ -1,0 +1,20 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of dependency-new (rhythm-sightread explain dependency-new).
+why: >-
+  The update adds a runtime dependency. Its code and everything it pulls
+  in now run in your project. It is high when the dependency is younger
+  than 7 days or has install scripts.
+how_to_review:
+  - "Check who publishes the dependency and how old it is."
+  - "Read its install scripts."
+  - "Ask whether the change needs it."
+false_alarms: >-
+  devDependencies are info.
+incidents:
+  - name: "event-stream 2018"
+    line: "A new maintainer added flatmap-stream."
+  - name: "axios 2026"
+    line: "1.14.1 added plain-crypto-js, published hours earlier."
+advice: "Look at the new dependency as closely as at the package itself."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#dependency-new

@@ -1,0 +1,11 @@
+eco: composer
+note: Composer has no provenance signal
+meta_old:
+  ref:
+    version: 1.0.0
+  provenance: slsa
+meta_new:
+  ref:
+    version: 2.0.0
+forbid:
+- provenance-dropped

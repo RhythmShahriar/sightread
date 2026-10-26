@@ -1,0 +1,5 @@
+eco: composer
+note: an added package that is a composer-plugin
+meta_new: {type: composer-plugin}
+expect:
+- {id: composer-plugin-new, min_severity: high}

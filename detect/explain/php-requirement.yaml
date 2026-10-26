@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of php-requirement (rhythm-sightread explain php-requirement).
+why: >-
+  The minimum PHP version changed. A site on an older PHP may stop
+  working after the update.
+how_to_review:
+  - "Check your server's PHP version."
+  - "Test the update on a staging copy."
+false_alarms: >-
+  None.
+incidents: []
+advice: "Check your server's PHP version first."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#php-requirement

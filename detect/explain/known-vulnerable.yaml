@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+# Explain text of known-vulnerable (rhythm-sightread explain known-vulnerable).
+why: >-
+  OSV lists an advisory for this version that it does not fix. Updating
+  to it keeps or brings in a known problem.
+how_to_review:
+  - "Read the advisory."
+  - "Check whether a later version fixes it."
+  - "Decide whether your site uses the affected code."
+false_alarms: >-
+  An advisory this version fixes is shown as info, titled "fixes <id>".
+incidents: []
+advice: "Pick a version that fixes the advisory if there is one."
+more: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#known-vulnerable

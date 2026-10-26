@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: the installed version was closed, the plugin is open again
+lookalike: true
+meta_old:
+  ref:
+    version: 1.0.0
+  closed: true
+  closed_reason: Guideline Violation
+meta_new:
+  ref:
+    version: 2.0.0
+forbid:
+- wporg-closed

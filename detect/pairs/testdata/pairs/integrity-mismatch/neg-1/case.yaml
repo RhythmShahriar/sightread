@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: every file matches the checksums
+meta_old:
+  ref:
+    version: 1.0.0
+integrity_old:
+  by: checksums
+integrity_new:
+  by: checksums
+forbid:
+- integrity-mismatch

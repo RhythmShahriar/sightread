@@ -1,0 +1,6 @@
+eco: npm
+note: a new prepare runs the build script the candidate rewrote
+meta_old: {scripts: {build: tsc}, dev_deps: {typescript: ^5.4.0}}
+meta_new: {scripts: {build: node tools/fetch.js, prepare: npm run build}, dev_deps: {typescript: ^5.4.0}}
+expect:
+- {id: npm-install-script-new, min_severity: high}
