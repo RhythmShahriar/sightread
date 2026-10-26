@@ -246,6 +246,39 @@ func TestJSONLStreams(t *testing.T) {
 	}
 }
 
+// TestJSONLTarget: each --jsonl line is written knowing the report's
+// target, so --redact-paths makes its paths relative as the envelope's.
+func TestJSONLTarget(t *testing.T) {
+	w := world(t)
+	w.Publish(core.WPPlugin, "a", "1.0.0", "1.1.0")
+	w.Install(core.WPPlugin, "a", "1.0.0")
+	tw := &targetStream{}
+	t.Cleanup(core.SwapWriter(tw))
+	if code, _, errOut := execute(t, "all", "--jsonl", "--redact-paths"); code != cli.ExitOK {
+		t.Fatalf("exit %d %q", code, errOut)
+	}
+	if len(tw.targets) != 1 || tw.targets[0] == "" || tw.targets[0] != tw.report {
+		t.Errorf("update targets %q, report target %q", tw.targets, tw.report)
+	}
+}
+
+// targetStream is a jsonl writer that records the target of each line.
+type targetStream struct {
+	streamWriter
+	targets []string
+	report  string
+}
+
+func (s *targetStream) WriteUpdateIn(w io.Writer, u *core.Update, target string, o core.WriteOptions) error {
+	s.targets = append(s.targets, target)
+	return s.WriteUpdate(w, u, o)
+}
+
+func (s *targetStream) Write(w io.Writer, r *core.Report, o core.WriteOptions) error {
+	s.report = r.Target.Path
+	return s.streamWriter.Write(w, r, o)
+}
+
 // streamWriter is a jsonl writer that records when it wrote.
 type streamWriter struct {
 	mu sync.Mutex

@@ -468,8 +468,24 @@ func (s *streams) writer() core.StreamWriter {
 	return sw
 }
 
-// update writes one finished update to every stream.
-func (s *streams) update(u core.Update) {
+// targetWriter is the jsonl writer's WriteUpdate that also knows the
+// report's target (report.JSONLWriter.WriteUpdateIn).
+type targetWriter interface {
+	WriteUpdateIn(w io.Writer, u *core.Update, target string, o core.WriteOptions) error
+}
+
+// writeUpdate writes u with sw, relative to target when sw can.
+func writeUpdate(sw core.StreamWriter, w io.Writer, u *core.Update, target string, o core.WriteOptions) error {
+	if tw, ok := sw.(targetWriter); ok {
+		return tw.WriteUpdateIn(w, u, target, o)
+	}
+	return sw.WriteUpdate(w, u, o)
+}
+
+// update writes one finished update of the report on target to every
+// stream. With RedactPaths a path inside target is written relative to
+// it, as the closing json envelope writes it.
+func (s *streams) update(u core.Update, target string) {
 	if s.stdout == nil && len(s.files) == 0 {
 		return
 	}
@@ -480,12 +496,12 @@ func (s *streams) update(u core.Update) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.stdout != nil {
-		if err := sw.WriteUpdate(s.stdout, &u, s.opts); err != nil && s.err == nil {
+		if err := writeUpdate(sw, s.stdout, &u, target, s.opts); err != nil && s.err == nil {
 			s.err = err
 		}
 	}
 	for _, f := range s.files {
-		if err := sw.WriteUpdate(f, &u, s.opts); err != nil && s.err == nil {
+		if err := writeUpdate(sw, f, &u, target, s.opts); err != nil && s.err == nil {
 			s.err = err
 		}
 	}

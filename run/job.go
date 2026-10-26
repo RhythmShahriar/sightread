@@ -312,7 +312,7 @@ func (r *reviewer) finish(u *core.Update) {
 	r.onUpdate.Lock()
 	defer r.onUpdate.Unlock()
 	if !r.stopped.Load() {
-		r.req.OnUpdate(*u)
+		r.req.OnUpdate(*u, r.target)
 	}
 }
 

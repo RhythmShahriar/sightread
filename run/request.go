@@ -100,8 +100,9 @@ type Request struct {
 	Log      io.Writer // -v
 	Progress io.Writer // "reviewing 3 of 8: ..." lines; nil prints none
 	// OnUpdate is called once per update as it finishes, from one
-	// goroutine at a time (--jsonl).
-	OnUpdate func(core.Update)
+	// goroutine at a time (--jsonl), with the report's target folder
+	// (Report.Target.Path) so paths can be redacted against it.
+	OnUpdate func(u core.Update, target string)
 	// OnProblem is called with every coded error that kept a package from
 	// being reviewed or verified (E5, E7, E9, E10, E11, E16), as the
 	// source gave it, so the command can print it the way PRD section 10

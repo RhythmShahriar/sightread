@@ -56,6 +56,7 @@ type reviewer struct {
 	notes    []string
 	warnings []string
 	onUpdate sync.Mutex
+	target   string       // Report.Target.Path once resolved, for OnUpdate
 	stopped  atomic.Bool  // the hard stop came: no more --jsonl lines
 	ghPlan   atomic.Int64 // api.github.com requests the run plans
 }
@@ -123,6 +124,7 @@ func Review(ctx context.Context, req Request) (*core.Report, error) {
 	if err != nil {
 		return nil, err
 	}
+	r.target = rep.Target.Path
 	r.packs(rep)
 
 	picked, err := r.pickAll(ctx, work, hard, targets)
