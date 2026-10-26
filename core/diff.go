@@ -57,6 +57,10 @@ type Hunk struct {
 	OldStart, OldLines int
 	NewStart, NewLines int
 	Lines              []string
+	// Tokens is set when the units compared are tokens of a minified
+	// file or of a very long line: the start and line counts then
+	// number tokens, not lines.
+	Tokens bool
 }
 
 // Diff is the file-level comparison of two trees.

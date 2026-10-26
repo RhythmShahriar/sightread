@@ -18,8 +18,11 @@ import (
 const NoNewline = `\ No newline at end of file`
 
 // NotePrefix starts a hunk line that is a note from Sightread rather
-// than package text: NoNewline and the binary file line.
+// than package text: NoNewline, the binary file line and EOLNote.
 const NotePrefix = `\ `
+
+// EOLNote is the one line of the hunk of a change of line endings only.
+const EOLNote = NotePrefix + "line endings changed only"
 
 // hunkWork bounds the effort of one file's line diff; see script.
 const hunkWork = 64 << 20
@@ -29,12 +32,13 @@ const hunkWork = 64 << 20
 // computed from the blobs on demand, so a report only pays for the
 // files it shows.
 //
-// A change with nothing to read gives no hunks: a rename by hash, a mode
-// change or a change of line endings only. A binary file gives one hunk
-// with the note `\ binary file changed (<old size> to <new size>)`. A
-// minified file (or any line over 64 KiB) is compared in tokens cut at
-// punctuation; those hunks are for reading, since the tokens are not
-// lines.
+// A change with nothing to read gives no hunks: a rename by hash or a
+// mode change. A change of line endings only gives one hunk holding
+// EOLNote, and a binary file one with the note
+// `\ binary file changed (<old size> to <new size>)`; both have every
+// start and count 0. A minified file (or any line over 64 KiB) is
+// compared in tokens cut at punctuation; those hunks are for reading,
+// since the tokens are not lines, and have Tokens set.
 func (Differ) Hunks(ctx context.Context, d *core.Diff, path string, contextLines int) ([]core.Hunk, error) {
 	if d == nil {
 		return nil, fmt.Errorf("hunks of %s: no diff", path)
@@ -43,7 +47,10 @@ func (Differ) Hunks(ctx context.Context, d *core.Diff, path string, contextLines
 	if !ok {
 		return nil, fmt.Errorf("hunks of %s: the path did not change", path)
 	}
-	if c.EOLOnly || c.Kind == core.ModeChanged || c.Kind == core.Renamed && c.Old.SHA256 == c.New.SHA256 {
+	if c.EOLOnly {
+		return []core.Hunk{{Path: path, Lines: []string{EOLNote}}}, nil
+	}
+	if c.Kind == core.ModeChanged || c.Kind == core.Renamed && c.Old.SHA256 == c.New.SHA256 {
 		return nil, nil
 	}
 	if err := ctx.Err(); err != nil {
@@ -115,7 +122,28 @@ func LineHunks(path string, old, new []byte, contextLines int, tokens bool) []co
 	ou, nu := units(old, tokens), units(new, tokens)
 	a, b := intern(ou, nu)
 	edits := script(a, b, hunkWork+16*(len(a)+len(b)))
-	return buildHunks(path, ou, nu, edits, contextLines, tokens)
+	hs := buildHunks(path, ou, nu, edits, contextLines, tokens)
+	if tokens || longLine(old) || longLine(new) {
+		for i := range hs {
+			hs[i].Tokens = true
+		}
+	}
+	return hs
+}
+
+// longLine reports a line over maxLine, which units cuts into tokens.
+func longLine(b []byte) bool {
+	for len(b) > 0 {
+		end := bytes.IndexByte(b, '\n') + 1
+		if end == 0 {
+			end = len(b)
+		}
+		if end > maxLine {
+			return true
+		}
+		b = b[end:]
+	}
+	return false
 }
 
 // buildHunks groups the edits into hunks, joining changes whose equal

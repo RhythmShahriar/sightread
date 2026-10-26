@@ -144,8 +144,9 @@ func TestHunksNoNewline(t *testing.T) {
 }
 
 func TestHunksQuietChanges(t *testing.T) {
-	if h := hunks(t, "f.php", "<?php\nx();\n", "<?php\r\nx();\r\n", 3); h != nil {
-		t.Errorf("line endings only: %+v, want no hunks", h)
+	h := hunks(t, "f.php", "<?php\nx();\n", "<?php\r\nx();\r\n", 3)
+	if len(h) != 1 || !reflect.DeepEqual(h[0].Lines, []string{EOLNote}) || h[0].OldStart+h[0].NewStart+h[0].OldLines+h[0].NewLines != 0 {
+		t.Errorf("line endings only: %+v, want the one note", h)
 	}
 	ot := coretest.Tree(map[string]string{"a.php": "<?php\n"})
 	nt := coretest.Tree(map[string]string{"b.php": "<?php\n"})
@@ -215,6 +216,13 @@ func TestHunksMinifiedTokens(t *testing.T) {
 	if !reflect.DeepEqual(h[0].Lines, want) {
 		t.Errorf("lines = %q, want %q", h[0].Lines, want)
 	}
+	if !h[0].Tokens {
+		t.Error("a token hunk is not marked Tokens")
+	}
+	// Negative: an ordinary text change numbers lines.
+	if h := hunks(t, "a.php", "<?php\na();\n", "<?php\nb();\n", 1); len(h) != 1 || h[0].Tokens {
+		t.Errorf("line hunk %+v", h)
+	}
 }
 
 func TestHunksLongLineTokens(t *testing.T) {
@@ -223,8 +231,8 @@ func TestHunksLongLineTokens(t *testing.T) {
 	old := "<?php\n$a = '" + long + "';\nend();\n"
 	new := "<?php\n$a = '" + strings.Replace(long, "x=1;", "x=2;", 1) + "';\nend();\n"
 	h := hunks(t, "big.php", old, new, 1)
-	if len(h) != 1 {
-		t.Fatalf("%d hunks, want 1", len(h))
+	if len(h) != 1 || !h[0].Tokens {
+		t.Fatalf("%d hunks (tokens %v), want 1 of tokens", len(h), len(h) == 1 && h[0].Tokens)
 	}
 	for _, l := range h[0].Lines {
 		if len(l) > maxToken+1 {
@@ -301,7 +309,7 @@ func FuzzDiff(f *testing.F) {
 			t.Fatal(err)
 		}
 		if d.Changes[0].EOLOnly {
-			if !eolOnly([]byte(old), []byte(new)) || h != nil {
+			if !eolOnly([]byte(old), []byte(new)) || len(h) != 1 || h[0].Lines[0] != EOLNote {
 				t.Fatalf("EOLOnly with hunks %+v", h)
 			}
 			return
