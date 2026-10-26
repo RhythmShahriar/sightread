@@ -155,9 +155,11 @@ func (r *reviewer) setup() error {
 		}
 	}
 	start := cmp.Or(r.req.ConfigStart, ".")
+	// Config, allow and baseline errors are tool-wide (PRD 10, E12):
+	// they name the file, not the command.
 	cfg, cfgPath, err := policy.LoadConfig(start, r.req.ConfigFile, r.req.NoConfig)
 	if err != nil {
-		return withCommand(err, r.req.Command)
+		return err
 	}
 	r.cfg, r.cfgPath = cfg, cfgPath
 	r.applyConfig()
@@ -177,12 +179,12 @@ func (r *reviewer) setup() error {
 			baseRef = cmp.Or(r.req.Changes.Base, "origin/HEAD")
 		}
 		if r.allow, err = policy.LoadAllow(r.cfg, r.cfgPath, baseRef); err != nil {
-			return withCommand(err, r.req.Command)
+			return err
 		}
 	}
 	if r.req.Baseline != "" {
 		if r.baseline, err = policy.LoadBaseline(r.req.Baseline); err != nil {
-			return withCommand(err, r.req.Command)
+			return err
 		}
 	}
 

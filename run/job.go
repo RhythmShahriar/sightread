@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
+	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/sightread/core"
 )
 
@@ -73,6 +74,7 @@ func upToDateNote(t *target) string {
 // carrying its code.
 func (r *reviewer) failure(t *target, err error) *result {
 	r.logf("%s:%s: %v", t.eco, t.name, err)
+	r.problem(err)
 	res := &result{}
 	nc := core.NotChecked{Eco: t.eco, Name: t.name, Version: t.fromVersion}
 	code := core.CodeOf(err)
@@ -89,6 +91,25 @@ func (r *reviewer) failure(t *target, err error) *result {
 	}
 	res.notChecked = append(res.notChecked, nc)
 	return res
+}
+
+// UnverifiedHint is the fix line of E5 (PRD section 10).
+const UnverifiedHint = "not diffed; run again later, or --allow-unverified to review it anyway (the report marks it unverified)"
+
+// problem hands a coded error to Request.OnProblem, its text masked
+// like everything else a package or registry can put into output.
+func (r *reviewer) problem(err error) {
+	var e *core.Error
+	if r.req.OnProblem == nil || !errors.As(err, &e) || e.Code == "" {
+		return
+	}
+	c := *e
+	c.What = secrets.Redact(c.What)
+	c.Hint = make([]string, len(e.Hint))
+	for i, h := range e.Hint {
+		c.Hint[i] = secrets.Redact(h)
+	}
+	r.req.OnProblem(&c)
 }
 
 // side is one fetched version.
@@ -160,8 +181,10 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 		// PRD 5.6: not diffed unless --allow-unverified.
 		for _, s := range []*side{old, cur} {
 			if s != nil && s.in.Partial() {
-				u.Errors = append(u.Errors, core.ErrorEntry{Eco: t.eco, Name: t.name, Code: core.EUnverifiable,
-					Message: fmt.Sprintf("couldn't verify %s %s: %s", t.name, s.info.Version, cmp.Or(s.in.Detail, "nothing to check it against"))})
+				msg := fmt.Sprintf("couldn't verify %s %s: %s", t.name, s.info.Version, cmp.Or(s.in.Detail, "nothing to check it against"))
+				u.Errors = append(u.Errors, core.ErrorEntry{Eco: t.eco, Name: t.name, Code: core.EUnverifiable, Message: msg})
+				r.problem(&core.Error{Code: core.EUnverifiable, Exit: cli.ExitUnavailable, Command: r.req.Command, What: msg,
+					Hint: []string{UnverifiedHint}})
 			}
 		}
 		r.scorer.Score(ctx, u, r.cfg, r.allow, r.baseline)

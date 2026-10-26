@@ -97,6 +97,12 @@ type Request struct {
 	// OnUpdate is called once per update as it finishes, from one
 	// goroutine at a time (--jsonl).
 	OnUpdate func(core.Update)
+	// OnProblem is called with every coded error that kept a package from
+	// being reviewed or verified (E5, E7, E9, E10, E11, E16), as the
+	// source gave it, so the command can print it the way PRD section 10
+	// shows it when the run fails. It may be called from several workers
+	// at once.
+	OnProblem func(*core.Error)
 	// HardStop ends the run at once when closed (the second Ctrl-C). The
 	// context passed to Review is the soft stop: once it is done no new
 	// package starts and the ones under way finish.

@@ -197,6 +197,8 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	}
 	defer stream.abort()
 	p.req.OnUpdate = stream.update
+	probs := &problems{}
+	p.req.OnProblem = probs.add
 
 	rep, err := run.Review(ctx, p.req)
 	if err != nil {
@@ -216,7 +218,67 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	if p.open {
 		openReport(ctx, p, stderr)
 	}
-	return gate(rep, p.gate)
+	if len(rep.Updates) == 0 && probs.any() {
+		// Nothing could be checked at all: that is a failed run, not a
+		// run with gaps, whatever --fail-on says (PRD 10, E7 to E16).
+		probs.print(stderr, rep)
+		return &cli.ExitError{Code: cli.ExitUnavailable}
+	}
+	err = gate(rep, p.gate)
+	if ee := (*cli.ExitError)(nil); errors.As(err, &ee) && ee.Code == cli.ExitUnavailable {
+		probs.print(stderr, rep)
+	}
+	return err
+}
+
+// problems collects the coded errors that kept packages from being
+// reviewed, from every worker, to print when the run fails.
+type problems struct {
+	mu   sync.Mutex
+	errs []*core.Error
+}
+
+func (p *problems) add(e *core.Error) {
+	p.mu.Lock()
+	p.errs = append(p.errs, e)
+	p.mu.Unlock()
+}
+
+func (p *problems) any() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return len(p.errs) > 0
+}
+
+// print writes each problem once, in a stable order, the way PRD
+// section 10 shows it. The rate limit hint gets the run's count of
+// reviewed updates, which only the run knows.
+func (p *problems) print(w io.Writer, rep *core.Report) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	failed := 0
+	for _, n := range rep.NotChecked {
+		if n.Reason == core.FetchFailed || n.Reason == core.TooLarge {
+			failed++
+		}
+	}
+	seen := map[string]bool{}
+	var lines []string
+	for _, e := range p.errs {
+		c := *e
+		if c.Code == core.ERateLimited && len(c.Hint) > 0 {
+			c.Hint = slices.Clone(c.Hint)
+			c.Hint[0] = fmt.Sprintf("reviewed %d of %d updates; %s", len(rep.Updates), len(rep.Updates)+failed, c.Hint[0])
+		}
+		if text := c.Error(); !seen[text] {
+			seen[text] = true
+			lines = append(lines, text)
+		}
+	}
+	slices.Sort(lines)
+	for _, l := range lines {
+		fmt.Fprintln(w, l)
+	}
 }
 
 // nothingElse reports whether a run reviewed nothing and left nothing
