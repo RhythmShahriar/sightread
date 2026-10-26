@@ -9,5 +9,10 @@
 // The lexers' tokens are normalised into one stream for both languages
 // (norm.go). A forward-only evaluator (eval.go) reads expressions from
 // it, folding built names and strings (fold.go) and following data from
-// sources to sinks within each function (flow.go).
+// sources to sinks within each function (flow.go). Feature extraction
+// (extract.go, php.go, js.go, npm.go) rides on that walk as its
+// observer. Hosts are read from literals, comments, JSON and docs
+// without resolving any (hosts.go, hostcat.go). Encoded literals are
+// decoded within fixed limits and their payloads analysed again
+// (blob.go).
 package analyze
