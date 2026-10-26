@@ -123,6 +123,9 @@ func (h *harness) environ(o runOpts) ([]string, error) {
 		env["RHYTHM_CACHE_DIR"] = o.cache
 	}
 
+	// Kit's config folder (report keys, first-run notes) is a work
+	// folder too; anything else written under HOME counts as outside.
+	env["RHYTHM_CONFIG_DIR"] = filepath.Join(h.work, "config")
 	env["RHYTHM_NO_UPDATE_CHECK"] = "1"
 	env["NO_COLOR"] = "1"
 	env["SSL_CERT_FILE"] = filepath.Join(h.state, "ca.pem")

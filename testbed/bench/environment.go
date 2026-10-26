@@ -374,12 +374,13 @@ func rawControls(out string) []string {
 	return out2
 }
 
-// tamperBlobs flips the last byte of every cached blob under cache and
-// returns how many it changed.
+// tamperBlobs flips the last byte of every cached blob under cache (in
+// any blobs folder: the tool's cache is RHYTHM_CACHE_DIR/sightread, PRD
+// 8.5) and returns how many it changed.
 func tamperBlobs(cache string) int {
 	n := 0
-	_ = filepath.WalkDir(filepath.Join(cache, "blobs"), func(p string, d fs.DirEntry, err error) error {
-		if err != nil || !d.Type().IsRegular() {
+	_ = filepath.WalkDir(cache, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || !d.Type().IsRegular() || !slices.Contains(strings.Split(filepath.ToSlash(p), "/"), "blobs") {
 			return nil
 		}
 		b, err := os.ReadFile(p) //nolint:gosec // our own cache folder

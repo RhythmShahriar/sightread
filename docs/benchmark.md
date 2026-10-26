@@ -6,7 +6,7 @@ We wrote Sightread and the testbed, so read this as a regression suite with a sc
 
 | | |
 |---|---|
-| Run | 2026-10-26 07:07 UTC, took 1m1s |
+| Run | 2026-10-26 07:11 UTC, took 1m27s |
 | Binary | rhythm-sightread dev |
 | Machine | linux/amd64, 16 CPUs, go1.27.3 |
 | Compared tools | npm audit 11.12.1; composer audit 2.9.5; GuardDog not run (not installed) |
@@ -24,8 +24,8 @@ We wrote Sightread and the testbed, so read this as a regression suite with a sc
 | Zero canary, egress and outside-write events | met | canary 0 connections and 0 files, egress 0, outside writes 0 |
 | Every environment scenario passes | **NOT MET** | failed: e01, e02, e03, e04, e05, e06, e07, e08, e09, e10, e11, e12, e14, e15, applies, hold, production, roadie-failed, roadie-stale, roadie-unsealed, roadie-missing, remote-wp; not run here: e13 |
 | Cold and warm runs agree | met | differ: none |
-| p01-large under 10 s warm and 512 MB RSS | **NOT MET** | warm 0.0 s, peak 80 MB (cold 0.0 s, 80 MB), exit 2 |
-| Full benchmark under 10 minutes | met | 1m1s |
+| p01-large under 10 s warm and 512 MB RSS | **NOT MET** | warm 0.0 s, peak 84 MB (cold 0.0 s, 84 MB), exit 2 |
+| Full benchmark under 10 minutes | met | 1m27s |
 
 ## Scoreboard
 
@@ -202,50 +202,50 @@ Cold and warm runs gave the same outcome for 38 of 38 scenarios. `make -C testbe
 
 Wall time and peak RSS of the rhythm-sightread process (from its rusage), on the machine above. Cold is an empty cache, warm the second run on the same cache.
 
-p01-large (4021 files, 40 MB, not a scored scenario): cold 0.00 s and 80 MB, warm 0.00 s and 80 MB; target under 10s warm and under 512 MB.
+p01-large (4021 files, 40 MB, not a scored scenario): cold 0.03 s and 84 MB, warm 0.02 s and 84 MB; target under 10s warm and under 512 MB.
 
-Full benchmark: 1m1s; target under 10m0s.
+Full benchmark: 1m27s; target under 10m0s.
 
 | Scenario | Cold s | Warm s | Peak RSS MB |
 |---|---|---|---|
-| b01 | 0.01 | 0.01 | 80 |
-| b02 | 0.00 | 0.01 | 80 |
-| b03 | 0.01 | 0.01 | 80 |
-| b04 | 0.01 | 0.00 | 80 |
-| b05 | 0.00 | 0.01 | 80 |
-| b06 | 0.01 | 0.00 | 80 |
-| b07 | 0.00 | 0.00 | 80 |
-| b08 | 0.01 | 0.01 | 80 |
-| b09 | 0.01 | 0.00 | 80 |
-| b10 | 0.00 | 0.00 | 80 |
-| b11 | 0.00 | 0.00 | 80 |
-| b12 | 0.00 | 0.00 | 80 |
-| b13 | 0.00 | 0.00 | 80 |
-| b14 | 0.00 | 0.00 | 80 |
-| b15 | 0.00 | 0.00 | 80 |
-| b16 | 0.00 | 0.00 | 80 |
-| b17 | 0.01 | 0.00 | 80 |
-| b18 | 0.00 | 0.00 | 80 |
-| b19 | 0.00 | 0.00 | 80 |
-| b20 | 0.01 | 0.01 | 80 |
-| b21 | 0.00 | 0.00 | 80 |
-| b22 | 0.01 | 0.00 | 80 |
-| b23 | 0.00 | 0.00 | 80 |
-| g01 | 0.00 | 0.00 | 80 |
-| g02 | 0.00 | 0.00 | 80 |
-| g03 | 0.00 | 0.00 | 80 |
-| g04 | 0.00 | 0.00 | 80 |
-| g05 | 0.00 | 0.00 | 80 |
-| g06 | 0.00 | 0.00 | 80 |
-| g07 | 0.00 | 0.00 | 80 |
-| g08 | 0.00 | 0.00 | 80 |
-| g09 | 0.00 | 0.00 | 80 |
-| g10 | 0.00 | 0.00 | 80 |
-| g11 | 0.00 | 0.00 | 80 |
-| g12 | 0.00 | 0.00 | 80 |
-| g13 | 0.00 | 0.00 | 80 |
-| g14 | 0.00 | 0.00 | 80 |
-| g15 | 0.00 | 0.00 | 80 |
+| b01 | 0.01 | 0.01 | 84 |
+| b02 | 0.01 | 0.01 | 84 |
+| b03 | 0.01 | 0.01 | 84 |
+| b04 | 0.00 | 0.01 | 84 |
+| b05 | 0.01 | 0.01 | 84 |
+| b06 | 0.01 | 0.02 | 84 |
+| b07 | 0.01 | 0.01 | 84 |
+| b08 | 0.02 | 0.02 | 84 |
+| b09 | 0.01 | 0.02 | 84 |
+| b10 | 0.01 | 0.01 | 84 |
+| b11 | 0.01 | 0.01 | 84 |
+| b12 | 0.01 | 0.01 | 84 |
+| b13 | 0.02 | 0.01 | 84 |
+| b14 | 0.02 | 0.02 | 84 |
+| b15 | 0.02 | 0.01 | 84 |
+| b16 | 0.02 | 0.02 | 84 |
+| b17 | 0.01 | 0.01 | 84 |
+| b18 | 0.02 | 0.01 | 84 |
+| b19 | 0.01 | 0.02 | 84 |
+| b20 | 0.02 | 0.01 | 84 |
+| b21 | 0.01 | 0.01 | 84 |
+| b22 | 0.02 | 0.02 | 84 |
+| b23 | 0.02 | 0.03 | 84 |
+| g01 | 0.01 | 0.02 | 84 |
+| g02 | 0.03 | 0.01 | 84 |
+| g03 | 0.01 | 0.01 | 84 |
+| g04 | 0.01 | 0.03 | 84 |
+| g05 | 0.01 | 0.01 | 84 |
+| g06 | 0.01 | 0.02 | 84 |
+| g07 | 0.01 | 0.02 | 84 |
+| g08 | 0.01 | 0.01 | 84 |
+| g09 | 0.01 | 0.02 | 84 |
+| g10 | 0.01 | 0.02 | 84 |
+| g11 | 0.01 | 0.02 | 84 |
+| g12 | 0.03 | 0.01 | 84 |
+| g13 | 0.01 | 0.01 | 84 |
+| g14 | 0.01 | 0.02 | 84 |
+| g15 | 0.01 | 0.01 | 84 |
 
 ## Compared tools
 
