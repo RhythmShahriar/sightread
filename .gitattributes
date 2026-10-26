@@ -1,0 +1,12 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Golden files, fixture packages and the JSON Schema are compared byte
+# for byte, so every text file checks out with LF on every OS (git on
+# Windows turns LF into CRLF by default).
+* text=auto eol=lf
+
+# Fixture archives are hashed as they are; git must never touch them.
+*.zip binary
+*.tgz binary
+*.gz binary

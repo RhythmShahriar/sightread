@@ -1,0 +1,81 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+name: ci
+on:
+  push:
+    branches: [master]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  # The shared workflows are pinned by commit; Dependabot can't bump a
+  # branch, so move the SHA by hand when RhythmShahriar/.github changes.
+  # go runs gofmt, vet, golangci-lint, go test -race ./... and a build on
+  # Linux, Windows and macOS, plus the writing-style check
+  # (scripts/check-style.py), the pinned-actions check and goreleaser
+  # check (once .goreleaser.yaml exists) on Linux.
+  go:
+    uses: RhythmShahriar/.github/.github/workflows/ci-go.yml@4e1c576341190242c956652d00cea38d7918cd40 # master 2026-10-26
+    with:
+      os: '["ubuntu-latest", "windows-latest", "macos-latest"]'
+      style: true
+      pin-check: true
+  commitlint:
+    uses: RhythmShahriar/.github/.github/workflows/commitlint.yml@4e1c576341190242c956652d00cea38d7918cd40 # master 2026-10-26
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint
+        # rhysd/actionlint:1.7.7, by digest so a moved tag can't change the check.
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint@sha256:887a259a5a534f3c4f36cb02dca341673c6089431057242cdc931e9f133147e9 -color
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: shellcheck
+        # koalaman/shellcheck:v0.10.0, by digest so a moved tag can't change the check.
+        run: |
+          mapfile -t files < <(.github/scripts/shell-files.sh)
+          docker run --rm --network none -v "$PWD:/repo:ro" -w /repo \
+            koalaman/shellcheck@sha256:2097951f02e735b613f4a34de20c40f937a6c8f18ecb170612c88c34517221fb "${files[@]}"
+
+  # Every parser has a fuzz target; each runs for 30 seconds.
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - run: make fuzz FUZZTIME=30s
+
+  # Sightread never runs fetched code. The tests run with a PATH that
+  # holds only go and git, so a test that reached for php, node, npm or
+  # composer fails instead of quietly running it.
+  no-interpreters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+      - name: go test with only go and git on PATH
+        run: |
+          bin="$RUNNER_TEMP/only-go-and-git"
+          mkdir -p "$bin"
+          ln -s "$(command -v go)" "$bin/go"
+          ln -s "$(command -v git)" "$bin/git"
+          go mod download
+          CGO_ENABLED=0 PATH="$bin" go test ./...

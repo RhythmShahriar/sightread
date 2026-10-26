@@ -1,0 +1,19 @@
+/bin/
+/dist/
+/rhythm-sightread
+/rhythm-sightread.exe
+*.exe
+*.test
+*.out
+/coverage.*
+.DS_Store
+.idea/
+.vscode/
+
+# The testbed's generated archives, servers' state and reports
+testbed/state/
+
+# Local environment files: never commit secrets
+.env
+.env.*
+!.env.example
