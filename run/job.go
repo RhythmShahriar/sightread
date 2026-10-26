@@ -128,6 +128,11 @@ func (r *reviewer) allowed(t *target) bool {
 	return match != nil && counted || conflict != nil
 }
 
+// archiveSignals are what an archive shows without a diff: entries
+// that point outside it, links, collisions and limits it hit. An update
+// that is not diffed still reports them.
+var archiveSignals = map[string]bool{"unanalysed": true, "archive-path-escape": true, "archive-link": true, "archive-collision": true}
+
 // sameSignals are what reviewSame reports: the version's bytes, as the
 // lockfile, the allow entries and the source's own hashes recorded them.
 // The scorer adds approved-version-changed.
@@ -176,12 +181,8 @@ func (r *reviewer) reviewSame(ctx context.Context, src core.Source, t *target) *
 	u.To.Wanted = t.cand.Wanted != "" && ref.Version == t.cand.Wanted
 	u.To.Constraint = t.constraint
 	u.From = core.Side{Version: ref.Version, Source: u.To.Source}
-	findings, errs := r.detect(ctx, s)
-	for _, f := range findings {
-		if sameSignals[f.ID] {
-			u.Findings = append(u.Findings, f)
-		}
-	}
+	findings, errs := r.detectOnly(ctx, s, sameSignals)
+	u.Findings = findings
 	if ctx.Err() != nil {
 		return nil
 	}
@@ -352,6 +353,15 @@ func (r *reviewer) review(ctx context.Context, t *target) *result {
 					Hint: []string{UnverifiedHint}})
 			}
 		}
+		// Not diffed, but what the archive itself showed still counts:
+		// a limit hit makes the package unanalysed, never clean (PRD
+		// 18), and hostile entries are named whatever the diff says.
+		s := &core.Subject{Update: core.Ref{Eco: t.eco, Name: t.name, Version: cur.info.Version}, New: cur.meta,
+			NewTree: cur.tree, NewIntegrity: cur.in, Config: r.cfg, Now: r.req.now()}
+		if old != nil {
+			s.Old, s.OldTree, s.OldIntegrity = old.meta, old.tree, old.in
+		}
+		u.Findings, _ = r.detectOnly(ctx, s, archiveSignals)
 		r.scorer.Score(ctx, u, r.cfg, r.allow, r.baseline)
 		r.finish(u)
 		res.update = u
@@ -616,7 +626,34 @@ func changedPaths(d *core.Diff) (old, cur []string) {
 // detect runs every detector on s. A detector that panics is reported
 // as an error of the update, so its signals are known to be unchecked.
 func (r *reviewer) detect(ctx context.Context, s *core.Subject) (out []core.Finding, errs []string) {
+	return r.detectWith(ctx, s, core.Detectors())
+}
+
+// detectOnly runs the detectors that can emit one of signals and keeps
+// only those findings. It is for a subject with no diff and no features
+// (a version checked against itself, or one that is not diffed), which
+// the code detectors have nothing to read in. A detector that lists no
+// signals runs too, its findings filtered the same way.
+func (r *reviewer) detectOnly(ctx context.Context, s *core.Subject, signals map[string]bool) ([]core.Finding, []string) {
+	var ds []core.Detector
 	for _, d := range core.Detectors() {
+		ids := d.Info().Signals
+		if len(ids) == 0 || slices.ContainsFunc(ids, func(id string) bool { return signals[id] }) {
+			ds = append(ds, d)
+		}
+	}
+	all, errs := r.detectWith(ctx, s, ds)
+	var out []core.Finding
+	for _, f := range all {
+		if signals[f.ID] {
+			out = append(out, f)
+		}
+	}
+	return out, errs
+}
+
+func (r *reviewer) detectWith(ctx context.Context, s *core.Subject, ds []core.Detector) (out []core.Finding, errs []string) {
+	for _, d := range ds {
 		func() {
 			defer func() {
 				if p := recover(); p != nil {

@@ -351,7 +351,7 @@ func TestUnverified(t *testing.T) {
 			w.Sources[core.WPTheme].Integrity[core.Ref{Eco: core.WPTheme, Name: "astra", Version: "4.8.1"}] =
 				core.Integrity{By: core.ByNone, Detail: "wordpress.org checksums answered 503"}
 			w.Install(core.WPTheme, "astra", "4.8.0")
-			w.Detector.Set("astra", "eval-dynamic")
+			w.Detector.Set("astra", "eval-dynamic", "unanalysed")
 			req := request(t, "all")
 			req.AllowUnverified = allow
 			rep := review(t, req)
@@ -362,9 +362,19 @@ func TestUnverified(t *testing.T) {
 			if u.Verdict != core.Unverified || u.To.Verified != core.ByNone {
 				t.Errorf("verdict %s verified %s", u.Verdict, u.To.Verified)
 			}
-			diffed := len(w.Detector.Subjects()) == 1
+			subs := w.Detector.Subjects()
+			diffed := len(subs) == 1 && subs[0].Diff != nil
 			if diffed != allow {
 				t.Errorf("diffed %v with --allow-unverified %v", diffed, allow)
+			}
+			// Not diffed, the archive's own findings stay and the code
+			// findings, which need the diff, are left out.
+			var ids []string
+			for _, f := range u.Findings {
+				ids = append(ids, f.ID)
+			}
+			if want := map[bool][]string{false: {"unanalysed"}, true: {"eval-dynamic", "unanalysed"}}[allow]; !reflect.DeepEqual(ids, want) {
+				t.Errorf("findings %q, want %q", ids, want)
 			}
 			if !allow && (len(u.Errors) != 1 || u.Errors[0].Code != core.EUnverifiable ||
 				u.Errors[0].Message != "couldn't verify astra 4.8.1: wordpress.org checksums answered 503") {
