@@ -1,6 +1,6 @@
 # Sightread settings for this project. Commit this file.
 # Every key is optional and flags on the command line win.
-# All keys: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Config
+# All keys: https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Configuration
 
 # Fail the run (exit 1) on findings at or above this severity:
 # none, info, low, medium, high or critical.
