@@ -421,7 +421,7 @@ func TestChangesLockfiles(t *testing.T) {
 	t.Run("named in a folder", func(t *testing.T) {
 		after := packageLock(map[string]string{"a": "^1"}, lockPkg{"node_modules/a", "1.0.0", reg("a", "1.0.0"), sri("a1")})
 		dir, base := gitRepo(t, map[string]string{"web/package-lock.json": after, "package-lock.json": packageLock(nil)},
-			map[string]string{"web/package-lock.json": strings.Replace(after, "1.0.0", "1.0.1", -1), "package-lock.json": after})
+			map[string]string{"web/package-lock.json": strings.ReplaceAll(after, "1.0.0", "1.0.1"), "package-lock.json": after})
 		cs, err := ReadChanges(ctx, core.ChangesRequest{Repo: dir, Base: base, Lockfiles: []string{filepath.Join(dir, "web", "package-lock.json")}}, noNPMRC)
 		if err != nil || !slices.Equal(bumpList(cs.Bumps), []string{"a 1.0.0>1.0.1"}) {
 			t.Fatalf("bumps = %v, %v", cs, err)

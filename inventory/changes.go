@@ -414,9 +414,9 @@ func lockBumps(old, cur []core.Installed) ([]core.Bump, []core.NotChecked) {
 	}
 	stillThere := make([]bool, len(old))
 	unchanged := make([]bool, len(cur))
-	for j := range cur {
-		for _, i := range byName[nameKey(&cur[j])] {
-			if same(&old[i], &cur[j]) {
+	for j, c := range cur {
+		for _, i := range byName[nameKey(&c)] {
+			if same(&old[i], &c) {
 				stillThere[i], unchanged[j] = true, true
 			}
 		}
