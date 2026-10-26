@@ -1,7 +1,14 @@
 Usage: rhythm-sightread update [--json] [--pin <name=version,...>]
 
-Downloads the latest signal and popular-name data Sightread works from, verified against the signed release checksums, or with --pin the versions named. It never updates a package.
+Downloads the latest signal and popular-name data Sightread works from, verified
+against the signed release checksums, or with --pin the versions named. It never
+updates a package.
 
 Flags:
-  --json           print the rhythm-data/v1 JSON document
-  --pin versions   download these data versions, as name=version,...
+  --json             print the rhythm-data/v1 JSON document
+  --pin <versions>   download these data versions, as name=version,...
+
+Examples:
+  rhythm-sightread update
+  rhythm-sightread update --json
+  rhythm-sightread update --pin sightread-signals=2026.10.24

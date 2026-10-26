@@ -22,37 +22,29 @@ const updateSummary = "refresh signal and name data, never packages"
 // Tool.Update provides the same command but its help line can't be
 // changed, so Sightread registers its own with the same contract: --json
 // prints rhythm-data/v1, --pin brings packs to named versions (exit 3
-// when one can't be had) and a failure exits 3.
-func updateCommand() cli.Command {
-	return cli.Command{
-		Name: "update", Args: "[--json]", Summary: updateSummary,
-		Flags: func() *flag.FlagSet { fs, _, _ := updateFlags(io.Discard); return fs },
-		Run:   runUpdate,
-	}
+// when one can't be had) and a failure exits 3. It is a simpleCommand so
+// its help page wraps and lists examples like every other page.
+func updateCommand() cli.Command { return updateCmd.command() }
+
+var updateCmd = &simpleCommand{
+	name: "update", args: "[--json] [--pin <name=version,...>]", brief: "[--json]", summary: updateSummary,
+	long: "Downloads the latest signal and popular-name data Sightread works from, verified against the signed " +
+		"release checksums, or with --pin the versions named. It never updates a package.",
+	examples: []string{"update", "update --json", "update --pin sightread-signals=2026.10.24"},
+	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
+		asJSON := fs.Bool("json", false, "print the "+cli.DataSchema+" JSON document")
+		pin := fs.String("pin", "", "download these data `versions`, as name=version,...")
+		return func(ctx context.Context, pos []string, stdout, stderr io.Writer) error {
+			return runUpdate(ctx, pos, *asJSON, *pin, stdout, stderr)
+		}
+	},
 }
 
-func updateFlags(stderr io.Writer) (*flag.FlagSet, *bool, *string) {
-	fs := cli.NewFlagSet("update", "Usage: "+cli.Name()+" update [--json] [--pin <name=version,...>]\n\n"+
-		"Downloads the latest signal and popular-name data Sightread works from, verified against the signed "+
-		"release checksums, or with --pin the versions named. It never updates a package.", stderr)
-	asJSON := fs.Bool("json", false, "print the "+cli.DataSchema+" JSON document")
-	pin := fs.String("pin", "", "download these data `versions`, as name=version,...")
-	return fs, asJSON, pin
-}
-
-func runUpdate(ctx context.Context, args []string, stdout, stderr io.Writer) error {
-	fs, asJSON, pinSpec := updateFlags(stderr)
-	if cli.HasFlag(args, "h") || cli.HasFlag(args, "help") {
-		fs.SetOutput(stdout)
-	}
-	pos, err := cli.ParseArgs(fs, args)
-	if err != nil {
-		return err
-	}
+func runUpdate(ctx context.Context, pos []string, asJSON bool, pinSpec string, stdout, stderr io.Writer) error {
 	if len(pos) > 0 {
 		return cli.Usagef("update takes no arguments, got %q", pos[0])
 	}
-	pins, err := cli.ParsePins(*pinSpec)
+	pins, err := cli.ParsePins(pinSpec)
 	if err != nil {
 		return cli.Usagef("--pin: %v", err)
 	}
@@ -61,7 +53,7 @@ func runUpdate(ctx context.Context, args []string, stdout, stderr io.Writer) err
 		return err
 	}
 	progress := stdout
-	if *asJSON {
+	if asJSON {
 		progress = stderr // stdout carries only the JSON
 	}
 	var packs []cli.DataPack
@@ -82,7 +74,7 @@ func runUpdate(ctx context.Context, args []string, stdout, stderr io.Writer) err
 	if packs == nil {
 		packs = []cli.DataPack{} // "data": [] rather than null
 	}
-	if *asJSON {
+	if asJSON {
 		return json.NewEncoder(stdout).Encode(struct {
 			Schema string         `json:"schema"`
 			Data   []cli.DataPack `json:"data"`

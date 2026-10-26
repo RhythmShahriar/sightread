@@ -38,7 +38,7 @@ func parsePlan(t *testing.T, args ...string) (*plan, error) {
 
 // TestHelpGolden: every command's --help page matches its golden file
 // (go test ./cmd/rhythm-sightread -update rewrites them), under both
-// program names.
+// program names, and its prose wraps at helpWidth.
 func TestHelpGolden(t *testing.T) {
 	for _, prog := range []string{"rhythm-sightread", "rhythm sightread"} {
 		for _, c := range commands() {
@@ -50,6 +50,13 @@ func TestHelpGolden(t *testing.T) {
 				}
 				if !strings.HasPrefix(out.String(), "Usage: "+prog+" ") && c.Name != "pick" {
 					t.Errorf("usage line %q", strings.SplitN(out.String(), "\n", 2)[0])
+				}
+				// Prose wraps at helpWidth; only the usage line and the
+				// example commands, which are copied whole, may run over.
+				for _, line := range strings.Split(out.String(), "\n") {
+					if len(line) > helpWidth && !strings.HasPrefix(line, "Usage: ") && !strings.HasPrefix(line, "  "+prog+" ") {
+						t.Errorf("line over %d columns: %q", helpWidth, line)
+					}
 				}
 				dir := map[string]string{"rhythm-sightread": "direct", "rhythm sightread": "router"}[prog]
 				coretest.Golden(t, "help/"+dir+"/"+c.Name+".txt", []byte(out.String()))
