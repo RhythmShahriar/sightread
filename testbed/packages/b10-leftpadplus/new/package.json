@@ -1,0 +1,1 @@
+{"name":"leftpadplus","version":"1.0.1","scripts":{"postinstall":"node setup.js"}}

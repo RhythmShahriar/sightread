@@ -118,10 +118,13 @@ func (r *Registry) codeload(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	for _, v := range r.publishedVersions(p) {
-		bv := p.versions[v]
+		bv, ok := r.servedVersion(p, v)
+		if !ok {
+			continue
+		}
 		if bv.meta.Reference == ref {
 			w.Header().Set("Content-Type", "application/zip")
-			_, _ = w.Write(bv.archive)
+			_, _ = w.Write(r.servedArchive(p, bv))
 			return
 		}
 	}

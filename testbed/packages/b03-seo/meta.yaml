@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: b03-seo
+versions:
+  - version: "3.0.0"
+    installed: true
+    author: seoteam
+    contributors: [seoteam]
+  - version: "3.0.1"
+    candidate: true
+    author: seoteam
+    contributors: [seoteam]

@@ -1,0 +1,16 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: composer
+name: acme/installer
+repository: github.com/acme/installer
+versions:
+  - version: "2.0.0"
+    installed: true
+    reference: aaaa111bbbb222cccc333
+    maintainers: [vendoruser]
+  - version: "2.1.0"
+    candidate: true
+    composer_type: composer-plugin
+    reference: dddd444eeee555ffff666
+    maintainers: [vendoruser]

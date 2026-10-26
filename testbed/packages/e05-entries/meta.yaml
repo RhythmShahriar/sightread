@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: e05-entries
+versions:
+  - version: "1.0.0"
+    installed: true
+    author: entryteam
+    contributors: [entryteam]
+  - version: "1.0.1"
+    candidate: true
+    author: entryteam
+    hazard: badentries
+    contributors: [entryteam]

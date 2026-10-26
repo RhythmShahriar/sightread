@@ -78,7 +78,10 @@ func (r *Registry) packument(w http.ResponseWriter, req *http.Request, p *builtP
 	versions := map[string]any{}
 	times := map[string]string{"created": p.versions[p.installed].published.Format(timeFmt)}
 	for _, v := range r.publishedVersions(p) {
-		bv := p.versions[v]
+		bv, ok := r.servedVersion(p, v)
+		if !ok {
+			continue
+		}
 		versions[v] = r.versionDoc(req, p, bv, abbreviated)
 		times[v] = bv.published.Format(timeFmt)
 	}
@@ -150,8 +153,12 @@ func (r *Registry) versionDoc(req *http.Request, p *builtPkg, bv *builtVersion, 
 func (r *Registry) tarball(w http.ResponseWriter, req *http.Request, p *builtPkg, file string) {
 	for _, v := range r.publishedVersions(p) {
 		if tarballName(p.meta.Name, v) == file {
+			bv, ok := r.servedVersion(p, v)
+			if !ok {
+				break
+			}
 			w.Header().Set("Content-Type", "application/octet-stream")
-			_, _ = w.Write(p.versions[v].archive)
+			_, _ = w.Write(r.servedArchive(p, bv))
 			return
 		}
 	}

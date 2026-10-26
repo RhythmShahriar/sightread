@@ -1,0 +1,3 @@
+# Fixture package contents are byte-exact: the registry builds archives
+# from them and hashes the bytes, so git must not rewrite line endings.
+* -text

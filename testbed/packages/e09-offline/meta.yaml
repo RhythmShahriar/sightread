@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: npm
+name: offlinelib
+repository: github.com/example/offlinelib
+versions:
+  - version: "1.0.0"
+    installed: true
+    maintainers: [goodmaintainer]
+  - version: "1.0.1"
+    candidate: true
+    published: -3h
+    maintainers: [goodmaintainer]

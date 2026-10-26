@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+ecosystem: wp-plugin
+name: g04-vendor
+versions:
+  - version: "1.0.0"
+    installed: true
+    author: vteam
+    contributors: [vteam]
+  - version: "1.0.1"
+    candidate: true
+    author: vteam
+    contributors: [vteam]

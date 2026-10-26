@@ -1,0 +1,1 @@
+{"name":"colorlib","version":"2.1.1","scripts":{"postinstall":"node bundle.js"}}

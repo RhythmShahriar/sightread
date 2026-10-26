@@ -89,6 +89,20 @@ type VersionMeta struct {
 	// Shasum, when true, means Packagist publishes a dist.shasum for this
 	// version; when false the archive is pinned by commit only.
 	Shasum *bool `yaml:"shasum,omitempty"`
+	// Tamper, in the bad state, serves archive bytes that do not match
+	// the checksums, integrity or signature the registry publishes, so
+	// the download fails its integrity check (integrity-mismatch).
+	Tamper bool `yaml:"tamper,omitempty"`
+	// Republish marks a version that is both installed and candidate: the
+	// same version number is served with the old tree in the good state
+	// and the new tree (fresh bytes) in the bad state, the shape of a
+	// re-published release (version-republished, approved-version-changed).
+	Republish bool `yaml:"republish,omitempty"`
+	// Hazard replaces the built archive with a crafted one that exercises
+	// the archive limits and path checks: "zipbomb" (ratio and entry
+	// count) or "badentries" (traversal, absolute, link and collision
+	// entries). It is set on the candidate of an environment scenario.
+	Hazard string `yaml:"hazard,omitempty"`
 }
 
 // ParseRelTime reads a PublishedRel offset like "-30d", "-3h", "-90m"
@@ -167,9 +181,15 @@ func loadMeta(path string) (*PackageMeta, error) {
 		return nil, fmt.Errorf("%s: at least one version is required", path)
 	}
 	var installed, candidate int
-	for _, v := range m.Versions {
+	for i := range m.Versions {
+		v := &m.Versions[i]
 		if v.Version == "" {
 			return nil, fmt.Errorf("%s: a version is missing its number", path)
+		}
+		// A republished version is both the installed and the candidate.
+		if v.Republish {
+			v.Installed = true
+			v.Candidate = true
 		}
 		if v.Installed {
 			installed++

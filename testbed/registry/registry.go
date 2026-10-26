@@ -202,7 +202,9 @@ func (r *Registry) state(id string) string { return readState(r.opts.StateDir, i
 // current state, oldest first. In the good state the candidate is
 // withheld, so the newest offered version is the installed one.
 func (r *Registry) publishedVersions(p *builtPkg) []string {
-	if r.state(p.id) == StateBad {
+	// A republished version keeps its number in both states; only its
+	// bytes change, so it is always published.
+	if r.state(p.id) == StateBad || p.republishAlt != nil {
 		return p.order
 	}
 	out := make([]string, 0, len(p.order))

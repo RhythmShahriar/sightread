@@ -30,6 +30,10 @@ type builtVersion struct {
 	// signature is the base64 npm registry signature, set in the bad
 	// state only for npm versions.
 	signature string
+	// tampered holds the archive bytes served in the bad state when the
+	// version's meta sets Tamper: the same archive with one byte flipped,
+	// so it no longer matches the published checksums or signature.
+	tampered []byte
 }
 
 // builtPkg is one scenario package, keyed by its name, with every
@@ -41,6 +45,10 @@ type builtPkg struct {
 	candidate string // candidate version number
 	versions  map[string]*builtVersion
 	order     []string // version numbers oldest first
+	// republishAlt is the fresh-bytes build served in the bad state for a
+	// republished version (its number is also the installed one); nil
+	// otherwise.
+	republishAlt *builtVersion
 }
 
 // archiveTop returns the top folder name a version's archive carries.
@@ -94,6 +102,9 @@ func build(packagesDir, id string, m *PackageMeta, now time.Time) (*builtPkg, er
 		if err := buildArchive(m, bv); err != nil {
 			return nil, fmt.Errorf("%s %s: %w", id, v.Version, err)
 		}
+		if v.Tamper {
+			bv.tampered = tamperBytes(bv.archive)
+		}
 		bp.versions[v.Version] = bv
 		bp.order = append(bp.order, v.Version)
 		if v.Installed {
@@ -102,12 +113,61 @@ func build(packagesDir, id string, m *PackageMeta, now time.Time) (*builtPkg, er
 		if v.Candidate {
 			bp.candidate = v.Version
 		}
+		if v.Republish {
+			alt, err := buildRepublishAlt(packagesDir, id, m, v, now)
+			if err != nil {
+				return nil, err
+			}
+			bp.republishAlt = alt
+		}
 	}
 	return bp, nil
 }
 
-// buildArchive packs and hashes one version's archive by ecosystem.
+// buildRepublishAlt builds the fresh-bytes version (from the new tree)
+// served in the bad state for a republished version.
+func buildRepublishAlt(packagesDir, id string, m *PackageMeta, v VersionMeta, now time.Time) (*builtVersion, error) {
+	files, err := readTree(filepath.Join(packagesDir, id, "new"))
+	if err != nil {
+		return nil, fmt.Errorf("%s %s (new): %w", id, v.Version, err)
+	}
+	pub, err := ParseRelTime(v.PublishedRel, now)
+	if err != nil {
+		return nil, err
+	}
+	alt := &builtVersion{meta: v, published: pub, files: files, checksums: checksumsFor(files)}
+	if err := buildArchive(m, alt); err != nil {
+		return nil, fmt.Errorf("%s %s (new): %w", id, v.Version, err)
+	}
+	return alt, nil
+}
+
+// tamperBytes returns a copy of b with its last byte flipped, enough to
+// break every published hash while staying a readable archive header.
+func tamperBytes(b []byte) []byte {
+	if len(b) == 0 {
+		return b
+	}
+	out := make([]byte, len(b))
+	copy(out, b)
+	out[len(out)-1] ^= 0xff
+	return out
+}
+
+// buildArchive packs and hashes one version's archive by ecosystem. A
+// hazard version gets a crafted archive instead of one built from files.
 func buildArchive(m *PackageMeta, bv *builtVersion) error {
+	if bv.meta.Hazard != "" {
+		z, err := buildHazard(archiveTop(m, bv.meta), bv.meta.Hazard)
+		if err != nil {
+			return err
+		}
+		bv.archive = z
+		bv.archiveSHA256 = sha256hex(z)
+		bv.shasum = sha1hex(z)
+		bv.integrity = sha512b64(z)
+		return nil
+	}
 	switch m.Ecosystem {
 	case "npm":
 		tgz, err := buildTarGz(bv.files)

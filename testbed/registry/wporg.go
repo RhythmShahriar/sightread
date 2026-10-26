@@ -115,23 +115,39 @@ func (r *Registry) wpDownload(eco, prefix string) http.HandlerFunc {
 			return
 		}
 		w.Header().Set("Content-Type", "application/zip")
-		_, _ = w.Write(bv.archive)
+		_, _ = w.Write(r.servedArchive(p, bv))
 	}
 }
 
-// servedVersion returns the built version if it is offered in the
-// current state (the candidate is withheld in the good state), mapping
-// the candidate number to the installed tree in the good state.
+// servedVersion returns the built version offered for a version number
+// in the current state. A republished version serves its fresh bytes in
+// the bad state and its original bytes in the good state; an ordinary
+// candidate is withheld in the good state.
 func (r *Registry) servedVersion(p *builtPkg, version string) (*builtVersion, bool) {
 	bv, ok := p.versions[version]
 	if !ok {
 		return nil, false
+	}
+	if p.republishAlt != nil && version == p.installed {
+		if r.state(p.id) == StateBad {
+			return p.republishAlt, true
+		}
+		return bv, true
 	}
 	if version == p.candidate && r.state(p.id) == StateGood {
 		// Good state: the candidate number is not published.
 		return nil, false
 	}
 	return bv, true
+}
+
+// servedArchive returns the archive bytes to serve for a version,
+// substituting the tampered bytes in the bad state when the meta asks.
+func (r *Registry) servedArchive(p *builtPkg, bv *builtVersion) []byte {
+	if bv.meta.Tamper && bv.tampered != nil && r.state(p.id) == StateBad {
+		return bv.tampered
+	}
+	return bv.archive
 }
 
 // splitSlugVersion splits "akismet.5.3.5.zip" into slug and version.
