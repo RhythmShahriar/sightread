@@ -10,6 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -195,7 +196,7 @@ func xmlElements(t *testing.T, b []byte) map[string]bool {
 	dec := xml.NewDecoder(bytes.NewReader(b))
 	for {
 		tok, err := dec.Token()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return out
 		}
 		if err != nil {

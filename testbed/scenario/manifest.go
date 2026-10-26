@@ -63,7 +63,7 @@ type Expect struct {
 	Verdict string `yaml:"verdict,omitempty"`
 	// Exit is the process exit code the bench expects of a bad or good
 	// scenario; nil means 0. An environment scenario states its exit
-	// under env.exit instead, and Load rejects one here.
+	// under env.exit instead; Load rejects one here.
 	Exit *int `yaml:"exit,omitempty"`
 	// Signals are the findings that must be present (bad) or are allowed
 	// (good), each with a minimum severity.

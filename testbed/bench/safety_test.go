@@ -14,7 +14,7 @@ import (
 
 // TestForwardedCredentials reads a recorded request log: a codeload
 // request with an Authorization header is a forwarded token, one without
-// it is not, and a token sent to the GitHub API is expected.
+// it is not; a token sent to the GitHub API is expected.
 func TestForwardedCredentials(t *testing.T) {
 	state := t.TempDir()
 	log := `{"service":"github","host":"127.0.0.1:18902","method":"GET","path":"/repos/acme/lib/zipball/abc","auth":true}

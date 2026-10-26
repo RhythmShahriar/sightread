@@ -95,7 +95,7 @@ func Evaluate(s Scenario, r *Report) Outcome {
 		}
 		gate := severityRank(s.EffectiveFailOn())
 		if s.Expect.Exact {
-			// Every counted finding is judged, below the gate too, and
+			// Every counted finding is judged (below the gate too) and
 			// each listed signal is required.
 			gate = 0
 			for _, e := range s.Expect.Signals {
