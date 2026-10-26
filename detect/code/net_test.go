@@ -41,6 +41,9 @@ func TestNormHost(t *testing.T) {
 		"acme.test:8443":   "acme.test",
 		"[2001:db8::1]:80": "2001:db8::1",
 		"acme.test.":       "acme.test",
+		"2001:db8::1":      "2001:db8::1",
+		"[2001:db8::2]":    "2001:db8::2",
+		"203.0.113.7:8080": "203.0.113.7",
 	} {
 		if got := normHost(in); got != want {
 			t.Errorf("normHost(%q) = %q, want %q", in, got, want)

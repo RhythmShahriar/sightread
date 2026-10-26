@@ -7,7 +7,7 @@ import (
 	"cmp"
 	"context"
 	"io"
-	"net"
+	"net/netip"
 	"net/url"
 	"path"
 	"slices"
@@ -211,7 +211,7 @@ var (
 // hostCategory names the risky category of host, or "".
 func hostCategory(host string) string {
 	switch {
-	case net.ParseIP(host) != nil:
+	case isIP(host):
 		return CatRawIP
 	case strings.HasPrefix(host, "rpc.") || matchesAny(host, rpcHosts):
 		return CatBlockchainRPC
@@ -227,12 +227,25 @@ func hostCategory(host string) string {
 	return ""
 }
 
+// isIP reports whether host is an IPv4 or IPv6 address. It uses
+// net/netip, which only parses text: package net may not be imported
+// where package text is read (internal/exectest).
+func isIP(host string) bool {
+	_, err := netip.ParseAddr(host)
+	return err == nil
+}
+
 // normHost lower-cases a host and drops a port, brackets and a trailing
-// dot.
+// dot. A bare IPv6 address has several colons and keeps them all.
 func normHost(h string) string {
 	h = strings.ToLower(strings.TrimSpace(h))
-	if hp, _, err := net.SplitHostPort(h); err == nil {
-		h = hp
+	switch {
+	case strings.HasPrefix(h, "["):
+		if i := strings.IndexByte(h, ']'); i > 0 {
+			h = h[1:i]
+		}
+	case strings.Count(h, ":") == 1:
+		h, _, _ = strings.Cut(h, ":")
 	}
 	return strings.TrimSuffix(strings.Trim(h, "[]"), ".")
 }
