@@ -252,6 +252,10 @@ func (c *Client) Text(ctx context.Context, method, rawURL string, body io.Reader
 	if err != nil {
 		return nil, nil, err
 	}
+	if method == http.MethodPost && body != nil {
+		// The one POST Sightread sends is the OSV batch query.
+		req.Header.Set("Content-Type", "application/json")
+	}
 	resp, err := c.do(c.api, req)
 	if err != nil {
 		return nil, nil, err
