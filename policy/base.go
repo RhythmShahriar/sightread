@@ -148,8 +148,8 @@ func relaxBack(cfg, base *core.Config) []string {
 
 	// The allow files hold approvals. Pointing allow_file or allow_from
 	// at another file would count that file's entries: one outside the
-	// repository is never read at the base, and another project's file
-	// in the same repository has entries the base already holds.
+	// repository is never read at the base. Another project's file in
+	// the same repository has entries the base already holds.
 	if !samePath(cfg.AllowFile, base.AllowFile) {
 		what := "allow_file removed"
 		if cfg.AllowFile != "" {
