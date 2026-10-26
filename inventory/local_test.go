@@ -16,6 +16,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/core/coretest"
 )
@@ -250,9 +251,18 @@ func TestFileKindOf(t *testing.T) {
 		{"a.min.js", nil, core.KindMinified}, {"bundle.js", long, core.KindMinified}, {"a.json", nil, core.KindJSON},
 		{"i.png", nil, core.KindAsset}, {"f.woff2", nil, core.KindAsset}, {"x.zip", nil, core.KindArchive},
 		{"blob", []byte("a\x00b"), core.KindBinary}, {"readme.txt", []byte("hello"), core.KindText}, {"LICENSE", nil, core.KindText},
+		// The archive rule: every PHP extension, and a file of an unknown
+		// type is binary (checked for hidden code) even when it reads as
+		// text.
+		{"a.php8", nil, core.KindPHP}, {"a.phps", nil, core.KindPHP}, {"shell.module", []byte("<?php system($x);"), core.KindBinary},
 	} {
 		if got := FileKindOf(c.p, c.head); got != c.want {
 			t.Errorf("FileKindOf(%q) = %s, want %s", c.p, got, c.want)
+		}
+		// An installed copy and the archive entry of the same name agree
+		// unless the head shows a minified script.
+		if got, arc := FileKindOf(c.p, c.head), archive.KindOf(c.p); got != arc && got != core.KindMinified {
+			t.Errorf("%q: installed %s, archive %s", c.p, got, arc)
 		}
 	}
 }

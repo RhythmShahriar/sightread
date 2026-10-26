@@ -11,10 +11,10 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
 )
 
@@ -203,34 +203,17 @@ func (h *headBuffer) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// FileKindOf guesses a file's kind from its path and first bytes: PHP
-// and JavaScript by extension (minified when a long first line has few
-// line breaks), JSON, assets and archives by extension, binary when the
-// head holds a NUL byte, else text.
-//
-// The archive package classifies archive entries; this is the same rule
-// for installed folders until the two share one helper.
+// FileKindOf is a file's kind from its path, by the rule archive entries
+// get (archive.KindOf), so an installed copy and the official archive of
+// the same package classify every file alike: the analyzer then checks
+// the same files for code. A JavaScript file whose head is one long line
+// is minified, which the analyzer would conclude from the contents too.
 func FileKindOf(p string, head []byte) core.FileKind {
-	switch strings.ToLower(path.Ext(p)) {
-	case ".php", ".phtml", ".inc", ".php5", ".php7":
-		return core.KindPHP
-	case ".js", ".mjs", ".cjs", ".jsx", ".ts", ".tsx", ".mts", ".cts":
-		if strings.HasSuffix(strings.ToLower(p), ".min.js") || minified(head) {
-			return core.KindMinified
-		}
-		return core.KindJS
-	case ".json":
-		return core.KindJSON
-	case ".png", ".jpg", ".jpeg", ".gif", ".ico", ".svg", ".webp", ".avif", ".bmp",
-		".woff", ".woff2", ".ttf", ".otf", ".eot", ".mo", ".mp3", ".mp4", ".webm", ".pdf":
-		return core.KindAsset
-	case ".zip", ".tgz", ".gz", ".tar", ".phar", ".rar", ".7z", ".bz2", ".xz":
-		return core.KindArchive
+	k := archive.KindOf(p)
+	if k == core.KindJS && minified(head) {
+		return core.KindMinified
 	}
-	if bytes.IndexByte(head, 0) >= 0 {
-		return core.KindBinary
-	}
-	return core.KindText
+	return k
 }
 
 // minified reports whether a JavaScript head looks minified: over 1,000
