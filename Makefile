@@ -6,6 +6,10 @@ export GOWORK := off
 
 # How long each fuzz target runs under `make fuzz`.
 FUZZTIME ?= 30s
+# `make fuzz` runs the targets whose place in the list, counted from 0,
+# leaves SHARD when divided by SHARDS, so CI can split them over jobs.
+SHARD ?= 0
+SHARDS ?= 1
 
 .PHONY: build test test-short test-integrated lint fmt check hooks fuzz signals-doc testbed testbed-down bench reproduce actionlint
 
@@ -32,13 +36,17 @@ check: lint test ## everything CI runs
 hooks: ## enable the Conventional Commits hook
 	git config core.hooksPath .githooks
 
-fuzz: ## run every Fuzz* target in every package for FUZZTIME (default 30s) each
-	@set -e; for pkg in $$(go list ./...); do \
+fuzz: ## run every Fuzz* target (or one SHARD of SHARDS) for FUZZTIME (default 30s) each
+	@set -e; i=0; failed=""; for pkg in $$(go list ./...); do \
 		for f in $$(go test -list '^Fuzz' "$$pkg" | grep '^Fuzz' || true); do \
-			echo "fuzz $$pkg $$f for $(FUZZTIME)"; \
-			go test -run '^$$' -fuzz "^$$f$$" -fuzztime $(FUZZTIME) "$$pkg"; \
+			if [ $$((i % $(SHARDS))) -eq $(SHARD) ]; then \
+				echo "fuzz $$pkg $$f for $(FUZZTIME)"; \
+				go test -run '^$$' -fuzz "^$$f$$" -fuzztime $(FUZZTIME) "$$pkg" || failed="$$failed $$pkg.$$f"; \
+			fi; \
+			i=$$((i + 1)); \
 		done; \
-	done
+	done; \
+	if [ -n "$$failed" ]; then echo "fuzz found crashers in:$$failed"; exit 1; fi
 
 signals-doc: ## write docs/signals.md from the signal catalogue and explain text
 	go run ./detect/cmd/signalsdoc

@@ -247,8 +247,11 @@ keeps the copies equal). Jobs:
 
 Daily at 02:41 UTC and on demand, read-only token:
 
-- `fuzz`: `make fuzz FUZZTIME=10m`; on failure every new file under a
-  `testdata/fuzz/` folder is uploaded as the artifact `fuzz-crashers`.
+- `fuzz`: six jobs, `make fuzz FUZZTIME=10m SHARD=<0-5> SHARDS=6`,
+  each running every sixth target (timeout 180 minutes); a target that
+  finds a crasher doesn't stop the rest of its shard. On failure every
+  new file under a `testdata/fuzz/` folder is uploaded as the artifact
+  `fuzz-crashers-<shard>`.
 - `integrated`: `SIGHTREAD_REQUIRE_LINKED=1 go test -race ./...` (what
   `make test-integrated` runs; Windows runners have no make) on Ubuntu,
   macOS and Windows.

@@ -8,7 +8,7 @@ rules that keep the fixtures and the fuzz corpus safe.
 ```sh
 make hooks   # Conventional Commits check
 make check   # lint + tests
-make fuzz    # every fuzz target for 30s (FUZZTIME=10m for longer)
+make fuzz    # every fuzz target for 30s (FUZZTIME=10m for longer; SHARD=n SHARDS=m for a part)
 make testbed # the fixture registries on 127.0.0.1, for end-to-end tests and the benchmark
 ```
 

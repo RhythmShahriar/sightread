@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 # The slow suites, every night and on demand: each fuzz target for ten
-# minutes; every test with every stage required to be linked on Linux,
-# macOS and Windows; the tagged bench tests; the testbed benchmark run
-# twice; e13 on Windows; the install refusing a tampered copy of the
-# latest signed release. The benchmark page is uploaded as an artifact
+# minutes, split over six jobs; every test with every stage required to
+# be linked on Linux, macOS and Windows; the tagged bench tests; the
+# testbed benchmark run twice; e13 on Windows; the install refusing a
+# tampered copy of the latest signed release. The benchmark page is uploaded as an artifact
 # for a person to read; CI never commits it (the token can only read).
 name: nightly
 on:
@@ -16,11 +16,17 @@ permissions:
   contents: read
 jobs:
   # A crasher lands in the package's testdata/fuzz/<target>/; it is
-  # uploaded so it can be committed as a seed with the fix.
+  # uploaded so it can be committed as a seed with the fix. A target that
+  # finds one doesn't stop the others in its shard.
   fuzz:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
     runs-on: ubuntu-latest
-    # Ten minutes per target; GitHub stops any job at six hours.
-    timeout-minutes: 350
+    # About ten targets per shard at ten minutes each, plus builds; well
+    # inside the limit, so a slow night still reaches the upload steps.
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -28,7 +34,7 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - run: make fuzz FUZZTIME=10m
+      - run: make fuzz FUZZTIME=10m SHARD=${{ matrix.shard }} SHARDS=6
       - name: Collect the crashers
         if: failure()
         run: |
@@ -39,7 +45,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
-          name: fuzz-crashers
+          name: fuzz-crashers-${{ matrix.shard }}
           path: ${{ runner.temp }}/crashers
           if-no-files-found: ignore
 
