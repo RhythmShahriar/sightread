@@ -332,6 +332,15 @@ func TestAllow(t *testing.T) {
 		t.Errorf("notes %q", r.Notes)
 	}
 
+	// An entry the change added next to a reviewed entry for another
+	// hash: the conflict still raises approved-version-changed and HOLD.
+	base := &core.AllowEntry{Package: "npm:sharp", Version: "1.1.0", SHA256: shaB, Reason: "reviewed", By: "Ann", Date: "2026-10-01"}
+	u = upd(core.NPM, "sharp", fd("license-change", "", 0))
+	score(u, nil, fakeAllow{match: e, counted: false, conflict: base}, nil)
+	if f := find(t, u, "approved-version-changed"); f.Allowed != nil || u.Verdict != core.Hold {
+		t.Errorf("conflict hidden by an entry in this change: %+v verdict %s", u.Findings, u.Verdict)
+	}
+
 	// An update without a hash is never allowed.
 	u = upd(core.NPM, "sharp", fd("license-change", "", 0))
 	u.To.SHA256, u.To.Verified = "", core.ByNone

@@ -54,10 +54,11 @@ type AllowSet struct {
 // Match implements core.AllowSet. An entry matches when it is for the
 // same package and version, has not expired and records the same
 // sha256. An entry that the change under review added matches with
-// counted false. When nothing matches, an entry that counts and records
-// another sha256 for that version is returned as the conflict, which
-// the scorer turns into approved-version-changed. A conflicting entry
-// added by the change itself is no evidence of anything and is skipped.
+// counted false. When no counted entry matches, an entry that counts
+// and records another sha256 for that version is returned as the
+// conflict, which the scorer turns into approved-version-changed; that
+// holds next to an uncounted match too. A conflicting entry added by
+// the change itself is no evidence of anything and is skipped.
 // Match compares entries of either hash kind; MatchKind narrows that.
 func (a *AllowSet) Match(eco core.Ecosystem, name, version, sha256 string) (*core.AllowEntry, bool, *core.AllowEntry) {
 	return a.MatchKind(eco, name, version, sha256, "")
@@ -95,13 +96,21 @@ func (a *AllowSet) MatchKind(eco core.Ecosystem, name, version, sha256, kind str
 			conflict = r
 		}
 	}
-	if match != nil {
-		return &match.entry, !match.inChange, nil
+	if match != nil && !match.inChange {
+		return &match.entry, true, nil
 	}
+	// Without a counted match a counted entry for another hash still
+	// raises approved-version-changed, even next to an entry the change
+	// added for this hash: otherwise a pull request could hide
+	// republished bytes by adding one allow line.
+	var c *core.AllowEntry
 	if conflict != nil {
-		return nil, false, &conflict.entry
+		c = &conflict.entry
 	}
-	return nil, false, nil
+	if match != nil {
+		return &match.entry, false, c
+	}
+	return nil, false, c
 }
 
 // Source returns the file an entry Match returned came from, as

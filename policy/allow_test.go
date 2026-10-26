@@ -262,6 +262,40 @@ func TestAllowPullRequestRule(t *testing.T) {
 	}
 }
 
+// Positive: an entry the change adds for republished bytes can't hide
+// the reviewed entry at the base, which still conflicts (SR-60, SR-61).
+// Negative: with --trust-pr-allow the added entry counts and there is
+// no conflict to report.
+func TestAllowPullRequestRuleKeepsConflict(t *testing.T) {
+	dir := inProject(t)
+	if err := os.Mkdir(filepath.Join(dir, ".git"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	reviewed := entry("npm:a", "1.0.0", shaA)
+	base := mustAllowYAML(t, reviewed)
+	writeFile(t, filepath.Join(dir, Dir, AllowName), mustAllowYAML(t, reviewed, entry("npm:a", "1.0.0", shaB)))
+	g := &fakeGit{files: map[string]string{"origin/main:.sightread/allowed.yaml": base}}
+	t.Cleanup(core.SwapGitShow(g.show))
+	s := testStore(nil)
+
+	set, err := s.LoadAllow(&core.Config{}, "", "origin/main")
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, counted, conflict := set.Match(core.NPM, "a", "1.0.0", shaB)
+	if m == nil || counted || conflict == nil || !strings.EqualFold(conflict.SHA256, shaA) {
+		t.Fatalf("match %v counted %v conflict %v, want the uncounted match and the base conflict", m, counted, conflict)
+	}
+
+	set, err = s.LoadAllow(&core.Config{}, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m, counted, conflict := set.Match(core.NPM, "a", "1.0.0", shaB); m == nil || !counted || conflict != nil {
+		t.Fatalf("trusted: match %v counted %v conflict %v", m, counted, conflict)
+	}
+}
+
 func TestAllowPullRequestRuleOutsideRepo(t *testing.T) {
 	dir := inProject(t)
 	repo := filepath.Join(dir, "repo")

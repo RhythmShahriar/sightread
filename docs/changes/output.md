@@ -73,6 +73,9 @@ allowed:
 - The same version with another sha256 adds the critical finding
   `approved-version-changed` with evidence such as
   `allowed on 2026-10-20 by Ann Reviewer with sha256 bbbbbbbbbbbb; now aaaaaaaaaaaa`.
+  An entry a pull request adds for the new sha256 doesn't hide it: in
+  `changes` without `--trust-pr-allow` the reviewed entry at the base
+  still raises the finding.
 - Unignorable signals (`integrity-mismatch`, `version-republished`,
   `approved-version-changed`, `known-malicious`, `archive-path-escape`)
   can't be allowed.
