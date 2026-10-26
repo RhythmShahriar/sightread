@@ -49,7 +49,7 @@ Adding one takes four pieces:
 ### Fixture pairs
 
 Every signal needs at least **3 positive and 3 negative pairs**. A pair is an old and a new
-version of a package under `detect/testdata/pairs/<signal-id>/`:
+version of a package under `detect/pairs/testdata/pairs/<signal-id>/`:
 
 - `pos-<n>/case.yaml`: the update the signal must catch, with `expect` naming the ID (and a
   minimum severity when it matters).
