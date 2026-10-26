@@ -324,6 +324,15 @@ func (t *termView) facts(u *core.Update) {
 		if s.RolledBack {
 			v += t.dot() + "rolled back"
 		}
+		if s.Report != "" {
+			v += t.dot() + tt(s.Report)
+		}
+		if s.Applied != "" {
+			t.fact("Applied", tt(s.Applied))
+		}
+		if s.RoadieVerify != "" {
+			t.fact("Roadie", tt(s.RoadieVerify))
+		}
 		t.fact("Soundcheck", v)
 	}
 	t.blank()

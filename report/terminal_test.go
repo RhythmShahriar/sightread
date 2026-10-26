@@ -519,3 +519,31 @@ func TestTerminalShowDiff(t *testing.T) {
 		t.Errorf("plain diff:\n%s", out)
 	}
 }
+
+// TestTerminalSoundcheckFacts: a --soundcheck run shows how the update
+// was applied, the Roadie verify result and the counts with the report
+// path; a run without --soundcheck shows none of them.
+func TestTerminalSoundcheckFacts(t *testing.T) {
+	o := termOpts(100)
+	o.Plain = true
+	r := oneUpdate()
+	r.Updates[0].Soundcheck = &core.SoundcheckResult{Staging: "https://staging.example", RoadieVerify: "ok",
+		Applied: "verified archive 0123456789ab", Report: "soundcheck/report.html", Broke: 1, New: 2, Changed: 3}
+	out := writeTerm(t, r, o)
+	for _, want := range []string{
+		"Applied: verified archive 0123456789ab\n",
+		"Roadie: ok\n",
+		"Soundcheck: https://staging.example: 1 broke, 2 new, 3 changed",
+		"soundcheck/report.html\n",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in\n%s", want, out)
+		}
+	}
+	out = writeTerm(t, oneUpdate(), o)
+	for _, label := range []string{"Applied:", "Roadie:", "Soundcheck:"} {
+		if strings.Contains(out, label) {
+			t.Errorf("a run without --soundcheck shows %q", label)
+		}
+	}
+}
