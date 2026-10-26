@@ -59,14 +59,19 @@ type ErrorEntry struct {
 
 // Update is one reviewed update.
 type Update struct {
-	Eco        Ecosystem
-	Name       string
-	From, To   Side
-	Installed  InstalledInfo
-	Verdict    Verdict
-	Diff       DiffStats
-	Changelog  []ChangelogEntry
-	Findings   []Finding
+	Eco       Ecosystem
+	Name      string
+	From, To  Side
+	Installed InstalledInfo
+	Verdict   Verdict
+	Diff      DiffStats
+	Changelog []ChangelogEntry
+	Findings  []Finding
+	// Hidden are the findings --id, --exclude-id and --severity left out
+	// of the report. They still count for the verdict and the gate, so a
+	// display filter never turns a REVIEW into a ROUTINE. A report read
+	// back from JSON keeps only their number.
+	Hidden     []Finding
 	Hunks      []Hunk // flagged hunks always; every hunk with --diff or HTML
 	Soundcheck *SoundcheckResult
 	Errors     []ErrorEntry
@@ -80,6 +85,7 @@ type Summary struct {
 	Updates, Hold, Review, Routine, Allowed, Unverified                 int
 	Critical, High, Medium, Low, Info                                   int
 	Baselined, AllowedFindings, Ignored, Demoted, NotChecked, FromCache int
+	Hidden                                                              int // left out by --id, --exclude-id or --severity
 }
 
 // Report is one review run, the data of a kind review document.

@@ -41,6 +41,7 @@ type jsonSummary struct {
 	Demoted         int `json:"demoted"`
 	NotChecked      int `json:"not_checked"`
 	FromCache       int `json:"from_cache"`
+	Hidden          int `json:"hidden"`
 }
 
 type jsonTarget struct {
@@ -188,6 +189,7 @@ type jsonUpdate struct {
 	Errors     []jsonError     `json:"errors"`
 	Sites      []string        `json:"sites"`
 	FromCache  bool            `json:"from_cache"`
+	Hidden     int             `json:"hidden"`
 }
 
 // jsonUpdateLine is one JSONL line: the update with "kind" first.

@@ -222,13 +222,13 @@ func TestSummaryHasEveryKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, k := range []string{"updates", "hold", "review", "routine", "allowed", "unverified", "critical", "high", "medium",
-		"low", "info", "baselined", "allowed_findings", "ignored", "demoted", "not_checked", "from_cache"} {
+		"low", "info", "baselined", "allowed_findings", "ignored", "demoted", "not_checked", "from_cache", "hidden"} {
 		if n := r.Summary[k]; n == nil || *n != 0 {
 			t.Errorf("summary.%s = %v, want 0", k, n)
 		}
 	}
-	if len(r.Summary) != 17 {
-		t.Errorf("summary has %d keys, want 17", len(r.Summary))
+	if len(r.Summary) != 18 {
+		t.Errorf("summary has %d keys, want 18", len(r.Summary))
 	}
 	if !bytes.Contains(doc, []byte(`"updates": []`)) || !bytes.Contains(doc, []byte(`"errors": []`)) {
 		t.Errorf("empty lists are not written as []:\n%s", doc)
@@ -340,6 +340,19 @@ func TestReadReportRoundTrip(t *testing.T) {
 			again := writeWith(t, core.FormatJSON, got, testOpts)
 			t.Errorf("%s: the report read back differs:\n%s", name, firstLineDiff(doc, again))
 		}
+	}
+	// Hidden findings come back as their number only.
+	hid := hiddenReport()
+	got, err := ReadReport(bytes.NewReader(writeWith(t, core.FormatJSON, hid, testOpts)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := len(got.Updates[0].Hidden); n != 1 || got.Summary.Hidden != 1 || got.Updates[0].Hidden[0].Severity != cli.SeverityNone {
+		t.Errorf("hidden read back as %+v, summary %d", got.Updates[0].Hidden, got.Summary.Hidden)
+	}
+	bad := bytes.Replace(writeWith(t, core.FormatJSON, hid, testOpts), []byte(`"hidden": 1`), []byte(`"hidden": -1`), -1)
+	if _, err := ReadReport(bytes.NewReader(bad)); err == nil || !strings.Contains(err.Error(), "hidden -1") {
+		t.Errorf("negative hidden: %v", err)
 	}
 	// Through the registry, as cmd reads it.
 	if _, err := core.ReadReport(bytes.NewReader(writeWith(t, core.FormatJSON, smallReport(), testOpts))); err != nil {

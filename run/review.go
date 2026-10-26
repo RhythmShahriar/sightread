@@ -177,6 +177,9 @@ func Review(ctx context.Context, req Request) (*core.Report, error) {
 	finishReport(rep)
 	rep.Duration = r.req.now().Sub(started)
 	r.scorer.Summarise(rep)
+	if n := rep.Summary.Hidden; n > 0 {
+		rep.Notes = append(rep.Notes, hiddenNote(&r.req, n))
+	}
 	if _, err := saveRun(r.cache, rep, r.req.Version, started); err != nil {
 		r.logf("runs: %v", err)
 	}

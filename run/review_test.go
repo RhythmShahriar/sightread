@@ -805,8 +805,9 @@ func TestRunsKept(t *testing.T) {
 	}
 }
 
-// TestFilters: --exclude-id and --severity drop findings after scoring
-// and the verdict follows; integrity-mismatch can never be dropped.
+// TestFilters: --exclude-id and --severity hide findings after scoring
+// but the verdict, the gate and the summary still see them;
+// integrity-mismatch can never be hidden.
 func TestFilters(t *testing.T) {
 	w := runtest.Install(t)
 	w.Publish(core.WPPlugin, "a", "1.0.0", "1.1.0")
@@ -818,14 +819,39 @@ func TestFilters(t *testing.T) {
 	req := request(t, "all")
 	req.ExcludeIDs, req.Severity = []string{"remote-*", "integrity-mismatch"}, cli.SeverityMedium
 	rep := review(t, req)
-	if got := names(rep); !reflect.DeepEqual(got, []string{"a 1.0.0→1.1.0 routine", "b 1.0.0→1.1.0 hold"}) {
+	if got := names(rep); !reflect.DeepEqual(got, []string{"a 1.0.0→1.1.0 hold", "b 1.0.0→1.1.0 hold"}) {
 		t.Fatalf("updates %q", got)
 	}
-	if n := len(rep.Updates[0].Findings); n != 0 {
-		t.Errorf("a kept %d findings", n)
+	if n, h := len(rep.Updates[0].Findings), len(rep.Updates[0].Hidden); n != 0 || h != 2 {
+		t.Errorf("a kept %d findings and hid %d, want 0 and 2", n, h)
 	}
-	if f := rep.Updates[1].Findings; len(f) != 1 || f[0].ID != "integrity-mismatch" {
-		t.Errorf("b findings %+v", f)
+	if f := rep.Updates[1].Findings; len(f) != 1 || f[0].ID != "integrity-mismatch" || len(rep.Updates[1].Hidden) != 0 {
+		t.Errorf("b findings %+v hidden %+v", f, rep.Updates[1].Hidden)
+	}
+	if rep.Summary.Hidden != 2 {
+		t.Errorf("summary.hidden %d, want 2", rep.Summary.Hidden)
+	}
+	want := "2 findings are hidden by --severity medium or --exclude-id (they still count for the verdict and --fail-on)"
+	if !slices.Contains(rep.Notes, want) {
+		t.Errorf("notes %q, want %q", rep.Notes, want)
+	}
+}
+
+// TestNoFilterNoNote: without --id, --exclude-id or --severity nothing
+// is hidden and the report says nothing about it.
+func TestNoFilterNoNote(t *testing.T) {
+	w := runtest.Install(t)
+	w.Publish(core.WPPlugin, "a", "1.0.0", "1.1.0")
+	w.Install(core.WPPlugin, "a", "1.0.0")
+	w.Detector.Set("a", "cron-new-hook")
+	rep := review(t, request(t, "all"))
+	if len(rep.Updates) != 1 || len(rep.Updates[0].Hidden) != 0 || rep.Summary.Hidden != 0 {
+		t.Fatalf("hidden findings without a filter: %+v", rep.Summary)
+	}
+	for _, n := range rep.Notes {
+		if strings.Contains(n, "hidden") {
+			t.Errorf("note %q", n)
+		}
 	}
 }
 

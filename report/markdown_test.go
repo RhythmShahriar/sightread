@@ -491,3 +491,20 @@ func TestMarkdownIncompleteLine(t *testing.T) {
 		t.Error("a complete run says it is incomplete")
 	}
 }
+
+// TestMarkdownHidden: hidden findings show in the heading, the row and
+// the notes; the heading never says there are no risk signals.
+func TestMarkdownHidden(t *testing.T) {
+	out := writeMD(t, hiddenReport())
+	for _, want := range []string{"## Sightread: 1 update, 1 finding hidden", "| 1 hidden |", "1 finding is hidden by --severity medium"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "no risk signals") {
+		t.Errorf("says no risk signals:\n%s", out)
+	}
+	if out := writeMD(t, smallReport()); !strings.Contains(out, "## Sightread: no risk signals in 1 update") {
+		t.Errorf("the clean heading is gone:\n%s", out)
+	}
+}

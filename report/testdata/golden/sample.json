@@ -21,7 +21,8 @@
     "ignored": 1,
     "demoted": 1,
     "not_checked": 1,
-    "from_cache": 1
+    "from_cache": 1,
+    "hidden": 0
   },
   "verdict": "findings",
   "data": {
@@ -346,7 +347,8 @@
         "soundcheck": null,
         "errors": [],
         "sites": [],
-        "from_cache": false
+        "from_cache": false,
+        "hidden": 0
       },
       {
         "ecosystem": "npm",
@@ -1123,7 +1125,8 @@
         "soundcheck": null,
         "errors": [],
         "sites": [],
-        "from_cache": false
+        "from_cache": false,
+        "hidden": 0
       },
       {
         "ecosystem": "composer",
@@ -1300,7 +1303,8 @@
         "soundcheck": null,
         "errors": [],
         "sites": [],
-        "from_cache": true
+        "from_cache": true,
+        "hidden": 0
       },
       {
         "ecosystem": "wp-plugin",
@@ -1387,7 +1391,8 @@
         "soundcheck": null,
         "errors": [],
         "sites": [],
-        "from_cache": false
+        "from_cache": false,
+        "hidden": 0
       },
       {
         "ecosystem": "wp-theme",
@@ -1454,7 +1459,8 @@
           }
         ],
         "sites": [],
-        "from_cache": false
+        "from_cache": false,
+        "hidden": 0
       },
       {
         "ecosystem": "wp-plugin",
@@ -1517,7 +1523,8 @@
           "brochure",
           "shop"
         ],
-        "from_cache": false
+        "from_cache": false,
+        "hidden": 0
       }
     ],
     "not_checked": [

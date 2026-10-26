@@ -16,6 +16,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"slices"
 	"sync"
 	"testing"
 
@@ -195,6 +196,7 @@ func (FakeScorer) Summarise(r *core.Report) {
 		if u.FromCache {
 			s.FromCache++
 		}
+		s.Hidden += len(u.Hidden)
 		for _, f := range u.Findings {
 			switch {
 			case f.Allowed != nil:
@@ -236,7 +238,7 @@ func (FakeScorer) Gate(r *core.Report, o core.GateOptions) (int, string) {
 		return cli.ExitOK, ""
 	}
 	for _, u := range r.Updates {
-		for _, f := range u.Findings {
+		for _, f := range slices.Concat(u.Findings, u.Hidden) {
 			if f.Counted() && o.FailOn.Fails(f.Severity) {
 				return cli.ExitFindings, fmt.Sprintf("findings at or above %s", o.FailOn)
 			}

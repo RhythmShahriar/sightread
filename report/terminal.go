@@ -807,7 +807,7 @@ func (t *termView) table() {
 	if countVerdict(ups, core.Routine) > routineFold {
 		kept := ups[:0:0]
 		for _, u := range ups {
-			if u.Verdict == core.Routine {
+			if quiet(u) {
 				routine++
 			} else {
 				kept = append(kept, u)
@@ -1112,6 +1112,9 @@ func (t *termView) countsLine(s core.Summary) string {
 	if s.AllowedFindings > 0 {
 		parts = append(parts, fmt.Sprintf("%d allowed", s.AllowedFindings))
 	}
+	if s.Hidden > 0 {
+		parts = append(parts, fmt.Sprintf("%d hidden", s.Hidden))
+	}
 	if t.o.Plain {
 		return strings.Join(parts, ", ")
 	}
@@ -1141,6 +1144,7 @@ func updateSummary(u *core.Update) core.Summary {
 			s.AllowedFindings++
 		}
 	}
+	s.Hidden = len(u.Hidden)
 	return s
 }
 
@@ -1206,7 +1210,7 @@ func (t *termView) box() {
 		lines = append(lines, c)
 	}
 	unverified := s.Unverified > 0 || t.single() && t.r.Updates[0].Verdict == core.Unverified
-	if s.Critical+s.High+s.Medium+s.Low+s.Info == 0 && s.AllowedFindings == 0 && !unverified && len(t.r.Updates) > 0 {
+	if s.Critical+s.High+s.Medium+s.Low+s.Info == 0 && s.AllowedFindings == 0 && s.Hidden == 0 && !unverified && len(t.r.Updates) > 0 {
 		lines = append(lines, cleanLine)
 	}
 	incomplete := incompleteText(t.r)
@@ -1366,7 +1370,9 @@ func (t *termView) updateCommands() []string {
 	names := map[core.Ecosystem][]string{}
 	var one *core.Update
 	for _, u := range byVerdict(t.r) {
-		if u.Verdict != core.Routine && u.Verdict != core.Allowed || u.To.Version == "" {
+		// An update with hidden findings is not offered: the reader
+		// hasn't seen what they say.
+		if u.Verdict != core.Routine && u.Verdict != core.Allowed || u.To.Version == "" || len(u.Hidden) > 0 {
 			continue
 		}
 		one = u

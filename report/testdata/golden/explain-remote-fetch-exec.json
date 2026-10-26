@@ -21,7 +21,8 @@
     "ignored": 0,
     "demoted": 0,
     "not_checked": 0,
-    "from_cache": 0
+    "from_cache": 0,
+    "hidden": 0
   },
   "verdict": "ok",
   "data": {

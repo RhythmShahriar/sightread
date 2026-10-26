@@ -211,6 +211,11 @@ func (m mdReport) heading() string {
 		return "## Sightread: " + joinAnd(parts)
 	case len(m.r.Updates) == 0:
 		return "## Sightread: no updates to review"
+	case s.Hidden > 0:
+		// Hidden findings may be the very risk signals; the note says
+		// which flags hid them.
+		return fmt.Sprintf("## Sightread: %s, %s", plural(len(m.r.Updates), "update", "updates"),
+			plural(s.Hidden, "finding hidden", "findings hidden"))
 	}
 	return fmt.Sprintf("## Sightread: no risk signals in %s", plural(len(m.r.Updates), "update", "updates"))
 }
@@ -233,7 +238,8 @@ func plural(n int, one, many string) string {
 // severities lists the levels worst first.
 var severities = []cli.Severity{cli.SeverityCritical, cli.SeverityHigh, cli.SeverityMedium, cli.SeverityLow, cli.SeverityInfo}
 
-// findingCounts is "2 critical, 1 high", "1 allowed" or "none".
+// findingCounts is "2 critical, 1 high", "1 allowed", "3 hidden" or
+// "none".
 func findingCounts(u *core.Update) string {
 	n := map[cli.Severity]int{}
 	allowed := 0
@@ -254,6 +260,9 @@ func findingCounts(u *core.Update) string {
 	}
 	if allowed > 0 {
 		parts = append(parts, fmt.Sprintf("%d allowed", allowed))
+	}
+	if n := len(u.Hidden); n > 0 {
+		parts = append(parts, fmt.Sprintf("%d hidden", n))
 	}
 	if len(parts) == 0 {
 		return "none"
@@ -282,7 +291,7 @@ func (m mdReport) table(b *strings.Builder) {
 	if n := countVerdict(ups, core.Routine); n > routineFold {
 		kept := ups[:0:0]
 		for _, u := range ups {
-			if u.Verdict == core.Routine {
+			if quiet(u) {
 				routine = append(routine, u)
 			} else {
 				kept = append(kept, u)
@@ -305,6 +314,11 @@ func (m mdReport) table(b *strings.Builder) {
 		b.WriteString("\n</details>\n\n")
 	}
 }
+
+// quiet reports whether u folds into the "with no risk signals" line: a
+// ROUTINE update with no finding hidden, since a hidden one may be a
+// risk signal.
+func quiet(u *core.Update) bool { return u.Verdict == core.Routine && len(u.Hidden) == 0 }
 
 func countVerdict(ups []*core.Update, v core.Verdict) int {
 	n := 0

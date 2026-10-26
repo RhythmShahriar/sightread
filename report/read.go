@@ -25,6 +25,9 @@ func init() { core.SetReportReader(ReadReport) }
 // that would exhaust memory.
 const maxReportBytes = 512 << 20
 
+// maxHiddenRead caps the hidden findings a read report stands in for.
+const maxHiddenRead = 100_000
+
 // readEnvelope is the envelope with the review data typed, for a strict
 // decode.
 type readEnvelope struct {
@@ -143,7 +146,7 @@ func reportFromJSON(env *readEnvelope, d *jsonReview) (*core.Report, error) {
 		Summary: core.Summary{Updates: s.Updates, Hold: s.Hold, Review: s.Review, Routine: s.Routine, Allowed: s.Allowed,
 			Unverified: s.Unverified, Critical: s.Critical, High: s.High, Medium: s.Medium, Low: s.Low, Info: s.Info,
 			Baselined: s.Baselined, AllowedFindings: s.AllowedFindings, Ignored: s.Ignored, Demoted: s.Demoted,
-			NotChecked: s.NotChecked, FromCache: s.FromCache},
+			NotChecked: s.NotChecked, FromCache: s.FromCache, Hidden: s.Hidden},
 		Warnings: nilIfEmpty(texts(d.Warnings)),
 		Notes:    nilIfEmpty(texts(d.Notes)),
 		Errors:   errorsFromJSON(d.Errors),
@@ -201,6 +204,16 @@ func updateFromJSON(j *jsonUpdate) (core.Update, error) {
 		Errors:    errorsFromJSON(j.Errors),
 		Sites:     nilIfEmpty(texts(j.Sites)),
 		FromCache: j.FromCache,
+	}
+	if j.Hidden < 0 {
+		return u, fmt.Errorf("hidden %d: want 0 or more", j.Hidden)
+	}
+	// The report keeps only the number of hidden findings. Blank ones
+	// stand in for them so a merged report counts them again; they have
+	// no severity, so they never trip a gate. The cap keeps a hostile
+	// number from allocating much.
+	if j.Hidden > 0 {
+		u.Hidden = make([]core.Finding, min(j.Hidden, maxHiddenRead))
 	}
 	var err error
 	if u.From, err = sideFromJSON("from", j.From); err != nil {

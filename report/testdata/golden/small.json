@@ -21,7 +21,8 @@
     "ignored": 0,
     "demoted": 0,
     "not_checked": 0,
-    "from_cache": 0
+    "from_cache": 0,
+    "hidden": 0
   },
   "verdict": "ok",
   "data": {
@@ -94,7 +95,8 @@
         "soundcheck": null,
         "errors": [],
         "sites": [],
-        "from_cache": false
+        "from_cache": false,
+        "hidden": 0
       }
     ],
     "not_checked": [],

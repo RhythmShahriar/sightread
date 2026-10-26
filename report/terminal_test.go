@@ -390,6 +390,37 @@ func TestTerminalClean(t *testing.T) {
 	}
 }
 
+// hiddenReport is smallReport with one low finding --severity hid.
+func hiddenReport() *core.Report {
+	r := smallReport()
+	r.Updates[0].Hidden = []core.Finding{{ID: "cron-new-hook", Severity: cli.SeverityLow}}
+	coretest.FakeScorer{}.Summarise(r)
+	r.Complete = true
+	r.Notes = []string{"1 finding is hidden by --severity medium (they still count for the verdict and --fail-on)"}
+	return r
+}
+
+// TestTerminalHiddenNotClean: a run that hid a finding never says it
+// found no risk signals and never offers the update command.
+func TestTerminalHiddenNotClean(t *testing.T) {
+	for _, plain := range []bool{false, true} {
+		o := termOpts(120)
+		o.Plain = plain
+		out := writeTerm(t, hiddenReport(), o)
+		if strings.Contains(out, cleanLine) {
+			t.Errorf("plain %v: the clean line with a hidden finding:\n%s", plain, out)
+		}
+		if strings.Contains(out, "update it") {
+			t.Errorf("plain %v: the update hint with a hidden finding:\n%s", plain, out)
+		}
+		for _, want := range []string{"1 hidden", "1 finding is hidden by --severity medium"} {
+			if !strings.Contains(out, want) {
+				t.Errorf("plain %v: missing %q:\n%s", plain, want, out)
+			}
+		}
+	}
+}
+
 func TestTerminalVerdictWords(t *testing.T) {
 	for _, v := range []core.Verdict{core.Hold, core.Review, core.Routine, core.Allowed, core.Unverified} {
 		r := smallReport()

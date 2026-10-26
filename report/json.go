@@ -177,7 +177,7 @@ func summaryJSON(s core.Summary) jsonSummary {
 		Updates: s.Updates, Hold: s.Hold, Review: s.Review, Routine: s.Routine, Allowed: s.Allowed, Unverified: s.Unverified,
 		Critical: s.Critical, High: s.High, Medium: s.Medium, Low: s.Low, Info: s.Info,
 		Baselined: s.Baselined, AllowedFindings: s.AllowedFindings, Ignored: s.Ignored, Demoted: s.Demoted,
-		NotChecked: s.NotChecked, FromCache: s.FromCache,
+		NotChecked: s.NotChecked, FromCache: s.FromCache, Hidden: s.Hidden,
 	}
 }
 
@@ -249,6 +249,7 @@ func updateJSON(u *core.Update, p paths) jsonUpdate {
 		Errors:    errorsJSON(u.Errors, p),
 		Sites:     list(texts(u.Sites)),
 		FromCache: u.FromCache,
+		Hidden:    len(u.Hidden),
 	}
 	for _, c := range u.Changelog {
 		j.Changelog = append(j.Changelog, jsonChangelog{Version: text(c.Version), Text: text(c.Text), Generic: c.Generic})

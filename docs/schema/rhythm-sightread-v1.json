@@ -102,6 +102,11 @@
         "from_cache": {
           "type": "integer",
           "minimum": 0
+        },
+        "hidden": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Findings --id, --exclude-id or --severity left out of the report. They still count for the verdicts and --fail-on."
         }
       }
     },
@@ -720,6 +725,11 @@
         },
         "from_cache": {
           "type": "boolean"
+        },
+        "hidden": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "This update's findings that --id, --exclude-id or --severity left out of findings. They still count for its verdict and --fail-on."
         }
       }
     },
@@ -826,6 +836,11 @@
         },
         "from_cache": {
           "type": "boolean"
+        },
+        "hidden": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "This update's findings that --id, --exclude-id or --severity left out of findings. They still count for its verdict and --fail-on."
         }
       }
     },

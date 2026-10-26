@@ -16,10 +16,12 @@ import (
 // included) and decides whether it is complete: not when an update is
 // UNVERIFIED, a package or the run recorded an error, anything is Not
 // checked for a reason that is not informational (core and mu-plugin
-// are listed but never make a run partial) or the run stopped early. It also adds the Notes lines Score
-// left for the report's updates. Severity counts are of counted
-// findings only; allowed, ignored and baselined findings have their own
-// counts and below-confidence ones are in none.
+// are listed but never make a run partial) or the run stopped early. It
+// also adds the Notes lines Score left for the report's updates.
+// Severity counts are of counted findings only; allowed, ignored and
+// baselined findings have their own counts, findings --id, --exclude-id
+// and --severity hid are counted in Hidden alone and below-confidence
+// ones are in none.
 func (s *Scorer) Summarise(r *core.Report) {
 	sum := core.Summary{Updates: len(r.Updates), NotChecked: core.CountNotChecked(r.NotChecked)}
 	errs := len(r.Errors)
@@ -40,6 +42,7 @@ func (s *Scorer) Summarise(r *core.Report) {
 		if u.FromCache {
 			sum.FromCache++
 		}
+		sum.Hidden += len(u.Hidden)
 		errs += len(u.Errors)
 		for _, f := range u.Findings {
 			switch {
@@ -92,7 +95,9 @@ func (s *Scorer) Summarise(r *core.Report) {
 func (s *Scorer) Gate(r *core.Report, o core.GateOptions) (int, string) {
 	var atFail, atNew int
 	for _, u := range r.Updates {
-		for _, f := range u.Findings {
+		// Hidden findings were only left out of the report; they still
+		// gate the run.
+		for _, f := range slices.Concat(u.Findings, u.Hidden) {
 			if !f.Counted() {
 				continue
 			}

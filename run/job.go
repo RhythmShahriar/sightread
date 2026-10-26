@@ -703,53 +703,54 @@ func (r *reviewer) tagCheck(ctx context.Context, t *target, m *core.Meta, findin
 	return true
 }
 
-// filter applies --id, --exclude-id and --severity after scoring. The
-// unignorable signals always stay: they say the bytes are not the ones
-// published or reviewed.
+// filter applies --id, --exclude-id and --severity after scoring. It
+// moves the findings it drops to u.Hidden instead of deleting them: they
+// are a display choice, so they still set the verdict Score gave and
+// still count for --fail-on. The unignorable signals always stay: they
+// say the bytes are not the ones published or reviewed.
 func (r *reviewer) filter(u *core.Update) {
 	q := r.req
 	if len(q.IDs) == 0 && len(q.ExcludeIDs) == 0 && q.Severity <= cli.SeverityInfo {
 		return
 	}
-	n := len(u.Findings)
-	kept := u.Findings[:0]
+	var kept, hidden []core.Finding
 	for _, f := range u.Findings {
 		keep := (len(q.IDs) == 0 || MatchAny(q.IDs, f.ID)) && !MatchAny(q.ExcludeIDs, f.ID) && f.Severity >= q.Severity
 		if keep || core.Unignorable(f.ID) {
 			kept = append(kept, f)
+		} else {
+			hidden = append(hidden, f)
 		}
 	}
-	if u.Findings = kept; len(kept) != n {
-		reverdict(u)
-	}
+	u.Findings, u.Hidden = kept, hidden
 }
 
-// reverdict sets the verdict of PRD 5.6 again after filter dropped
-// findings. The scorer can't be asked twice: its context rules would
-// raise a finding a second time.
-func reverdict(u *core.Update) {
-	worst, allowed := cli.SeverityNone, 0
-	for i := range u.Findings {
-		f := &u.Findings[i]
-		if f.Allowed != nil {
-			allowed++
-		}
-		if f.Counted() && f.Severity > worst {
-			worst = f.Severity
-		}
+// hiddenNote is the report note for findings filter left out, naming
+// the flags that hid them so the reader knows how to see them again.
+func hiddenNote(q *Request, n int) string {
+	var by []string
+	if q.Severity > cli.SeverityInfo {
+		by = append(by, "--severity "+q.Severity.String())
 	}
-	switch {
-	case u.From.Verified == core.ByNone || u.To.Verified == core.ByNone:
-		u.Verdict = core.Unverified
-	case worst == cli.SeverityCritical:
-		u.Verdict = core.Hold
-	case worst >= cli.SeverityMedium:
-		u.Verdict = core.Review
-	case allowed > 0 && allowed == len(u.Findings):
-		u.Verdict = core.Allowed
-	default:
-		u.Verdict = core.Routine
+	if len(q.IDs) > 0 {
+		by = append(by, "--id")
 	}
+	if len(q.ExcludeIDs) > 0 {
+		by = append(by, "--exclude-id")
+	}
+	what := "findings are"
+	if n == 1 {
+		what = "finding is"
+	}
+	return fmt.Sprintf("%d %s hidden by %s (they still count for the verdict and --fail-on)", n, what, joinOr(by))
+}
+
+// joinOr writes "a", "a or b" or "a, b or c".
+func joinOr(parts []string) string {
+	if len(parts) < 2 {
+		return strings.Join(parts, "")
+	}
+	return strings.Join(parts[:len(parts)-1], ", ") + " or " + parts[len(parts)-1]
 }
 
 // hunks returns the hunks of the files counted findings point at, or of
