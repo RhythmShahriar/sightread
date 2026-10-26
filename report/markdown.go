@@ -338,7 +338,7 @@ func (m mdReport) body(t mdTrim) string {
 		m.section(&b, u, t)
 	}
 	if left := len(secs) - len(shown); left > 0 {
-		fmt.Fprintf(&b, "%s more not shown here.\n\n", plural(left, "update with findings is", "updates with findings are"))
+		fmt.Fprintf(&b, "%s not shown here.\n\n", plural(left, "more update with findings is", "more updates with findings are"))
 	}
 	m.unverified(&b)
 	m.notChecked(&b)

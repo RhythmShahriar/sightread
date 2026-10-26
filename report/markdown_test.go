@@ -5,6 +5,7 @@ package report
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -297,6 +298,12 @@ func TestMarkdownSizeCap(t *testing.T) {
 	}
 	if strings.Contains(out, "<details><summary>Diff") {
 		t.Error("hunks were kept although the report was trimmed")
+	}
+	if !regexp.MustCompile(`\n\d+ more updates with findings are not shown here\.\n`).MatchString(out) {
+		t.Error("no line for the update sections left out")
+	}
+	if got := strings.Count(out, "| ⚠️ REVIEW | pkg-"); got != 500 {
+		t.Errorf("the table lists %d of 500 updates", got)
 	}
 }
 
