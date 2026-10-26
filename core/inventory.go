@@ -3,7 +3,10 @@
 
 package core
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 // NotCheckedReason is why a component was left out of the review
 // (PRD 5.5).
@@ -70,6 +73,10 @@ type InventoryRequest struct {
 	Transitive  bool
 	Ecosystems  []Ecosystem
 	MaxDepth    int
+	// Command is the Sightread command errors name; Log gets one line
+	// per --wp call (-v). Both are set by run.
+	Command string
+	Log     io.Writer
 }
 
 // Site is what one target folder holds.

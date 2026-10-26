@@ -5,8 +5,10 @@ package inventory
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/RhythmShahriar/sightread/core"
@@ -110,5 +112,21 @@ func TestReadWPMissingCommandIsE1(t *testing.T) {
 	_, err := ReadWP(context.Background(), []string{filepath.Join(t.TempDir(), "wp")}, WPOptions{Command: "plugin"})
 	if core.CodeOf(err) != core.ENothingInstalled {
 		t.Errorf("err = %v, want E1", err)
+	}
+}
+
+// TestReaderPassesCommand: a --wp read through the registered Reader
+// names the run's command in its error, as ReadWP does when called
+// directly. (The -v log reaches wpcli the same way; wpcli's tests check
+// what it writes.)
+func TestReaderPassesCommand(t *testing.T) {
+	_, err := (&Reader{}).Read(context.Background(), core.InventoryRequest{Root: t.TempDir(),
+		WP: []string{filepath.Join(t.TempDir(), "wp")}, Command: "plugin", Log: &strings.Builder{}})
+	if core.CodeOf(err) != core.ENothingInstalled {
+		t.Fatalf("err = %v, want E1", err)
+	}
+	var ce *core.Error
+	if !errors.As(err, &ce) || ce.Command != "plugin" {
+		t.Errorf("error command: %+v", err)
 	}
 }

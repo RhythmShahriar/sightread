@@ -88,6 +88,7 @@ func (r *reviewer) readSite(ctx context.Context, req core.InventoryRequest) (*co
 		return nil, "", err
 	}
 	req.Root = root
+	req.Command, req.Log = r.req.Command, r.req.Log
 	site, err := r.inv.Read(ctx, req)
 	if err != nil {
 		return nil, root, withCommand(err, r.req.Command)

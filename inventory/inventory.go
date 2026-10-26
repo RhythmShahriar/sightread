@@ -189,7 +189,7 @@ func (s ecoSelection) has(eco core.Ecosystem) bool {
 func (rd *Reader) readWP(ctx context.Context, req core.InventoryRequest, root string) (*core.Site, error) {
 	switch {
 	case len(req.WP) > 0:
-		return ReadWP(ctx, req.WP, WPOptions{})
+		return ReadWP(ctx, req.WP, WPOptions{Command: req.Command, Log: req.Log})
 	case req.TunerReport != "":
 		return ReadTuner(req.TunerReport)
 	}
