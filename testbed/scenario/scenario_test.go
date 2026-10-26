@@ -71,6 +71,41 @@ func TestManifest(t *testing.T) {
 	}
 }
 
+// TestLoadRejectsUnusedExpectations keeps the manifest honest: an
+// assertion the evaluator would ignore is an error, not a comment.
+func TestLoadRejectsUnusedExpectations(t *testing.T) {
+	cases := map[string]string{
+		"env with expect.exit":  "  - {id: e01, kind: env, command: [x], expect: {exit: 0}, env: {exit: 3}}\n",
+		"exact on a bad one":    "  - {id: b01, kind: bad, command: [x], expect: {exact: true, signals: [{id: owner-change}]}}\n",
+		"exact with no signals": "  - {id: g15, kind: good, command: [x], expect: {exact: true}}\n",
+	}
+	for name, entry := range cases {
+		p := filepath.Join(t.TempDir(), "scenarios.yaml")
+		if err := os.WriteFile(p, []byte("scenarios:\n"+entry), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load(p); err == nil {
+			t.Errorf("%s: Load accepted it", name)
+		}
+	}
+	ok := "  - {id: e01, kind: env, command: [x], env: {exit: 3}}\n" +
+		"  - {id: g15, kind: good, command: [x], expect: {exit: 1, exact: true, signals: [{id: owner-change}]}}\n"
+	p := filepath.Join(t.TempDir(), "scenarios.yaml")
+	if err := os.WriteFile(p, []byte("scenarios:\n"+ok), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	m, err := Load(p)
+	if err != nil {
+		t.Fatalf("a valid manifest was rejected: %v", err)
+	}
+	if got := m.Scenarios[1].Expect.WantExit(); got != 1 {
+		t.Errorf("WantExit = %d, want 1", got)
+	}
+	if got := m.Scenarios[0].Expect.WantExit(); got != 0 {
+		t.Errorf("WantExit with no exit = %d, want 0", got)
+	}
+}
+
 // TestManifestCoversPRD19 checks the scenario counts match PRD 19: 23
 // bad, 15 good, 15 environment.
 func TestManifestCoversPRD19(t *testing.T) {
@@ -180,6 +215,37 @@ func TestEvaluate(t *testing.T) {
 		o := Evaluate(g15, report("REVIEW", f("owner-change", "high")))
 		if o.Status != StatusClean {
 			t.Fatalf("an allowed owner-change is not a false alarm, got %s %v", o.Status, o.FalseAlarms)
+		}
+	})
+
+	exact := Scenario{ID: "g15", Kind: KindGood, FailOn: "high",
+		Expect: Expect{Exact: true, Signals: []ExpectSignal{{ID: "owner-change", MinSeverity: "high"}}}}
+	t.Run("exact clean with only its signal", func(t *testing.T) {
+		o := Evaluate(exact, report("REVIEW", f("owner-change", "high")))
+		if o.Status != StatusClean {
+			t.Fatalf("owner-change alone is clean, got %s %v %v", o.Status, o.FalseAlarms, o.Missing)
+		}
+	})
+	t.Run("exact flags an extra finding below the gate", func(t *testing.T) {
+		o := Evaluate(exact, report("REVIEW", f("owner-change", "high"), f("cron-new-hook", "low")))
+		if o.Status != StatusFalseAlarm || len(o.FalseAlarms) != 1 || o.FalseAlarms[0] != "cron-new-hook" {
+			t.Fatalf("a low extra finding breaks an exact scenario, got %s %v", o.Status, o.FalseAlarms)
+		}
+	})
+	t.Run("exact requires its signal", func(t *testing.T) {
+		o := Evaluate(exact, report("ROUTINE"))
+		if o.Status != StatusMissed || len(o.Missing) != 1 {
+			t.Fatalf("an exact scenario without owner-change is missed, got %s %v", o.Status, o.Missing)
+		}
+		o = Evaluate(exact, report("REVIEW", f("owner-change", "medium")))
+		if o.Status != StatusMissed {
+			t.Fatalf("owner-change below its rank is missed, got %s", o.Status)
+		}
+	})
+	t.Run("non-exact good does not require its signal", func(t *testing.T) {
+		g05 := Scenario{ID: "g05", Kind: KindGood, Expect: Expect{Signals: []ExpectSignal{{ID: "cron-new-hook", MinSeverity: "low"}}}}
+		if o := Evaluate(g05, report("ROUTINE")); o.Status != StatusClean {
+			t.Fatalf("an allowed signal may be absent, got %s", o.Status)
 		}
 	})
 

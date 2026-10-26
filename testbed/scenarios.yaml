@@ -390,14 +390,14 @@ scenarios:
       exit: 1
       signals:
         - {id: owner-change, min_severity: high}
+      # PRD 19: owner-change and nothing else, at any severity.
+      exact: true
     fail_on: high
   - id: e01
     kind: env
     title: "registry down"
     package: e01-down
     command: ["npm", "downlib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       exit: 3
       never: ["no risk"]
@@ -407,8 +407,6 @@ scenarios:
     title: "429 then success"
     package: e02-retry
     command: ["npm", "retrylib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       exit: 0
       note: "retries with Retry-After and succeeds"
@@ -417,8 +415,6 @@ scenarios:
     title: "body stalls"
     package: e03-stall
     command: ["npm", "stalllib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       exit: 3
       note: "stops at the configured timeout"
@@ -428,7 +424,6 @@ scenarios:
     package: e04-bomb
     command: ["plugin", "e04-bomb", "--path", "projects/wp"]
     expect:
-      exit: 0
       signals:
         - {id: unanalysed, min_severity: high}
     env:
@@ -439,7 +434,6 @@ scenarios:
     package: e05-entries
     command: ["plugin", "e05-entries", "--path", "projects/wp"]
     expect:
-      exit: 0
       signals:
         - {id: archive-path-escape, min_severity: critical}
         - {id: archive-link, min_severity: high}
@@ -451,8 +445,6 @@ scenarios:
     title: "cached blob tampered on disk"
     package: e06-cache
     command: ["npm", "cachelib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       note: "detects on reuse and refetches"
   - id: e07
@@ -460,8 +452,6 @@ scenarios:
     title: "two runs share one cache"
     package: e07-shared
     command: ["npm", "sharedlib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       note: "both runs correct, no corrupt cache"
   - id: e08
@@ -469,8 +459,6 @@ scenarios:
     title: "Ctrl-C during fetch"
     package: e08-interrupt
     command: ["npm", "interruptlib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       exit: 130
       note: "no partial cache entry, temp removed"
@@ -479,8 +467,6 @@ scenarios:
     title: "offline with a warm cache"
     package: e09-offline
     command: ["npm", "offlinelib", "--offline", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       exit: 0
       says: ["offline"]
@@ -490,8 +476,6 @@ scenarios:
     title: "read-only HOME"
     package: e10-rohome
     command: ["npm", "rohomelib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       note: "clear error or a temp cache fallback"
   - id: e11
@@ -499,8 +483,6 @@ scenarios:
     title: "private host namesake and private npm scope"
     package: e11-private
     command: ["all", "projects/e11"]
-    expect:
-      exit: 0
     env:
       never: ["private-host.example"]
       note: "never names the private host or the WordPress.org namesake in the request log"
@@ -509,8 +491,6 @@ scenarios:
     title: "version unpublished from npm"
     package: e12-unpub
     command: ["npm", "unpublib", "--to", "9.9.9", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       says: ["unpublished"]
       note: "says the version was unpublished"
@@ -519,8 +499,6 @@ scenarios:
     title: "Windows run catches b10"
     package: e13-windows
     command: ["npm", "winlib", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       note: "runs on Windows only; catches the install-script payload"
   - id: e14
@@ -528,8 +506,6 @@ scenarios:
     title: "bidi and ANSI escapes in the name and changelog"
     package: e14-escape
     command: ["plugin", "e14-escape", "--path", "projects/wp"]
-    expect:
-      exit: 0
     env:
       note: "prints the escapes escaped, never raw"
   - id: e15
@@ -537,7 +513,5 @@ scenarios:
     title: "--soundcheck on the Docker WordPress with the Roadie stub"
     package: e15-soundcheck
     command: ["plugin", "e15-soundcheck", "--soundcheck", "http://127.0.0.1:18907", "--wp", "{testbed}/bin/wp"]
-    expect:
-      exit: 0
     env:
       note: "the update is applied only on the staging copy; refusals leave files byte-identical (cases in testbed/staging)"

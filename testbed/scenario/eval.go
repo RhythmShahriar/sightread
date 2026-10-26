@@ -94,16 +94,35 @@ func Evaluate(s Scenario, r *Report) Outcome {
 			allowed[e.ID] = true
 		}
 		gate := severityRank(s.EffectiveFailOn())
+		if s.Expect.Exact {
+			// Every counted finding is judged, below the gate too, and
+			// each listed signal is required.
+			gate = 0
+			for _, e := range s.Expect.Signals {
+				if rank, ok := best[e.ID]; ok && rank >= max(severityRank(e.MinSeverity), 0) {
+					o.Present = append(o.Present, e.ID)
+				} else {
+					o.Missing = append(o.Missing, e.ID)
+				}
+			}
+			sort.Strings(o.Present)
+			sort.Strings(o.Missing)
+		}
 		for id, rank := range best {
 			if !allowed[id] && gate >= 0 && rank >= gate {
 				o.FalseAlarms = append(o.FalseAlarms, id)
 			}
 		}
 		sort.Strings(o.FalseAlarms)
-		if len(o.FalseAlarms) == 0 && len(o.Forbidden) == 0 {
-			o.Status = StatusClean
-		} else {
+		switch {
+		case len(o.FalseAlarms) > 0 || len(o.Forbidden) > 0:
 			o.Status = StatusFalseAlarm
+		case len(o.Missing) > 0:
+			// An exact good scenario without its one expected signal is
+			// a miss: g15 must still say the owner changed.
+			o.Status = StatusMissed
+		default:
+			o.Status = StatusClean
 		}
 	default: // bad
 		for _, e := range s.Expect.Signals {

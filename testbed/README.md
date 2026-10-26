@@ -112,7 +112,11 @@ checks this table against it.
 `scenarios.yaml` holds each scenario's command, expected verdict, exit
 code and signals. Bad scenarios must report every listed signal at or
 above its severity; good scenarios must report nothing at or above their
-gate beyond what is listed.
+gate beyond what is listed. A good scenario with `exact: true` (g15)
+must report every listed signal and nothing else at any severity.
+Environment scenarios state their exit code and output under `env`;
+the manifest loader rejects an `expect.exit` on one, since it would
+never be checked.
 
 | ID | Kind | Update | Expected |
 |---|---|---|---|

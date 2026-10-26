@@ -132,13 +132,17 @@ func renderMismatches(w func(string, ...any), r *Results) {
 }
 
 func renderFalseAlarms(w func(string, ...any), r *Results) {
-	w("## False alarms\n\nFindings at or above each good scenario's gate (medium unless its entry says otherwise) that it is not allowed.\n\n")
+	w("## False alarms\n\nFindings at or above each good scenario's gate (medium unless its entry says otherwise) that it is not allowed. An exact scenario (g15) counts any other finding at any severity and lists a required signal it did not report as missing.\n\n")
 	w("| Scenario | Findings | Signals |\n|---|---|---|\n")
 	for _, s := range r.Scenarios {
 		if s.Kind != "good" {
 			continue
 		}
-		w("| %s | %d | %s |\n", s.ID, len(s.FalseAlarms), cell(listOrDash(s.FalseAlarms)))
+		list := append([]string(nil), s.FalseAlarms...)
+		for _, m := range s.Missing {
+			list = append(list, "missing:"+m)
+		}
+		w("| %s | %d | %s |\n", s.ID, len(s.FalseAlarms), cell(listOrDash(list)))
 	}
 	c := r.Control
 	w("\nControl pass: every good scenario again %d times on a warm cache, %d runs, %d false alarms; outcome changed between rounds: %s.\n\n",

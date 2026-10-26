@@ -86,7 +86,7 @@ func (h *harness) scored(ctx context.Context, s scenario.Scenario) benchdoc.Scen
 		Forbidden:   cold.outcome.Forbidden,
 		WantVerdict: s.Expect.Verdict,
 		Exit:        cold.exec.exit,
-		WantExit:    s.Expect.Exit,
+		WantExit:    s.Expect.WantExit(),
 		Problem:     cold.problem,
 		Cold:        benchdoc.Timing{Seconds: cold.exec.elapsed.Seconds(), RSSMB: cold.exec.rssMB},
 		Warm:        benchdoc.Timing{Seconds: warm.exec.elapsed.Seconds(), RSSMB: warm.exec.rssMB},

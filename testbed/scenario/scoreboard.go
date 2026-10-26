@@ -73,7 +73,7 @@ func Scoreboard(outcomes []Outcome) string {
 		if o.Scenario.Kind != KindGood {
 			continue
 		}
-		w("| %s | %s | %s | %s |\n", o.Scenario.ID, o.Scenario.Title, result(o), joinOrDash(o.FalseAlarms))
+		w("| %s | %s | %s | %s |\n", o.Scenario.ID, o.Scenario.Title, result(o), falseAlarms(o))
 	}
 
 	if t.NoReport > 0 {
@@ -127,6 +127,16 @@ func signals(o Outcome) string {
 	}
 	for _, f := range o.Forbidden {
 		parts = append(parts, "forbidden:"+f)
+	}
+	return joinOrDash(parts)
+}
+
+// falseAlarms lists a good outcome's false alarms and, for an exact
+// scenario, the required signals it did not report.
+func falseAlarms(o Outcome) string {
+	parts := append([]string(nil), o.FalseAlarms...)
+	for _, m := range o.Missing {
+		parts = append(parts, "missing:"+m)
 	}
 	return joinOrDash(parts)
 }

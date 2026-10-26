@@ -4,6 +4,7 @@
 package scenario
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -60,20 +61,35 @@ type Scenario struct {
 type Expect struct {
 	// Verdict is HOLD, REVIEW, ROUTINE, ALLOWED or UNVERIFIED.
 	Verdict string `yaml:"verdict,omitempty"`
-	// Exit is the process exit code the bench expects.
-	Exit int `yaml:"exit"`
+	// Exit is the process exit code the bench expects of a bad or good
+	// scenario; nil means 0. An environment scenario states its exit
+	// under env.exit instead, and Load rejects one here.
+	Exit *int `yaml:"exit,omitempty"`
 	// Signals are the findings that must be present (bad) or are allowed
 	// (good), each with a minimum severity.
 	Signals []ExpectSignal `yaml:"signals,omitempty"`
 	// NotCheckedReasons are the reason codes the report must list under
 	// Not checked.
 	NotCheckedReasons []string `yaml:"not_checked_reasons,omitempty"`
+	// Exact makes a good scenario's Signals the whole answer: each must
+	// be present at its minimum severity and any other counted finding,
+	// at any severity, is a false alarm (PRD 19: g15 gives owner-change
+	// and nothing else).
+	Exact bool `yaml:"exact,omitempty"`
 }
 
 // ExpectSignal names a signal and the least severe rank that counts.
 type ExpectSignal struct {
 	ID          string `yaml:"id"`
 	MinSeverity string `yaml:"min_severity,omitempty"`
+}
+
+// WantExit is the exit code a bad or good scenario expects.
+func (e Expect) WantExit() int {
+	if e.Exit == nil {
+		return 0
+	}
+	return *e.Exit
 }
 
 // EnvAssert is an environment scenario's assertions.
@@ -114,8 +130,26 @@ func Load(path string) (*Manifest, error) {
 		default:
 			return nil, fmt.Errorf("%s: scenario %s has an unknown kind %q", path, s.ID, s.Kind)
 		}
+		if err := s.check(); err != nil {
+			return nil, fmt.Errorf("%s: scenario %s %w", path, s.ID, err)
+		}
 	}
 	return &m, nil
+}
+
+// check rejects expectations the evaluator would ignore or contradict,
+// so the manifest never shows a reader an assertion that is not made.
+func (s Scenario) check() error {
+	if s.Expect.Exact && s.Kind != KindGood {
+		return errors.New("sets exact, which only a good scenario uses")
+	}
+	if s.Expect.Exact && len(s.Expect.Signals) == 0 {
+		return errors.New("sets exact with no signals; leave it out to allow none")
+	}
+	if s.Kind == KindEnv && s.Expect.Exit != nil {
+		return errors.New("sets expect.exit; an environment scenario states its exit under env.exit")
+	}
+	return nil
 }
 
 // EffectiveFailOn returns the gate the scenario runs under.
