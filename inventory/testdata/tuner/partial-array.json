@@ -1,0 +1,5 @@
+[
+  {"schema": "rhythm-tuner/v0", "tool": "rhythm-tuner", "version": "0.9.2", "target": "https://blog.example.test", "complete": false, "stopped_by": "max-time",
+   "fingerprint": {"tech": ["wordpress"], "components": [{"type": "plugin", "slug": "akismet", "version": "5.3.5"}]}, "findings": []},
+  {"target": "https://down.example.test", "error": "connection refused"}
+]
