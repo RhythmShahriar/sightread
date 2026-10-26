@@ -38,7 +38,7 @@ const svnJobs = 4
 // Theme is the WordPress.org theme source. WordPress.org publishes no
 // checksums for themes, so a theme is verified by TLS only, or with
 // --svn-check by comparing every file with themes.svn.wordpress.org. It
-// implements core.Source and core.TagSource.
+// implements core.Source, core.LocalVerifier and core.TagSource.
 type Theme struct{ s *site }
 
 // NewTheme returns the theme source for env.
@@ -88,6 +88,33 @@ func (t *Theme) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Integ
 // cached instead of fetching it.
 func (t *Theme) MetaFromTree(m *core.Meta, tree *core.Tree) { metaFromTree(m, tree) }
 
+// VerifyLocal compares an installed copy with the release zip of the
+// installed version (PRD 6.1). WordPress.org publishes no theme
+// checksums, so the zip itself, verified by TLS, is the official copy.
+// Fewer than half the files matching makes the copy not the theme
+// WordPress.org knows (Drift.Official false). A version or zip that
+// can't be had is the error a fetch of it gives.
+func (t *Theme) VerifyLocal(ctx context.Context, ref core.Ref, local *core.Tree) (core.Drift, error) {
+	differ := core.GetDiffer()
+	if differ == nil {
+		// package diff holds the one drift rule (which files a site may
+		// change); without it there is nothing to compare by.
+		return core.Drift{}, fmt.Errorf("drift: differ %w", core.ErrNotLinked)
+	}
+	m, _, err := t.s.meta(ctx, ref)
+	if err != nil {
+		return core.Drift{}, err
+	}
+	if m.Closed {
+		return core.Drift{}, t.s.closedError(m)
+	}
+	official, err := t.s.download(ctx, m)
+	if err != nil {
+		return core.Drift{}, err
+	}
+	return differ.Drift(ctx, local, official), nil
+}
+
 // Tags returns {"latest": the info API version}.
 func (t *Theme) Tags(ctx context.Context, slug string) (map[string]string, error) {
 	return t.s.tags(ctx, slug)
@@ -95,8 +122,9 @@ func (t *Theme) Tags(ctx context.Context, slug string) (map[string]string, error
 
 // The interfaces Theme promises.
 var (
-	_ core.Source    = (*Theme)(nil)
-	_ core.TagSource = (*Theme)(nil)
+	_ core.Source        = (*Theme)(nil)
+	_ core.LocalVerifier = (*Theme)(nil)
+	_ core.TagSource     = (*Theme)(nil)
 )
 
 // errSVNLimit is an SVN copy bigger than the limits allow.

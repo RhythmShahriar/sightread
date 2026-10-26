@@ -5,6 +5,7 @@ package wporg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sort"
@@ -12,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/core/coretest"
 )
 
 // themeInfo is a theme info answer in the shape api.wordpress.org
@@ -302,4 +304,49 @@ func TestEscapePath(t *testing.T) {
 	if got := escapePath("assets/a b#1.css"); got != "assets/a%20b%231.css" {
 		t.Errorf("escapePath = %q", got)
 	}
+}
+
+// TestThemeVerifyLocal: an installed theme is compared with the zip of
+// its version; an edited file is drift, an untouched copy has none and a
+// namesake with other files is not the WordPress.org theme.
+func TestThemeVerifyLocal(t *testing.T) {
+	t.Setenv("RHYTHM_INVOKED_AS", "rhythm sightread")
+	r := newRegistry()
+	twentyTwentyFour(t, r, themeFiles)
+	ref := core.Ref{Eco: core.WPTheme, Name: "twentytwentyfour", Version: "1.2"}
+	ctx := context.Background()
+	t.Run("edited", func(t *testing.T) {
+		local := clone(themeFiles)
+		local["functions.php"] = "<?php // edited on the site"
+		local["cache/extra.php"] = "<?php"
+		d, err := NewTheme(start(t, r, core.SourceOptions{})).VerifyLocal(ctx, ref, coretest.Tree(local))
+		if err != nil || !d.Official || !slices.Equal(d.Differ, []string{"functions.php"}) || !slices.Equal(d.Extra, []string{"cache/extra.php"}) {
+			t.Errorf("drift %+v, %v", d, err)
+		}
+	})
+	t.Run("untouched", func(t *testing.T) {
+		d, err := NewTheme(start(t, r, core.SourceOptions{})).VerifyLocal(ctx, ref, coretest.Tree(clone(themeFiles)))
+		if err != nil || !d.Official || len(d.Differ)+len(d.Missing)+len(d.Extra) != 0 {
+			t.Errorf("drift %+v, %v", d, err)
+		}
+	})
+	t.Run("namesake", func(t *testing.T) {
+		other := map[string]string{"style.css": "/* Theme Name: Someone else */", "index.php": "<?php", "inc/a.php": "<?php"}
+		d, err := NewTheme(start(t, r, core.SourceOptions{})).VerifyLocal(ctx, ref, coretest.Tree(other))
+		if err != nil || d.Official {
+			t.Errorf("a namesake is official: %+v %v", d, err)
+		}
+	})
+	t.Run("unknown version", func(t *testing.T) {
+		_, err := NewTheme(start(t, r, core.SourceOptions{})).VerifyLocal(ctx, core.Ref{Eco: core.WPTheme, Name: "twentytwentyfour", Version: "9.9"}, coretest.Tree(themeFiles))
+		if core.CodeOf(err) != core.EVersionMissing {
+			t.Errorf("unknown version: %v", err)
+		}
+	})
+	t.Run("no differ", func(t *testing.T) {
+		t.Cleanup(core.SwapDiffer(nil))
+		if _, err := NewTheme(start(t, r, core.SourceOptions{})).VerifyLocal(ctx, ref, coretest.Tree(themeFiles)); !errors.Is(err, core.ErrNotLinked) {
+			t.Errorf("without a differ: %v", err)
+		}
+	})
 }
