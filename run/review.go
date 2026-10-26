@@ -193,6 +193,11 @@ func (r *reviewer) setup() error {
 		return err
 	}
 	r.cfg, r.cfgPath = cfg, cfgPath
+	// The unanalysed note tells the user which config to edit: the
+	// --config file as they typed it, else the usual one.
+	if cs, ok := r.scorer.(interface{ SetConfigPath(string) }); ok {
+		cs.SetConfigPath(r.req.ConfigFile)
+	}
 	baseRef := r.prBaseRef()
 	if baseRef != "" {
 		// Before applyConfig and LoadAllow, so a flag still wins and the
