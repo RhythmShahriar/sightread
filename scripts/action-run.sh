@@ -190,8 +190,10 @@ run() {
   fi
 
   # The outputs scripts read: the worst verdict, counts and file paths.
+  # Worst first in the reports' order: an update that couldn't be
+  # verified is worse than one with nothing to say.
   local verdict updates findings
-  verdict=$(jq -r '[.data.updates[]?.verdict] as $v | first(("hold", "review", "routine", "allowed", "unverified") as $w | select($v | index($w)) | $w) // "none"' "$json" 2> /dev/null || echo none)
+  verdict=$(jq -r '[.data.updates[]?.verdict] as $v | first(("hold", "review", "unverified", "allowed", "routine") as $w | select($v | index($w)) | $w) // "none"' "$json" 2> /dev/null || echo none)
   updates=$(jq -r '.summary.updates // 0' "$json" 2> /dev/null || echo 0)
   findings=$(jq -r '[.summary.critical, .summary.high, .summary.medium, .summary.low, .summary.info] | map(. // 0) | add' "$json" 2> /dev/null || echo 0)
   [ "${SUMMARY:-true}" != true ] || cat "$markdown" >> "$jobsummary" 2> /dev/null || true

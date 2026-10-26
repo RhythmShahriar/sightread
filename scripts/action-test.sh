@@ -156,6 +156,21 @@ if out exit-code=2 && contains "$work/runner/summary" 'unknown mode "nope"'; the
   ok "an unknown mode"
 else bad "an unknown mode"; fi
 
+# The verdict output ranks like the reports: unverified is worse than
+# routine and allowed, better than review.
+cat > "$work/unverified.json" <<'JSON'
+{"schema": "rhythm-sightread/v1", "kind": "review", "complete": false,
+ "summary": {"updates": 3}, "data": {"updates": [{"verdict": "routine"}, {"verdict": "unverified"}, {"verdict": "allowed"}]}}
+JSON
+act action-run.sh run MODE=all FAKE_JSON="$work/unverified.json"
+if out verdict=unverified; then ok "unverified outranks routine and allowed"; else bad "unverified outranks routine and allowed"; fi
+cat > "$work/allowed.json" <<'JSON'
+{"schema": "rhythm-sightread/v1", "kind": "review", "complete": true,
+ "summary": {"updates": 2}, "data": {"updates": [{"verdict": "routine"}, {"verdict": "allowed"}]}}
+JSON
+act action-run.sh run MODE=all FAKE_JSON="$work/allowed.json"
+if out verdict=allowed; then ok "allowed outranks routine"; else bad "allowed outranks routine"; fi
+
 # Findings at fail-on: exit 1 is passed on as the exit-code output.
 act action-run.sh run MODE=all FAKE_EXIT=1
 if [ "$code" = 0 ] && out exit-code=1 && out verdict=hold; then
