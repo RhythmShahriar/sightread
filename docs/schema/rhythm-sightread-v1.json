@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/RhythmShahriar/sightread/blob/master/docs/schema/rhythm-sightread-v1.json",
   "title": "rhythm-sightread/v1",
-  "description": "The JSON Sightread writes: an envelope for every command's --json and -o file.json, and the lines of --jsonl. Fields are only ever added within v1, so validators should allow unknown properties.",
+  "description": "The JSON Sightread writes: the envelope of every command's --json and -o file.json plus the lines of --jsonl. Fields are only ever added within v1, so validators should allow unknown properties.",
   "anyOf": [
     {
       "$ref": "#/$defs/envelope"
