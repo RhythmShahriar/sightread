@@ -333,7 +333,7 @@ func oldRunsScript(pm string, args []string, old, cur *core.Meta) bool {
 }
 
 // sameScript reports whether script name has the same text in old and
-// cur, and so does every script it runs through a package manager.
+// cur, as does every script it runs through a package manager.
 func sameScript(name string, old, cur *core.Meta, seen map[string]bool) bool {
 	if seen[name] {
 		return true
