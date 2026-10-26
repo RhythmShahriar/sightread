@@ -62,10 +62,27 @@ func ReadZip(ctx context.Context, ra io.ReaderAt, size int64, blobs core.BlobSto
 func zipEntry(b *builder, ra io.ReaderAt, f *zip.File) error {
 	raw := f.Name
 	mode := f.Mode()
-	isDir := mode.IsDir() || strings.HasSuffix(raw, "/") || strings.HasSuffix(raw, `\`)
-	name, ok := b.name(raw, isDir)
+	// WordPress (_unzip_file_ziparchive), ZipArchive::extractTo and
+	// Composer treat only a name ending in a slash as a folder; anything
+	// else is written out as a file, whatever the mode bits say. So the
+	// name decides, and a folder mode on another name is read as a file
+	// rather than skipped, or code could land on disk unseen.
+	//
+	// A Windows tool may end an empty folder's name in a backslash; one
+	// with contents is a file, under the name without it.
+	back := strings.HasSuffix(raw, `\`) && !strings.HasSuffix(raw, "/")
+	isDir := strings.HasSuffix(raw, "/") || back && f.UncompressedSize64 == 0
+	named := raw
+	if back && !isDir {
+		named = strings.TrimSuffix(raw, `\`)
+	}
+	name, ok := b.name(named, isDir)
 	if !ok || isDir {
 		return nil
+	}
+	if mode.IsDir() || back {
+		b.issue(core.IssueMalformed, raw, "", "marked as a folder but extractors write it as a file")
+		mode = mode.Perm()
 	}
 	if local, ok := localName(ra, f); ok && local != raw {
 		b.issue(core.IssueMalformed, raw, local, "the local header names another file than the central directory")

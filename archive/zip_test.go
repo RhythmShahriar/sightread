@@ -321,6 +321,48 @@ func TestReadZipEncrypted(t *testing.T) {
 	}
 }
 
+// TestReadZipFolderModeFile: an entry with the folder mode bit but no
+// trailing slash is written as a file by WordPress, ZipArchive and
+// Composer, so it is stored and flagged instead of skipped.
+func TestReadZipFolderModeFile(t *testing.T) {
+	data := makeZip(t,
+		zent{name: "p/a.php", body: "<?php"},
+		zent{name: "p/evil.php", body: "<?php system($_GET['c']);", mode: fs.ModeDir | 0o755},
+		zent{name: `p/win.php\`, body: "<?php echo 1;"},
+	)
+	tree, _ := mustZip(t, data, StripSingle)
+	if got := content(t, tree, "evil.php"); !strings.Contains(got, "system") {
+		t.Errorf("evil.php holds %q", got)
+	}
+	if f, _ := tree.Lookup("evil.php"); !f.Mode.IsRegular() || f.Mode.Perm() != 0o755 || f.Kind == "" {
+		t.Errorf("evil.php mode %v kind %q", f.Mode, f.Kind)
+	}
+	if got := content(t, tree, "win.php"); got != "<?php echo 1;" {
+		t.Errorf("win.php holds %q", got)
+	}
+	if !hasIssue(tree, core.IssueMalformed, "p/evil.php") || !hasIssue(tree, core.IssueMalformed, `p/win.php\`) {
+		t.Errorf("issues %v", issues(tree))
+	}
+}
+
+// TestReadZipRealFolders: folders named with a trailing slash (or an
+// empty backslash one) are skipped quietly, with or without the mode bit.
+func TestReadZipRealFolders(t *testing.T) {
+	data := makeZip(t,
+		zent{name: "p/", mode: fs.ModeDir | 0o755},
+		zent{name: "p/inc/"},
+		zent{name: `p/win\`},
+		zent{name: "p/a.php", body: "<?php"},
+	)
+	tree, _ := mustZip(t, data, StripSingle)
+	if got := paths(tree); !slices.Equal(got, []string{"a.php"}) {
+		t.Errorf("paths %v", got)
+	}
+	if len(tree.Issues) != 0 {
+		t.Errorf("issues %v", issues(tree))
+	}
+}
+
 // TestReadZipLyingHeader: a header that understates the size is caught
 // on the bytes read, not trusted.
 func TestReadZipLyingHeader(t *testing.T) {
@@ -579,6 +621,7 @@ func FuzzZipIndex(f *testing.F) {
 	f.Add(makeZip(f, zent{name: "p/x.php", body: "1"}, zent{name: "p/X.php", body: "2"}, zent{name: "p/x.php", body: "3"}))
 	f.Add(makeZip(f, zent{name: "p/z", body: strings.Repeat("\x00", 1<<16)}))
 	f.Add([]byte("PK\x05\x06" + strings.Repeat("\x00", 18)))
+	f.Add(makeZip(f, zent{name: "p/evil.php", body: "<?php", mode: fs.ModeDir | 0o755}, zent{name: `p/w\`, body: "x"}))
 	lim := core.DefaultLimits()
 	lim.Uncompressed, lim.EntryStored, lim.Entries = 1<<20, 256<<10, 64
 	f.Fuzz(func(t *testing.T, data []byte) {
@@ -590,6 +633,7 @@ func FuzzZipIndex(f *testing.F) {
 		if tree.Bytes > lim.Uncompressed || len(tree.Files) > lim.Entries {
 			t.Fatalf("%d bytes, %d files past the limits", tree.Bytes, len(tree.Files))
 		}
+		accounted(t, data, tree)
 		for _, file := range tree.Files {
 			// Drop the #n of a disambiguated duplicate.
 			p := copySuffix.ReplaceAllString(tree.Root+file.Path, "")
@@ -604,6 +648,34 @@ func FuzzZipIndex(f *testing.F) {
 			}
 		}
 	})
+}
+
+// accounted checks that no entry vanishes: every entry that is not a
+// folder is either stored or named in an issue. A limit hit ends the
+// walk, so the check is skipped then.
+func accounted(t *testing.T, data []byte, tree *core.Tree) {
+	t.Helper()
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
+		return
+	}
+	named := map[string]bool{}
+	for _, is := range tree.Issues {
+		if is.Kind == core.IssueLimit {
+			return
+		}
+		named[is.Path] = true
+	}
+	silent := 0
+	for _, f := range zr.File {
+		folder := strings.HasSuffix(f.Name, "/") || strings.HasSuffix(f.Name, `\`) && f.UncompressedSize64 == 0
+		if !folder && !named[f.Name] && !named[strings.TrimSuffix(f.Name, `\`)] {
+			silent++
+		}
+	}
+	if silent > len(tree.Files) {
+		t.Fatalf("%d entries without an issue, %d files stored", silent, len(tree.Files))
+	}
 }
 
 // TestReadZipTricksOnDisk runs every trick fixture into a Disk store:
