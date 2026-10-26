@@ -1,0 +1,3 @@
+Usage: rhythm-sightread doctor [--offline] [--json]
+
+check sources, cache, tokens and helpers

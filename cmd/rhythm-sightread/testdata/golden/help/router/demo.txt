@@ -1,0 +1,3 @@
+Usage: rhythm sightread demo [--keep]
+
+try it on built-in packages, no network

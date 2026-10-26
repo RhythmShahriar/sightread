@@ -1,0 +1,3 @@
+Usage: rhythm sightread explain <signal-id> | <report.json> <n|fp>
+
+what a signal means and how to review it

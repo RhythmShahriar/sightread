@@ -1,0 +1,3 @@
+Usage: rhythm-sightread signals [--json]
+
+list every signal with its default severity

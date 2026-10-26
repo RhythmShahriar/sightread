@@ -1,0 +1,3 @@
+Usage: rhythm sightread watch -l <sites.yaml> --every <d> [flags]
+
+check sites on a schedule

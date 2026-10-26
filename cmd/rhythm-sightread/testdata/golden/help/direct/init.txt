@@ -1,0 +1,3 @@
+Usage: rhythm-sightread init [ci] [--force]
+
+write .sightread/config.yaml or a CI workflow

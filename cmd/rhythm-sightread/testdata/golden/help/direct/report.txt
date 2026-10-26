@@ -1,0 +1,3 @@
+Usage: rhythm-sightread report <report.json>... -o <file>
+
+render saved JSON as Markdown, HTML or SARIF

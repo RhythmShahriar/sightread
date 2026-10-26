@@ -1,0 +1,3 @@
+Usage: rhythm-sightread verify-report <report.json> [--key <pub>]
+
+check a signed report

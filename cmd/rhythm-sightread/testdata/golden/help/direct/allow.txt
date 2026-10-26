@@ -1,0 +1,3 @@
+Usage: rhythm-sightread allow <ref>... | --from <json> | list | remove | import
+
+record a reviewed version

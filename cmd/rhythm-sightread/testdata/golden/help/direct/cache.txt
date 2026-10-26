@@ -1,0 +1,3 @@
+Usage: rhythm-sightread cache prune [--older <d>]
+
+remove cached archives nothing uses
