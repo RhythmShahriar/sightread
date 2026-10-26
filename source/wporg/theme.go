@@ -83,6 +83,11 @@ func (t *Theme) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Integ
 	return tree, in, nil
 }
 
+// MetaFromTree fills what m takes from the release's own files (the
+// changelog and the readme's contributors), for a tree the caller had
+// cached instead of fetching it.
+func (t *Theme) MetaFromTree(m *core.Meta, tree *core.Tree) { metaFromTree(m, tree) }
+
 // Tags returns {"latest": the info API version}.
 func (t *Theme) Tags(ctx context.Context, slug string) (map[string]string, error) {
 	return t.s.tags(ctx, slug)

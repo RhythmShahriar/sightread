@@ -9,7 +9,6 @@ import (
 	"github.com/RhythmShahriar/sightread/archive"
 	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/fetch"
-	"github.com/RhythmShahriar/sightread/source/changelog"
 )
 
 func init() {
@@ -71,7 +70,8 @@ func (p *Plugin) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 }
 
 // download fetches and indexes m's zip, stripping the slug's folder,
-// gives the tree its manifest hash and reads the changelog into m.
+// gives the tree its manifest hash and reads the changelog and the
+// readme's contributors into m.
 func (s *site) download(ctx context.Context, m *core.Meta) (*core.Tree, error) {
 	slug, v := m.Ref.Name, m.Ref.Version
 	d, err := s.env.Get.Download(ctx, m.Archive.URL, s.lim.Download, s.env.Blobs)
@@ -84,9 +84,14 @@ func (s *site) download(ctx context.Context, m *core.Meta) (*core.Tree, error) {
 	}
 	tree.HashKind = core.HashManifest
 	tree.SHA256 = core.ManifestHash(tree.Files)
-	m.Changelog = changelog.FromTree(tree)
+	metaFromTree(m, tree)
 	return tree, nil
 }
+
+// MetaFromTree fills what m takes from the release's own files (the
+// changelog and the readme's contributors), for a tree the caller had
+// cached instead of fetching it.
+func (p *Plugin) MetaFromTree(m *core.Meta, tree *core.Tree) { metaFromTree(m, tree) }
 
 // VerifyLocal compares an installed copy with WordPress.org's checksums
 // of the installed version. Fewer than half the files matching makes the

@@ -55,12 +55,19 @@ func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 		}
 		return nil, core.Integrity{}, pk.Wrap(err)
 	}
+	s.MetaFromTree(m, tree)
+	return tree, in, nil
+}
+
+// MetaFromTree fills what m takes from the package's own files: the
+// changelog and an install script node-gyp implies. Fetch calls it; a
+// caller that cached the tree calls it instead of fetching.
+func (s *Source) MetaFromTree(m *core.Meta, tree *core.Tree) {
 	m.Changelog = changelog.FromTree(tree)
 	// npm runs node-gyp for a binding.gyp when no install script is set.
 	if f, ok := tree.Lookup("binding.gyp"); ok && f.Mode.IsRegular() {
 		m.HasInstallScript = true
 	}
-	return tree, in, nil
 }
 
 // unpack indexes a downloaded tarball, stripping package/.

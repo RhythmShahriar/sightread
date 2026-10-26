@@ -62,9 +62,16 @@ func (s *Source) Fetch(ctx context.Context, m *core.Meta) (*core.Tree, core.Inte
 		return nil, core.Integrity{}, pk.Wrap(err)
 	}
 	in := verify(m.Archive, d, tree)
+	s.MetaFromTree(m, tree)
+	return tree, in, nil
+}
+
+// MetaFromTree fills what m takes from the package's own files: the
+// composer.json fields Fetch names and the changelog. Fetch calls it; a
+// caller that cached the tree calls it instead of fetching.
+func (s *Source) MetaFromTree(m *core.Meta, tree *core.Tree) {
 	s.readComposerJSON(tree, m)
 	m.Changelog = changelog.FromTree(tree)
-	return tree, in, nil
 }
 
 // distURL points a dist URL at the configured GitHub mirror when there
