@@ -226,7 +226,7 @@ func (e *extractor) jsImport(i int, mod string) {
 	}
 	if jsModules[m] {
 		t := e.toks[i]
-		e.col.add(core.FCall, "import:"+m, t.line, t.line, e.fnAt(i), map[string]string{"module": attrText(mod)})
+		e.col.addAt(t.off, core.FCall, "import:"+m, t.line, t.line, e.fnAt(i), map[string]string{"module": attrText(mod)})
 	}
 }
 
@@ -238,7 +238,7 @@ func (e *extractor) jsEnv(i, j int, alias map[string]bool) int {
 	t := toks[i]
 	read := func(name string) {
 		e.note(i, readEnv)
-		e.col.add(core.FEnvRead, attrText(name), t.line, t.line, e.fnAt(i), map[string]string{"fn": "process.env"})
+		e.col.addAt(t.off, core.FEnvRead, attrText(name), t.line, t.line, e.fnAt(i), map[string]string{"fn": "process.env"})
 	}
 	switch n := at(toks, j); {
 	case n.punct(".") || n.punct("?."):

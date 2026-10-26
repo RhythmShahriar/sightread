@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/RhythmShahriar/sightread/core"
 )
@@ -135,6 +136,7 @@ type flowHooks struct {
 	out     map[string]core.Feature
 	obs     observer // sees the last pass over each body, or nil
 	observe bool     // the current pass is the one obs sees
+	off     int      // byte offset of the call or include being read, for snippets
 }
 
 // observer is what feature extraction (extract.go) plugs into the flow
@@ -251,6 +253,10 @@ func (h *flowHooks) read(s *scope, name string, line int) taint {
 }
 
 func (h *flowHooks) include(s *scope, r res, sp [2]int, line int, kind string) {
+	h.off = -1
+	if sp[0] > 0 && sp[0]-1 < len(s.toks) {
+		h.off = s.toks[sp[0]-1].off
+	}
 	h.sink(s, sinkInclude, kind, line, r.t)
 	if h.observe && h.obs != nil {
 		h.obs.include(s, r, sp, line, kind)
@@ -258,6 +264,10 @@ func (h *flowHooks) include(s *scope, r res, sp [2]int, line int, kind string) {
 }
 
 func (h *flowHooks) call(s *scope, c *callSite) taint {
+	h.off = -1
+	if c.pos < len(s.toks) {
+		h.off = s.toks[c.pos].off
+	}
 	if h.observe && h.obs != nil && h.cur == nil {
 		h.obs.call(s, c)
 	}
@@ -469,7 +479,7 @@ func (h *flowHooks) emit(src source, o origin, sink, sinkName string, line int, 
 		// A flow one level deep: the source is in the caller.
 		attrs["caller"] = caller
 	}
-	snip := h.lines.text(to)
+	snip := h.lines.textAt(to, h.off)
 	if from != to {
 		snip = h.lines.text(from) + " … " + snip
 	}
@@ -586,8 +596,29 @@ func newLineIndex(src []byte) lineIndex {
 	return lineIndex{src: s, starts: starts}
 }
 
+// snippetLine is the most bytes of one line a snippet is cut from: a
+// minified file is one long line; masking it whole for every feature
+// would cost more than the analysis.
+const snippetLine = 400
+
+// short reports whether line n fits a snippet whole.
+func (l lineIndex) short(n int) bool {
+	if n < 1 || n > len(l.starts) {
+		return true
+	}
+	end := len(l.src)
+	if n < len(l.starts) {
+		end = l.starts[n] - 1
+	}
+	return end-l.starts[n-1] <= snippetLine
+}
+
 // text returns line n (1-based) without its line break and outer blanks.
-func (l lineIndex) text(n int) string {
+func (l lineIndex) text(n int) string { return l.textAt(n, -1) }
+
+// textAt is text cut to snippetLine bytes around byte offset off of the
+// file, or from the line's start when off is not on the line.
+func (l lineIndex) textAt(n, off int) string {
 	if n < 1 || n > len(l.starts) {
 		return ""
 	}
@@ -595,6 +626,19 @@ func (l lineIndex) text(n int) string {
 	end := len(l.src)
 	if n < len(l.starts) {
 		end = l.starts[n] - 1
+	}
+	if end-start > snippetLine {
+		from := start
+		if off > start && off < end {
+			from = max(start, off-snippetLine/4)
+		}
+		start, end = from, min(end, from+snippetLine)
+		for start < end && !utf8.RuneStart(l.src[start]) {
+			start++
+		}
+		for end > start && end < len(l.src) && !utf8.RuneStart(l.src[end]) {
+			end--
+		}
 	}
 	return strings.TrimSpace(l.src[start:end])
 }

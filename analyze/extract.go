@@ -68,6 +68,7 @@ type collector struct {
 	lines lineIndex
 	seen  map[string]map[string]string // id -> the stored feature's attrs
 	out   []core.Feature
+	snips map[[2]int]core.Snippet // by line and end line, for short lines
 }
 
 func newCollector(path, ctx string, lines lineIndex) *collector {
@@ -78,12 +79,18 @@ func newCollector(path, ctx string, lines lineIndex) *collector {
 // which the caller may still fill. A feature already recorded at the
 // same line keeps its first attrs.
 func (c *collector) add(kind core.FeatureKind, key string, line, end int, fn string, attrs map[string]string) map[string]string {
-	return c.addCtx(c.ctx, kind, key, line, end, fn, attrs)
+	return c.addCtxAt(c.ctx, -1, kind, key, line, end, fn, attrs)
 }
 
-// addCtx is add with a context of its own (a comment, a decoded
-// payload).
-func (c *collector) addCtx(ctx string, kind core.FeatureKind, key string, line, end int, fn string, attrs map[string]string) map[string]string {
+// addAt is add with the byte offset of the feature in the file, so the
+// snippet of a long line is cut around it.
+func (c *collector) addAt(off int, kind core.FeatureKind, key string, line, end int, fn string, attrs map[string]string) map[string]string {
+	return c.addCtxAt(c.ctx, off, kind, key, line, end, fn, attrs)
+}
+
+// addCtxAt is addAt with a context of its own (a comment, a decoded
+// payload, an asset); off is -1 when unknown.
+func (c *collector) addCtxAt(ctx string, off int, kind core.FeatureKind, key string, line, end int, fn string, attrs map[string]string) map[string]string {
 	if attrs == nil {
 		attrs = map[string]string{}
 	}
@@ -95,15 +102,42 @@ func (c *collector) addCtx(ctx string, kind core.FeatureKind, key string, line, 
 	if end < line {
 		end = line
 	}
-	snip := c.lines.text(line)
-	if end != line {
-		snip += " … " + c.lines.text(end)
-	}
 	c.out = append(c.out, core.Feature{
 		Kind: kind, Key: key, Context: ctx, Attrs: attrs,
-		Ev: core.Evidence{Path: c.path, Line: line, EndLine: end, Func: fn, Snippet: core.NewSnippet(snip)},
+		Ev: core.Evidence{Path: c.path, Line: line, EndLine: end, Func: fn, Snippet: c.snippet(line, end, off)},
 	})
 	return attrs
+}
+
+// snippet is the masked text of lines line to end. Masking is the
+// costly part of a feature, so a snippet that does not depend on the
+// offset (a line shorter than snippetLine) is made once per line.
+func (c *collector) snippet(line, end, off int) core.Snippet {
+	short := c.lines.short(line)
+	if short {
+		if s, ok := c.snips[[2]int{line, end}]; ok {
+			return s
+		}
+	}
+	text := c.lines.textAt(line, off)
+	if end != line {
+		text += " … " + c.lines.text(end)
+	}
+	s := core.NewSnippet(text)
+	if short {
+		if c.snips == nil {
+			c.snips = map[[2]int]core.Snippet{}
+		}
+		c.snips[[2]int{line, end}] = s
+	}
+	return s
+}
+
+// has reports whether a feature is already recorded, so a caller can
+// skip building its attributes.
+func (c *collector) has(ctx string, kind core.FeatureKind, key string, line int) bool {
+	_, ok := c.seen[string(kind)+"\x00"+key+"\x00"+ctx+"\x00"+strconv.Itoa(line)]
+	return ok
 }
 
 // attrText makes package text fit for an attribute: secrets masked,
@@ -138,16 +172,16 @@ var readOrder = []string{readUsers, readOptions, readAdminEmail, readEnv, readCr
 
 // extractor is the flow pass's observer for one file.
 type extractor struct {
-	col   *collector
-	st    *stream
-	toks  []tok
-	lang  lang
-	h     *flowHooks
-	owner []int32 // token index -> body index
-	facts []bodyFacts
-	sends []sendRef
-	// tainted calls the flow pass found whose callee was data, by
-	// position, for FDynCall's source attribute.
+	col    *collector
+	st     *stream
+	toks   []tok
+	lang   lang
+	h      *flowHooks
+	owner  []int32 // token index -> body index
+	facts  []bodyFacts
+	sends  []sendRef
+	work   int             // look-back steps left (spend)
+	uaVars map[string]bool // PHP variables holding the user agent
 }
 
 // sendRef is a send whose "reads" attribute waits for the end of the
@@ -163,6 +197,7 @@ func newExtractor(st *stream, col *collector) *extractor {
 
 func (e *extractor) begin(h *flowHooks) {
 	e.h = h
+	e.work = 1<<20 + 16*len(e.toks)
 	e.owner = make([]int32, len(e.toks))
 	// Bodies come outer first, so an inner body overwrites its range.
 	for bi := 1; bi < len(h.bodies); bi++ {
@@ -255,7 +290,7 @@ func (e *extractor) callEnd(c *callSite) int {
 // callFeature records a feature at a call, spanning its argument window.
 func (e *extractor) callFeature(kind core.FeatureKind, key string, c *callSite, attrs map[string]string) map[string]string {
 	end := e.toks[e.callEnd(c)].line
-	return e.col.add(kind, key, c.line, end, e.fnAt(c.pos), attrs)
+	return e.col.addAt(e.toks[c.pos].off, kind, key, c.line, end, e.fnAt(c.pos), attrs)
 }
 
 // argAttrs returns the folded string and number arguments of a call as
@@ -305,11 +340,25 @@ func (e *extractor) isVarTok(t tok) bool {
 	return t.k == tName && !isJSKeyword(t.text) && !jsRoots[t.text]
 }
 
+// lookBack is how many tokens back an assignment is looked for.
+const lookBack = 4096
+
+// spend uses one step of the file's look-back work and reports whether
+// any was left. The budget keeps a file full of calls linear: past it,
+// variables are no longer followed to their assignments.
+func (e *extractor) spend() bool {
+	e.work--
+	return e.work >= 0
+}
+
 // assigned finds the last plain assignment "name = ..." before token
 // before and returns the range of its right-hand side.
 func (e *extractor) assigned(before int, name string) ([2]int, bool) {
 	toks := e.toks
-	for j := before - 1; j >= 0 && j >= before-4096; j-- {
+	for j := before - 1; j >= 0 && j >= before-lookBack; j-- {
+		if !e.spend() {
+			return [2]int{}, false
+		}
 		t := toks[j]
 		if t.text != name || !e.isVarTok(t) || !at(toks, j+1).punct("=") {
 			continue
@@ -326,7 +375,10 @@ func (e *extractor) assigned(before int, name string) ([2]int, bool) {
 // in JavaScript) before token before and returns its right-hand side.
 func (e *extractor) indexAssigned(before int, name, key string) ([2]int, bool) {
 	toks := e.toks
-	for j := before - 1; j >= 0 && j >= before-4096; j-- {
+	for j := before - 1; j >= 0 && j >= before-lookBack; j-- {
+		if !e.spend() {
+			return [2]int{}, false
+		}
 		t := toks[j]
 		if t.text != name || !e.isVarTok(t) {
 			continue

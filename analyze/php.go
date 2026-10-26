@@ -141,7 +141,7 @@ func (e *extractor) phpCall(s *scope, c *callSite) {
 		watch = c.method
 	}
 	if watch != "" && phpWatched(watch) && (watch != "preg_replace" || evalModifier(c.arg(0).v)) &&
-		(watch != "error_reporting" || isZero(c.arg(0).v)) {
+		(watch != "error_reporting" || isZero(c.arg(0).v)) && !e.col.has(e.col.ctx, core.FCall, watch, c.line) {
 		a := argAttrs(c)
 		if c.via != "" {
 			a["via"] = c.via
@@ -753,6 +753,7 @@ func (e *extractor) credRead(c *callSite, fn string) {
 // $wpdb->users, __halt_compiler and user agent cloaking.
 func (e *extractor) phpScan() {
 	toks := e.toks
+	e.uaVars = e.userAgentVars()
 	for i := 0; i < len(toks); i++ {
 		t := toks[i]
 		switch {
@@ -765,7 +766,7 @@ func (e *extractor) phpScan() {
 					continue
 				}
 			}
-			e.col.add(core.FEnvRead, attrText(key), t.line, t.line, e.fnAt(i), map[string]string{"fn": "$_ENV"})
+			e.col.addAt(t.off, core.FEnvRead, attrText(key), t.line, t.line, e.fnAt(i), map[string]string{"fn": "$_ENV"})
 		case t.k == tName && at(toks, i-1).punct("->") && at(toks, i-2).is(tVar, "$wpdb"):
 			switch t.text {
 			case "users", "usermeta":
@@ -786,11 +787,32 @@ func (e *extractor) phpScan() {
 				start = n.off + len(n.text)
 			}
 			n := max(len(e.col.lines.src)-start, 0)
-			e.col.add(core.FHalt, "__halt_compiler", t.line, t.line, e.fnAt(i), map[string]string{"trailing": strconv.Itoa(n)})
+			e.col.addAt(t.off, core.FHalt, "__halt_compiler", t.line, t.line, e.fnAt(i), map[string]string{"trailing": strconv.Itoa(n)})
 		case t.k == tName && (t.text == "if" || t.text == "elseif") && at(toks, i+1).punct("("):
 			e.uaCheck(i)
 		}
 	}
+}
+
+// userAgentVars finds the variables assigned from the user agent, or
+// from a variable that was: $ua = $_SERVER['HTTP_USER_AGENT'] and
+// $is_bot = preg_match('/bot/i', $ua).
+func (e *extractor) userAgentVars() map[string]bool {
+	toks := e.toks
+	vars := map[string]bool{}
+	for i := 0; i+1 < len(toks); i++ {
+		if toks[i].k != tVar || !toks[i+1].punct("=") {
+			continue
+		}
+		end := e.exprStop(i+2, len(toks))
+		for j := i + 2; j < end; j++ {
+			if t := toks[j]; t.k == tStr && strings.EqualFold(t.val, "HTTP_USER_AGENT") || t.k == tVar && vars[t.text] {
+				vars[toks[i].text] = true
+				break
+			}
+		}
+	}
+	return vars
 }
 
 // uaCheck reads the if at i: a branch on the user agent naming a
@@ -803,6 +825,14 @@ func (e *extractor) uaCheck(i int) {
 		return
 	}
 	cond := [2]int{i + 2, ce}
+	// Most conditions have nothing to do with the user agent: decide that
+	// without following variables.
+	if !e.contains(cond, func(t tok) bool {
+		return t.k == tStr && strings.EqualFold(t.val, "HTTP_USER_AGENT") || t.is(tName, "is_user_logged_in") ||
+			t.k == tVar && e.uaVars[t.text]
+	}) {
+		return
+	}
 	h := e.hints(cond, value{})
 	ua, crawler := false, false
 	for _, l := range h.lits {
@@ -832,7 +862,7 @@ func (e *extractor) uaCheck(i int) {
 		return
 	}
 	end := toks[max(min(then[1], len(toks))-1, i)].line
-	e.col.add(core.FUACheck, key, toks[i].line, end, e.fnAt(i), map[string]string{"prints": prints})
+	e.col.addAt(toks[i].off, core.FUACheck, key, toks[i].line, end, e.fnAt(i), map[string]string{"prints": prints})
 }
 
 // branch is the statement or block starting at i and the index after.

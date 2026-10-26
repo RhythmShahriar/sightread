@@ -331,8 +331,12 @@ func textHosts(s string, literal, freeText bool) []hostRef {
 	return refs
 }
 
-// addHost records a host reference: FDomain always, FURL for a URL.
-func (c *collector) addHost(ctx string, r hostRef, line int, fn string) {
+// addHost records a host reference at byte offset off of the file:
+// FDomain always, FURL for a URL.
+func (c *collector) addHost(ctx string, r hostRef, off, line int, fn string) {
+	if c.has(ctx, core.FDomain, r.key, line) && (r.url == "" || c.has(ctx, core.FURL, attrText(r.url), line)) {
+		return
+	}
 	cat := hostCategory(r.host)
 	if r.ip {
 		cat = catRawIP
@@ -341,20 +345,25 @@ func (c *collector) addHost(ctx string, r hostRef, line int, fn string) {
 	if cat != "" {
 		a["category"] = cat
 	}
-	c.addCtx(ctx, core.FDomain, attrText(r.key), line, line, fn, a)
+	c.addCtxAt(ctx, off, core.FDomain, r.key, line, line, fn, a)
 	if r.url != "" {
-		u := map[string]string{"host": attrText(r.host), "domain": attrText(r.key)}
+		u := map[string]string{"host": attrText(r.host), "domain": r.key}
 		if cat != "" {
 			u["category"] = cat
 		}
-		c.addCtx(ctx, core.FURL, attrText(r.url), line, line, fn, u)
+		c.addCtxAt(ctx, off, core.FURL, attrText(r.url), line, line, fn, u)
 	}
 }
 
-// addTextHosts records the hosts of text that starts on line.
-func (c *collector) addTextHosts(ctx, text string, line int, fn string, literal, freeText bool) {
+// addTextHosts records the hosts of text that starts on line, at
+// about byte offset base of the file (-1 unknown).
+func (c *collector) addTextHosts(ctx, text string, base, line int, fn string, literal, freeText bool) {
 	for _, r := range textHosts(text, literal, freeText) {
-		c.addHost(ctx, r, line+strings.Count(text[:r.off], "\n"), fn)
+		off := -1
+		if base >= 0 {
+			off = base + r.off
+		}
+		c.addHost(ctx, r, off, line+strings.Count(text[:r.off], "\n"), fn)
 	}
 }
 
@@ -375,19 +384,19 @@ func (e *extractor) phpHosts(toks []php.Token) {
 	for _, t := range toks {
 		switch t.Kind {
 		case php.Comment:
-			e.col.addTextHosts(commentCtx(ctx), t.Text, t.Line, "", false, true)
+			e.col.addTextHosts(commentCtx(ctx), t.Text, t.Off, t.Line, "", false, true)
 		case php.InlineHTML:
 			if strings.Contains(t.Text, "://") {
-				e.col.addTextHosts(ctx, t.Text, t.Line, "", false, false)
+				e.col.addTextHosts(ctx, t.Text, t.Off, t.Line, "", false, false)
 			}
 		case php.String:
 			if v, ok := php.StringValue(t); ok {
-				e.col.addTextHosts(ctx, v, t.Line, "", true, false)
+				e.col.addTextHosts(ctx, v, t.Off, t.Line, "", true, false)
 				continue
 			}
 			for _, sg := range php.Segments(t) {
 				if sg.Code == nil {
-					e.col.addTextHosts(ctx, sg.Lit, sg.Line, "", false, false)
+					e.col.addTextHosts(ctx, sg.Lit, t.Off, sg.Line, "", false, false)
 				}
 			}
 		}
@@ -401,14 +410,14 @@ func (e *extractor) jsHosts(toks []js.Token) {
 	for _, t := range toks {
 		switch t.Kind {
 		case js.Comment:
-			e.col.addTextHosts(commentCtx(ctx), t.Text, t.Line, "", false, true)
+			e.col.addTextHosts(commentCtx(ctx), t.Text, t.Off, t.Line, "", false, true)
 		case js.String:
 			if v, ok := js.StringValue(t); ok {
-				e.col.addTextHosts(ctx, v, t.Line, "", true, false)
+				e.col.addTextHosts(ctx, v, t.Off, t.Line, "", true, false)
 			}
 		case js.Template:
 			if v, ok := js.TemplateText(t); ok {
-				e.col.addTextHosts(ctx, v, t.Line, "", strings.HasPrefix(t.Text, "`") && strings.HasSuffix(t.Text, "`"), false)
+				e.col.addTextHosts(ctx, v, t.Off, t.Line, "", strings.HasPrefix(t.Text, "`") && strings.HasSuffix(t.Text, "`"), false)
 			}
 		}
 	}
@@ -435,7 +444,7 @@ func (e *extractor) callHosts(c *callSite, network bool) {
 			}
 		}
 		for _, r := range refs {
-			e.col.addHost(e.col.ctx, r, c.line, e.fnAt(c.pos))
+			e.col.addHost(e.col.ctx, r, e.toks[c.pos].off, c.line, e.fnAt(c.pos))
 		}
 	}
 }
@@ -463,7 +472,7 @@ func jsonHosts(col *collector, src []byte) {
 		line := bytes.Count(src[:min(end, len(src))], []byte("\n")) + 1
 		// A JSON string holds no raw line break; an escaped one must not
 		// move the line.
-		col.addTextHosts(col.ctx, strings.ReplaceAll(s, "\n", " "), line, "", true, false)
+		col.addTextHosts(col.ctx, strings.ReplaceAll(s, "\n", " "), -1, line, "", true, false)
 	}
 }
 
@@ -473,7 +482,7 @@ func docHosts(col *collector, src []byte) {
 	if ctx == core.CtxCode {
 		ctx = core.CtxDoc
 	}
-	col.addTextHosts(ctx, string(src), 1, "", false, true)
+	col.addTextHosts(ctx, string(src), 0, 1, "", false, true)
 }
 
 // jsonFeatures returns the features of a JSON file: its hosts, plus
