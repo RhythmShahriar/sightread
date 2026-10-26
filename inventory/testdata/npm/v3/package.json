@@ -1,0 +1,13 @@
+{
+  "name": "app-v3",
+  "dependencies": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "@acme/billing": "^2.0.0",
+    "@acme/ui-kit": "^3.2.0",
+    "react": "^18.3.1",
+    "local-lib": "file:../local-lib"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.3.3"
+  }
+}

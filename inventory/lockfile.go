@@ -50,7 +50,8 @@ type Options struct {
 	// ComposerRepos is sources.composer.repositories.
 	ComposerRepos []string
 	// NPMRC lists the .npmrc files read for @scope:registry= lines. Nil
-	// means the project's .npmrc and ~/.npmrc.
+	// means the project's .npmrc and ~/.npmrc for ReadNPM and none for
+	// ParseNPMLock.
 	NPMRC []string
 }
 

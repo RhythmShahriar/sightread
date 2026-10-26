@@ -251,13 +251,8 @@ func TestScanJSONKeys(t *testing.T) {
 // FuzzComposerLock: never panics; every entry has a valid name and a
 // LockLine inside the input.
 func FuzzComposerLock(f *testing.F) {
-	for _, p := range []string{"testdata/composer/repos/composer.lock"} {
-		b, err := os.ReadFile(p)
-		if err != nil {
-			f.Fatal(err)
-		}
-		f.Add(b, []byte(`{"require": {"a/b": "^1"}, "repositories": [{"type": "composer", "url": "https://r.example"}]}`))
-	}
+	f.Add([]byte(`{"packages": [{"name": "a/b", "version": "1.0.0", "dist": {"type": "zip", "url": "https://r.example/a.zip", "reference": "abc"}, "notification-url": "https://packagist.org/downloads/"}], "packages-dev": [{"name": "c/d", "version": "dev-main", "source": {"type": "git", "url": "https://g.example/c.git", "reference": "def"}}]}`),
+		[]byte(`{"require": {"a/b": "^1"}, "repositories": [{"type": "composer", "url": "https://r.example"}, {"type": "vcs", "url": "https://g.example/c"}]}`))
 	f.Add([]byte(`{"packages": [{"name": "a/b", "version": "1.0.0", "dist": {"type": "path", "url": "x"}}]}`), []byte(`{"repositories": {"x": false}}`))
 	f.Fuzz(func(t *testing.T, lock, manifest []byte) {
 		p, err := ParseComposer("composer.lock", lock, manifest, nil, Options{})

@@ -1,0 +1,13 @@
+{
+  "name": "app-yarn1",
+  "dependencies": {
+    "@babel/code-frame": "^7.10.4",
+    "chalk": "^2.4.2",
+    "string-width-cjs": "npm:string-width@^4.2.0",
+    "local-lib": "file:./local-lib",
+    "my-fork": "acme/my-fork#v1.0.0"
+  },
+  "devDependencies": {
+    "left-pad": "^1.3.0"
+  }
+}
