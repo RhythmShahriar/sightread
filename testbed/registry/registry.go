@@ -27,6 +27,10 @@ type Options struct {
 	// PlainHTTP serves plain HTTP instead of TLS, for the loopback
 	// mirror tests. The default is TLS with the generated CA.
 	PlainHTTP bool
+	// AnyPort binds every listener to a free loopback port instead of
+	// the documented one, so unit tests run beside make up or a bench.
+	// Port maps a documented port to the bound one.
+	AnyPort bool
 	// Now is the run start, against which relative publish times resolve.
 	// The zero value means time.Now at New.
 	Now time.Time
@@ -41,6 +45,9 @@ type Registry struct {
 	log     *reqLog
 	pkgs    []*builtPkg
 	servers []*http.Server
+	// bound maps a documented port to the one a listener got. It is
+	// empty until Start and identical unless AnyPort is set.
+	bound map[int]int
 }
 
 // New loads every scenario, builds its archives, generates the CA and
@@ -127,6 +134,7 @@ func (r *Registry) Start() error {
 		{ports.OSV, r.osvMux()},
 		{ports.Codeload, r.codeloadMux()},
 	}
+	r.bound = map[int]int{}
 	for _, rt := range routes {
 		if err := r.serve(rt.port, rt.mux); err != nil {
 			_ = r.Close()
@@ -136,13 +144,27 @@ func (r *Registry) Start() error {
 	return nil
 }
 
-// serve starts one listener on 127.0.0.1:port.
+// Port returns the port the listener documented as port is bound to:
+// port itself unless Options.AnyPort is set.
+func (r *Registry) Port(port int) int {
+	if p, ok := r.bound[port]; ok {
+		return p
+	}
+	return port
+}
+
+// serve starts one listener on 127.0.0.1:port, or on a free port with
+// AnyPort.
 func (r *Registry) serve(port int, mux *http.ServeMux) error {
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	if r.opts.AnyPort {
+		addr = "127.0.0.1:0"
+	}
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("listen %s: %w", addr, err)
 	}
+	r.bound[port] = ln.Addr().(*net.TCPAddr).Port
 	srv := &http.Server{
 		Handler:           r.logging(mux),
 		ReadHeaderTimeout: 10 * time.Second,

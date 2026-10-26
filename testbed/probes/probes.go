@@ -32,11 +32,33 @@ type Set struct {
 	listeners    []net.Listener
 	retryState   sync.Map // path -> *int32 attempts
 	redirectHits int32
+	// anyPort binds free ports; bound maps each documented port to the
+	// bound one and unconfigured is where the loopback redirect points.
+	anyPort      bool
+	bound        map[int]int
+	unconfigured int
 }
 
-// Start binds every probe and serves in the background.
-func Start() (*Set, error) {
-	s := &Set{}
+// Start binds every probe on its documented port and serves in the
+// background.
+func Start() (*Set, error) { return startSet(false) }
+
+// StartAnyPort binds every probe on a free loopback port, so unit tests
+// run beside make up or a bench; Port maps a documented port to the
+// bound one.
+func StartAnyPort() (*Set, error) { return startSet(true) }
+
+func startSet(anyPort bool) (*Set, error) {
+	s := &Set{anyPort: anyPort, bound: map[int]int{}, unconfigured: ports.ProbeUnconfigured}
+	if anyPort {
+		// A port that was free a moment ago and has nothing on it now.
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			return nil, err
+		}
+		s.unconfigured = ln.Addr().(*net.TCPAddr).Port
+		_ = ln.Close()
+	}
 	plain := map[int]http.HandlerFunc{
 		ports.ProbeStall:            s.stall,
 		ports.ProbeEndless:          s.endless,
@@ -62,12 +84,29 @@ func Start() (*Set, error) {
 	return s, nil
 }
 
-// serve binds one probe on 127.0.0.1:port.
+// Port returns the port the probe documented as port is bound to.
+func (s *Set) Port(port int) int {
+	if p, ok := s.bound[port]; ok {
+		return p
+	}
+	return port
+}
+
+// Unconfigured is the loopback port the redirect probe points at, where
+// nothing listens: ports.ProbeUnconfigured unless started on any port.
+func (s *Set) Unconfigured() int { return s.unconfigured }
+
+// serve binds one probe on 127.0.0.1:port, or on a free port.
 func (s *Set) serve(port int, h http.HandlerFunc, tlsConf *tls.Config) error {
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	if s.anyPort {
+		addr = "127.0.0.1:0"
+	}
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return fmt.Errorf("probe listen %d: %w", port, err)
 	}
+	s.bound[port] = ln.Addr().(*net.TCPAddr).Port
 	srv := &http.Server{Handler: h, ReadHeaderTimeout: 10 * time.Second}
 	if tlsConf != nil {
 		srv.TLSConfig = tlsConf
@@ -139,7 +178,7 @@ func (s *Set) ssrf(w http.ResponseWriter, req *http.Request) {
 // reaches the dead port).
 func (s *Set) redirectLoopback(w http.ResponseWriter, req *http.Request) {
 	atomic.AddInt32(&s.redirectHits, 1)
-	http.Redirect(w, req, fmt.Sprintf("http://127.0.0.1:%d/", ports.ProbeUnconfigured), http.StatusFound)
+	http.Redirect(w, req, fmt.Sprintf("http://127.0.0.1:%d/", s.unconfigured), http.StatusFound)
 }
 
 // RedirectHits returns how often the loopback-redirect probe was reached.

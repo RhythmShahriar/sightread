@@ -44,7 +44,7 @@ func (r *Registry) githubRepos(w http.ResponseWriter, req *http.Request) {
 			scheme = "http"
 		}
 		host, _, _ := strings.Cut(req.Host, ":")
-		loc := scheme + "://" + host + ":" + strconv.Itoa(ports.Codeload) + "/" + owner + "/" + repo + "/legacy.zip/" + ref
+		loc := scheme + "://" + host + ":" + strconv.Itoa(r.Port(ports.Codeload)) + "/" + owner + "/" + repo + "/legacy.zip/" + ref
 		http.Redirect(w, req, loc, http.StatusFound) //nolint:gosec // loopback testbed; the target is our own codeload listener on 127.0.0.1
 	case strings.HasPrefix(tail, "git/ref/tags/"):
 		r.gitRef(w, req, owner, repo, strings.TrimPrefix(tail, "git/ref/tags/"))

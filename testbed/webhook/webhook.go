@@ -34,8 +34,12 @@ type Receiver struct {
 }
 
 // New creates a receiver bound to the webhook port.
-func New() (*Receiver, error) {
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", ports.Webhook))
+func New() (*Receiver, error) { return NewOn(ports.Webhook) }
+
+// NewOn creates a receiver bound to 127.0.0.1:port; 0 picks a free port
+// (see Port), so unit tests run beside make up or a bench.
+func NewOn(port int) (*Receiver, error) {
+	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		return nil, fmt.Errorf("webhook listen: %w", err)
 	}
@@ -43,6 +47,9 @@ func New() (*Receiver, error) {
 	r.srv = &http.Server{Handler: http.HandlerFunc(r.handle), ReadHeaderTimeout: 10 * time.Second}
 	return r, nil
 }
+
+// Port returns the port the receiver listens on.
+func (r *Receiver) Port() int { return r.ln.Addr().(*net.TCPAddr).Port }
 
 // Start serves in the background.
 func (r *Receiver) Start() {

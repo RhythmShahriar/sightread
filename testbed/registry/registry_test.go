@@ -119,7 +119,7 @@ versions:
 // client and a base-URL maker.
 func startPlain(t *testing.T, dir string) (*Registry, *http.Client) {
 	t.Helper()
-	reg, err := New(Options{PackagesDir: dir, StateDir: t.TempDir(), PlainHTTP: true})
+	reg, err := New(Options{PackagesDir: dir, StateDir: t.TempDir(), PlainHTTP: true, AnyPort: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,10 @@ func startPlain(t *testing.T, dir string) (*Registry, *http.Client) {
 	return reg, &http.Client{}
 }
 
-func base(port int) string { return fmt.Sprintf("http://127.0.0.1:%d", port) }
+// baseOf is the plain HTTP base URL of the listener documented as port.
+func baseOf(reg *Registry, port int) string {
+	return fmt.Sprintf("http://127.0.0.1:%d", reg.Port(port))
+}
 
 // getJSON fetches url and decodes the JSON body into a generic map.
 func getJSON(t *testing.T, c *http.Client, url string) map[string]any {
@@ -180,7 +183,7 @@ func TestFixtureRegistry(t *testing.T) {
 	reg, c := startPlain(t, dir)
 
 	t.Run("wporg info shape and version", func(t *testing.T) {
-		got := getJSON(t, c, base(ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=example-plugin")
+		got := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=example-plugin")
 		assertKeys(t, "wporg", got, "wporg-plugin-info.json")
 		if got["version"] != "1.3.0" {
 			t.Errorf("bad state: want version 1.3.0, got %v", got["version"])
@@ -188,12 +191,12 @@ func TestFixtureRegistry(t *testing.T) {
 	})
 
 	t.Run("checksums match the built zip", func(t *testing.T) {
-		got := getJSON(t, c, base(ports.WPOrg)+"/plugin-checksums/example-plugin/1.3.0.json")
+		got := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugin-checksums/example-plugin/1.3.0.json")
 		files, _ := got["files"].(map[string]any)
 		if len(files) == 0 {
 			t.Fatal("no checksums")
 		}
-		zipBytes := fetch(t, c, base(ports.WPOrg)+"/plugin/example-plugin.1.3.0.zip")
+		zipBytes := fetch(t, c, baseOf(reg, ports.WPOrg)+"/plugin/example-plugin.1.3.0.zip")
 		if len(zipBytes) == 0 {
 			t.Fatal("empty zip")
 		}
@@ -207,14 +210,14 @@ func TestFixtureRegistry(t *testing.T) {
 	})
 
 	t.Run("propfind returns the creator", func(t *testing.T) {
-		body := propfind(t, c, base(ports.WPOrg)+"/svn/plugins/example-plugin/tags/1.3.0/")
+		body := propfind(t, c, baseOf(reg, ports.WPOrg)+"/svn/plugins/example-plugin/tags/1.3.0/")
 		if !strings.Contains(body, "newcommitter") {
 			t.Errorf("PROPFIND missing creator newcommitter: %s", body)
 		}
 	})
 
 	t.Run("packagist p2 shape", func(t *testing.T) {
-		got := getJSON(t, c, base(ports.Packagist)+"/p2/vendor/example.json")
+		got := getJSON(t, c, baseOf(reg, ports.Packagist)+"/p2/vendor/example.json")
 		assertKeys(t, "packagist", got, "packagist-p2.json")
 		if got["minified"] != "composer/2.0" {
 			t.Errorf("not minified composer/2.0: %v", got["minified"])
@@ -223,7 +226,7 @@ func TestFixtureRegistry(t *testing.T) {
 
 	t.Run("github zipball redirects to codeload", func(t *testing.T) {
 		noFollow := &http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
-		resp, err := noFollow.Get(base(ports.GitHub) + "/repos/vendor/example/zipball/dddddddeeeeeeefffffff") //nolint:noctx // test
+		resp, err := noFollow.Get(baseOf(reg, ports.GitHub) + "/repos/vendor/example/zipball/dddddddeeeeeeefffffff") //nolint:noctx // test
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -232,7 +235,7 @@ func TestFixtureRegistry(t *testing.T) {
 			t.Fatalf("want 302, got %d", resp.StatusCode)
 		}
 		loc := resp.Header.Get("Location")
-		if !strings.Contains(loc, fmt.Sprintf("127.0.0.1:%d", ports.Codeload)) {
+		if !strings.Contains(loc, fmt.Sprintf("127.0.0.1:%d", reg.Port(ports.Codeload))) {
 			t.Errorf("redirect not to codeload: %s", loc)
 		}
 		z := fetch(t, c, loc)
@@ -242,14 +245,14 @@ func TestFixtureRegistry(t *testing.T) {
 	})
 
 	t.Run("github git ref", func(t *testing.T) {
-		got := getJSON(t, c, base(ports.GitHub)+"/repos/vendor/example/git/ref/tags/v2.0.0")
+		got := getJSON(t, c, baseOf(reg, ports.GitHub)+"/repos/vendor/example/git/ref/tags/v2.0.0")
 		assertKeys(t, "github-ref", got, "github-ref.json")
 	})
 
 	t.Run("npm packument and version doc", func(t *testing.T) {
-		got := getJSON(t, c, base(ports.NPM)+"/example-pkg")
+		got := getJSON(t, c, baseOf(reg, ports.NPM)+"/example-pkg")
 		assertKeys(t, "npm packument", got, "npm-packument.json")
-		ver := getJSON(t, c, base(ports.NPM)+"/example-pkg/2.0.0")
+		ver := getJSON(t, c, baseOf(reg, ports.NPM)+"/example-pkg/2.0.0")
 		assertKeys(t, "npm version", ver, "npm-version.json")
 		dist, _ := ver["dist"].(map[string]any)
 		if dist["integrity"] == nil {
@@ -258,11 +261,11 @@ func TestFixtureRegistry(t *testing.T) {
 	})
 
 	t.Run("osv querybatch and vuln", func(t *testing.T) {
-		body := postJSON(t, c, base(ports.OSV)+"/v1/querybatch", `{"queries":[{"package":{"name":"example-pkg","ecosystem":"npm"},"version":"2.0.0"},{"package":{"name":"example-pkg","ecosystem":"npm"},"version":"1.0.0"}]}`)
+		body := postJSON(t, c, baseOf(reg, ports.OSV)+"/v1/querybatch", `{"queries":[{"package":{"name":"example-pkg","ecosystem":"npm"},"version":"2.0.0"},{"package":{"name":"example-pkg","ecosystem":"npm"},"version":"1.0.0"}]}`)
 		if !strings.Contains(body, "MAL-2026-0001") {
 			t.Errorf("querybatch did not report the advisory: %s", body)
 		}
-		got := getJSON(t, c, base(ports.OSV)+"/v1/vulns/MAL-2026-0001")
+		got := getJSON(t, c, baseOf(reg, ports.OSV)+"/v1/vulns/MAL-2026-0001")
 		assertKeys(t, "osv vuln", got, "osv-vuln.json")
 	})
 
@@ -270,14 +273,14 @@ func TestFixtureRegistry(t *testing.T) {
 		if err := WriteState(reg.opts.StateDir, "example-plugin", StateGood); err != nil {
 			t.Fatal(err)
 		}
-		got := getJSON(t, c, base(ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=example-plugin")
+		got := getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=example-plugin")
 		if got["version"] != "1.2.0" {
 			t.Errorf("good state: want version 1.2.0, got %v", got["version"])
 		}
 		if err := WriteState(reg.opts.StateDir, "example-plugin", StateBad); err != nil {
 			t.Fatal(err)
 		}
-		got = getJSON(t, c, base(ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=example-plugin")
+		got = getJSON(t, c, baseOf(reg, ports.WPOrg)+"/plugins/info/1.2/?action=plugin_information&request[slug]=example-plugin")
 		if got["version"] != "1.3.0" {
 			t.Errorf("bad state: want version 1.3.0, got %v", got["version"])
 		}
@@ -287,13 +290,13 @@ func TestFixtureRegistry(t *testing.T) {
 func TestArchivesDeterministic(t *testing.T) {
 	dir := fixtureDir(t)
 	reg1, c1 := startPlain(t, dir)
-	tgz1 := fetch(t, c1, base(ports.NPM)+"/example-pkg/-/example-pkg-2.0.0.tgz")
-	ver1 := getJSON(t, c1, base(ports.NPM)+"/example-pkg/2.0.0")
+	tgz1 := fetch(t, c1, baseOf(reg1, ports.NPM)+"/example-pkg/-/example-pkg-2.0.0.tgz")
+	ver1 := getJSON(t, c1, baseOf(reg1, ports.NPM)+"/example-pkg/2.0.0")
 	_ = reg1.Close()
 
 	reg2, c2 := startPlain(t, dir)
-	tgz2 := fetch(t, c2, base(ports.NPM)+"/example-pkg/-/example-pkg-2.0.0.tgz")
-	ver2 := getJSON(t, c2, base(ports.NPM)+"/example-pkg/2.0.0")
+	tgz2 := fetch(t, c2, baseOf(reg2, ports.NPM)+"/example-pkg/-/example-pkg-2.0.0.tgz")
+	ver2 := getJSON(t, c2, baseOf(reg2, ports.NPM)+"/example-pkg/2.0.0")
 	_ = reg2.Close()
 
 	if !bytes.Equal(tgz1, tgz2) {
@@ -308,7 +311,7 @@ func TestArchivesDeterministic(t *testing.T) {
 
 func TestTLSWithCA(t *testing.T) {
 	dir := fixtureDir(t)
-	reg, err := New(Options{PackagesDir: dir, StateDir: t.TempDir()})
+	reg, err := New(Options{PackagesDir: dir, StateDir: t.TempDir(), AnyPort: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -321,7 +324,7 @@ func TestTLSWithCA(t *testing.T) {
 		t.Fatal("could not add CA")
 	}
 	c := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{RootCAs: pool, MinVersion: tls.VersionTLS12}}}
-	resp, err := c.Get(fmt.Sprintf("https://127.0.0.1:%d/example-pkg", ports.NPM)) //nolint:noctx // test
+	resp, err := c.Get(fmt.Sprintf("https://127.0.0.1:%d/example-pkg", reg.Port(ports.NPM))) //nolint:noctx // test
 	if err != nil {
 		t.Fatal(err)
 	}

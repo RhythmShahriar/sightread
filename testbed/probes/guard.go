@@ -26,7 +26,7 @@ type Guard struct {
 	done     chan struct{}
 }
 
-// StartGuard listens on 127.0.0.1:port.
+// StartGuard listens on 127.0.0.1:port (0 picks a free port; see Port).
 func StartGuard(port int) (*Guard, error) {
 	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
@@ -65,6 +65,9 @@ func (g *Guard) record(c net.Conn) {
 	g.attempts = append(g.attempts, line)
 	g.mu.Unlock()
 }
+
+// Port returns the port the guard listens on.
+func (g *Guard) Port() int { return g.ln.Addr().(*net.TCPAddr).Port }
 
 // Attempts returns the request lines seen so far, oldest first.
 func (g *Guard) Attempts() []string {

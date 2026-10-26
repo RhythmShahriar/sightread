@@ -15,14 +15,6 @@ import (
 	"time"
 )
 
-// Test ports for the fronts and the guard, outside the testbed's own
-// ranges so a running testbed and the tests never collide.
-const (
-	testFrontRetry = 31120
-	testFrontStall = 31121
-	testGuard      = 31122
-)
-
 // upstream echoes the Host it received and the path.
 func upstream(t *testing.T) *httptest.Server {
 	t.Helper()
@@ -38,13 +30,13 @@ func noProxyClient() *http.Client {
 }
 
 func TestFrontRetry(t *testing.T) {
-	f, err := StartFront(testFrontRetry, FrontModeRetry, upstream(t).URL, nil, nil)
+	f, err := StartFront(0, FrontModeRetry, upstream(t).URL, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
 	c := noProxyClient()
-	base := fmt.Sprintf("http://127.0.0.1:%d", testFrontRetry)
+	base := fmt.Sprintf("http://127.0.0.1:%d", f.Port())
 
 	resp, err := c.Get(base + "/retrylib")
 	if err != nil {
@@ -61,7 +53,7 @@ func TestFrontRetry(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
 	// The Host header is kept, so the registry builds URLs on the front.
-	if resp.StatusCode != http.StatusOK || string(body) != fmt.Sprintf("127.0.0.1:%d /retrylib", testFrontRetry) {
+	if resp.StatusCode != http.StatusOK || string(body) != fmt.Sprintf("127.0.0.1:%d /retrylib", f.Port()) {
 		t.Fatalf("second request: %d %q", resp.StatusCode, body)
 	}
 	if f.Limited() != 1 || f.Requests() != 2 {
@@ -79,13 +71,13 @@ func TestFrontRetry(t *testing.T) {
 }
 
 func TestFrontStall(t *testing.T) {
-	f, err := StartFront(testFrontStall, FrontModeStall, upstream(t).URL, nil, nil)
+	f, err := StartFront(0, FrontModeStall, upstream(t).URL, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f.Close()
 	c := noProxyClient()
-	base := fmt.Sprintf("http://127.0.0.1:%d", testFrontStall)
+	base := fmt.Sprintf("http://127.0.0.1:%d", f.Port())
 
 	// Metadata passes through.
 	resp, err := c.Get(base + "/stalllib")
@@ -119,17 +111,17 @@ func TestFrontStall(t *testing.T) {
 }
 
 func TestFrontRefusesUnknownMode(t *testing.T) {
-	if _, err := StartFront(testFrontRetry, "flaky", "http://127.0.0.1:1", nil, nil); err == nil {
+	if _, err := StartFront(0, "flaky", "http://127.0.0.1:1", nil, nil); err == nil {
 		t.Fatal("an unknown mode was accepted")
 	}
 }
 
 func TestGuardCountsAndRefuses(t *testing.T) {
-	g, err := StartGuard(testGuard)
+	g, err := StartGuard(0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	proxy, _ := neturl.Parse(fmt.Sprintf("http://127.0.0.1:%d", testGuard))
+	proxy, _ := neturl.Parse(fmt.Sprintf("http://127.0.0.1:%d", g.Port()))
 	c := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxy)}, Timeout: 5 * time.Second}
 
 	// Documentation addresses (RFC 5737): never contacted, the guard

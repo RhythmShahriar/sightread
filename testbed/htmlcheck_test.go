@@ -27,10 +27,6 @@ import (
 // runs no script but its own hashed one and requests nothing. The static
 // half (escaping, the CSP) is report's TestHTMLHostileText.
 
-// sinkAddr is where every hostile payload points. It is in this lane's
-// loopback port range; nothing else listens there.
-const sinkAddr = "127.0.0.1:31121"
-
 // marker is the attribute a payload sets on <html> when it runs. Text
 // that merely shows the payload can't produce it: the browser
 // serializes a real attribute as data-sr-ran="...", text as escaped
@@ -38,9 +34,10 @@ const sinkAddr = "127.0.0.1:31121"
 const marker = `data-sr-ran="`
 
 // payloads returns hostile package text that, if the page let it run,
-// sets marker or fetches from the sink. n numbers the payload so a hit
-// says which one got through.
-func payloads() []string {
+// sets marker or fetches from the sink at sinkAddr (a free loopback
+// port the test listens on). n numbers the payload so a hit says which
+// one got through.
+func payloads(sinkAddr string) []string {
 	sink := "http://" + sinkAddr
 	ran := func(n int) string { return fmt.Sprintf("document.documentElement.setAttribute('data-sr-ran','%d')", n) }
 	return []string{
@@ -60,8 +57,8 @@ func payloads() []string {
 
 // hostileReport is the sample report with every piece of package text a
 // writer shows replaced by the payloads.
-func hostileReport() *core.Report {
-	p := payloads()
+func hostileReport(sinkAddr string) *core.Report {
+	p := payloads(sinkAddr)
 	all := strings.Join(p, " ")
 	r := coretest.SampleReport()
 	for i := range r.Updates {
@@ -131,8 +128,9 @@ func findChrome() string {
 	return ""
 }
 
-// sink counts every request that reaches sinkAddr.
+// sink counts every request that reaches it on addr.
 type sink struct {
+	addr string
 	mu   sync.Mutex
 	hits []string
 }
@@ -155,11 +153,12 @@ func (s *sink) take() []string {
 
 func startSink(t *testing.T) *sink {
 	t.Helper()
-	ln, err := net.Listen("tcp", sinkAddr)
+	// A free port, so the check runs beside make up and other tests.
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
-		t.Fatalf("listen on %s for the payload sink: %v", sinkAddr, err)
+		t.Fatalf("listen for the payload sink: %v", err)
 	}
-	s := &sink{}
+	s := &sink{addr: ln.Addr().String()}
 	srv := &http.Server{Handler: s, ReadHeaderTimeout: 5 * time.Second}
 	go func() { _ = srv.Serve(ln) }()
 	t.Cleanup(func() { _ = srv.Close() })
@@ -221,7 +220,7 @@ func TestHTMLReportHeadless(t *testing.T) {
 		// before its DOM is read; in the report it would show as a hit
 		// and a missing page.
 		var live []string
-		for _, p := range payloads() {
+		for _, p := range payloads(s.addr) {
 			if !strings.Contains(p, "http-equiv") {
 				live = append(live, p)
 			}
@@ -245,7 +244,7 @@ func TestHTMLReportHeadless(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := core.WriterFor(core.FormatHTML).Write(f, hostileReport(), core.WriteOptions{Version: "test", Program: "rhythm-sightread"}); err != nil {
+		if err := core.WriterFor(core.FormatHTML).Write(f, hostileReport(s.addr), core.WriteOptions{Version: "test", Program: "rhythm-sightread"}); err != nil {
 			t.Fatal(err)
 		}
 		if err := f.Close(); err != nil {

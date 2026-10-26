@@ -55,8 +55,13 @@ func New(stateDir string) (*Canary, error) {
 }
 
 // Start binds the canary port and accepts connections in the background.
-func (c *Canary) Start() error {
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", ports.Canary))
+func (c *Canary) Start() error { return c.StartOn(ports.Canary) }
+
+// StartOn binds 127.0.0.1:port instead; 0 picks a free port (see Port),
+// so unit tests run beside make up or a bench. The fixtures' payloads
+// target ports.Canary, so the benchmark always uses Start.
+func (c *Canary) StartOn(port int) error {
+	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		return fmt.Errorf("canary listen: %w", err)
 	}
@@ -138,3 +143,6 @@ func (c *Canary) Close() error {
 	}
 	return err
 }
+
+// Port returns the port the canary listens on, once started.
+func (c *Canary) Port() int { return c.ln.Addr().(*net.TCPAddr).Port }

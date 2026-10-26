@@ -9,19 +9,17 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/RhythmShahriar/sightread/testbed/ports"
 )
 
 func TestWebhookStoresDeliveries(t *testing.T) {
-	r, err := New()
+	r, err := NewOn(0)
 	if err != nil {
 		t.Fatal(err)
 	}
 	r.Start()
 	defer r.Close()
 
-	url := fmt.Sprintf("http://127.0.0.1:%d/notify", ports.Webhook)
+	url := fmt.Sprintf("http://127.0.0.1:%d/notify", r.Port())
 	// Give the listener a moment to accept.
 	deadline := time.Now().Add(2 * time.Second)
 	var resp *http.Response

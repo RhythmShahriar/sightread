@@ -42,9 +42,11 @@ type Front struct {
 	limited  atomic.Int32
 	stalled  atomic.Int32
 	requests atomic.Int32
+	port     int
 }
 
-// StartFront serves mode on 127.0.0.1:port, proxying to upstream (for
+// StartFront serves mode on 127.0.0.1:port (0 picks a free port; see
+// Port), proxying to upstream (for
 // example https://127.0.0.1:18903). serverTLS is the registry's TLS
 // configuration so the front presents a certificate of the same CA; nil
 // serves plain HTTP. caPEM verifies the upstream; nil trusts the system
@@ -80,6 +82,7 @@ func StartFront(port int, mode, upstream string, serverTLS *tls.Config, caPEM []
 	if err != nil {
 		return nil, fmt.Errorf("front listen %d: %w", port, err)
 	}
+	f.port = ln.Addr().(*net.TCPAddr).Port
 	if serverTLS != nil {
 		ln = tls.NewListener(ln, serverTLS)
 	}
@@ -118,6 +121,9 @@ func (f *Front) handler(next http.Handler) http.Handler {
 		next.ServeHTTP(w, req)
 	})
 }
+
+// Port returns the port the front listens on.
+func (f *Front) Port() int { return f.port }
 
 // Limited counts the 429 answers given.
 func (f *Front) Limited() int { return int(f.limited.Load()) }

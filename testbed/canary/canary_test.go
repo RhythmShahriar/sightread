@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/RhythmShahriar/sightread/testbed/ports"
 )
 
 func TestCanaryCountsConnections(t *testing.T) {
@@ -19,7 +17,7 @@ func TestCanaryCountsConnections(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := c.Start(); err != nil {
+	if err := c.StartOn(0); err != nil {
 		t.Fatal(err)
 	}
 	defer c.Close()
@@ -28,7 +26,7 @@ func TestCanaryCountsConnections(t *testing.T) {
 		t.Fatal("canary fired before any connection")
 	}
 	for i := 0; i < 3; i++ {
-		conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", ports.Canary), time.Second)
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", c.Port()), time.Second)
 		if err != nil {
 			t.Fatal(err)
 		}

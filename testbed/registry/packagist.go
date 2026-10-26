@@ -100,7 +100,7 @@ func (r *Registry) githubBase(req *http.Request) string {
 		scheme = "http"
 	}
 	host, _, _ := strings.Cut(req.Host, ":")
-	return scheme + "://" + host + ":" + strconv.Itoa(ports.GitHub)
+	return scheme + "://" + host + ":" + strconv.Itoa(r.Port(ports.GitHub))
 }
 
 // normalizeComposer turns "1.2.3" into Composer's "1.2.3.0" normalized
