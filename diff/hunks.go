@@ -34,11 +34,11 @@ const hunkWork = 64 << 20
 //
 // A change with nothing to read gives no hunks: a rename by hash or a
 // mode change. A change of line endings only gives one hunk holding
-// EOLNote, and a binary file one with the note
-// `\ binary file changed (<old size> to <new size>)`; both have every
+// EOLNote; a binary file gives one with the note
+// `\ binary file changed (<old size> to <new size>)`. Both have every
 // start and count 0. A minified file (or any line over 64 KiB) is
-// compared in tokens cut at punctuation; those hunks are for reading,
-// since the tokens are not lines, and have Tokens set.
+// compared in tokens cut at punctuation; those hunks have Tokens set
+// and are for reading, since the tokens are not lines.
 func (Differ) Hunks(ctx context.Context, d *core.Diff, path string, contextLines int) ([]core.Hunk, error) {
 	if d == nil {
 		return nil, fmt.Errorf("hunks of %s: no diff", path)

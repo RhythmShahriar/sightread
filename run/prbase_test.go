@@ -311,7 +311,7 @@ type pathScorer struct {
 func (s pathScorer) SetConfigPath(p string) { *s.path = p }
 
 // TestScorerConfigPath: the scorer's notes name the --config file as
-// typed, and the usual file (empty) without --config.
+// typed; without --config they name the usual file (empty).
 func TestScorerConfigPath(t *testing.T) {
 	for _, file := range []string{"ci/sightread.yaml", ""} {
 		w := runtest.Install(t)
@@ -353,7 +353,7 @@ func (b baseInventory) ResolveBase(context.Context, string) (string, error) {
 }
 
 // TestChangesBasePinned: without --base, the allow entries are read at
-// the base the inventory picks (the merge base), not at origin/HEAD, and
+// the base the inventory picks (the merge base), not at origin/HEAD;
 // the change set's warnings reach the report. With --base, or when no
 // base can be found, nothing is pinned.
 func TestChangesBasePinned(t *testing.T) {

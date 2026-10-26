@@ -55,9 +55,9 @@ func TestLinkSameTarget(t *testing.T) {
 	}
 }
 
-// Positive: a link moved to another target is modified, its hunk shows
-// both targets, and two archive links with different targets are never
-// paired as a rename (both have the zero hash).
+// Positive: a link moved to another target is modified and its hunk
+// shows both targets. Two archive links with different targets are
+// never paired as a rename (both have the zero hash).
 func TestLinkRetargeted(t *testing.T) {
 	blobs := coretest.MemBlobs()
 	old := tree(blobs, archiveLink("lib", "vendor/lib"), archiveLink("a", "x"))

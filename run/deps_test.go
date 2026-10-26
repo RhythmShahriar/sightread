@@ -50,7 +50,7 @@ func TestNewDependencyInfo(t *testing.T) {
 }
 
 // TestNearPopularMaintainers: a new dependency one edit from a popular
-// name carries its maintainers, and the popular package's maintainers
+// name carries its maintainers and the popular package's maintainers
 // are looked up beside it; a new dependency near nothing popular looks
 // up nothing more.
 func TestNearPopularMaintainers(t *testing.T) {
