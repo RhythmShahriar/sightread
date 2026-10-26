@@ -38,7 +38,7 @@ func parsePlan(t *testing.T, args ...string) (*plan, error) {
 
 // TestHelpGolden: every command's --help page matches its golden file
 // (go test ./cmd/rhythm-sightread -update rewrites them), under both
-// program names, and its prose wraps at helpWidth.
+// program names. Its prose wraps at helpWidth.
 func TestHelpGolden(t *testing.T) {
 	for _, prog := range []string{"rhythm-sightread", "rhythm sightread"} {
 		for _, c := range commands() {

@@ -106,7 +106,7 @@ type Report struct {
 type Target struct {
 	Path string
 	// RepoPath is Path relative to the git repository that holds it,
-	// with forward slashes ("." for the root), and "" outside one. A
+	// with forward slashes ("." for the root); "" outside one. A
 	// report whose Path was redacted or merged still finds its files in
 	// the repository through it (SARIF).
 	RepoPath  string
