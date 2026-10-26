@@ -1,0 +1,20 @@
+eco: wp-plugin
+note: a .min.js jQuery update whose packed strings changed
+lookalike: true
+features_old:
+  found:
+  - kind: blob
+    key: b64:j360
+    path: js/jquery.min.js
+    line: 2
+    attrs: {encoding: base64, size: '700', entropy: '5.1', decoded: data}
+  minified: [js/jquery.min.js]
+features_new:
+  found:
+  - kind: blob
+    key: b64:j371
+    path: js/jquery.min.js
+    line: 2
+    attrs: {encoding: base64, size: '720', entropy: '5.1', decoded: data}
+  minified: [js/jquery.min.js]
+forbid: [obfuscation, eval-dynamic]

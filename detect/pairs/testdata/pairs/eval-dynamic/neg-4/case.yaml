@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: call_user_func with a plain literal callback, as WordPress code does everywhere
+lookalike: true
+features_old: []
+features_new:
+- kind: dyn-call
+  key: call_user_func
+  path: plugin.php
+  line: 12
+  attrs: {callee: myplugin_init, source: literal}
+forbid: [eval-dynamic]

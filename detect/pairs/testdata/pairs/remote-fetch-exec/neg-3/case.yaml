@@ -1,0 +1,8 @@
+eco: npm
+note: a README example that fetches and evaluates, in a comment
+lookalike: true
+features_old: []
+features_new:
+- {kind: flow, key: remote->eval, path: lib/index.js, line: 2, context: comment}
+- {kind: flow, key: remote->exec, path: docs/install.md, line: 5, context: doc}
+forbid: [remote-fetch-exec]

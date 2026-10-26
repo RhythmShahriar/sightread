@@ -1,0 +1,17 @@
+eco: wp-plugin
+note: eval inside a comment and in a test
+features_old: []
+features_new:
+- kind: eval
+  key: eval
+  path: inc/a.php
+  line: 3
+  context: comment
+  attrs: {source: variable}
+- kind: eval
+  key: eval
+  path: tests/test-a.php
+  line: 9
+  context: test
+  attrs: {source: request}
+forbid: [eval-dynamic]

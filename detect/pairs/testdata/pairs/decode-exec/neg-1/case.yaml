@@ -1,0 +1,9 @@
+eco: wp-plugin
+note: base64_decode into output (an inline image), nothing runs it
+lookalike: true
+new: {img.php: '<?php header(''Content-Type: image/png''); echo base64_decode(LOGO);'}
+features_old: []
+features_new:
+- {kind: call, key: base64_decode, path: img.php, line: 1}
+- {kind: call, key: header, path: img.php, line: 1}
+forbid: [decode-exec, eval-dynamic]

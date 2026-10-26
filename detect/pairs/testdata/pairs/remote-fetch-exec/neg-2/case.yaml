@@ -1,0 +1,7 @@
+eco: wp-plugin
+note: the old version already fetched and ran remote code; a capability that moved stays quiet
+features_old:
+- {kind: flow, key: remote->eval, path: updater.php, line: 3}
+features_new:
+- {kind: flow, key: remote->eval, path: inc/updater.php, line: 40}
+forbid: [remote-fetch-exec]

@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: eval(base64_decode(...)) quoted in a comment that warns about it
+features_old: []
+features_new:
+- kind: eval
+  key: eval
+  path: inc/security.php
+  line: 12
+  context: comment
+  attrs: {arg: base64_decode($x)}
+forbid: [decode-exec, eval-dynamic]

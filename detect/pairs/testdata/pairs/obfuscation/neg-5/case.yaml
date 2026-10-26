@@ -1,0 +1,320 @@
+eco: wp-plugin
+note: a new file of ordinary code next to its peers
+lookalike: true
+old:
+  inc/page-0.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_0() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_0() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-1.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_1() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_1() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-2.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_2() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_2() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-3.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_3() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_3() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-4.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_4() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_4() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-5.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_5() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_5() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+new:
+  inc/page-0.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_0() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_0() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-1.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_1() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_1() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-2.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_2() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_2() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-3.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_3() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_3() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-4.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_4() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_4() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-5.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_5() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_5() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-new.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_99() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_99() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+features_old: []
+features_new: []
+forbid: [obfuscation]

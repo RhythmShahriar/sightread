@@ -1,0 +1,297 @@
+eco: wp-plugin
+note: a new code file far more random than the plugin's other code
+old:
+  inc/page-0.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_0() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_0() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-1.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_1() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_1() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-2.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_2() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_2() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-3.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_3() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_3() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-4.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_4() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_4() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-5.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_5() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_5() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+new:
+  inc/page-0.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_0() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_0() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-1.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_1() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_1() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-2.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_2() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_2() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-3.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_3() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_3() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-4.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_4() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_4() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/page-5.php: |
+    <?php
+    /**
+     * Settings screen of the plugin.
+     */
+    function acme_settings_page_5() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+        $options = get_option( 'acme_options', array() );
+        echo '<div class="wrap"><h1>' . esc_html__( 'Settings', 'acme' ) . '</h1>';
+        foreach ( $options as $key => $value ) {
+            printf( '<p>%s: %s</p>', esc_html( $key ), esc_html( $value ) );
+        }
+        echo '</div>';
+    }
+
+    /**
+     * Saves the settings form.
+     */
+    function acme_save_settings_5() {
+        check_admin_referer( 'acme_save' );
+        update_option( 'acme_options', array_map( 'sanitize_text_field', wp_unslash( $_POST['acme'] ) ) );
+    }
+  inc/loader.php: <?php $k='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';
+features_old: []
+features_new: []
+expect:
+- {id: obfuscation, min_severity: high}

@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: preg_replace with /e always fires
+features_old: []
+features_new:
+- kind: eval
+  key: preg_replace_e
+  path: lib/format.php
+  line: 5
+  attrs: {source: literal, arg: '''/(.*)/e'''}
+expect:
+- {id: eval-dynamic, min_severity: high}

@@ -1,0 +1,11 @@
+eco: npm
+note: esbuild's __require helper
+lookalike: true
+features_old: []
+features_new:
+- kind: dyn-call
+  key: __require
+  path: dist/index.cjs
+  line: 3
+  attrs: {callee: __require, source: variable}
+forbid: [eval-dynamic]

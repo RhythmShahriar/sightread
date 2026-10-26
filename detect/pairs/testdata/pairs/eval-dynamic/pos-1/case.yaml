@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: eval of request data
+features_old: []
+features_new:
+- kind: eval
+  key: eval
+  path: admin/tools.php
+  line: 22
+  attrs: {source: request, arg: '$_POST[''code'']'}
+expect:
+- {id: eval-dynamic, min_severity: high}

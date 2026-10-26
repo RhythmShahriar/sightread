@@ -1,0 +1,13 @@
+eco: wp-plugin
+note: 'Essential Plugin 2.6.7: @$clean(...) with a function name taken from fetched data'
+features_old: []
+features_new:
+- kind: dyn-call
+  key: $clean
+  path: includes/class-update.php
+  line: 118
+  attrs: {source: remote}
+  snippet: '@$clean($this->version_cache, $this->changelog);'
+  func: version_info_clean
+expect:
+- {id: eval-dynamic, min_severity: high}
