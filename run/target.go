@@ -275,12 +275,14 @@ func (r *reviewer) resolveChanges(ctx context.Context, rep *core.Report) ([]*tar
 		return nil, err
 	}
 	cr.Repo = repo
-	bumps, notChecked, err := r.inv.Changes(ctx, cr)
+	cs, err := r.inv.Changes(ctx, cr)
 	if err != nil {
 		return nil, withCommand(err, r.req.Command)
 	}
+	bumps := cs.Bumps
 	rep.Target = core.Target{Path: repo, Kind: "changes"}
-	for _, nc := range notChecked {
+	rep.Warnings = append(rep.Warnings, cs.Warnings...)
+	for _, nc := range cs.NotChecked {
 		if Selected(nc.Eco, nc.Name, r.req.Only, r.req.Skip) {
 			rep.NotChecked = append(rep.NotChecked, nc)
 		}

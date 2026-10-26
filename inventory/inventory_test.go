@@ -307,12 +307,15 @@ func TestReaderChanges(t *testing.T) {
 		"a/package-lock.json": packageLock(map[string]string{"a": "^1"}, lockPkg{"node_modules/a", "1.0.0", reg("a", "1.0.0"), sri("a1")}),
 		"b/package-lock.json": packageLock(map[string]string{"a": "^1"}, lockPkg{"node_modules/a", "1.0.1", reg("a", "1.0.1"), sri("a2")}),
 	})
-	bumps, nc, err := (&Reader{}).Changes(context.Background(), core.ChangesRequest{
+	cs, err := (&Reader{}).Changes(context.Background(), core.ChangesRequest{
 		Before: filepath.Join(dir, "a", "package-lock.json"), After: filepath.Join(dir, "b", "package-lock.json")})
-	if err != nil || len(nc) != 0 || !slices.Equal(bumpList(bumps), []string{"a 1.0.0>1.0.1"}) {
-		t.Fatalf("bumps %q nc %+v err %v", bumpList(bumps), nc, err)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, _, err := (&Reader{}).Changes(context.Background(), core.ChangesRequest{Before: "x"}); core.CodeOf(err) != core.EBadFlag {
+	if len(cs.NotChecked) != 0 || cs.Base != "" || !slices.Equal(bumpList(cs.Bumps), []string{"a 1.0.0>1.0.1"}) {
+		t.Fatalf("change set %+v", cs)
+	}
+	if _, err := (&Reader{}).Changes(context.Background(), core.ChangesRequest{Before: "x"}); core.CodeOf(err) != core.EBadFlag {
 		t.Errorf("err = %v", err)
 	}
 }

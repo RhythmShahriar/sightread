@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/RhythmShahriar/sightread/core"
+	"github.com/RhythmShahriar/sightread/inventory/gitref"
 )
 
 func init() { core.SetInventory(&Reader{}) }
@@ -119,15 +120,16 @@ func (rd *Reader) Read(ctx context.Context, req core.InventoryRequest) (*core.Si
 	return site, nil
 }
 
-// Changes reads what a lockfile change moves (ReadChanges). The
-// warnings of the change set are not returned: core.Inventory has no
-// place for them yet.
-func (rd *Reader) Changes(ctx context.Context, req core.ChangesRequest) ([]core.Bump, []core.NotChecked, error) {
-	cs, err := ReadChanges(ctx, req, ChangesOptions{Options: rd.Options})
-	if err != nil {
-		return nil, nil, err
-	}
-	return cs.Bumps, cs.NotChecked, nil
+// Changes reads what a lockfile change moves (ReadChanges).
+func (rd *Reader) Changes(ctx context.Context, req core.ChangesRequest) (*core.ChangeSet, error) {
+	return ReadChanges(ctx, req, ChangesOptions{Options: rd.Options})
+}
+
+// ResolveBase is the ref Changes compares repo with when the request
+// names none (gitref.ResolveBase), so run can read the allow entries
+// and the config at that same ref.
+func (rd *Reader) ResolveBase(ctx context.Context, repo string) (string, error) {
+	return gitref.ResolveBase(ctx, repo, nil)
 }
 
 // LocalTree reads an installed folder into a tree (see LocalTree).

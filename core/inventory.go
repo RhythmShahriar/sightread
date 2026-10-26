@@ -99,10 +99,25 @@ type Bump struct {
 	To   Installed
 }
 
+// ChangeSet is what a lockfile change moves: one Bump per package whose
+// version, integrity, resolved URL or reference changed and per added
+// package. Removed packages are not listed: nothing new runs.
+type ChangeSet struct {
+	// Base is the ref the working tree was compared with: the --base
+	// value, origin/$GITHUB_BASE_REF or the merge-base commit. Empty for
+	// --before and --after.
+	Base       string
+	Bumps      []Bump
+	NotChecked []NotChecked
+	// Warnings are lines for the report, such as a lockfile that is not
+	// at the base so every package in it counts as added.
+	Warnings []string
+}
+
 // Inventory reads what is installed (package inventory).
 type Inventory interface {
 	Read(ctx context.Context, req InventoryRequest) (*Site, error)
-	Changes(ctx context.Context, req ChangesRequest) ([]Bump, []NotChecked, error)
+	Changes(ctx context.Context, req ChangesRequest) (*ChangeSet, error)
 	// LocalTree reads an installed folder into a tree, the same shape an
 	// archive gives, so it can be diffed and verified.
 	LocalTree(ctx context.Context, dir string, blobs BlobStore, lim Limits) (*Tree, error)

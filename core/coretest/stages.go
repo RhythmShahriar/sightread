@@ -76,8 +76,10 @@ func (s *FakeSource) Install(t testing.TB) {
 // FakeInventory is a core.Inventory over canned data.
 type FakeInventory struct {
 	Site       *core.Site
+	Base       string // the ChangeSet's Base
 	Bumps      []core.Bump
 	NotChecked []core.NotChecked
+	Warnings   []string // the ChangeSet's Warnings
 	// Dirs maps a folder LocalTree is asked for to its files.
 	Dirs map[string]map[string]string
 	Err  error
@@ -96,9 +98,12 @@ func (f *FakeInventory) Read(_ context.Context, req core.InventoryRequest) (*cor
 	return &s, nil
 }
 
-// Changes returns Bumps and NotChecked.
-func (f *FakeInventory) Changes(context.Context, core.ChangesRequest) ([]core.Bump, []core.NotChecked, error) {
-	return f.Bumps, f.NotChecked, f.Err
+// Changes returns Base, Bumps, NotChecked and Warnings as a change set.
+func (f *FakeInventory) Changes(context.Context, core.ChangesRequest) (*core.ChangeSet, error) {
+	if f.Err != nil {
+		return nil, f.Err
+	}
+	return &core.ChangeSet{Base: f.Base, Bumps: f.Bumps, NotChecked: f.NotChecked, Warnings: f.Warnings}, nil
 }
 
 // LocalTree builds the tree of Dirs[dir].

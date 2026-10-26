@@ -18,18 +18,8 @@ import (
 	"github.com/RhythmShahriar/sightread/inventory/gitref"
 )
 
-// ChangeSet is what a lockfile change moves: one Bump per package whose
-// version, integrity, resolved URL or reference changed and per added
-// package. Removed packages are not listed: nothing new runs.
-type ChangeSet struct {
-	// Base is the ref the working tree was compared with: the --base
-	// value, origin/$GITHUB_BASE_REF or the merge-base commit. Empty for
-	// --before and --after.
-	Base       string
-	Bumps      []core.Bump
-	NotChecked []core.NotChecked
-	Warnings   []string
-}
+// ChangeSet is what a lockfile change moves (core.ChangeSet).
+type ChangeSet = core.ChangeSet
 
 // ChangesOptions tune ReadChanges.
 type ChangesOptions struct {
