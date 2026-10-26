@@ -479,13 +479,17 @@ func secretFeatures(p string, src []byte, code bool) []core.Feature {
 	}
 	col := newCollector(p, pathContext(p), newLineIndex(src))
 	found := map[secrets.Secret]bool{}
-	add := func(s secrets.Secret, line int) {
+	add := func(s secrets.Secret, line int, raw []byte) {
 		found[s] = true
-		col.add(core.FSecret, s.Kind+":"+attrText(s.String()), line, line, "", map[string]string{
+		attrs := map[string]string{
 			"kind":   s.Kind,
 			"name":   attrText(s.Name),
 			"masked": s.Masked,
-		})
+		}
+		if exampleSecret(string(raw), s) {
+			attrs["example"] = "true"
+		}
+		col.add(core.FSecret, s.Kind+":"+attrText(s.String()), line, line, "", attrs)
 	}
 	line := 0
 	for rest := src; len(rest) > 0; {
@@ -495,7 +499,7 @@ func secretFeatures(p string, src []byte, code bool) []core.Feature {
 			n = len(rest)
 		}
 		for _, s := range keep(secrets.FindSecrets(rest[:n])) {
-			add(s, line)
+			add(s, line, rest[:n])
 		}
 		rest = rest[min(n+1, len(rest)):]
 	}
@@ -508,17 +512,69 @@ func secretFeatures(p string, src []byte, code bool) []core.Feature {
 	for _, b := range pemBlocks(src) {
 		for _, s := range keep(secrets.FindSecrets(src[b.start:b.end])) {
 			if !found[s] {
-				add(s, b.line)
+				add(s, b.line, src[b.start:b.end])
 			}
 		}
 	}
 	// Fail toward reporting: anything still not placed goes on line 1.
 	for _, s := range all {
 		if !found[s] {
-			add(s, 1)
+			add(s, 1, nil)
 		}
 	}
 	return col.out
+}
+
+// maskBullets is what secrets.Mask puts in place of the hidden part.
+const maskBullets = "•••••"
+
+// exampleSecret reports whether the value of s in raw is a documented
+// example: its hidden part holds EXAMPLE or XXXX. Only the value counts,
+// never the rest of the line, so "// for example" or an example.com
+// host next to a real token does not lower it. The value is found by
+// lining raw up with what secrets.Redact makes of it: each masked span
+// is the kept prefix and the bullets, and the raw text after it starts
+// where the redacted text resumes.
+func exampleSecret(raw string, s secrets.Secret) bool {
+	if raw == "" || !strings.HasSuffix(s.Masked, maskBullets) {
+		return false
+	}
+	red := secrets.Redact(raw)
+	i, j := 0, 0 // raw[i:] lines up with red[j:]
+	for {
+		q := strings.Index(red[j:], maskBullets)
+		if q < 0 {
+			return false
+		}
+		q += j
+		hiddenAt := i + (q - j) // raw[hiddenAt:] starts the hidden part
+		after := q + len(maskBullets)
+		// The next stretch of redacted text that is raw text too.
+		next := strings.Index(red[after:], maskBullets)
+		seg := red[after:]
+		if next >= 0 {
+			seg = red[after : after+next]
+		}
+		end := len(raw)
+		if seg != "" {
+			k := strings.Index(raw[min(hiddenAt+1, len(raw)):], seg)
+			if k < 0 {
+				return false
+			}
+			end = min(hiddenAt+1, len(raw)) + k
+		}
+		if hiddenAt > len(raw) || end < hiddenAt {
+			return false
+		}
+		prefix := strings.TrimSuffix(s.Masked, maskBullets)
+		if strings.HasSuffix(red[j:q], prefix) {
+			v := strings.ToUpper(raw[hiddenAt:end])
+			if strings.Contains(v, "EXAMPLE") || strings.Contains(v, "XXXX") {
+				return true
+			}
+		}
+		i, j = end, after
+	}
 }
 
 // pemBlock is a "-----BEGIN" block at src[start:end] that starts on line.

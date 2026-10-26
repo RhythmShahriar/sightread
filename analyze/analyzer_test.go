@@ -756,3 +756,43 @@ func TestEncodedArgs(t *testing.T) {
 		t.Errorf("%d calls checked, want base64_decode twice, gzinflate and curl_init: %q", calls, describe(fs))
 	}
 }
+
+// TestSecretExampleValueOnly: a secret is a documented example only when
+// its own value holds EXAMPLE or XXXX; the words elsewhere on the line
+// leave a real-looking token as it is.
+func TestSecretExampleValueOnly(t *testing.T) {
+	gh := coretest.FakeKey(coretest.KeyGitHub)
+	exampleGH := "gh" + "p_" + strings.Repeat("x", 36)
+	exampleAWS := "AK" + "IA" + "IOSFODNN7" + "EXAMPLE"
+	for line, want := range map[string]bool{
+		"const t = '" + gh + "'; // for example":                false,
+		"fetch('https://api.example.com/?t=" + gh + "')":        false,
+		"const t = '" + exampleGH + "';":                        true,
+		"aws = '" + exampleAWS + "' // EXAMPLE":                 true,
+		"a = '" + exampleAWS + "'; b = '" + gh + "' // example": true, // the AWS one
+	} {
+		fs := secretFeatures("inc/a.js", []byte(line+"\n"), true)
+		if len(fs) == 0 {
+			t.Errorf("%q: no secret found", line)
+			continue
+		}
+		got := false
+		for _, f := range fs {
+			if f.Attrs["example"] == "true" {
+				got = true
+			}
+		}
+		if got != want {
+			t.Errorf("%q: example %v, want %v (%+v)", line, got, want, fs)
+		}
+	}
+	// With two secrets on the line only the example one is marked.
+	fs := secretFeatures("inc/a.js", []byte("a = '"+exampleAWS+"'; b = '"+gh+"';\n"), true)
+	marks := map[string]string{}
+	for _, f := range fs {
+		marks[f.Attrs["kind"]] = f.Attrs["example"]
+	}
+	if len(marks) != 2 || marks["aws-access-key"] != "true" || marks["github-token"] != "" {
+		t.Errorf("marks %v", marks)
+	}
+}

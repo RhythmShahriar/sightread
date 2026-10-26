@@ -214,6 +214,23 @@ func TestSecretMasked(t *testing.T) {
 	}
 }
 
+// TestSecretExampleByValue: only the analyzer's example mark lowers a
+// secret; EXAMPLE or an example host elsewhere on the line does not.
+func TestSecretExampleByValue(t *testing.T) {
+	key := coretest.FakeKey(coretest.KeyGitHub)
+	f := coretest.Feat(core.FSecret, "github-token", "inc/config.php", 3)
+	f.Ev.Snippet = core.NewSnippet("$k = '" + key + "'; // for EXAMPLE, see https://api.example.com")
+	got := detectAll(t, netDetector{}, subject(core.WPPlugin, nil, coretest.Features(f)))
+	if len(got) != 1 || got[0].Severity != cli.SeverityMedium || got[0].Demoted != "" {
+		t.Fatalf("a real token next to the word example was lowered: %+v", got)
+	}
+	f.Attrs = map[string]string{AttrExample: "true"}
+	got = detectAll(t, netDetector{}, subject(core.WPPlugin, nil, coretest.Features(f)))
+	if len(got) != 1 || got[0].Severity != cli.SeverityInfo || got[0].Demoted != DemotedExample {
+		t.Fatalf("an example value stayed: %+v", got)
+	}
+}
+
 // wp-config.php constants count only when sent out.
 func TestWPConfigRead(t *testing.T) {
 	read := coretest.Feat(core.FCredRead, "wp-config:DB_PASSWORD", "inc/a.php", 3)

@@ -499,11 +499,13 @@ func secretFinding(f core.Feature) core.Finding {
 	if sec := f.Attrs[AttrSecret]; sec != "" {
 		fd.Evidence = core.NewSnippet(cmp.Or(f.Key, "secret") + ": " + sec)
 	}
-	ev := strings.ToUpper(fd.Evidence.String())
+	// Only the value decides: the analyzer marks one that holds EXAMPLE
+	// or XXXX. The rest of the line ("// for example", an example.com
+	// host) says nothing about the token.
 	switch {
 	case f.Context == core.CtxTest || testPath(f.Ev.Path):
 		fd.Severity, fd.Demoted = cli.SeverityInfo, DemotedTestPath
-	case f.Attrs[AttrExample] == "true" || strings.Contains(ev, "EXAMPLE") || strings.Contains(ev, "XXXX"):
+	case f.Attrs[AttrExample] == "true":
 		fd.Severity, fd.Demoted = cli.SeverityInfo, DemotedExample
 	}
 	return fd
