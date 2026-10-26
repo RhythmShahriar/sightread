@@ -84,17 +84,24 @@ func scriptAttr(s string) string {
 	return s
 }
 
-// textFeatures is AnalyzeText: PHP and JavaScript text is analysed as a
-// file of that kind; anything else is read as shell lines, the way npm
-// runs a script.
+// textFeatures is AnalyzeText without limits: PHP and JavaScript text
+// is analysed as a file of that kind; anything else is read as shell
+// lines, the way npm runs a script.
 func textFeatures(kind core.FileKind, p string, src []byte) []core.Feature {
+	fs, _ := analyzeText(kind, p, src, decodeEnv{budget: newDecodeBudget(), layers: maxLayers})
+	return fs
+}
+
+// analyzeText is textFeatures within env's limits, with the reasons
+// the text was not analysed whole.
+func analyzeText(kind core.FileKind, p string, src []byte, env decodeEnv) ([]core.Feature, []core.Unanalysed) {
 	switch kind {
 	case core.KindPHP:
-		return codeFeatures(langPHP, p, src, pathContext(p))
-	case core.KindJS:
-		return codeFeatures(langJS, p, src, pathContext(p))
+		return analyzeCode(langPHP, p, src, pathContext(p), env)
+	case core.KindJS, core.KindMinified:
+		return analyzeCode(langJS, p, src, pathContext(p), env)
 	}
-	return shellFeatures(p, src)
+	return shellFeatures(p, src), nil
 }
 
 // fetchers are commands that download; shells are commands that run

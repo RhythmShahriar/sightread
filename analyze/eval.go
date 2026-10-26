@@ -195,6 +195,9 @@ func (s *scope) walk(i, end int) {
 		if j <= i {
 			j = i + 1
 		}
+		if s.f.st.clk.tick(j - i) {
+			return
+		}
 		i = j
 	}
 }

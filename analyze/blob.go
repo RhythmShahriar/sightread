@@ -90,7 +90,8 @@ var errLimit = errors.New(reasonDecodeLimit)
 // decodeEnv is what one file's analysis may decode.
 type decodeEnv struct {
 	budget *decodeBudget
-	layers int // decode layers left for payloads found in this file
+	layers int    // decode layers left for payloads found in this file
+	clk    *clock // the file's time budget, shared with its payloads
 }
 
 // decodeStep undoes one encoding of data, or reports false when it does
@@ -599,7 +600,7 @@ func (b *blobScan) payload(l lang, text []byte, line, end, layers int) {
 	if l == langPHP && !bytes.Contains(text, []byte("<?")) {
 		text = append([]byte("<?php "), text...)
 	}
-	fs, un := analyzeCode(l, b.path, text, core.CtxDecoded, decodeEnv{budget: b.env.budget, layers: layers})
+	fs, un := analyzeCode(l, b.path, text, core.CtxDecoded, decodeEnv{budget: b.env.budget, layers: layers, clk: b.env.clk})
 	if len(un) > 0 {
 		b.un = true
 	}
@@ -659,9 +660,9 @@ func addDataURI(col *collector, env decodeEnv, p, val string, off, line, end int
 
 // assetFeatures returns the data URIs of a style sheet or SVG file as
 // FBlob features in Context asset.
-func assetFeatures(p string, src []byte, budget *decodeBudget) ([]core.Feature, []core.Unanalysed) {
+func assetFeatures(p string, src []byte, env decodeEnv) ([]core.Feature, []core.Unanalysed) {
 	col := newCollector(p, ctxAsset, newLineIndex(src))
-	env := decodeEnv{budget: budget, layers: maxLayers}
+	env.layers = maxLayers
 	limit := false
 	var payloads []core.Feature
 	s := string(src)
@@ -681,7 +682,7 @@ func assetFeatures(p string, src []byte, budget *decodeBudget) ([]core.Feature, 
 		}
 		line := strings.Count(s[:k], "\n") + 1
 		addDataURI(col, env, p, s[k:e], k, line, line, func(l lang, text []byte, layers int) {
-			fs, un := analyzeCode(l, p, text, core.CtxDecoded, decodeEnv{budget: budget, layers: layers})
+			fs, un := analyzeCode(l, p, text, core.CtxDecoded, decodeEnv{budget: env.budget, layers: layers, clk: env.clk})
 			limit = limit || len(un) > 0
 			for _, f := range fs {
 				f.Ev.Line, f.Ev.EndLine = line, line

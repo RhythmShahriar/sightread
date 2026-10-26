@@ -185,6 +185,9 @@ func runFlow(st *stream, lines lineIndex, path, ctx string, obs observer) []core
 		if i == 0 || b.key == "" {
 			continue
 		}
+		if st.clk.tick(0) {
+			break // out of time: the file is listed as unanalysed
+		}
 		sum := &summary{}
 		h.cur = sum
 		f.budget = budget()
@@ -202,6 +205,9 @@ func runFlow(st *stream, lines lineIndex, path, ctx string, obs observer) []core
 	// passes over a body let a value tainted late (in a callback) reach
 	// a sink read earlier.
 	for _, b := range bodies {
+		if st.clk.tick(0) {
+			break
+		}
 		s := newScope(f, b.name)
 		for pass := range 2 {
 			h.observe = pass == 1

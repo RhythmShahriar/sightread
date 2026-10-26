@@ -55,7 +55,8 @@ func (t tok) punct(text string) bool { return t.k == tPunct && t.text == text }
 type stream struct {
 	lang  lang
 	toks  []tok
-	match []int // index of the matching bracket, or len(toks) when unbalanced
+	match []int  // index of the matching bracket, or len(toks) when unbalanced
+	clk   *clock // the file's time budget, ticked by the walk
 }
 
 func newStream(l lang, toks []tok) *stream {
@@ -172,7 +173,14 @@ func normPHP(src []php.Token) []tok {
 
 // normJS turns JavaScript lexer tokens into a normalised stream.
 func normJS(src []js.Token) []tok {
-	out := make([]tok, 0, len(src)/2)
+	n := 0
+	for _, t := range src {
+		if t.Kind != js.Whitespace && t.Kind != js.Comment {
+			n++
+		}
+	}
+	// A minified bundle has no whitespace to drop: size the stream once.
+	out := make([]tok, 0, n+n/16)
 	for _, t := range src {
 		switch t.Kind {
 		case js.Whitespace, js.Comment, js.Error:

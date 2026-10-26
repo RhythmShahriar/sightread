@@ -15,5 +15,8 @@
 // without resolving any (hosts.go, hostcat.go). Encoded literals are
 // decoded within fixed limits and their payloads analysed again
 // (blob.go). Minified bundles, Unicode tricks in code and code hidden in
-// images, fonts and text files are told apart in kinds.go.
+// images, fonts and text files are told apart in kinds.go. The Analyzer
+// (analyzer.go) runs all of it over a tree on a worker pool within the
+// size and time limits; what it could not read is listed as
+// Unanalysed.
 package analyze

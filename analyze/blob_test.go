@@ -29,6 +29,8 @@ func randomBytes(n int, seed uint64) []byte {
 	return b
 }
 
+func testEnv() decodeEnv { return decodeEnv{budget: newDecodeBudget(), layers: maxLayers} }
+
 func b64(b []byte) string { return base64.StdEncoding.EncodeToString(b) }
 
 func deflateRaw(b []byte) []byte {
@@ -271,19 +273,19 @@ func TestAssetDataURIs(t *testing.T) {
 	font := b64(append([]byte("wOF2"), randomBytes(800, 5)...))
 	script := b64([]byte(`require('child_process').exec(process.env.X); // ` + strings.Repeat("x", 600)))
 	css := "@font-face {\n  font-family: X;\n  src: url(data:font/woff2;base64," + font + ") format('woff2');\n}\n"
-	fs, un := assetFeatures("assets/style.css", []byte(css), newDecodeBudget())
+	fs, un := assetFeatures("assets/style.css", []byte(css), testEnv())
 	if len(un) != 0 || len(fs) != 1 || fs[0].Kind != core.FBlob || fs[0].Context != ctxAsset || fs[0].Attrs["decoded"] != decodedData || fs[0].Ev.Line != 3 {
 		t.Errorf("font data URI: %+v %v", fs, un)
 	}
 	svg := `<svg xmlns="http://www.w3.org/2000/svg"><script href="data:text/javascript;base64,` + script + `"/></svg>`
-	fs, _ = assetFeatures("icon.svg", []byte(svg), newDecodeBudget())
+	fs, _ = assetFeatures("icon.svg", []byte(svg), testEnv())
 	if !hasDecoded(fs, core.FCall, "child_process.exec") {
 		t.Errorf("script data URI not analysed: %q", describeCtx(fs))
 	}
 	if f, ok := blobOf(fs); !ok || f.Attrs["decoded"] != decodedCode {
 		t.Errorf("script data URI blob %+v", f)
 	}
-	fs, _ = assetFeatures("small.css", []byte("a{background:url(data:image/gif;base64,R0lGODlhAQABAAAAACw=)}"), newDecodeBudget())
+	fs, _ = assetFeatures("small.css", []byte("a{background:url(data:image/gif;base64,R0lGODlhAQABAAAAACw=)}"), testEnv())
 	if len(fs) != 0 {
 		t.Errorf("a tiny data URI is a blob: %q", describe(fs))
 	}

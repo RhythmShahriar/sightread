@@ -6,6 +6,7 @@ package analyze
 import (
 	"bytes"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -558,6 +559,9 @@ func assetFileFeatures(p string, src []byte, env decodeEnv) ([]core.Feature, []c
 		"ext":  strings.ToLower(path.Ext(p)),
 	})
 	fs, un := analyzeCode(l, p, src[k:], ctx, env)
+	// Binary data after the code reads as unterminated strings now and
+	// then; only the limits count here.
+	un = slices.DeleteFunc(un, func(u core.Unanalysed) bool { return u.Reason != reasonDecodeLimit && u.Reason != reasonTimeLimit })
 	for _, f := range fs {
 		f.Ev.Line += line - 1
 		f.Ev.EndLine += line - 1
