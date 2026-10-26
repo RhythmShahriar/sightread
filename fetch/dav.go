@@ -26,9 +26,10 @@ type DAV interface {
 	Propfind(ctx context.Context, url string, depth int, kind string, limit int64) ([]byte, error)
 }
 
-// propfindBody asks for only the properties Sightread reads, so a
-// folder listing stays small.
-const propfindBody = `<?xml version="1.0" encoding="utf-8"?>` +
+// PropfindBody is the PROPFIND request body: it asks for only the
+// properties Sightread reads, so a folder listing stays small. A source
+// sends it through Getter.Text when its Getter is not a DAV.
+const PropfindBody = `<?xml version="1.0" encoding="utf-8"?>` +
 	`<propfind xmlns="DAV:"><prop><resourcetype/><getcontentlength/>` +
 	`<creator-displayname/><creationdate/></prop></propfind>`
 
@@ -50,7 +51,7 @@ func (c *Client) Propfind(ctx context.Context, rawURL string, depth int, kind st
 	}
 	key := "PROPFIND " + strconv.Itoa(depth) + " " + u.String()
 	body, _, err := cache.Load(store, ctx, kind, key, func(ctx context.Context) ([]byte, error) {
-		req, err := http.NewRequestWithContext(ctx, "PROPFIND", u.String(), strings.NewReader(propfindBody)) //nolint:gosec // u passed the allowlist in parse
+		req, err := http.NewRequestWithContext(ctx, "PROPFIND", u.String(), strings.NewReader(PropfindBody)) //nolint:gosec // u passed the allowlist in parse
 		if err != nil {
 			return nil, err
 		}
