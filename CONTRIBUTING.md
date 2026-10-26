@@ -87,7 +87,7 @@ token text joins back to the input.
   `example.com`, `example.org`, `.test` hosts and `127.0.0.1`.
 - A crasher found by `make fuzz` or the nightly run is committed under
   `testdata/fuzz/<FuzzName>/` with the fix, so it stays a regression test.
-- CI runs each target for 30 seconds on every pull request and the nightly run for 10 minutes.
+- CI runs each target for 60 seconds on every pull request and the nightly run for 10 minutes.
 
 ## Tests and the network
 

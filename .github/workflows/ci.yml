@@ -58,10 +58,15 @@ jobs:
       - run: scripts/comment-test.sh
       - run: scripts/verify-release-test.sh
 
-  # Every parser has a fuzz target; each runs for 30 seconds.
+  # Every parser has a fuzz target; each runs for 60 seconds, the
+  # targets split over four jobs so a pull request waits about 20 minutes.
   fuzz:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,7 +74,7 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-      - run: make fuzz FUZZTIME=30s
+      - run: make fuzz FUZZTIME=60s SHARD=${{ matrix.shard }} SHARDS=4
 
   # Sightread never runs fetched code. The tests run with a PATH that
   # holds only go and git, so a test that reached for php, node, npm or
