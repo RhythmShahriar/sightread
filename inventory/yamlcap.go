@@ -6,6 +6,7 @@ package inventory
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -57,6 +58,9 @@ func (n *ynode) str() string {
 
 // parseYAML decodes data into a ynode tree within the caps.
 func parseYAML(data []byte) (*ynode, error) {
+	if yamlNodeFloor(data) > maxYAMLNodes {
+		return nil, errYAMLBomb
+	}
 	var doc yaml.Node
 	if err := yaml.Unmarshal(data, &doc); err != nil {
 		return nil, err
@@ -66,6 +70,77 @@ func parseYAML(data []byte) (*ynode, error) {
 	}
 	c := &yamlCopier{budget: maxYAMLNodes}
 	return c.copy(&doc, 0)
+}
+
+// yamlNodeFloor counts, in one pass and without decoding, the marks
+// that each start at least one node: a block entry "- ", a mapping
+// colon ": " or ":" at the end of a line; a flow "," "[" or "{".
+// Quoted text and comments are skipped; a quote opens only where a
+// token starts, so a stray one cannot hide the marks after it.
+// yaml.Unmarshal builds the whole tree before the copier can count it,
+// at a few hundred bytes a node, so a flat 32 MiB "- a" list costs
+// gigabytes; this count turns such a file away first. On a real
+// lockfile it stays near the true count and so never refuses one the
+// copier would take.
+func yamlNodeFloor(data []byte) int {
+	n := 0
+	var quote byte // the open quote on this line, or 0
+	lineStart := true
+	for i := 0; i < len(data); i++ {
+		c := data[i]
+		if c == '\n' {
+			quote, lineStart = 0, true
+			continue
+		}
+		if quote != 0 {
+			if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		next := byte('\n')
+		if i+1 < len(data) {
+			next = data[i+1]
+		}
+		spaceAfter := next == ' ' || next == '\n' || next == '\r' || next == '\t'
+		switch c {
+		case ' ', '\t', '\r':
+			continue
+		case '#':
+			if i == 0 || isYAMLSpace(data[i-1]) {
+				for i+1 < len(data) && data[i+1] != '\n' {
+					i++
+				}
+				continue
+			}
+		case '\'', '"':
+			// A quote opens a scalar only at the start of a token; in
+			// "a'b" it is part of a plain word and hides nothing.
+			if i == 0 || isYAMLSpace(data[i-1]) || strings.IndexByte("[{,:-?", data[i-1]) >= 0 {
+				quote = c
+			}
+		case '-':
+			// Only at the start of a line or after another "- ", so a
+			// hyphen inside a plain word is not counted.
+			if lineStart && spaceAfter {
+				n++
+				continue // the next mark on this line may be "- " too
+			}
+		case ':':
+			if spaceAfter {
+				n++
+			}
+		case ',', '[', '{':
+			n++
+		}
+		lineStart = false
+	}
+	return n
+}
+
+// isYAMLSpace reports whether c separates YAML tokens.
+func isYAMLSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }
 
 // yamlCopier copies a yaml.Node tree, counting nodes.
