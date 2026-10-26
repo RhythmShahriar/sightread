@@ -283,7 +283,7 @@ when compare has changes at `--soundcheck-fail-on`.
   signals`. `<prog> explain: review.json has no finding 9 (it has 5)`, `... has no finding with
   fingerprint <fp>`, `<prog> explain: review.json: no such file`.
 - `allow <eco:name@version>... --reason <text> [--by <name>] [--until <date>] [--signals <IDs>]
-  [--file <file>] [--offline] [--config <file> | --no-config]` prints `allowed npm:sharp@0.33.5
+  [--file <file>] [--offline] [--force] [--config <file> | --no-config]` prints `allowed npm:sharp@0.33.5
   (sha256 0b7e1d2c3a4f) in .sightread/allowed.yaml`. `--by` defaults to `git config user.name`,
   then `$USER`, `%USERNAME%`, `unknown`. `allow --from <report.json> --reason <text>`. `allow list
   [--json]` (table `PACKAGE  SHA256  SIGNALS  BY  DATE  UNTIL  REASON`, or `<file> allows nothing
@@ -294,7 +294,13 @@ when compare has changes at `--soundcheck-fail-on`.
   be allowed` / `  allow records a reviewed archive by its hash; review it first with <prog> npm
   left-pad --to 1.4.0`; mismatch `<prog> allow: npm:evil@2.0.0 doesn't match its published hash,
   so it can't be allowed` / `  someone between you and the registry changed it, or the release
-  was edited; don't install this copy`; `--until "soon": want a date such as 2027-01-31`.
+  was edited; don't install this copy`; `--until "soon": want a date such as 2027-01-31`. A
+  version already allowed with another sha256 is refused: `<prog> allow: .sightread/allowed.yaml:
+  npm:sharp@0.33.5 is already allowed with sha256 <12 hex> (entry 1), not <12 hex>` / `  the
+  earlier review covered other bytes; review these, then add --force to replace that entry`.
+  `--force` replaces it and warns `warning: replaced the entry that allowed npm:sharp@0.33.5 with
+  sha256 <12 hex> (by <name>, <date>)`. A version with no complete archive hash (an archive limit
+  stopped the read) is refused: `<ref> has no complete archive hash, so it can't be allowed`.
 - `report <report.json>... -o <file>` merges and writes `.md .html .sarif .json`, printing `wrote
   <file>`. `report writes files: give -o <file> ending in .md, .html, .sarif or .json`.
 - `verify-report <report.json> [--key <file>]... [--config <file>] [--json]`: `review.json:

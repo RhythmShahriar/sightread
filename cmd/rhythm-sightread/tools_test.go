@@ -235,6 +235,43 @@ func TestAllowRoundTrip(t *testing.T) {
 	}
 }
 
+// TestAllowOtherHash: allowing a version already allowed with other
+// bytes is refused with a pointer to --force; --force replaces the old
+// entry with a warning, so the file never holds two entries for one
+// version. A report side with no hash (an archive limit hit) is refused.
+func TestAllowOtherHash(t *testing.T) {
+	w := world(t)
+	p := installAllow(t, w)
+	old := strings.Repeat("cd", 32)
+	p.Allow = append(p.Allow, core.AllowEntry{Package: "npm:sharp", Version: "0.33.5", SHA256: old, Reason: "earlier",
+		By: "Bob", Date: "2026-10-01"})
+	w.Publish(core.NPM, "sharp", "0.33.5")
+	code, out, errOut := execute(t, "allow", "npm:sharp@0.33.5", "--reason", "looked again")
+	if code != cli.ExitUsage || out != "" || !strings.Contains(errOut, "npm:sharp@0.33.5 is already allowed with sha256 cdcdcdcdcdcd") ||
+		!strings.Contains(errOut, "add --force to replace that entry") || len(p.Allow) != 1 {
+		t.Fatalf("without --force: exit %d %q %q, entries %d", code, out, errOut, len(p.Allow))
+	}
+	code, out, errOut = execute(t, "allow", "npm:sharp@0.33.5", "--reason", "looked again", "--force")
+	if code != cli.ExitOK || !strings.HasPrefix(out, "allowed npm:sharp@0.33.5 (sha256 ") ||
+		errOut != "warning: replaced the entry that allowed npm:sharp@0.33.5 with sha256 cdcdcdcdcdcd (by Bob, 2026-10-01)\n" {
+		t.Fatalf("--force: exit %d %q %q", code, out, errOut)
+	}
+	if len(p.Allow) != 1 || p.Allow[0].SHA256 == old || p.Allow[0].Reason != "looked again" {
+		t.Errorf("entries %+v", p.Allow)
+	}
+
+	jsonReports(t)
+	rep := &core.Report{Kind: core.KindReview, Updates: []core.Update{
+		{Eco: core.WPPlugin, Name: "e04-bomb", To: core.Side{Version: "1.0.1", HashKind: core.HashManifest, Verified: core.ByChecksums}},
+		{Eco: core.NPM, Name: "sharp", To: core.Side{Version: "0.33.5", SHA256: old, Verified: core.BySignature}},
+	}}
+	code, _, errOut = execute(t, "allow", "--from", saveReport(t, rep), "--reason", "r")
+	if code != cli.ExitUsage || !strings.Contains(errOut, "wp-plugin:e04-bomb@1.0.1 has no complete archive hash, so it can't be allowed") ||
+		!strings.Contains(errOut, "npm:sharp@0.33.5 is already allowed with sha256 ") || len(p.Allow) != 1 {
+		t.Errorf("--from: exit %d %q, entries %+v", code, errOut, p.Allow)
+	}
+}
+
 // TestAllowRefuses: E12 without a reason, E18 for an unverified or
 // mismatched version, through a fetch and through --from.
 func TestAllowRefuses(t *testing.T) {

@@ -461,8 +461,40 @@ func (s *Store) AddAllow(path string, e core.AllowEntry) error {
 			err.Err = core.ErrAlreadyAllowed
 			return nil, err
 		}
+		// Two entries for one version would leave the stale one in
+		// place, quietly: an earlier review covered other bytes.
+		if i := findVersion(entries, e); i >= 0 {
+			err := configError(path, fmt.Sprintf("%s@%s is already allowed with sha256 %s (entry %d), not %s",
+				e.Package, e.Version, shortHash(entries[i].SHA256), i+1, shortHash(e.SHA256)))
+			err.Err = core.ErrAllowedOtherHash
+			return nil, err
+		}
 		return append(entries, e), nil
 	})
+}
+
+// ReplaceAllow appends e in place of every entry for the same package
+// and version, and returns the entries it removed.
+func (s *Store) ReplaceAllow(path string, e core.AllowEntry) ([]core.AllowEntry, error) {
+	if err := checkAllowEntry(&e, "the new entry"); err != nil {
+		return nil, configError(path, err.Error())
+	}
+	var removed []core.AllowEntry
+	err := editAllow(path, func(entries []core.AllowEntry) ([]core.AllowEntry, error) {
+		removed = nil
+		kept := slices.DeleteFunc(slices.Clone(entries), func(x core.AllowEntry) bool {
+			if x.Package == e.Package && x.Version == e.Version {
+				removed = append(removed, x)
+				return true
+			}
+			return false
+		})
+		return append(kept, e), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return removed, nil
 }
 
 // RemoveAllow removes the entries for r from the allow file: every
@@ -508,6 +540,17 @@ func (s *Store) ImportAllow(path, from string) (int, error) {
 		return 0, err
 	}
 	return added, nil
+}
+
+// findVersion returns the index of an entry for e's package and
+// version, whatever its hash, or -1.
+func findVersion(entries []core.AllowEntry, e core.AllowEntry) int {
+	for i, x := range entries {
+		if x.Package == e.Package && x.Version == e.Version {
+			return i
+		}
+	}
+	return -1
 }
 
 func findDup(entries []core.AllowEntry, e core.AllowEntry) int {

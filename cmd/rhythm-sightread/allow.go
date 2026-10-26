@@ -30,7 +30,7 @@ const gitTimeout = 5 * time.Second
 type allowFlags struct {
 	reason, by, until, file, from string
 	signals                       cli.ListFlag
-	asJSON, offline               bool
+	asJSON, offline, force        bool
 	configFile                    string
 	noConfig                      bool
 }
@@ -61,6 +61,7 @@ var allowCommand = &simpleCommand{
 		fs.StringVar(&f.from, "from", "", "take every update of this saved JSON `report`")
 		fs.BoolVar(&f.asJSON, "json", false, "allow list: print the kind allowed JSON document")
 		fs.BoolVar(&f.offline, "offline", false, "use only cached archives (also RHYTHM_OFFLINE)")
+		fs.BoolVar(&f.force, "force", false, "replace an entry that allows the same version with another sha256")
 		fs.StringVar(&f.configFile, "config", "", "read this config `file` instead of the nearest .sightread/config.yaml")
 		fs.BoolVar(&f.noConfig, "no-config", false, "read no config")
 		return func(ctx context.Context, pos []string, stdout, stderr io.Writer) error {
@@ -161,7 +162,7 @@ func (f *allowFlags) run(ctx context.Context, pos []string, stdout, stderr io.Wr
 		if err := refuse(ref, side.Verified, false); err != nil {
 			return err
 		}
-		if err := f.add(policy, path, ref, side, stdout); err != nil {
+		if err := f.add(policy, path, ref, side, stdout, stderr); err != nil {
 			return err
 		}
 	}
@@ -190,11 +191,18 @@ func (f *allowFlags) fromReport(policy core.Policy, path string, stdout, stderr 
 			refused++
 			continue
 		}
-		if err := f.add(policy, path, ref, u.To, stdout); err != nil {
+		if err := f.add(policy, path, ref, u.To, stdout, stderr); err != nil {
 			// A report made after an earlier allow lists that update as
 			// ALLOWED: skipping it is the normal flow, not a failure.
 			if errors.Is(err, core.ErrAlreadyAllowed) {
 				fmt.Fprintf(stdout, "already allowed %s (sha256 %s) in %s\n", ref, short(u.To.SHA256), shown(path))
+				continue
+			}
+			// Other bytes than the ones allowed, or no hash at all: refused
+			// like an unverified update, and the others still go in.
+			if errors.Is(err, core.ErrAllowedOtherHash) || errors.Is(err, errNoHash) {
+				fmt.Fprintln(stderr, err.Error())
+				refused++
 				continue
 			}
 			return err
@@ -206,15 +214,43 @@ func (f *allowFlags) fromReport(policy core.Policy, path string, stdout, stderr 
 	return nil
 }
 
-// add writes one entry.
-func (f *allowFlags) add(policy core.Policy, path string, ref core.Ref, side core.Side, stdout io.Writer) error {
+// errNoHash is the cause of the refusal of a version with no sha256.
+var errNoHash = errors.New("no archive hash")
+
+// add writes one entry. An entry for the same version with another
+// sha256 is refused, or replaced with --force and a warning naming it.
+func (f *allowFlags) add(policy core.Policy, path string, ref core.Ref, side core.Side, stdout, stderr io.Writer) error {
+	if side.SHA256 == "" {
+		// A tree an archive limit cut short has no hash to bind to.
+		return &core.Error{Code: core.EAllowUnverified, Exit: cli.ExitUsage, Command: "allow", Err: errNoHash,
+			What: ref.String() + " has no complete archive hash, so it can't be allowed",
+			Hint: []string{"an archive limit stopped the read before the end, so the files were never all seen; look at it by hand"}}
+	}
 	e := core.AllowEntry{Package: ref.Unversioned().String(), Version: ref.Version, SHA256: side.SHA256,
 		Signals: slices.Clone(f.signals), Reason: strings.TrimSpace(f.reason), By: f.by,
 		Date: time.Now().Format(time.DateOnly), Until: f.until}
 	if side.HashKind == core.HashManifest {
 		e.Hash = core.HashManifest
 	}
-	if err := policy.AddAllow(path, e); err != nil {
+	err := policy.AddAllow(path, e)
+	if errors.Is(err, core.ErrAllowedOtherHash) {
+		if !f.force {
+			ce := &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage, Command: "allow", Err: err, What: err.Error()}
+			if e := (*core.Error)(nil); errors.As(err, &e) {
+				ce.What = e.What
+			}
+			ce.Hint = []string{"the earlier review covered other bytes; review these, then add --force to replace that entry"}
+			return ce
+		}
+		var removed []core.AllowEntry
+		if removed, err = policy.ReplaceAllow(path, e); err == nil {
+			for _, old := range removed {
+				fmt.Fprintf(stderr, "warning: replaced the entry that allowed %s with sha256 %s (by %s, %s)\n",
+					ref, short(old.SHA256), cell(old.By), cell(old.Date))
+			}
+		}
+	}
+	if err != nil {
 		return err
 	}
 	fmt.Fprintf(stdout, "allowed %s (sha256 %s) in %s\n", ref, short(side.SHA256), shown(path))

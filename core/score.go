@@ -40,6 +40,11 @@ type AllowSet interface {
 // entry the file already has, so allow --from can skip it and go on.
 var ErrAlreadyAllowed = errors.New("already allowed")
 
+// ErrAllowedOtherHash is the cause of the error AddAllow returns when
+// the file already allows the same package and version with another
+// hash: an earlier review covered other bytes. ReplaceAllow swaps it.
+var ErrAllowedOtherHash = errors.New("already allowed with another hash")
+
 // Policy loads and edits config, allow and baseline files (package
 // policy).
 type Policy interface {
@@ -51,8 +56,12 @@ type Policy interface {
 	// that git ref too (changes).
 	LoadAllow(cfg *Config, configPath string, baseRef string) (AllowSet, error)
 	// AddAllow appends e; an error wrapping ErrAlreadyAllowed means the
-	// same package, version and hash is already there.
+	// same package, version and hash is already there, one wrapping
+	// ErrAllowedOtherHash that the version is there with another hash.
 	AddAllow(path string, e AllowEntry) error
+	// ReplaceAllow appends e in place of the entries for the same
+	// package and version, and returns the ones it removed.
+	ReplaceAllow(path string, e AllowEntry) ([]AllowEntry, error)
 	RemoveAllow(path string, r Ref) error
 	ImportAllow(path, from string) (int, error)
 	// LoadBaseline returns the fingerprints of a saved report.

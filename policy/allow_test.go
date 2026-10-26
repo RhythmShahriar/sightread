@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -131,8 +132,10 @@ func mustAllowYAML(t *testing.T, entries ...core.AllowEntry) string {
 	t.Helper()
 	dir := t.TempDir()
 	p := filepath.Join(dir, "a.yaml")
+	// Written as the file stands, two entries for one version included
+	// (a hand edit or a merge makes them; AddAllow refuses the second).
 	for _, e := range entries {
-		if err := testStore(nil).AddAllow(p, e); err != nil {
+		if err := editAllow(p, func(es []core.AllowEntry) ([]core.AllowEntry, error) { return append(es, e), nil }); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -643,5 +646,42 @@ func TestAllowMatchKind(t *testing.T) {
 	// Match compares every kind, as core.AllowSet has none.
 	if _, _, c := a.Match(core.WPPlugin, "akismet", "5.3.1", shaB); c == nil {
 		t.Error("Match must still report the conflict")
+	}
+}
+
+// TestAddAllowOtherHash: a second entry for a version with other bytes
+// is refused and names the entry it would sit next to; ReplaceAllow
+// swaps it and returns the old one, leaving one entry.
+func TestAddAllowOtherHash(t *testing.T) {
+	dir := inProject(t)
+	p := filepath.Join(dir, Dir, AllowName)
+	s := testStore(nil)
+	if err := s.AddAllow(p, entry("npm:a", "1.0.0", shaA)); err != nil {
+		t.Fatal(err)
+	}
+	err := s.AddAllow(p, entry("npm:a", "1.0.0", shaB))
+	want := "rhythm sightread: .sightread/allowed.yaml: npm:a@1.0.0 is already allowed with sha256 aaaaaaaaaaaa (entry 1), not bbbbbbbbbbbb"
+	if err == nil || err.Error() != want || !errors.Is(err, core.ErrAllowedOtherHash) || errors.Is(err, core.ErrAlreadyAllowed) {
+		t.Errorf("other hash: %v", err)
+	}
+	// Another version of the package is not a conflict.
+	if err := s.AddAllow(p, entry("npm:a", "1.0.1", shaB)); err != nil {
+		t.Errorf("other version: %v", err)
+	}
+	removed, err := s.ReplaceAllow(p, entry("npm:a", "1.0.0", shaB))
+	if err != nil || len(removed) != 1 || removed[0].SHA256 != shaA {
+		t.Fatalf("replace: %v %+v", err, removed)
+	}
+	set, err := s.LoadAllow(&core.Config{}, "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, e := range set.(*AllowSet).Entries() {
+		got = append(got, e.Package+"@"+e.Version+" "+e.SHA256[:4])
+	}
+	sort.Strings(got)
+	if strings.Join(got, ",") != "npm:a@1.0.0 bbbb,npm:a@1.0.1 bbbb" {
+		t.Errorf("entries %v", got)
 	}
 }

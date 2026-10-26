@@ -295,8 +295,32 @@ func (p *FakePolicy) AddAllow(_ string, e core.AllowEntry) error {
 				Err: core.ErrAlreadyAllowed}
 		}
 	}
+	for _, a := range p.Allow {
+		if a.Package == e.Package && a.Version == e.Version {
+			return &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage,
+				What: e.Package + "@" + e.Version + " is already allowed with sha256 " + a.SHA256[:min(12, len(a.SHA256))],
+				Err:  core.ErrAllowedOtherHash}
+		}
+	}
 	p.Allow = append(p.Allow, e)
 	return nil
+}
+
+// ReplaceAllow appends e in place of the entries for the same package
+// and version, like the real policy.
+func (p *FakePolicy) ReplaceAllow(_ string, e core.AllowEntry) ([]core.AllowEntry, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	var removed []core.AllowEntry
+	p.Allow = slices.DeleteFunc(p.Allow, func(a core.AllowEntry) bool {
+		if a.Package == e.Package && a.Version == e.Version {
+			removed = append(removed, a)
+			return true
+		}
+		return false
+	})
+	p.Allow = append(p.Allow, e)
+	return removed, nil
 }
 
 // RemoveAllow drops the entries for r.

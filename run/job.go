@@ -601,9 +601,23 @@ func (r *reviewer) fetch(ctx context.Context, src core.Source, m *core.Meta) (*c
 	return t, in, false, nil
 }
 
+// sideHash is the sha256 the report gives a tree. A manifest hash
+// stands for the files read, so a tree with none, or one an archive
+// limit cut short, has no hash worth showing: "" rather than the hash
+// of an empty or partial list. An archive hash is of the bytes
+// downloaded and stays.
+func sideHash(t *core.Tree) string {
+	if t.HashKind == core.HashManifest {
+		if len(t.Files) == 0 || slices.ContainsFunc(t.Issues, func(i core.ArchiveIssue) bool { return i.Kind == core.IssueLimit }) {
+			return ""
+		}
+	}
+	return hex.EncodeToString(t.SHA256[:])
+}
+
 // sideInfo is the report's view of one version.
 func (r *reviewer) sideInfo(ref core.Ref, m *core.Meta, t *core.Tree, in core.Integrity, local string) core.Side {
-	s := core.Side{Version: ref.Version, SHA256: hex.EncodeToString(t.SHA256[:]), HashKind: t.HashKind,
+	s := core.Side{Version: ref.Version, SHA256: sideHash(t), HashKind: t.HashKind,
 		Verified: in.By, Method: in.Method, Source: local}
 	if in.By == core.ByTLS && in.Detail != "" {
 		// A check that could not finish (--svn-check) says why next to
