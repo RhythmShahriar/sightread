@@ -10,7 +10,7 @@ import (
 )
 
 // FuzzDecodeVerify: whatever rhythm-roadie prints, decoding never
-// panics, only a rhythm-roadie/v1 verify document passes, and every
+// panics, only a rhythm-roadie/v1 verify document passes and every
 // reason it gives is printable text.
 func FuzzDecodeVerify(f *testing.F) {
 	for _, s := range []string{

@@ -209,7 +209,7 @@ func (c *reviewCommand) run(ctx context.Context, p *plan, _ []string, stdout, st
 	if p.soundcheck.Staging != "" {
 		tripped, scErr = c.runSoundcheck(ctx, p, rep)
 	}
-	// With nothing to compare the terminal says only that, but every -o
+	// With nothing to compare the terminal says only that while every -o
 	// file is still written: a CI job reads it and a missing report
 	// would look like a failed run.
 	quiet := p.stdout == core.FormatTerminal && nothingElse(rep)
