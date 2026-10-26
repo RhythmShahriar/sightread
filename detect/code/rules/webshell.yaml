@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Derived from tuner/local/rules/local-malware-webshell.yaml
+id: webshell
+name: Known web shell
+signal: remote-fetch-exec
+side: added
+files: ["**/*.php", "**/*.phtml", "**/*.inc", "**/*.php[0-9]"]
+# vendor/ is read too: dropping a shell there is a known way to hide
+# it. No library needs this.
+match:
+  # Names and markers of widespread web shells, which run whatever
+  # their remote operator sends.
+  words: [FilesMan, wso_version, b374k, c99shell, c99_sess_put, r57shell]

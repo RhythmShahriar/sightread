@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule eval-base64 (Tuner negative): the pattern named in a readme'
+new:
+  readme.txt: eval(base64_decode( is a pattern to look for
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- decode-exec

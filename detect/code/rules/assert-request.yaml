@@ -1,0 +1,12 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Derived from tuner/local/rules/local-malware-assert-request.yaml
+id: assert-request
+name: assert() runs request input
+signal: eval-dynamic
+side: added
+files: ["**/*.php", "**/*.phtml", "**/*.inc"]
+exclude: ["vendor/**"]
+match:
+  regex: ['(?i)\bassert\s*\(\s*@?\s*(?:stripslashes\s*\(\s*)?\$_(?:POST|GET|REQUEST|COOKIE|SERVER)\b']

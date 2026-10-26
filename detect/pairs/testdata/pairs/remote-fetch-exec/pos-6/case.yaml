@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: rule webshell (Tuner positive 2)
+new:
+  shell.php: <?php /* b374k shell */
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: remote-fetch-exec, min_severity: critical}

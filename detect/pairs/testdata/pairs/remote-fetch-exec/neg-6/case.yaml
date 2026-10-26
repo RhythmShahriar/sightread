@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule webshell (Tuner negative 2): a marker in a text file'
+new:
+  notes.txt: FilesMan
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- remote-fetch-exec

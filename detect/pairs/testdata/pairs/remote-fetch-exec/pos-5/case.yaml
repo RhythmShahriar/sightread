@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: rule webshell (Tuner positive 1)
+new:
+  uploads/x/fm.php: <?php $default_action = 'FilesMan'; ?>
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: remote-fetch-exec, min_severity: critical}

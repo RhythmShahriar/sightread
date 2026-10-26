@@ -1,0 +1,14 @@
+eco: wp-plugin
+note: 'rule webshell (Tuner negative 1): a files manager that is not one'
+lookalike: true
+new:
+  files.php: '<?php // Files manager for the media library
+
+    $c99 = 1;'
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+forbid:
+- remote-fetch-exec

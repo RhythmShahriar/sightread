@@ -1,0 +1,23 @@
+eco: wp-plugin
+note: rule eval-base64 on a line added to a changed file
+old:
+  inc/a.php: '<?php
+
+    $x = get_option(''acme'');
+
+    '
+new:
+  inc/a.php: '<?php
+
+    $x = get_option(''acme'');
+
+    eval(base64_decode($x));
+
+    '
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: decode-exec, min_severity: critical}

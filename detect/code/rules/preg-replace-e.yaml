@@ -1,0 +1,14 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Derived from tuner/local/rules/local-malware-preg-replace-e.yaml
+id: preg-replace-e
+name: preg_replace() with the /e modifier
+signal: eval-dynamic
+side: added
+files: ["**/*.php", "**/*.phtml", "**/*.inc"]
+exclude: ["vendor/**"]
+match:
+  # A pattern string whose closing delimiter is followed by modifiers
+  # that include e, which evaluates the replacement as code.
+  regex: ['(?i)\bpreg_replace\s*\(\s*[''"][^''"\n]*[/#~|!@%][a-z]*e[a-z]*[''"]\s*,']

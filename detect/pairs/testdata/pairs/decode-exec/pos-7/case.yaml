@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: 'rule eval-base64 (Tuner positive 2): upper case and spaces'
+new:
+  inc/x.php: <?php EVAL ( @base64_decode('ZWNobyAxOw==') );
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: decode-exec, min_severity: critical}

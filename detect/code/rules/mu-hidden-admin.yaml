@@ -1,0 +1,15 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Derived from tuner/local/rules/local-malware-mu-hidden-admin.yaml
+id: mu-hidden-admin
+name: Must-use plugin creates a hidden admin user
+signal: admin-user-hidden
+side: added
+# A package that ships a must-use plugin to copy into wp-content.
+files: ["**/mu-plugins/**/*.php"]
+match:
+  # Creates a user, makes it an administrator...
+  regex: ['(?i)\b(?:wp_insert_user|wp_create_user)\s*\(', '(?i)[''"]administrator[''"]']
+  # ...and hides users from the Users screen.
+  words: [pre_user_query, pre_get_users, views_users, user_search]

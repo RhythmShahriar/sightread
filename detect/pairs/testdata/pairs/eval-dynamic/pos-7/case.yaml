@@ -1,0 +1,11 @@
+eco: wp-plugin
+note: rule assert-request (Tuner positive 1)
+new:
+  x.php: <?php @assert($_POST['c']);
+meta_old:
+  ref:
+    version: 1.0.0
+features_old: []
+features_new: []
+expect:
+- {id: eval-dynamic, min_severity: high}

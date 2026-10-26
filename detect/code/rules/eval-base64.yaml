@@ -1,0 +1,13 @@
+# Copyright (c) 2026 Rhythm Shahriar <me@rhy.io>
+# SPDX-License-Identifier: MIT
+
+# Derived from tuner/local/rules/local-malware-eval-base64.yaml
+id: eval-base64
+name: eval() of base64-decoded code
+signal: decode-exec
+side: added
+files: ["**/*.php", "**/*.phtml", "**/*.inc"]
+# vendor/ is read too: dropping a payload there is a known way to hide
+# it. No library needs this.
+match:
+  regex: ['(?i)\beval\s*\(\s*@?\s*base64_decode\s*\(']
