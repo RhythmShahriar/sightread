@@ -770,7 +770,7 @@ func ruleFiles(s *core.Subject) []ruleFile {
 func (r *Rule) finding(f core.File, b []byte, at int, oldLines map[string]bool) (core.Finding, bool) {
 	line, ev := 1, r.Name
 	if at >= 0 {
-		if commentLine(lineText(b, at)) {
+		if commentLine(b, at) {
 			return core.Finding{}, false
 		}
 		line = lineAt(b, at)
@@ -789,10 +789,13 @@ func (r *Rule) finding(f core.File, b []byte, at int, oldLines map[string]bool) 
 	return fd, true
 }
 
-// commentLine reports whether a whole line is a comment, so nothing on
-// it runs: it starts with //, # (not a #[ attribute) or a docblock *.
-// A PHP line comment ends at ?>, so a line holding one is code.
-func commentLine(l string) bool {
+// commentLine reports whether the whole line holding offset at is a
+// comment, so nothing on it runs: it starts with //, # (not a #[
+// attribute) or, inside a /* */ block, a docblock *. A PHP line comment
+// ends at ?>, so a line holding one is code. A "* " line outside a block
+// is code: PHP reads "$a = 1\n* eval($p);" as a product.
+func commentLine(b []byte, at int) bool {
+	l := lineText(b, at)
 	if strings.Contains(l, "?>") {
 		return false
 	}
@@ -801,12 +804,59 @@ func commentLine(l string) bool {
 		return true
 	case strings.HasPrefix(l, "#"):
 		return !strings.HasPrefix(l, "#[")
-	case l == "*":
-		return true
-	case strings.HasPrefix(l, "* "):
-		return true
+	case l == "*" || strings.HasPrefix(l, "* "):
+		return inBlockComment(b[:bytes.LastIndexByte(b[:at], '\n')+1])
 	}
 	return false
+}
+
+// inBlockComment reports whether the end of code lies inside an open
+// /* */ comment. It skips quoted strings and line comments so a "/*"
+// in "uploads/*" opens nothing. Heredocs and regex literals are not
+// tracked: this only decides whether a supplementary rule may skip a
+// line. The Go detectors read the parsed code.
+func inBlockComment(code []byte) bool {
+	const (
+		inCode = iota
+		inLine
+		inBlock
+		inQuote
+	)
+	state, quote := inCode, byte(0)
+	for i := 0; i < len(code); i++ {
+		c := code[i]
+		next := byte(0)
+		if i+1 < len(code) {
+			next = code[i+1]
+		}
+		switch state {
+		case inCode:
+			switch {
+			case c == '/' && next == '*':
+				state, i = inBlock, i+1
+			case c == '/' && next == '/', c == '#' && next != '[':
+				state = inLine
+			case c == '\'' || c == '"' || c == '`':
+				state, quote = inQuote, c
+			}
+		case inLine:
+			if c == '\n' {
+				state = inCode
+			}
+		case inBlock:
+			if c == '*' && next == '/' {
+				state, i = inCode, i+1
+			}
+		case inQuote:
+			switch c {
+			case '\\':
+				i++
+			case quote:
+				state = inCode
+			}
+		}
+	}
+	return state == inBlock
 }
 
 // lineText is the trimmed text of the line holding offset at.

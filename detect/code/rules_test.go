@@ -237,15 +237,23 @@ func TestLiteralHints(t *testing.T) {
 
 func TestCommentLine(t *testing.T) {
 	for l, want := range map[string]bool{
-		"// eval(base64_decode($x))":          true,
-		"# eval(base64_decode($x))":           true,
-		"* eval(base64_decode($x))":           true,
-		"#[Attr] eval(base64_decode($x));":    false,
-		"*/ eval(base64_decode($x));":         false,
-		"// ?> <?php eval(base64_decode($x))": false,
-		"eval(base64_decode($x)); // done":    false,
+		"// eval(base64_decode($x))":                    true,
+		"# eval(base64_decode($x))":                     true,
+		"/**\n * eval(base64_decode($x))\n */":          true,
+		"/*\n*\n* eval(base64_decode($x)) */":           true,
+		"* eval(base64_decode($x))":                     false,
+		"$a = 1\n* eval(base64_decode($p));":            false,
+		"/* done */\n* eval(base64_decode($p));":        false,
+		"$g = 'uploads/*';\n* eval(base64_decode($p));": false,
+		"// a /* b\n* eval(base64_decode($p));":         false,
+		"$s = \"a\\\"/*\";\n* eval(base64_decode($p));": false,
+		"#[Attr] eval(base64_decode($x));":              false,
+		"*/ eval(base64_decode($x));":                   false,
+		"// ?> <?php eval(base64_decode($x))":           false,
+		"eval(base64_decode($x)); // done":              false,
 	} {
-		if got := commentLine(l); got != want {
+		at := strings.Index(l, "eval")
+		if got := commentLine([]byte(l), at); got != want {
 			t.Errorf("commentLine(%q) = %v, want %v", l, got, want)
 		}
 	}
