@@ -36,8 +36,12 @@ const (
 	// WPDocker publishes the Docker WordPress for the --soundcheck end to
 	// end scenario (e15).
 	WPDocker = 18907
-	// Codeload is the second GitHub host name, the target of the zipball
-	// redirect, served by its own listener (SIGHTREAD_GITHUB_CODELOAD).
+	// Codeload is the target of the zipball redirect, served by its own
+	// listener and reached by a second host name, localhost, where every
+	// other listener is reached as 127.0.0.1 (SIGHTREAD_GITHUB_CODELOAD).
+	// A client copies Authorization across a redirect to the same host
+	// name on another port, so the second name is what shows a
+	// GITHUB_TOKEN forwarded to codeload in the request log.
 	Codeload = 18908
 )
 

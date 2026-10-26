@@ -12,6 +12,12 @@ import (
 	"github.com/RhythmShahriar/sightread/testbed/ports"
 )
 
+// CodeloadHost is the host name the zipball redirect points at. It is
+// the second GitHub host name: the API is reached as 127.0.0.1 and
+// codeload as localhost, both served on loopback and both covered by the
+// per-run certificate.
+const CodeloadHost = "localhost"
+
 // githubMux routes the zipball redirect, the git ref lookup and the rate
 // limit endpoint. The zipball itself is served by the codeload listener,
 // one redirect hop away, as the real GitHub does.
@@ -43,9 +49,12 @@ func (r *Registry) githubRepos(w http.ResponseWriter, req *http.Request) {
 		if r.opts.PlainHTTP {
 			scheme = "http"
 		}
-		host, _, _ := strings.Cut(req.Host, ":")
-		loc := scheme + "://" + host + ":" + strconv.Itoa(r.Port(ports.Codeload)) + "/" + owner + "/" + repo + "/legacy.zip/" + ref
-		http.Redirect(w, req, loc, http.StatusFound) //nolint:gosec // loopback testbed; the target is our own codeload listener on 127.0.0.1
+		// The target names localhost, not the 127.0.0.1 the API is reached
+		// on: a client copies Authorization across a redirect when the
+		// host name matches whatever the port, so only a second host name
+		// shows whether Sightread keeps GITHUB_TOKEN off codeload.
+		loc := scheme + "://" + CodeloadHost + ":" + strconv.Itoa(r.Port(ports.Codeload)) + "/" + owner + "/" + repo + "/legacy.zip/" + ref
+		http.Redirect(w, req, loc, http.StatusFound) //nolint:gosec // loopback testbed; the target is our own codeload listener
 	case strings.HasPrefix(tail, "git/ref/tags/"):
 		r.gitRef(w, req, owner, repo, strings.TrimPrefix(tail, "git/ref/tags/"))
 	default:

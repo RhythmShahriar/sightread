@@ -67,6 +67,7 @@ func TestEachFailureBreaksATarget(t *testing.T) {
 		"egress":       func(r *Results) { r.Safety.Egress = []string{"CONNECT registry.npmjs.org:443 HTTP/1.1"} },
 		"outside":      func(r *Results) { r.Safety.OutsideWrites = []string{"b01: added: .config/x"} },
 		"unmasked":     func(r *Results) { r.Safety.Unmasked = []string{"b11: report"} },
+		"token forwarded": func(r *Results) { r.Safety.Forwarded = []string{"GET localhost:18908/vendor/example/legacy.zip/abc"} },
 		"env":          func(r *Results) { r.Env[0].Result = ResultFail },
 		"staging":      func(r *Results) { r.Staging[0].Result = ResultFail },
 		"cold != warm": func(r *Results) { r.Scenarios[0].WarmStatus = "missed" },

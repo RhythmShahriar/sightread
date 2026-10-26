@@ -37,8 +37,8 @@ canary, webhook receiver, probes, fronts and proxy guard, so stop a
 `make up` first. It exits non-zero until every 1.0 target is met: every
 non-pending bad scenario caught, zero false alarms on the good scenarios
 and in a 10-round control pass, every run writing a report, zero
-canary, egress, outside-write and unmasked-key events, every environment
-scenario passing, cold and warm runs agreeing, p01-large under 10 s warm
+canary, egress, outside-write, unmasked-key and forwarded-token events,
+every environment scenario passing, cold and warm runs agreeing, p01-large under 10 s warm
 and 512 MB RSS, the whole run under 10 minutes. A run that wrote no
 report (a crash, a usage error, a timeout) is shown as NO REPORT, apart
 from misses and false alarms. A partial run (`-only`) never claims the
@@ -68,7 +68,7 @@ export SSL_CERT_FILE=$PWD/state/ca.pem SIGHTREAD_NPM_EXTRA_KEYS=$PWD/state/npm-k
 export SIGHTREAD_WPORG_API=https://127.0.0.1:18900 SIGHTREAD_WPDL_API=https://127.0.0.1:18900
 export SIGHTREAD_WPSVN=https://127.0.0.1:18900/svn/plugins SIGHTREAD_WPTHEMESVN=https://127.0.0.1:18900/svn/themes
 export SIGHTREAD_PACKAGIST=https://127.0.0.1:18901 SIGHTREAD_PACKAGIST_META=https://127.0.0.1:18901
-export SIGHTREAD_GITHUB_API=https://127.0.0.1:18902 SIGHTREAD_GITHUB_CODELOAD=https://127.0.0.1:18908
+export SIGHTREAD_GITHUB_API=https://127.0.0.1:18902 SIGHTREAD_GITHUB_CODELOAD=https://localhost:18908
 export SIGHTREAD_NPM_REGISTRY=https://127.0.0.1:18903 SIGHTREAD_OSV_API=https://127.0.0.1:18904
 export HTTPS_PROXY=http://127.0.0.1:23399 RHYTHM_NO_UPDATE_CHECK=1
 ../bin/rhythm-sightread plugin b01-widget --path projects/wp
@@ -94,7 +94,7 @@ checks this table against it.
 | 18905 | Canary: every bad payload would connect here; must stay silent |
 | 18906 | Webhook receiver for watch notifications |
 | 18907 | Docker WordPress for `--soundcheck` (e15), through the gate |
-| 18908 | GitHub codeload, the zipball redirect target |
+| 18908 | GitHub codeload, the zipball redirect target, reached as `localhost` (a second host name) |
 | 23300-23339 | Probes and fronts for the environment scenarios |
 | 23301 | Probe: a body that stalls |
 | 23302 | Probe: an endless body |
@@ -208,6 +208,15 @@ the two for every kind). b11's payload falls back to `{{fakekey:npm}}`.
 A test scans every fixture for literal key prefixes. The benchmark
 searches every output and report for the assembled keys: one found in
 full is counted as an unmasked key.
+
+Sightread runs with a fake `GITHUB_TOKEN` assembled the same way. The
+token belongs to the GitHub API only (PRD 11). The zipball redirect
+points at codeload under a second host name, `localhost`, while the API
+is `127.0.0.1`: an HTTP client copies `Authorization` across a redirect
+to the same host name on another port, so a shared name would hide a
+forwarded token. The request log records whether each request carried
+an `Authorization` header (a boolean, never the value) and the benchmark
+counts every codeload request that did.
 
 ## Why archives are never committed
 

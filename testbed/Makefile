@@ -40,7 +40,7 @@ up: ## start the registry, canary and webhook on 127.0.0.1 in the background
 		echo $$! > $(PIDS)/$$svc; \
 	done
 	@for i in $$(seq 1 50); do [ -f state/ca.pem ] && break; sleep 0.2; done
-	@echo "registry: https://127.0.0.1:18900-18904 and 18908 (CA in state/ca.pem)"
+	@echo "registry: https://127.0.0.1:18900-18904 and https://localhost:18908 (CA in state/ca.pem)"
 	@echo "canary:   127.0.0.1:18905    webhook: http://127.0.0.1:18906"
 	@echo "point Sightread at it: see README.md, Run Sightread by hand"
 

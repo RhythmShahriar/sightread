@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/RhythmShahriar/sightread/testbed/ports"
+	"github.com/RhythmShahriar/sightread/testbed/registry"
 )
 
 // runOpts adjust one run of the binary.
@@ -59,6 +60,9 @@ func (r execResult) output() string { return string(r.stdout) + "\n" + string(r.
 // with scheme http or https.
 func bases(scheme string) map[string]string {
 	at := func(port int, path string) string { return fmt.Sprintf("%s://127.0.0.1:%d%s", scheme, port, path) }
+	// Codeload is reached by a second host name so a token copied across
+	// the zipball redirect shows up in the request log.
+	codeload := fmt.Sprintf("%s://%s:%d", scheme, registry.CodeloadHost, ports.Codeload)
 	return map[string]string{
 		"SIGHTREAD_WPORG_API":       at(ports.WPOrg, ""),
 		"SIGHTREAD_WPDL_API":        at(ports.WPOrg, ""),
@@ -67,7 +71,7 @@ func bases(scheme string) map[string]string {
 		"SIGHTREAD_PACKAGIST":       at(ports.Packagist, ""),
 		"SIGHTREAD_PACKAGIST_META":  at(ports.Packagist, ""),
 		"SIGHTREAD_GITHUB_API":      at(ports.GitHub, ""),
-		"SIGHTREAD_GITHUB_CODELOAD": at(ports.Codeload, ""),
+		"SIGHTREAD_GITHUB_CODELOAD": codeload,
 		"SIGHTREAD_NPM_REGISTRY":    at(ports.NPM, ""),
 		"SIGHTREAD_OSV_API":         at(ports.OSV, ""),
 	}
@@ -135,6 +139,10 @@ func (h *harness) environ(o runOpts) ([]string, error) {
 	env["SIGHTREAD_NPM_EXTRA_KEYS"] = filepath.Join(h.state, "npm-keys.json")
 	env["SIGHTREAD_CANARY_DIR"] = filepath.Join(h.state, "canary")
 	env["TESTBED_STATE"] = h.state
+	// A fake token, so a run that forwards it across the zipball redirect
+	// to codeload is caught by the safety counters (PRD 11: GITHUB_TOKEN
+	// goes to the GitHub API only).
+	env["GITHUB_TOKEN"] = registry.FakeGitHubToken()
 	for k, v := range bases(h.scheme()) {
 		env[k] = v
 	}

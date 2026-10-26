@@ -235,12 +235,70 @@ func TestFixtureRegistry(t *testing.T) {
 			t.Fatalf("want 302, got %d", resp.StatusCode)
 		}
 		loc := resp.Header.Get("Location")
-		if !strings.Contains(loc, fmt.Sprintf("127.0.0.1:%d", reg.Port(ports.Codeload))) {
-			t.Errorf("redirect not to codeload: %s", loc)
+		// A second host name, so a client that copies Authorization to
+		// the same host on another port does not hide a forwarded token.
+		if !strings.Contains(loc, fmt.Sprintf("://%s:%d/", CodeloadHost, reg.Port(ports.Codeload))) {
+			t.Errorf("redirect not to codeload on %s: %s", CodeloadHost, loc)
+		}
+		if strings.Contains(loc, "127.0.0.1") {
+			t.Errorf("codeload shares the API host name: %s", loc)
 		}
 		z := fetch(t, c, loc)
 		if !zipNames(t, z, "vendor-example-ddddddd/")["composer.json"] {
 			t.Errorf("codeload zip missing composer.json under the top folder")
+		}
+	})
+
+	t.Run("request log keeps auth presence only", func(t *testing.T) {
+		token := FakeGitHubToken()
+		for _, u := range []struct {
+			url  string
+			auth bool
+		}{
+			{baseOf(reg, ports.GitHub) + "/rate_limit", true},
+			{fmt.Sprintf("http://%s:%d/vendor/example/legacy.zip/dddddddeeeeeeefffffff", CodeloadHost, reg.Port(ports.Codeload)), false},
+		} {
+			req, err := http.NewRequest(http.MethodGet, u.url, nil) //nolint:noctx // test
+			if err != nil {
+				t.Fatal(err)
+			}
+			if u.auth {
+				req.Header.Set("Authorization", "Bearer "+token)
+			}
+			resp, err := c.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_ = resp.Body.Close()
+		}
+		b, err := os.ReadFile(filepath.Join(reg.opts.StateDir, "requests.log"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Contains(b, []byte(token)) {
+			t.Fatal("the request log holds the token itself")
+		}
+		var api, codeload *logLine
+		for _, raw := range bytes.Split(bytes.TrimSpace(b), []byte("\n")) {
+			var l logLine
+			if err := json.Unmarshal(raw, &l); err != nil {
+				t.Fatalf("bad log line %s: %v", raw, err)
+			}
+			switch {
+			case l.Service == "github" && l.Path == "/rate_limit" && l.Auth:
+				api = &l
+			case l.Service == ServiceCodeload && l.Path == "/vendor/example/legacy.zip/dddddddeeeeeeefffffff":
+				codeload = &l
+			}
+		}
+		if api == nil {
+			t.Error("the API request with a token was not logged with auth true")
+		}
+		if codeload == nil {
+			t.Fatal("the codeload request was not logged")
+		}
+		if codeload.Auth {
+			t.Error("a codeload request without a token was logged with auth true")
 		}
 	})
 

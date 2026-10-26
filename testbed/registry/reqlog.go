@@ -12,8 +12,9 @@ import (
 
 // reqLog appends one JSON line per request to testbed/state/requests.log
 // so the privacy and egress tests can read back exactly which host and
-// path Sightread asked for. It records the host, path and raw query, not
-// headers or bodies.
+// path Sightread asked for. It records the listener, host, path and raw
+// query and whether an Authorization header arrived, never a header value
+// or a body.
 type reqLog struct {
 	mu sync.Mutex
 	f  *os.File
@@ -21,11 +22,17 @@ type reqLog struct {
 
 // logLine is one request as the log records it.
 type logLine struct {
-	Time   string `json:"time"`
-	Host   string `json:"host"`
-	Method string `json:"method"`
-	Path   string `json:"path"`
-	Query  string `json:"query,omitempty"`
+	Time string `json:"time"`
+	// Service names the listener that took the request (wporg,
+	// packagist, github, npm, osv or codeload).
+	Service string `json:"service"`
+	Host    string `json:"host"`
+	Method  string `json:"method"`
+	Path    string `json:"path"`
+	Query   string `json:"query,omitempty"`
+	// Auth is true when the request carried an Authorization header.
+	// Only the presence is kept so the log never holds a credential.
+	Auth bool `json:"auth,omitempty"`
 }
 
 // openReqLog truncates and opens the request log at path.
@@ -38,15 +45,17 @@ func openReqLog(path string) (*reqLog, error) {
 }
 
 // record writes one line.
-func (l *reqLog) record(host, method, path, query string) {
+func (l *reqLog) record(service, host, method, path, query string, auth bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	b, err := json.Marshal(logLine{
-		Time:   time.Now().UTC().Format(time.RFC3339Nano),
-		Host:   host,
-		Method: method,
-		Path:   path,
-		Query:  query,
+		Time:    time.Now().UTC().Format(time.RFC3339Nano),
+		Service: service,
+		Host:    host,
+		Method:  method,
+		Path:    path,
+		Query:   query,
+		Auth:    auth,
 	})
 	if err != nil {
 		return

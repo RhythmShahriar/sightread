@@ -67,8 +67,9 @@ func (r *Results) Targets() []Target {
 	add("Zero false alarms in the control pass", c.Rounds > 0 && c.FalseAlarms == 0 && len(c.Unstable) == 0,
 		"%d rounds, %d runs, %d false alarms, unstable: %s", c.Rounds, c.Runs, c.FalseAlarms, listOrNone(c.Unstable))
 	s := r.Safety
-	add("Zero canary, egress, outside-write and unmasked-key events", s.Zero(), "canary %d connections and %d files, egress %d, outside writes %d, unmasked keys %d",
-		s.CanaryConnections, len(s.CanaryFiles), len(s.Egress), len(s.OutsideWrites), len(s.Unmasked))
+	add("Zero canary, egress, outside-write, unmasked-key and forwarded-token events", s.Zero(),
+		"canary %d connections and %d files, egress %d, outside writes %d, unmasked keys %d, tokens sent to codeload %d",
+		s.CanaryConnections, len(s.CanaryFiles), len(s.Egress), len(s.OutsideWrites), len(s.Unmasked), len(s.Forwarded))
 
 	var failed, notRun []string
 	for _, e := range append(append([]EnvResult(nil), r.Env...), r.Staging...) {

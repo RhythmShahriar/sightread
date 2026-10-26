@@ -147,17 +147,18 @@ func renderFalseAlarms(w func(string, ...any), r *Results) {
 
 func renderSafety(w func(string, ...any), r *Results) {
 	s := r.Safety
-	w("## Safety\n\nEvery bad payload targets the canary: it would connect to 127.0.0.1:18905 and write a file under testbed/state/canary if it ever ran. HTTPS_PROXY and HTTP_PROXY point at the proxy guard on 127.0.0.1:23399, which closes every connection, so a forgotten base URL fails and is counted. HOME and the project fixtures are walked before and after every run. Fixtures carry fake keys built at run time; every output and report is searched for them in full.\n\n")
+	w("## Safety\n\nEvery bad payload targets the canary: it would connect to 127.0.0.1:18905 and write a file under testbed/state/canary if it ever ran. HTTPS_PROXY and HTTP_PROXY point at the proxy guard on 127.0.0.1:23399, which closes every connection, so a forgotten base URL fails and is counted. HOME and the project fixtures are walked before and after every run. Fixtures carry fake keys built at run time; every output and report is searched for them in full. Sightread runs with a fake GITHUB_TOKEN and codeload answers on a second host name (localhost), so a token sent across the zipball redirect is counted.\n\n")
 	w("| Counter | Count | Must be |\n|---|---|---|\n")
 	w("| Canary connections | %d | 0 |\n", s.CanaryConnections)
 	w("| Canary files | %d | 0 |\n", len(s.CanaryFiles))
 	w("| Egress attempts | %d | 0 |\n", len(s.Egress))
 	w("| Files written outside the work folders | %d | 0 |\n", len(s.OutsideWrites))
-	w("| Fake keys printed or written unmasked | %d | 0 |\n\n", len(s.Unmasked))
+	w("| Fake keys printed or written unmasked | %d | 0 |\n", len(s.Unmasked))
+	w("| Codeload requests carrying GITHUB_TOKEN | %d | 0 |\n\n", len(s.Forwarded))
 	for _, list := range []struct {
 		name  string
 		items []string
-	}{{"Canary files", s.CanaryFiles}, {"Egress attempts", s.Egress}, {"Outside writes", s.OutsideWrites}, {"Unmasked fake keys", s.Unmasked}} {
+	}{{"Canary files", s.CanaryFiles}, {"Egress attempts", s.Egress}, {"Outside writes", s.OutsideWrites}, {"Unmasked fake keys", s.Unmasked}, {"Credentials sent to codeload", s.Forwarded}} {
 		if len(list.items) == 0 {
 			continue
 		}

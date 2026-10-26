@@ -65,7 +65,7 @@ test keeps the README table equal to it.
 | 18905 | Canary: every bad payload would connect here; must stay silent |
 | 18906 | Webhook receiver for watch notifications |
 | 18907 | Docker WordPress for `--soundcheck` (e15), through the gate |
-| 18908 | GitHub codeload, the zipball redirect target |
+| 18908 | GitHub codeload, the zipball redirect target, reached as `localhost` (a second host name) |
 | 23301 to 23305 | Probes: stalled body, endless body, 429 then 200, redirect to 169.254.169.254, self-signed TLS |
 | 23310, 23311 | Probe: redirect to an unconfigured port (hit-counted); nothing listens on 23311 |
 | 23320 | Front: 429 with Retry-After on each path's first request (e02) |
@@ -157,7 +157,7 @@ them in this order.
 | Every run wrote a report | no scenario with the status `no-report` |
 | Exit codes, verdicts and Not checked as expected | the manifest's `expect` per scenario |
 | Zero false alarms in the control pass | 10 rounds of every good scenario |
-| Zero canary, egress, outside-write and unmasked-key events | canary connections and files, proxy guard lines, tree snapshots, the fixtures' fake keys found in full in any output or report |
+| Zero canary, egress, outside-write, unmasked-key and forwarded-token events | canary connections and files, proxy guard lines, tree snapshots, the fixtures' fake keys found in full in any output or report, codeload requests that carried an `Authorization` header (the bench sets a fake `GITHUB_TOKEN`) |
 | Every environment scenario passes | each `env` block, e15's eight cases; e13 is "not run" on Linux and runs in the nightly `bench-windows` job |
 | Cold and warm runs agree | the same outcome from an empty and a warm cache |
 | p01-large under 10 s warm and 512 MB RSS | 4,000 files of about 10 KB, rusage of the child |
@@ -180,7 +180,7 @@ The rest:
 | `SIGHTREAD_WPTHEMESVN` | `https://127.0.0.1:18900/svn/themes` | fetch |
 | `SIGHTREAD_PACKAGIST`, `SIGHTREAD_PACKAGIST_META` | `https://127.0.0.1:18901` | fetch (source/packagist) |
 | `SIGHTREAD_GITHUB_API` | `https://127.0.0.1:18902` | fetch (source/github) |
-| `SIGHTREAD_GITHUB_CODELOAD` | `https://127.0.0.1:18908` | fetch (source/github) |
+| `SIGHTREAD_GITHUB_CODELOAD` | `https://localhost:18908` | fetch (source/github) |
 | `SIGHTREAD_NPM_REGISTRY` | `https://127.0.0.1:18903`; e01 `:23311`, e02 `:23320`, e03 and e08 `:23321` | fetch (source/npm) |
 | `SIGHTREAD_OSV_API` | `https://127.0.0.1:18904` | fetch (source/osv) |
 | `SIGHTREAD_NPM_EXTRA_KEYS` | `testbed/state/npm-keys.json`, the run's npm signing key | fetch (source/npm) |

@@ -124,19 +124,20 @@ func (r *Registry) signNPM() error {
 // closes the registry with Close.
 func (r *Registry) Start() error {
 	routes := []struct {
-		port int
-		mux  *http.ServeMux
+		port    int
+		service string
+		mux     *http.ServeMux
 	}{
-		{ports.WPOrg, r.wporgMux()},
-		{ports.Packagist, r.packagistMux()},
-		{ports.GitHub, r.githubMux()},
-		{ports.NPM, r.npmMux()},
-		{ports.OSV, r.osvMux()},
-		{ports.Codeload, r.codeloadMux()},
+		{ports.WPOrg, "wporg", r.wporgMux()},
+		{ports.Packagist, "packagist", r.packagistMux()},
+		{ports.GitHub, "github", r.githubMux()},
+		{ports.NPM, "npm", r.npmMux()},
+		{ports.OSV, "osv", r.osvMux()},
+		{ports.Codeload, ServiceCodeload, r.codeloadMux()},
 	}
 	r.bound = map[int]int{}
 	for _, rt := range routes {
-		if err := r.serve(rt.port, rt.mux); err != nil {
+		if err := r.serve(rt.port, rt.service, rt.mux); err != nil {
 			_ = r.Close()
 			return err
 		}
@@ -155,7 +156,7 @@ func (r *Registry) Port(port int) int {
 
 // serve starts one listener on 127.0.0.1:port, or on a free port with
 // AnyPort.
-func (r *Registry) serve(port int, mux *http.ServeMux) error {
+func (r *Registry) serve(port int, service string, mux *http.ServeMux) error {
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
 	if r.opts.AnyPort {
 		addr = "127.0.0.1:0"
@@ -166,7 +167,7 @@ func (r *Registry) serve(port int, mux *http.ServeMux) error {
 	}
 	r.bound[port] = ln.Addr().(*net.TCPAddr).Port
 	srv := &http.Server{
-		Handler:           r.logging(mux),
+		Handler:           r.logging(service, mux),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	if !r.opts.PlainHTTP {
@@ -182,10 +183,14 @@ func (r *Registry) serve(port int, mux *http.ServeMux) error {
 	return nil
 }
 
+// ServiceCodeload is the service name the request log gives the codeload
+// listener. No request there may carry an Authorization header.
+const ServiceCodeload = "codeload"
+
 // logging records every request before handing it to the mux.
-func (r *Registry) logging(next http.Handler) http.Handler {
+func (r *Registry) logging(service string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		r.log.record(req.Host, req.Method, req.URL.Path, req.URL.RawQuery)
+		r.log.record(service, req.Host, req.Method, req.URL.Path, req.URL.RawQuery, req.Header.Get("Authorization") != "")
 		next.ServeHTTP(w, req)
 	})
 }

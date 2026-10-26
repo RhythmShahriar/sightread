@@ -54,6 +54,15 @@ func FakeKeys() []string {
 	return out
 }
 
+// FakeGitHubToken returns the fake GITHUB_TOKEN the benchmark hands
+// Sightread, assembled at run time like every other fake key. The
+// registry's request log then shows whether it reached codeload, where
+// it must never go.
+func FakeGitHubToken() string {
+	k, _ := fakeKey("github")
+	return k
+}
+
 // fakeKeyRE matches a {{fakekey:<kind>}} placeholder.
 var fakeKeyRE = regexp.MustCompile(`\{\{fakekey:([a-z]+)\}\}`)
 

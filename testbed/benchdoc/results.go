@@ -151,13 +151,17 @@ type Safety struct {
 	// Unmasked lists the places a fixture's fake key appeared in full
 	// (terminal output or a written report), as "<scenario>: <where>".
 	Unmasked []string `json:"unmasked,omitempty"`
+	// Forwarded lists codeload requests that carried an Authorization
+	// header: GITHUB_TOKEN copied across the zipball redirect, as
+	// "<method> <host><path>".
+	Forwarded []string `json:"forwarded_credentials,omitempty"`
 }
 
-// Zero reports whether nothing fired, escaped, was written outside or
-// was printed unmasked.
+// Zero reports whether nothing fired, escaped, was written outside, was
+// printed unmasked or carried a credential to the wrong host.
 func (s Safety) Zero() bool {
 	return s.CanaryConnections == 0 && len(s.CanaryFiles) == 0 && len(s.Egress) == 0 && len(s.OutsideWrites) == 0 &&
-		len(s.Unmasked) == 0
+		len(s.Unmasked) == 0 && len(s.Forwarded) == 0
 }
 
 // Large is the p01-large performance check.

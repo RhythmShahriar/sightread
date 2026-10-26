@@ -20,6 +20,7 @@ import (
 	"github.com/RhythmShahriar/sightread/testbed/benchdoc"
 	"github.com/RhythmShahriar/sightread/testbed/fsnap"
 	"github.com/RhythmShahriar/sightread/testbed/large"
+	"github.com/RhythmShahriar/sightread/testbed/registry"
 	"github.com/RhythmShahriar/sightread/testbed/scenario"
 )
 
@@ -174,27 +175,57 @@ func (h *harness) safety() benchdoc.Safety {
 	s.Egress = append(append(s.Egress, h.egress...), h.foreignRequests()...)
 	s.OutsideWrites = h.outside
 	s.Unmasked = h.unmasked
+	s.Forwarded = h.forwardedCredentials()
 	return s
 }
 
-// foreignRequests lists registry requests whose Host names something
-// other than loopback: a client that sent a real host name to a fixture.
-func (h *harness) foreignRequests() []string {
+// loggedRequest is the part of a requests.log line the safety checks read.
+type loggedRequest struct {
+	Service, Host, Method, Path string
+	Auth                        bool
+}
+
+// loggedRequests reads every line of the registry's request log.
+func (h *harness) loggedRequests() []loggedRequest {
 	f, err := os.Open(filepath.Join(h.state, "requests.log")) //nolint:gosec // the registry's own log
 	if err != nil {
 		return nil
 	}
 	defer func() { _ = f.Close() }()
-	var out []string
+	var out []loggedRequest
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 0, 64*1024), 1<<20)
 	for sc.Scan() {
-		var line struct{ Host, Path string }
+		var line loggedRequest
 		if json.Unmarshal(sc.Bytes(), &line) != nil {
 			continue
 		}
-		if !loopbackHost(line.Host) {
-			out = append(out, "registry request for "+line.Host+line.Path)
+		out = append(out, line)
+	}
+	return out
+}
+
+// foreignRequests lists registry requests whose Host names something
+// other than loopback: a client that sent a real host name to a fixture.
+func (h *harness) foreignRequests() []string {
+	var out []string
+	for _, l := range h.loggedRequests() {
+		if !loopbackHost(l.Host) {
+			out = append(out, "registry request for "+l.Host+l.Path)
+		}
+	}
+	return out
+}
+
+// forwardedCredentials lists codeload requests that carried an
+// Authorization header. The bench gives Sightread a fake GITHUB_TOKEN;
+// it belongs to the GitHub API only and must not follow the zipball
+// redirect to the second host name.
+func (h *harness) forwardedCredentials() []string {
+	var out []string
+	for _, l := range h.loggedRequests() {
+		if l.Service == registry.ServiceCodeload && l.Auth {
+			out = append(out, l.Method+" "+l.Host+l.Path)
 		}
 	}
 	return out
