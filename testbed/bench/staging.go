@@ -171,12 +171,17 @@ func (h *harness) staging(ctx context.Context) []benchdoc.EnvResult {
 // Those are Soundcheck's, so they must not count as Sightread's egress
 // or outside writes. They must still go nowhere.
 type soundcheckJail struct {
-	bin   string // the folder holding the wrapper, for the front of PATH
-	tmp   string // Soundcheck's TMPDIR
+	bin string // the folder holding the wrapper, for the front of PATH
+	tmp string // Soundcheck's TMPDIR
+	// wd is the folder Soundcheck runs in, under tmp. Soundcheck keeps
+	// its .soundcheck/ store (snapshots, runs) in its working folder,
+	// which would otherwise be testbed/, where Sightread runs.
+	wd    string
 	guard *probes.Guard
 }
 
-// close stops the guard and removes the temp folder.
+// close stops the guard and removes the temp folder, Soundcheck's
+// working folder with it.
 func (j *soundcheckJail) close() error {
 	_ = os.RemoveAll(j.tmp)
 	return j.guard.Close()
@@ -209,8 +214,12 @@ func (h *harness) jailSoundcheck(real string) (*soundcheckJail, error) {
 		_ = g.Close()
 		return nil, err
 	}
-	j := &soundcheckJail{bin: bin, tmp: tmp, guard: g}
-	if err := os.WriteFile(filepath.Join(bin, "rhythm-soundcheck"), []byte(soundcheckWrapper(real, home, tmp, g.Port())), 0o750); err != nil { //nolint:gosec // an executable wrapper in the work folder
+	j := &soundcheckJail{bin: bin, tmp: tmp, wd: filepath.Join(tmp, "wd"), guard: g}
+	if err := os.Mkdir(j.wd, 0o750); err != nil {
+		_ = j.close()
+		return nil, err
+	}
+	if err := os.WriteFile(filepath.Join(bin, "rhythm-soundcheck"), []byte(soundcheckWrapper(real, home, tmp, j.wd, g.Port())), 0o750); err != nil { //nolint:gosec // an executable wrapper in the work folder
 		_ = j.close()
 		return nil, err
 	}
@@ -218,10 +227,12 @@ func (h *harness) jailSoundcheck(real string) (*soundcheckJail, error) {
 }
 
 // soundcheckWrapper is the wrapper script: Soundcheck's own HOME and XDG
-// folders under home, TMPDIR at tmp and every proxy variable on the
-// guard at port. Loopback stays direct, so the staging site is still
-// reached.
-func soundcheckWrapper(real, home, tmp string, port int) string {
+// folders under home, TMPDIR at tmp, its working folder at wd (so its
+// .soundcheck/ store lands there, not in testbed/) and every proxy
+// variable on the guard at port. Loopback stays direct, so the staging
+// site is still reached. Sightread passes Soundcheck only URLs and
+// snapshot names, so the change of folder changes nothing it reads.
+func soundcheckWrapper(real, home, tmp, wd string, port int) string {
 	guard := fmt.Sprintf("http://127.0.0.1:%d", port)
 	var b strings.Builder
 	b.WriteString("#!/bin/sh\n# Written by the benchmark: Soundcheck and its Chrome in the work folder.\n")
@@ -236,6 +247,7 @@ func soundcheckWrapper(real, home, tmp string, port int) string {
 	for _, v := range vars {
 		fmt.Fprintf(&b, "%s=%s\nexport %s\n", v[0], shellQuote(v[1]), v[0])
 	}
+	fmt.Fprintf(&b, "cd %s || exit 2\n", shellQuote(wd))
 	fmt.Fprintf(&b, "exec %s \"$@\"\n", shellQuote(real))
 	return b.String()
 }

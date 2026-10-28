@@ -17,14 +17,16 @@ import (
 
 // TestSoundcheckJail: the wrapper starts the real binary with its
 // arguments, a HOME and XDG folders in the work folder and every proxy
-// variable on its own guard, whatever the caller's environment says.
+// variable on its own guard, whatever the caller's environment says. It
+// runs in a temp folder, so Soundcheck's .soundcheck/ store never lands
+// in testbed/.
 func TestSoundcheckJail(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("the wrapper is a POSIX shell script")
 	}
 	dir := t.TempDir()
 	real := filepath.Join(dir, "it's real")
-	if err := os.WriteFile(real, []byte("#!/bin/sh\necho \"args=$*\"\nenv\n"), 0o750); err != nil { //nolint:gosec // a test script
+	if err := os.WriteFile(real, []byte("#!/bin/sh\necho \"args=$*\"\necho \"wd=$(pwd -P)\"\nenv\n"), 0o750); err != nil { //nolint:gosec // a test script
 		t.Fatal(err)
 	}
 	h := &harness{work: filepath.Join(dir, "work")}
@@ -40,6 +42,13 @@ func TestSoundcheckJail(t *testing.T) {
 		t.Fatalf("%v: %s", err, out)
 	}
 	home := filepath.Join(h.work, "soundcheck", "home")
+	wd, err := filepath.EvalSymlinks(sc.wd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(sc.wd, sc.tmp+string(filepath.Separator)) || !strings.Contains(string(out), "wd="+wd+"\n") {
+		t.Errorf("Soundcheck does not run in %s under its temp folder:\n%s", sc.wd, out)
+	}
 	guard := "http://127.0.0.1:" + strconv.Itoa(sc.guard.Port())
 	for _, want := range []string{"args=compare a b", "HOME=" + home, "XDG_CACHE_HOME=" + home + "/.cache",
 		"XDG_CONFIG_HOME=" + home + "/.config", "TMPDIR=" + sc.tmp, "HTTPS_PROXY=" + guard, "http_proxy=" + guard, "ALL_PROXY=" + guard} {
