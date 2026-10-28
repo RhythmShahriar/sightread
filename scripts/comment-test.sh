@@ -9,6 +9,12 @@
 # records each call. CI runs it; so can you: scripts/comment-test.sh
 set -uo pipefail
 
+# Each case sets the runner variables it needs. On a real runner the
+# job's own would leak into the cases that leave them out (a pull
+# request's GITHUB_BASE_REF gives "changes" a base), so start from none.
+unset GITHUB_BASE_REF GITHUB_HEAD_REF GITHUB_EVENT_NAME GITHUB_EVENT_PATH GITHUB_REPOSITORY \
+  GITHUB_RUN_ID GITHUB_SERVER_URL GITHUB_OUTPUT GITHUB_STEP_SUMMARY GITHUB_PATH RUNNER_TEMP
+
 here=$(cd "$(dirname "$0")" && pwd)
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
