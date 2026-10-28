@@ -964,7 +964,9 @@ func TestSendFailureSummarised(t *testing.T) {
 	if !strings.Contains(r.Lines(), "\n  couldn't notify "+want) || strings.Contains(r.Lines(), "dial tcp") {
 		t.Errorf("lines %q", r.Lines())
 	}
-	if !strings.Contains(verbose.String(), "couldn't notify webhook+http://"+addr+": ") || !strings.Contains(verbose.String(), "connect: connection refused") {
+	// The raw error's wording is the system's own (Windows says the
+	// target "actively refused it"); its "dial tcp" is the same anywhere.
+	if !strings.Contains(verbose.String(), "couldn't notify webhook+http://"+addr+": dial tcp "+addr+": ") {
 		t.Errorf("-v holds no raw error: %q", verbose.String())
 	}
 }
