@@ -410,6 +410,43 @@ func TestReportMerges(t *testing.T) {
 	}
 }
 
+// TestReportRedactsInCI: report redacts paths when CI is set unless
+// --redact-paths says otherwise; --help reads the same either way.
+func TestReportRedactsInCI(t *testing.T) {
+	w := world(t)
+	jsonReports(t)
+	a := saveReport(t, &core.Report{Kind: core.KindReview, Target: core.Target{Path: "/srv/a"}, Updates: []core.Update{{Name: "x"}}})
+	for _, c := range []struct {
+		ci   string
+		args []string
+		want bool
+	}{
+		{"", nil, false},
+		{"true", nil, true},
+		{"true", []string{"--redact-paths=false"}, false},
+		{"", []string{"--redact-paths"}, true},
+	} {
+		t.Setenv("CI", c.ci)
+		before := len(w.Writers[core.FormatMarkdown].Options())
+		args := append([]string{"report", a, "--md"}, c.args...)
+		if code, _, errOut := execute(t, args...); code != cli.ExitOK {
+			t.Fatalf("CI=%q %v: exit %d %q", c.ci, c.args, code, errOut)
+		}
+		opts := w.Writers[core.FormatMarkdown].Options()
+		if len(opts) != before+1 || opts[before].RedactPaths != c.want {
+			t.Errorf("CI=%q %v: RedactPaths %+v, want %v", c.ci, c.args, opts[before:], c.want)
+		}
+	}
+	var help [2]string
+	for i, ci := range []string{"", "true"} {
+		t.Setenv("CI", ci)
+		_, help[i], _ = execute(t, "report", "--help")
+	}
+	if help[0] != help[1] || help[0] == "" {
+		t.Errorf("report --help differs with CI set:\n%s\nwithout:\n%s", help[1], help[0])
+	}
+}
+
 // TestMergeKeepsLocations: merged reports keep what SARIF needs to
 // find their files. One target is kept as it is; targets in one
 // repository get paths relative to its root; a target outside a

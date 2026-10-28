@@ -394,17 +394,19 @@ func (l AllowList) Match(eco core.Ecosystem, name, version, sha256 string) (*cor
 type FakeWriter struct {
 	Name string // the format it registers as
 
-	mu  sync.Mutex
-	got []*core.Report
+	mu   sync.Mutex
+	got  []*core.Report
+	opts []core.WriteOptions
 }
 
 // Format returns Name.
 func (w *FakeWriter) Format() string { return w.Name }
 
-// Write records r and writes "fake <format>: <n> updates".
-func (w *FakeWriter) Write(out io.Writer, r *core.Report, _ core.WriteOptions) error {
+// Write records r and o and writes "fake <format>: <n> updates".
+func (w *FakeWriter) Write(out io.Writer, r *core.Report, o core.WriteOptions) error {
 	w.mu.Lock()
 	w.got = append(w.got, r)
+	w.opts = append(w.opts, o)
 	w.mu.Unlock()
 	_, err := fmt.Fprintf(out, "fake %s: %d updates\n", w.Name, len(r.Updates))
 	return err
@@ -415,6 +417,13 @@ func (w *FakeWriter) Got() []*core.Report {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	return append([]*core.Report(nil), w.got...)
+}
+
+// Options returns the write options of each report written so far.
+func (w *FakeWriter) Options() []core.WriteOptions {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return append([]core.WriteOptions(nil), w.opts...)
 }
 
 // Install registers w for its format for the test.
