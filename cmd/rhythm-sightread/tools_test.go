@@ -101,6 +101,17 @@ func TestExplain(t *testing.T) {
 	if code != cli.ExitUsage || errOut != want {
 		t.Errorf("unknown signal: exit %d %q", code, errOut)
 	}
+	// A word close to a part of an ID gets that ID, as the changes
+	// notes say: "evil" is not two edits from any ID.
+	code, _, errOut = execute(t, "explain", "evil")
+	want = "rhythm-sightread explain: no signal \"evil\" (did you mean eval-dynamic?)\n  list them: rhythm-sightread signals\n"
+	if code != cli.ExitUsage || errOut != want {
+		t.Errorf("explain evil: exit %d %q", code, errOut)
+	}
+	code, _, errOut = execute(t, "explain", "zzzzzzzzzz")
+	if code != cli.ExitUsage || strings.Contains(errOut, "did you mean") {
+		t.Errorf("explain zzzzzzzzzz: exit %d %q", code, errOut)
+	}
 }
 
 // TestExplainFinding picks a finding by number and by fingerprint and

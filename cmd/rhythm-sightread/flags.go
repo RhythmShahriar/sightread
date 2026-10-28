@@ -726,10 +726,11 @@ func scopeTokens() map[string]string {
 }
 
 // unknownSignal is the E13-style error for an ID that isn't in the
-// catalogue, with the nearest one.
+// catalogue, with the nearest one when one is reasonably close ("evil"
+// suggests eval-dynamic).
 func unknownSignal(id string) error {
 	what := fmt.Sprintf("no signal %q", id)
-	if s := cli.Suggest(id, core.SignalIDs()); s != "" {
+	if s := core.SuggestSignal(id); s != "" {
 		what += " (did you mean " + s + "?)"
 	}
 	return &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, What: what, Hint: []string{"list them: " + cli.Name() + " signals"}}

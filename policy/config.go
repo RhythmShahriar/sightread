@@ -349,7 +349,7 @@ func knownSignal(id string) error {
 		return nil
 	}
 	msg := "no signal " + show(id)
-	if s := cli.Suggest(id, core.SignalIDs()); s != "" {
+	if s := core.SuggestSignal(id); s != "" {
 		msg += " (did you mean " + s + "?)"
 	} else {
 		msg += " (" + cli.Name() + " signals lists them)"

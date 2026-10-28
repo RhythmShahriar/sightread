@@ -119,65 +119,12 @@ func writeExplainJSON(w io.Writer, d core.ExplainData, complete bool, o core.Wri
 // unknownSignal is the E13 error for an ID outside the catalogue.
 func unknownSignal(id string, o core.WriteOptions) *core.Error {
 	e := &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: "explain", What: "no signal \"" + tt(id) + "\""}
-	if s := suggestSignal(id); s != "" {
+	if s := core.SuggestSignal(id); s != "" {
 		e.What += " (did you mean " + s + "?)"
 	} else {
 		e.Hint = []string{tt(programName(o.Program)) + " signals lists them"}
 	}
 	return e
-}
-
-// suggestSignal returns the catalogue ID closest to id: kit's suggestion
-// (two edits at most), else an ID with a part close to id, so "evil"
-// suggests eval-dynamic and "exfil" data-exfil, else an ID starting with
-// id.
-func suggestSignal(id string) string {
-	ids := core.SignalIDs()
-	if s := cli.Suggest(id, ids); s != "" {
-		return s
-	}
-	in := strings.ToLower(id)
-	best, bestDist := "", 3
-	for _, full := range ids {
-		for _, part := range strings.Split(full, "-") {
-			if d := editDistance(in, part); d < bestDist && d < len([]rune(in)) {
-				best, bestDist = full, d
-			}
-		}
-	}
-	if best != "" {
-		return best
-	}
-	if len(in) >= 3 {
-		for _, full := range ids {
-			if strings.HasPrefix(full, in) {
-				return full
-			}
-		}
-	}
-	return ""
-}
-
-// editDistance is the Levenshtein distance between a and b in runes.
-func editDistance(a, b string) int {
-	ra, rb := []rune(a), []rune(b)
-	prev := make([]int, len(rb)+1)
-	for j := range prev {
-		prev[j] = j
-	}
-	for i := 1; i <= len(ra); i++ {
-		cur := make([]int, len(rb)+1)
-		cur[0] = i
-		for j := 1; j <= len(rb); j++ {
-			cost := 1
-			if ra[i-1] == rb[j-1] {
-				cost = 0
-			}
-			cur[j] = min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost)
-		}
-		prev = cur
-	}
-	return prev[len(rb)]
 }
 
 // selectFinding finds sel in r. It returns the update, the finding, its

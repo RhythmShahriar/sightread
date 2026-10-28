@@ -339,17 +339,6 @@ func TestExplainFindingSelectErrors(t *testing.T) {
 	}
 }
 
-func TestSuggestSignal(t *testing.T) {
-	for in, want := range map[string]string{
-		"eval-dynamic": "eval-dynamic", "evil": "eval-dynamic", "typosquad": "typosquat", "cron": "cron-new-hook",
-		"zzzzzzzzzz": "", "": "", "a": "",
-	} {
-		if got := suggestSignal(in); got != want {
-			t.Errorf("suggestSignal(%q) = %q, want %q", in, got, want)
-		}
-	}
-}
-
 // validateDocument checks doc against the shipped schema.
 func validateDocument(t *testing.T, doc []byte) {
 	t.Helper()
