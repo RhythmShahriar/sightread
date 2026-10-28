@@ -121,7 +121,10 @@ func localPath(dir, p string) string {
 			return filepath.Join(home, rest)
 		}
 	}
-	if !filepath.IsAbs(p) {
+	// A rooted \var\www on Windows has no drive letter, so it isn't
+	// absolute there; it names the folder on the current drive and
+	// not one under dir. Neither does a drive-relative C:www.
+	if !filepath.IsAbs(p) && !strings.HasPrefix(p, string(filepath.Separator)) && filepath.VolumeName(p) == "" {
 		return filepath.Join(dir, p)
 	}
 	return p
