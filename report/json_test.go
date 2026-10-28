@@ -333,10 +333,14 @@ func TestRedactPaths(t *testing.T) {
 	r.Updates[0].Installed.Path = filepath.Join(site, "wp-content", "plugins", "x")
 	r.Updates[0].Soundcheck = &core.SoundcheckResult{Report: filepath.Join(home, "reports", "sc.html")}
 	r.Warnings = append(r.Warnings, "couldn't read "+filepath.Join(site, "wp-config.php"))
+	// JSON escapes the backslashes of a Windows path, so look for home
+	// as JSON writes it.
+	q, _ := json.Marshal(home)
+	jsonHome := q[1 : len(q)-1]
 	o := testOpts
 	o.RedactPaths = true
 	doc := writeWith(t, core.FormatJSON, r, o)
-	if bytes.Contains(doc, []byte(home)) {
+	if bytes.Contains(doc, jsonHome) {
 		t.Errorf("the home path is still in the report:\n%s", doc)
 	}
 	for _, want := range []string{`"path": "."`, `"path": "wp-content/plugins/x"`, `"report": "~/reports/sc.html"`, `couldn't read wp-config.php`} {
@@ -345,7 +349,7 @@ func TestRedactPaths(t *testing.T) {
 		}
 	}
 	plain := writeWith(t, core.FormatJSON, r, testOpts)
-	if !bytes.Contains(plain, []byte(home)) {
+	if !bytes.Contains(plain, jsonHome) {
 		t.Errorf("without RedactPaths the path should stay")
 	}
 
@@ -354,7 +358,7 @@ func TestRedactPaths(t *testing.T) {
 	if err := (JSONLWriter{}).WriteUpdateIn(&line, &r.Updates[0], site, o); err != nil {
 		t.Fatal(err)
 	}
-	if bytes.Contains(line.Bytes(), []byte(home)) || !bytes.Contains(line.Bytes(), []byte(`"path":"wp-content/plugins/x"`)) {
+	if bytes.Contains(line.Bytes(), jsonHome) || !bytes.Contains(line.Bytes(), []byte(`"path":"wp-content/plugins/x"`)) {
 		t.Errorf("jsonl line not redacted like json:\n%s", line.String())
 	}
 	// Without the target only the home prefix can go.
@@ -575,5 +579,19 @@ func TestJSONSoundcheckNotCompared(t *testing.T) {
 	}
 	if errs := validateStrict(loadSchema(t, schemaPath), doc); len(errs) > 0 {
 		t.Errorf("schema: %v", errs)
+	}
+}
+
+// TestReplacePrefix: a path in a message loses its prefix and keeps
+// forward slashes up to the punctuation that ends it.
+func TestReplacePrefix(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"can't read /home/u/other/x.php: denied", "can't read ~/other/x.php: denied"},
+		{"\"/home/u/a b\" and /home/u/c, /home/u/d)", "\"~/a b\" and ~/c, ~/d)"},
+		{"nothing here", "nothing here"},
+	} {
+		if got := replacePrefix(c.in, "/home/u/", "~/"); got != c.want {
+			t.Errorf("replacePrefix(%q) = %q, want %q", c.in, got, c.want)
+		}
 	}
 }

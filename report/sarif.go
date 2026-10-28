@@ -462,7 +462,10 @@ func (l locator) uri(rel string) (string, bool) {
 		}
 		return escapeURI(c), true
 	}
-	if filepath.IsAbs(filepath.FromSlash(rel)) {
+	// A rooted path such as /etc/composer.lock isn't absolute on Windows,
+	// where it lacks a drive letter; it still names no file under
+	// the target; neither does a drive-relative C:composer.lock.
+	if fp := filepath.FromSlash(rel); filepath.IsAbs(fp) || filepath.VolumeName(fp) != "" || strings.HasPrefix(rel, "/") {
 		return ".", false
 	}
 	abs := filepath.Join(l.target, filepath.FromSlash(rel))
