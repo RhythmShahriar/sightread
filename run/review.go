@@ -290,7 +290,7 @@ func (r *reviewer) applyConfig() {
 	c, q := r.cfg, &r.req
 	if !q.set("path") && c.Path != "" {
 		p := c.Path
-		if !filepath.IsAbs(p) && r.cfgPath != "" {
+		if !rooted(p) && r.cfgPath != "" {
 			// path is relative to the project, the folder holding .sightread/.
 			p = filepath.Join(filepath.Dir(filepath.Dir(r.cfgPath)), p)
 		}
