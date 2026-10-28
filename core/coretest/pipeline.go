@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
@@ -289,6 +290,11 @@ func (p *FakePolicy) LoadAllow(*core.Config, string, string) (core.AllowSet, err
 func (p *FakePolicy) AddAllow(_ string, e core.AllowEntry) error {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	// An expired entry for the version gives way to the new one.
+	today := time.Now().Format(time.DateOnly)
+	p.Allow = slices.DeleteFunc(p.Allow, func(a core.AllowEntry) bool {
+		return a.Package == e.Package && a.Version == e.Version && a.Until != "" && a.Until < today
+	})
 	for _, a := range p.Allow {
 		if a.Package == e.Package && a.Version == e.Version && strings.EqualFold(a.SHA256, e.SHA256) {
 			return &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage, What: e.Package + "@" + e.Version + " is already allowed",

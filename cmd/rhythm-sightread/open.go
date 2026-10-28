@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/RhythmShahriar/sightread/core"
 	"github.com/RhythmShahriar/sightread/internal/proc"
 )
 
@@ -28,13 +27,7 @@ func openReport(ctx context.Context, p *plan, stderr io.Writer) {
 
 // openFirstHTML opens the first HTML file of files, as openReport does.
 func openFirstHTML(ctx context.Context, files []output, log, stderr io.Writer) {
-	path := ""
-	for _, f := range files {
-		if f.format == core.FormatHTML {
-			path = f.path
-			break
-		}
-	}
+	path := firstHTML(files)
 	if abs, err := filepath.Abs(path); err == nil {
 		path = abs
 	}

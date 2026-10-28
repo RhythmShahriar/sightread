@@ -175,3 +175,55 @@ func TestLocalUnverifiedHint(t *testing.T) {
 		t.Error("the local hint still says to run again later")
 	}
 }
+
+// unknownSource is a WordPress.org source that knows no plugin, with the
+// real source's E2 text and hint.
+type unknownSource struct{ *runtest.Source }
+
+func (unknownSource) Meta(_ context.Context, ref core.Ref) (*core.Meta, error) {
+	return nil, &core.Error{Code: core.EUnknownPackage, Exit: 2, Command: "plugin",
+		What: "wordpress.org has no plugin \"" + ref.Name + "\"",
+		Hint: []string{"A premium plugin has no official source: use --to-file <zip>"}}
+}
+
+func (s unknownSource) Versions(ctx context.Context, name string) ([]string, error) {
+	_, err := s.Meta(ctx, core.Ref{Name: name})
+	return nil, err
+}
+
+// TestLocalToFileUnknownFrom: with --to-file given, a --from that
+// WordPress.org doesn't know points at the installed side, not at the
+// --to-file the run already has.
+func TestLocalToFileUnknownFrom(t *testing.T) {
+	w := runtest.Install(t)
+	src := unknownSource{w.Sources[core.WPPlugin]}
+	t.Cleanup(core.SwapSource(core.WPPlugin, func(*core.Env) core.Source { return src }))
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "new.zip"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(core.SwapLocalArchive(func(context.Context, string, core.BlobStore, core.Limits) (*core.Tree, error) {
+		return coretest.Tree(map[string]string{"p.php": "<?php\n"}), nil
+	}))
+	req := request(t, "plugin")
+	req.Eco, req.Names, req.From = core.WPPlugin, []string{"myplug"}, "1.0.0"
+	req.ToFile = filepath.Join(dir, "new.zip")
+	var problems []*core.Error
+	req.OnProblem = func(e *core.Error) { problems = append(problems, e) }
+	rep := review(t, req)
+	if len(problems) != 1 || len(problems[0].Hint) != 1 || problems[0].Hint[0] != run.InstalledSideHint {
+		t.Errorf("E2 problems %+v", problems)
+	}
+	if len(rep.NotChecked) != 1 || rep.NotChecked[0].Hint != run.InstalledSideHint {
+		t.Errorf("not checked %+v", rep.NotChecked)
+	}
+	// The source's own error keeps its --to-file hint for other runs.
+	if _, err := src.Meta(context.Background(), core.Ref{Name: "myplug"}); !strings.Contains(err.Error(), "use --to-file <zip>") {
+		t.Errorf("source error changed: %v", err)
+	}
+	// Without --to-file the named package fails with the --to-file hint.
+	req.ToFile = ""
+	if _, err := run.Review(context.Background(), req); err == nil || !strings.Contains(err.Error(), "use --to-file <zip>") {
+		t.Errorf("without --to-file: %v", err)
+	}
+}

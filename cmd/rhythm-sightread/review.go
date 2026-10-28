@@ -127,6 +127,9 @@ func (c *reviewCommand) parse(args []string, stdout, stderr io.Writer) (*plan, [
 	if err := c.positional(p, f, pos); err != nil {
 		return nil, nil, err
 	}
+	if err := checkLocalFiles(f); err != nil {
+		return nil, nil, err
+	}
 	if err := c.checkSoundcheck(p); err != nil {
 		return nil, nil, err
 	}

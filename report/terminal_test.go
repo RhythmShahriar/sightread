@@ -305,7 +305,7 @@ func TestTerminalMulti(t *testing.T) {
 		"  NOT CHECKED  2 ─",
 		"    gravityforms 2.8.1 (wp-plugin): not on WordPress.org\n",
 		"      → give the vendor's zip with --to-file\n",
-		"    left-pad (npm): can't reach registry.npmjs.org (no such host) (E7)\n",
+		"    left-pad (npm): can't reach registry.npmjs.org (no such host)\n",
 		"6 UPDATES",
 		"1 hold · 1 review · 2 routine · 1 allowed · 1 unverified",
 		"Incomplete review: 1 update couldn't be verified, 1 package wasn't checked and 1 error.",
@@ -709,8 +709,8 @@ func TestFetchFailureListedOnce(t *testing.T) {
 	term := writeTerm(t, r, termOpts(120))
 	for _, want := range []string{
 		"  NOT CHECKED  2 ─",
-		"    date-utils-lite 1.4.0 (npm): could not download (can't reach registry.npmjs.org) (E7)\n",
-		"    other (npm): can't reach registry.npmjs.org (E7)\n",
+		"    date-utils-lite 1.4.0 (npm): could not download (can't reach registry.npmjs.org)\n",
+		"    other (npm): can't reach registry.npmjs.org\n",
 		"Incomplete review: 1 package wasn't checked and 1 error.",
 	} {
 		if !strings.Contains(term, want) {
@@ -722,11 +722,41 @@ func TestFetchFailureListedOnce(t *testing.T) {
 	}
 	md := writeMD(t, r)
 	if !strings.Contains(md, "**Incomplete review:** 1 package wasn't checked and 1 error.") ||
-		strings.Count(md, "date-utils-lite") != 1 || !strings.Contains(md, "(E7)") {
+		strings.Count(md, "date-utils-lite") != 1 {
 		t.Errorf("markdown:\n%s", md)
 	}
-	if h := writeHTML(t, r); strings.Count(h, "date-utils-lite") != 1 || !strings.Contains(h, "1 package wasn&#39;t checked and 1 error") {
+	h := writeHTML(t, r)
+	if strings.Count(h, "date-utils-lite") != 1 || !strings.Contains(h, "1 package wasn&#39;t checked and 1 error") {
 		t.Errorf("html lists the failure %d times", strings.Count(h, "date-utils-lite"))
+	}
+	// The error code is for scripts (the JSON keeps it), not the text.
+	for name, out := range map[string]string{"terminal": term, "markdown": md, "html": h} {
+		if strings.Contains(out, "(E7)") {
+			t.Errorf("%s shows the error code:\n%s", name, out)
+		}
+	}
+}
+
+// TestNextStepsHTMLWritten: a run that writes an HTML report points at
+// that file for the full diff instead of asking for a rerun, for one
+// update, several and the demo.
+func TestNextStepsHTMLWritten(t *testing.T) {
+	single := coretest.SampleReport()
+	single.Updates = single.Updates[:1]
+	for name, c := range map[string]struct {
+		r    *core.Report
+		demo bool
+	}{"multi": {coretest.SampleReport(), false}, "single": {single, false}, "demo": {coretest.SampleReport(), true}} {
+		o := termOpts(120)
+		o.Demo = c.demo
+		o.HTMLReport = "out dir/b21.html"
+		out := writeTerm(t, c.r, o)
+		if !strings.Contains(out, "  → every finding and the full diff: in 'out dir/b21.html'\n") {
+			t.Errorf("%s: no step naming the written report:\n%s", name, out)
+		}
+		if strings.Contains(out, "review.html") {
+			t.Errorf("%s: still asks for a rerun with review.html:\n%s", name, out)
+		}
 	}
 }
 

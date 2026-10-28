@@ -128,6 +128,8 @@ func TestBadFlagValues(t *testing.T) {
 		{[]string{"plugin", "a", "--proxy", "proxy.example"}, `rhythm-sightread: --proxy "proxy.example": want a URL such as http://proxy.example:3128`},
 		{[]string{"plugin", "a", "--wp", "wp 'x"}, `rhythm-sightread: --wp "wp 'x": a quote is not closed`},
 		{[]string{"all", "--only", "wordpress"}, `rhythm-sightread: --only or --skip "wordpress": want an ecosystem (wp-plugin, wp-theme, composer, npm) or <eco>:<name>, globs allowed`},
+		{[]string{"plugin", "b01-widget", "--from", "2.6.7", "--to-file", "testdata/missing.zip"}, "rhythm-sightread: --to-file testdata/missing.zip: no such file or folder\n  check the path; it names the zip, tgz or folder of the package"},
+		{[]string{"plugin", "b01-widget", "--from-file", "testdata/missing", "--to", "2.6.8"}, "rhythm-sightread: --from-file testdata/missing: no such file or folder\n  check the path; it names the zip, tgz or folder of the package"},
 		{[]string{"plugin", "a", "--exclude-id", "eval-dynamik"}, "rhythm-sightread: no signal \"eval-dynamik\" (did you mean eval-dynamic?)\n  list them: rhythm-sightread signals"},
 		{[]string{"changes", "--before", "a.json"}, `rhythm-sightread: --before and --after go together: the old and the new lockfile`},
 		{[]string{"all", "--to-file", "x.zip"}, `rhythm-sightread: --to-file and --from-file review one package: use rhythm-sightread plugin, theme, composer or npm with a name`},
@@ -191,6 +193,13 @@ func TestProxyPasswordMasked(t *testing.T) {
 // run.Request, the Getter, the gate, the writers or the stage that uses
 // it.
 func TestFlagMapping(t *testing.T) {
+	// --to-file and --from-file must name files that are there.
+	t.Chdir(t.TempDir())
+	for _, name := range []string{"n.zip", "o.zip"} {
+		if err := os.WriteFile(name, nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
 	for _, k := range []string{"GITHUB_TOKEN", "RHYTHM_GITHUB_TOKEN", "HTTPS_PROXY", "https_proxy", "CI", "NO_COLOR", cli.OfflineEnv, "COMPOSER_AUTH"} {
 		t.Setenv(k, "")
 		_ = os.Unsetenv(k)

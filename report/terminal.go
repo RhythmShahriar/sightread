@@ -1068,15 +1068,15 @@ func (t *termView) item(s, hint string) {
 
 // notChecked lists what the run did not check and the report's errors.
 func (t *termView) notChecked() {
-	// A package that failed to download is one entry with its error's
-	// code, not an entry and an error.
-	codes, rest := t.r.PairErrors()
+	// A package that failed to download is one entry, not an entry and
+	// an error. Error codes stay in the JSON: the text says what to do.
+	_, rest := t.r.PairErrors()
 	n := len(t.r.NotChecked) + len(rest)
 	if n == 0 {
 		return
 	}
 	t.sectionHead("NOT CHECKED", n, t.mutedBold)
-	for i, nc := range t.r.NotChecked {
+	for _, nc := range t.r.NotChecked {
 		s := tt(nc.Name)
 		if nc.Version != "" {
 			s += " " + tt(nc.Version)
@@ -1085,9 +1085,6 @@ func (t *termView) notChecked() {
 			s += " (" + tt(string(nc.Eco)) + ")"
 		}
 		s += ": " + tt(nc.Text)
-		if codes[i] != "" {
-			s += " (" + tt(string(codes[i])) + ")"
-		}
 		t.item(s, tt(nc.Hint))
 	}
 	for _, e := range rest {
@@ -1095,7 +1092,7 @@ func (t *termView) notChecked() {
 		if e.Eco != "" {
 			s += " (" + tt(string(e.Eco)) + ")"
 		}
-		t.item(s+": "+tt(t.p.text(e.Message))+" ("+tt(string(e.Code))+")", "")
+		t.item(s+": "+tt(t.p.text(e.Message)), "")
 	}
 	t.blank()
 }
@@ -1312,6 +1309,8 @@ func (t *termView) next() {
 	worst := t.worstFinding()
 	if worst != nil {
 		switch {
+		case t.o.HTMLReport != "":
+			steps = append(steps, [2]string{"every finding and the full diff", "in " + shellArg(tt(t.o.HTMLReport))})
 		case t.o.Demo:
 			// Only the demo reaches the demo's packages.
 			steps = append(steps, [2]string{"every finding and the full diff", tt(programName(t.o.Program)) + " demo -o review.html --open"})

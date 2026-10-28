@@ -128,6 +128,13 @@ func (f *allowFlags) run(ctx context.Context, pos []string, stdout, stderr io.Wr
 		if _, err := time.Parse(time.DateOnly, f.until); err != nil {
 			return badFlag("--until %q: want a date such as 2027-01-31", f.until)
 		}
+		// An entry counts through its until day: one that ended before
+		// today would be written and never count.
+		if f.until < time.Now().Format(time.DateOnly) {
+			return &core.Error{Code: core.EBadConfig, Exit: cli.ExitUsage, Command: "allow",
+				What: "--until " + f.until + " is in the past, so the entry would never count",
+				Hint: []string{"give today or a later date, or leave --until out"}}
+		}
 	}
 	for _, id := range f.signals {
 		if _, ok := core.Signal(id); !ok {
@@ -298,15 +305,28 @@ func (f *allowFlags) list(policy core.Policy, cfg *core.Config, cfgPath, path st
 		fmt.Fprintf(stdout, "%s allows nothing yet\n", shown(path))
 		return nil
 	}
+	today := time.Now().Format(time.DateOnly)
 	tw := tabwriter.NewWriter(stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, "PACKAGE\tSHA256\tSIGNALS\tBY\tDATE\tUNTIL\tREASON")
 	for _, e := range entries {
 		// allowed.yaml may come from another repository (allow import,
 		// allow_from): every field is terminal text from outside (SR-10).
 		fmt.Fprintf(tw, "%s@%s\t%s\t%s\t%s\t%s\t%s\t%s\n", cell(e.Package), cell(e.Version), cell(short(e.SHA256)),
-			cell(cmp.Or(strings.Join(e.Signals, ","), "all")), cell(e.By), cell(e.Date), cell(cmp.Or(e.Until, "-")), cell(e.Reason))
+			cell(cmp.Or(strings.Join(e.Signals, ","), "all")), cell(e.By), cell(e.Date), untilCell(e, today), cell(e.Reason))
 	}
 	return tw.Flush()
+}
+
+// untilCell is the UNTIL column: the date, marked when the entry no
+// longer counts, or "-" for an entry with no end.
+func untilCell(e core.AllowEntry, today string) string {
+	switch {
+	case e.Until == "":
+		return "-"
+	case e.Until < today:
+		return cell(e.Until) + " (expired)"
+	}
+	return cell(e.Until)
 }
 
 // parseAllowRef reads a package reference; adding needs its version.

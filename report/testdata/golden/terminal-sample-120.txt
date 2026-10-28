@@ -221,7 +221,7 @@
 
     gravityforms 2.8.1 (wp-plugin): not on WordPress.org
       → give the vendor's zip with --to-file
-    left-pad (npm): can't reach registry.npmjs.org (no such host) (E7)
+    left-pad (npm): can't reach registry.npmjs.org (no such host)
 
  ╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
  │  6 UPDATES                             1 hold · 1 review · 2 routine · 1 allowed · 1 unverified  │

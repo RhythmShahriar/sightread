@@ -22,6 +22,10 @@ type WriteOptions struct {
 	// (--path, --from, --to-file, ...), as arguments: the terminal's
 	// "the full diff" command repeats them so it reviews the same thing.
 	RerunFlags []string
+	// HTMLReport is the first -o .html file this run writes, as given:
+	// the terminal's "the full diff" step points at it instead of asking
+	// for a rerun.
+	HTMLReport string
 	// Demo marks the built-in demo's report: its packages are made up,
 	// so no next step or allow line names them for a real registry; the
 	// rerun step reruns the demo.

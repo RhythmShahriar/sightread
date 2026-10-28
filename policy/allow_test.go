@@ -4,6 +4,7 @@
 package policy
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -17,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
 )
 
@@ -465,6 +467,59 @@ func TestAddAllow(t *testing.T) {
 	}
 	if _, err := os.Stat(p + ".lock"); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("lock file left behind: %v", err)
+	}
+}
+
+// TestAddAllowReplacesExpired: an expired entry for the same version
+// never counts again, so adding the version replaces it with a warning
+// instead of refusing a repeat; an entry still in date is kept.
+func TestAddAllowReplacesExpired(t *testing.T) {
+	dir := inProject(t)
+	p := filepath.Join(dir, Dir, AllowName)
+	var stderr bytes.Buffer
+	s := testStore(&stderr)
+	old := entry("npm:leftpadplus", "1.0.1", shaA)
+	old.Until = testNow.AddDate(0, 0, -1).Format(time.DateOnly)
+	other := entry("npm:other", "1.0.0", shaB)
+	other.Until = testNow.Format(time.DateOnly) // counts through today
+	for _, e := range []core.AllowEntry{old, other} {
+		if err := s.AddAllow(p, e); err != nil {
+			t.Fatal(err)
+		}
+	}
+	again := entry("npm:leftpadplus", "1.0.1", shaA)
+	again.Reason = "looked again"
+	if err := s.AddAllow(p, again); err != nil {
+		t.Fatalf("expired entry blocked the new one: %v", err)
+	}
+	want := "warning: replaced the entry that allowed npm:leftpadplus@1.0.1 with sha256 aaaaaaaaaaaa, expired " + old.Until + "\n"
+	if stderr.String() != want {
+		t.Errorf("stderr %q, want %q", stderr.String(), want)
+	}
+	set, err := s.LoadAllow(&core.Config{}, filepath.Join(dir, Dir, "config.yaml"), "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := set.(*AllowSet).Entries()
+	if len(got) != 2 || got[0].Package != "npm:leftpadplus" || got[0].Until != "" || got[0].Reason != "looked again" {
+		t.Errorf("entries %+v", got)
+	}
+	// An entry that still counts is a repeat.
+	stderr.Reset()
+	if err := s.AddAllow(p, entry("npm:other", "1.0.0", shaB)); !errors.Is(err, core.ErrAlreadyAllowed) || stderr.Len() != 0 {
+		t.Errorf("in-date entry: %v %q", err, stderr.String())
+	}
+}
+
+// TestKnownSignalProgramName: the "signals lists them" hint names the
+// program as it was run, through the router or directly.
+func TestKnownSignalProgramName(t *testing.T) {
+	for _, prog := range []string{"rhythm sightread", "rhythm-sightread"} {
+		t.Setenv(cli.InvokedAsEnv, prog)
+		err := knownSignal("*")
+		if want := `no signal "*" (` + prog + ` signals lists them)`; err == nil || err.Error() != want {
+			t.Errorf("%s: %v, want %q", prog, err, want)
+		}
 	}
 }
 

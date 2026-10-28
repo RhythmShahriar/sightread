@@ -156,7 +156,7 @@ UNVERIFIED (1):
 NOT CHECKED (2):
   gravityforms 2.8.1 (wp-plugin): not on WordPress.org
     give the vendor's zip with --to-file
-  left-pad (npm): can't reach registry.npmjs.org (no such host) (E7)
+  left-pad (npm): can't reach registry.npmjs.org (no such host)
 
 6 updates: 1 hold, 1 review, 2 routine, 1 allowed, 1 unverified
 11 critical, 22 high, 12 medium, 3 low, 3 info, 1 allowed

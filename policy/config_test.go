@@ -82,6 +82,7 @@ func TestConfigRules(t *testing.T) {
 		{"ignore without id", "ignore:\n  - reason: ok\n", "ignore 1: needs an id, the signal it hides, such as outbound-new-domain"},
 		{"ignore without reason", "ignore:\n  - id: outbound-new-domain\n", "ignore 1 (outbound-new-domain): needs a reason, so the next person knows why it is accepted"},
 		{"ignore unknown id", "ignore:\n  - id: outbound-new-domian\n    reason: ok\n", `ignore 1 (outbound-new-domian): no signal "outbound-new-domian" (did you mean outbound-new-domain?)`},
+		{"ignore no near id", "ignore:\n  - id: \"*\"\n    reason: ok\n", `ignore 1 (*): no signal "*" (rhythm sightread signals lists them)`},
 		{"ignore unignorable", "ignore:\n  - id: integrity-mismatch\n    reason: ok\n", "ignore 1 (integrity-mismatch): integrity-mismatch can't be ignored; it says the bytes are not the ones published or reviewed"},
 		{"ignore bad until", "ignore:\n  - id: license-change\n    reason: ok\n    until: next year\n", `ignore 1 (license-change): until "next year": want a date such as 2027-03-31`},
 		{"ignore bad glob", "ignore:\n  - id: license-change\n    reason: ok\n    path: \"src/[\"\n", `ignore 1 (license-change): bad pattern "src/["`},

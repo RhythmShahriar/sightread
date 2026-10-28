@@ -55,6 +55,9 @@ func runPick(ctx context.Context, args []string, stdout, stderr io.Writer) error
 	if _, err := cli.ParseArgs(fs, args); err != nil {
 		return err
 	}
+	if err := needTTY(isTerminalIn, openTTY); err != nil {
+		return finish(stderr, err, false)
+	}
 	found := lookAround(ctx, ".")
 	fmt.Fprintf(stdout, "\n  ♪ %s %s\n  What will this update really change?\n\n  %s\n\n", cli.Name(), version, found.describe())
 
@@ -100,6 +103,26 @@ func runPick(ctx context.Context, args []string, stdout, stderr io.Writer) error
 		}
 	}
 	return fmt.Errorf("pick: no command %s", argv[0])
+}
+
+// openTTY opens the terminal the picker falls back to when stdin is not
+// one, as huh does.
+func openTTY() (io.Closer, error) { return os.Open("/dev/tty") }
+
+// needTTY refuses the picker (exit 2) when it has no terminal to read
+// keys from: stdin is not one and the controlling terminal can't be
+// opened. huh's own error would name /dev/tty and its library.
+func needTTY(stdinTerminal func() bool, open func() (io.Closer, error)) error {
+	if stdinTerminal() {
+		return nil
+	}
+	if f, err := open(); err == nil {
+		_ = f.Close()
+		return nil
+	}
+	return &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: "pick",
+		What: "the picker needs a terminal to read keys from",
+		Hint: []string{"run it in a terminal, or name a command: " + cli.Name() + " help lists them"}}
 }
 
 // defaultPickWidth is the picker's width when the terminal reports none.

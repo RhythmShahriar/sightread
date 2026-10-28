@@ -99,7 +99,7 @@ Not reviewed as verified releases; `--allow-unverified` reviews them anyway.
 ### Not checked
 
 - gravityforms 2.8.1 (wp-plugin): not on WordPress.org. Give the vendor's zip with --to-file
-- left-pad (npm): can't reach registry.npmjs.org \(no such host\) (E7)
+- left-pad (npm): can't reach registry.npmjs.org \(no such host\)
 
 ### Warnings
 

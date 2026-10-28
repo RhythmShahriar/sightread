@@ -151,11 +151,11 @@ func mdInline(s string) string {
 	return out
 }
 
-// mdCode puts package text in a code span with its domains and URLs
-// defanged. Pipes are escaped because GitHub splits table cells on them
-// even inside a code span.
-func mdCode(s string) string {
-	return strings.ReplaceAll(term.MarkdownCode(defang(text(s))), "|", `\|`)
+// mdCode puts package text in a code span with its URLs and the
+// update's reported hosts defanged. Pipes are escaped because GitHub
+// splits table cells on them even inside a code span.
+func mdCode(s string, hosts hostSet) string {
+	return strings.ReplaceAll(term.MarkdownCode(defang(text(s), hosts)), "|", `\|`)
 }
 
 var (
@@ -164,16 +164,36 @@ var (
 	hostName = regexp.MustCompile(`(?i)\b(?:[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}[a-z0-9]\b`)
 )
 
-// fileExts are last labels that name a file type, not a domain, so
-// "class-api.php" stays as it is. Real TLDs among them (.sh, .md, .py,
-// .zip) lose little: such a name still reads as one.
-var fileExts = map[string]bool{
-	"php": true, "phtml": true, "inc": true, "js": true, "mjs": true, "cjs": true, "jsx": true, "ts": true, "tsx": true,
-	"css": true, "scss": true, "less": true, "json": true, "lock": true, "html": true, "htm": true, "xml": true,
-	"txt": true, "md": true, "yml": true, "yaml": true, "map": true, "min": true, "png": true, "jpg": true, "jpeg": true,
-	"gif": true, "svg": true, "webp": true, "ico": true, "woff": true, "woff2": true, "ttf": true, "eot": true,
-	"zip": true, "gz": true, "tgz": true, "tar": true, "sh": true, "py": true, "go": true, "vue": true, "pot": true,
-	"po": true, "mo": true, "sql": true, "log": true, "dist": true, "bak": true, "orig": true, "twig": true,
+// hostSet holds the domains (eTLD+1, lower case) the findings of an
+// update report. A dotted name in code is defanged only when it is one
+// of them or a host below one, so "http.get" and "fs.writeFileSync"
+// stay as the package wrote them.
+type hostSet map[string]bool
+
+// hostsOf is the hosts u's findings report, counted or not.
+func hostsOf(u *core.Update) hostSet {
+	hs := hostSet{}
+	for i := range u.Findings {
+		for _, d := range u.Findings[i].Domains {
+			hs[strings.ToLower(strings.TrimSuffix(d, "."))] = true
+		}
+	}
+	return hs
+}
+
+// has reports whether name is in hs or below one of its domains.
+func (hs hostSet) has(name string) bool {
+	name = strings.ToLower(name)
+	for {
+		if hs[name] {
+			return true
+		}
+		i := strings.IndexByte(name, '.')
+		if i < 0 {
+			return false
+		}
+		name = name[i+1:]
+	}
 }
 
 // defangScheme turns http:// and https:// into hxxp:// and hxxps://.
@@ -181,17 +201,32 @@ func defangScheme(s string) string {
 	return urlScheme.ReplaceAllStringFunc(s, func(m string) string { return "hxxp" + strings.ToLower(m[4:]) })
 }
 
-// defang makes URLs and domains unclickable and harmless to paste:
-// "https://a.example/x" becomes "hxxps://a[.]example/x".
-func defang(s string) string {
+// defang makes URLs and hosts unclickable and harmless to paste:
+// "https://a.example/x" becomes "hxxps://a[.]example/x". A dotted name
+// is defanged when it is a URL's host, starts with "www." or is one of
+// hosts; any other name, such as res.on or class-api.php, is code.
+func defang(s string, hosts hostSet) string {
 	s = defangScheme(s)
-	return hostName.ReplaceAllStringFunc(s, func(h string) string {
-		i := strings.LastIndexByte(h, '.')
-		if fileExts[strings.ToLower(h[i+1:])] {
-			return h
+	var b strings.Builder
+	last := 0
+	for _, m := range hostName.FindAllStringIndex(s, -1) {
+		h := s[m[0]:m[1]]
+		url := m[0] >= 3 && s[m[0]-3:m[0]] == "://"
+		if !url && !strings.HasPrefix(strings.ToLower(h), "www.") && !hosts.has(h) {
+			continue
 		}
-		return h[:i] + "[.]" + h[i+1:]
-	})
+		i := strings.LastIndexByte(h, '.')
+		b.WriteString(s[last:m[0]])
+		b.WriteString(h[:i] + "[.]" + h[i+1:])
+		last = m[1]
+	}
+	b.WriteString(s[last:])
+	return b.String()
+}
+
+// defangHost defangs a host or domain itself, as a finding lists it.
+func defangHost(d string) string {
+	return defang(d, hostSet{strings.ToLower(d): true})
 }
 
 func (m mdReport) heading() string {
@@ -408,6 +443,7 @@ func (m mdReport) section(b *strings.Builder, u *core.Update, t mdTrim) {
 	if t.findings >= 0 && t.findings < limit {
 		limit = t.findings
 	}
+	hosts := hostsOf(u)
 	for _, f := range fs[:limit] {
 		signal := md(f.Title)
 		if len(f.RaisedBy) > 0 {
@@ -422,11 +458,11 @@ func (m mdReport) section(b *strings.Builder, u *core.Update, t mdTrim) {
 			if f.Line > 0 {
 				loc += ":" + strconv.Itoa(f.Line)
 			}
-			where = mdCode(loc)
+			where = mdCode(loc, hosts)
 		}
 		ev := "n/a"
 		if e := f.Evidence.String(); e != "" {
-			ev = mdCode(e)
+			ev = mdCode(e, hosts)
 		}
 		fmt.Fprintf(b, "| %s | %s | %s | %s |\n", f.Severity, signal, where, ev)
 	}
@@ -632,12 +668,13 @@ func (m mdReport) hunks(b *strings.Builder, u *core.Update, fs []*core.Finding) 
 	if len(hs) == 0 {
 		return
 	}
+	hosts := hostsOf(u)
 	var body strings.Builder
 	for _, h := range hs {
-		body.WriteString(hunkTitle(h, defang(text(h.Path))) + "\n")
+		body.WriteString(hunkTitle(h, defang(text(h.Path), hosts)) + "\n")
 		for _, l := range h.Lines {
 			// One hunk line is one output line, whatever it holds.
-			body.WriteString(defang(strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(text(l))) + "\n")
+			body.WriteString(defang(strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(text(l)), hosts) + "\n")
 		}
 	}
 	fence := strings.Repeat("`", max(3, longestRun(body.String(), '`')+1))
@@ -695,8 +732,9 @@ func (m mdReport) notChecked(b *strings.Builder) {
 		return
 	}
 	b.WriteString("### Not checked\n\n")
-	codes, rest := m.r.PairErrors()
-	for i, n := range m.r.NotChecked {
+	// Error codes stay in the JSON: the text says what to do.
+	_, rest := m.r.PairErrors()
+	for _, n := range m.r.NotChecked {
 		line := "- " + md(n.Name)
 		if n.Version != "" {
 			line += " " + mdInline(n.Version)
@@ -705,9 +743,6 @@ func (m mdReport) notChecked(b *strings.Builder) {
 			line += " (" + md(string(n.Eco)) + ")"
 		}
 		line += ": " + md(n.Text)
-		if codes[i] != "" {
-			line += " (" + md(string(codes[i])) + ")"
-		}
 		if n.Hint != "" {
 			line += ". " + md(capitalise(n.Hint))
 		}
@@ -718,7 +753,7 @@ func (m mdReport) notChecked(b *strings.Builder) {
 		if e.Eco != "" {
 			line += " (" + md(string(e.Eco)) + ")"
 		}
-		b.WriteString(line + ": " + md(e.Message) + " (" + md(string(e.Code)) + ")\n")
+		b.WriteString(line + ": " + md(e.Message) + "\n")
 	}
 	b.WriteString("\n")
 }

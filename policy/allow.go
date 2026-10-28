@@ -17,6 +17,7 @@ import (
 	"unicode"
 
 	"github.com/RhythmShahriar/rhythm/kit/cli"
+	"github.com/RhythmShahriar/rhythm/kit/term"
 	"github.com/RhythmShahriar/sightread/core"
 	"gopkg.in/yaml.v3"
 )
@@ -80,7 +81,7 @@ func (a *AllowSet) MatchKind(eco core.Ecosystem, name, version, sha256, kind str
 		if r.ref.Eco != eco || r.ref.Name != name || r.entry.Version != version {
 			continue
 		}
-		if r.entry.Until != "" && r.entry.Until < today {
+		if Expired(r.entry, today) {
 			continue
 		}
 		if kind != "" && hashKind(r.entry.Hash) != kind {
@@ -455,7 +456,19 @@ func (s *Store) AddAllow(path string, e core.AllowEntry) error {
 	if err := checkAllowEntry(&e, "the new entry"); err != nil {
 		return configError(path, err.Error())
 	}
-	return editAllow(path, func(entries []core.AllowEntry) ([]core.AllowEntry, error) {
+	today := s.now().Format(time.DateOnly)
+	var expired []core.AllowEntry
+	err := editAllow(path, func(entries []core.AllowEntry) ([]core.AllowEntry, error) {
+		// An expired entry for this version never counts again, so the
+		// new one takes its place instead of being refused as a repeat.
+		expired = nil
+		entries = slices.DeleteFunc(slices.Clone(entries), func(x core.AllowEntry) bool {
+			if x.Package == e.Package && x.Version == e.Version && Expired(x, today) {
+				expired = append(expired, x)
+				return true
+			}
+			return false
+		})
 		if i := findDup(entries, e); i >= 0 {
 			err := configError(path, fmt.Sprintf("%s@%s with sha256 %s is already allowed (entry %d)", e.Package, e.Version, shortHash(e.SHA256), i+1))
 			err.Err = core.ErrAlreadyAllowed
@@ -471,6 +484,22 @@ func (s *Store) AddAllow(path string, e core.AllowEntry) error {
 		}
 		return append(entries, e), nil
 	})
+	if err != nil {
+		return err
+	}
+	for _, x := range expired {
+		// The file may come from another repository: its fields are
+		// terminal text from outside (SR-10).
+		fmt.Fprintf(s.stderr(), "warning: replaced the entry that allowed %s@%s with sha256 %s, expired %s\n",
+			term.Sanitize(x.Package), term.Sanitize(x.Version), term.Sanitize(shortHash(x.SHA256)), term.Sanitize(x.Until))
+	}
+	return nil
+}
+
+// Expired reports whether e stopped counting before today (YYYY-MM-DD).
+// An entry counts through its until day.
+func Expired(e core.AllowEntry, today string) bool {
+	return e.Until != "" && e.Until < today
 }
 
 // ReplaceAllow appends e in place of every entry for the same package
@@ -718,7 +747,7 @@ func lockFile(path string) (func(), error) {
 		}
 		if time.Now().After(deadline) {
 			return nil, &core.Error{Code: core.EBadConfig, Exit: cli.ExitUnavailable,
-				What: display(path) + " is being edited by another rhythm sightread allow",
+				What: display(path) + " is being edited by another " + cli.Name() + " allow",
 				Hint: []string{"wait for it to finish, or remove " + display(lp) + " if none is running"}}
 		}
 		time.Sleep(lockPoll)

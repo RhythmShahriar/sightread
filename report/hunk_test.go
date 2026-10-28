@@ -32,11 +32,11 @@ func TestHunkHead(t *testing.T) {
 // the numbers after them stay right.
 func TestHTMLHunkNotes(t *testing.T) {
 	h := htmlHunkOf(core.Hunk{Path: "a.php", OldStart: 1, OldLines: 1, NewStart: 1, NewLines: 1,
-		Lines: []string{"-a", `\ No newline at end of file`, "+b"}})
+		Lines: []string{"-a", `\ No newline at end of file`, "+b"}}, nil)
 	if len(h.Lines) != 4 || h.Lines[2].Class != "note" || h.Lines[2].Old != "" || h.Lines[2].New != "" || h.Lines[3].New != "1" {
 		t.Errorf("lines %+v", h.Lines)
 	}
-	h = htmlHunkOf(core.Hunk{Path: "a.png", Lines: []string{`\ binary file changed (1 KiB to 2 KiB)`}})
+	h = htmlHunkOf(core.Hunk{Path: "a.png", Lines: []string{`\ binary file changed (1 KiB to 2 KiB)`}}, nil)
 	if len(h.Lines) != 1 || h.Lines[0].Class != "note" || strings.HasPrefix(h.Lines[0].Text, `\`) {
 		t.Errorf("binary %+v", h.Lines)
 	}

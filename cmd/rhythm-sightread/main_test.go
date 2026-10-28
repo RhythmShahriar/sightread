@@ -179,6 +179,40 @@ func TestBareRunOffTerminal(t *testing.T) {
 	}
 }
 
+// TestPickNeedsTerminal: the hidden picker with no terminal to read
+// keys from says so in the program's own words and exits 2; a terminal
+// on stdin or an openable /dev/tty lets it run.
+func TestPickNeedsTerminal(t *testing.T) {
+	t.Setenv(cli.InvokedAsEnv, "rhythm-sightread")
+	noTTY := func() (io.Closer, error) { return nil, errors.New("open /dev/tty: no such device or address") }
+	err := needTTY(func() bool { return false }, noTTY)
+	want := "rhythm-sightread pick: the picker needs a terminal to read keys from\n  run it in a terminal, or name a command: rhythm-sightread help lists them"
+	var e *core.Error
+	if !errors.As(err, &e) || e.ExitCode() != cli.ExitUsage || err.Error() != want {
+		t.Errorf("no terminal: %v", err)
+	}
+	if err := needTTY(func() bool { return true }, noTTY); err != nil {
+		t.Errorf("stdin terminal: %v", err)
+	}
+	tty := func() (io.Closer, error) { return io.NopCloser(strings.NewReader("")), nil }
+	if err := needTTY(func() bool { return false }, tty); err != nil {
+		t.Errorf("/dev/tty: %v", err)
+	}
+	// The real command, run with no terminal at all (CI, setsid), prints
+	// the message and nothing from the library.
+	if f, err := os.Open("/dev/tty"); err == nil {
+		_ = f.Close()
+		return // this machine has a terminal to fall back to
+	}
+	if isTerminalIn() {
+		return
+	}
+	code, out, errOut := execute(t, "pick")
+	if code != cli.ExitUsage || out != "" || errOut != want+"\n" || strings.Contains(errOut, "huh") {
+		t.Errorf("pick: exit %d %q %q", code, out, errOut)
+	}
+}
+
 // TestUnknownCommand is E20, the kit text.
 func TestUnknownCommand(t *testing.T) {
 	code, _, errOut := child(t, t.TempDir(), "plugn")

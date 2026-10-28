@@ -98,6 +98,7 @@ func writeRule(t *testing.T, dir, name, body string) {
 
 // A bad --signals file is E12 (exit 2) naming the file and the key.
 func TestLoadRuleDirsE12(t *testing.T) {
+	t.Setenv(cli.InvokedAsEnv, "rhythm-sightread") // the hint names the program as run
 	dir := t.TempDir()
 	writeRule(t, dir, "bad.yaml", "id: bad\nname: B\nsignal: evl-dynamic\nfiles: ['**/*.php']\nmatch: {words: [x]}\n")
 	_, err := LoadRuleDirs([]string{dir})
@@ -108,7 +109,7 @@ func TestLoadRuleDirsE12(t *testing.T) {
 	if !errors.As(err, &e) || e.ExitCode() != cli.ExitUsage {
 		t.Fatalf("exit: %v", err)
 	}
-	want := filepath.Join(dir, "bad.yaml") + `: signal: "evl-dynamic" is not a signal ID a detector emits (rhythm sightread signals lists them)`
+	want := filepath.Join(dir, "bad.yaml") + `: signal: "evl-dynamic" is not a signal ID a detector emits (rhythm-sightread signals lists them)`
 	if e.What != want || e.Hint[0] != "fix the rule file or leave its folder out of --signals" {
 		t.Errorf("what %q hint %q", e.What, e.Hint)
 	}

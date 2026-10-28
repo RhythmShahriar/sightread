@@ -352,7 +352,7 @@ func knownSignal(id string) error {
 	if s := cli.Suggest(id, core.SignalIDs()); s != "" {
 		msg += " (did you mean " + s + "?)"
 	} else {
-		msg += " (rhythm sightread signals lists them)"
+		msg += " (" + cli.Name() + " signals lists them)"
 	}
 	return errors.New(msg)
 }

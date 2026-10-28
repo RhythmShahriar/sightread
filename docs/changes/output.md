@@ -240,9 +240,10 @@ More
   `archive not in cache: run the review again (it is cached for 30 days)`,
   or for a --from-file or --to-file review, which is never cached,
   `a local file's diff is never cached and the report holds no hunk of this file: run the review again with the same local files, with -o review.html for the full diff`.
-- A package that failed to download is one Not checked line carrying its
-  error's code (`date-utils-lite 1.4.0 (npm): could not download (...) (E7)`)
-  and counts once in `Incomplete review: 1 package wasn't checked`.
+- A package that failed to download is one Not checked line
+  (`date-utils-lite 1.4.0 (npm): could not download (...)`) and counts once
+  in `Incomplete review: 1 package wasn't checked`. Its error code stays in
+  the JSON `errors` list; no terminal, Markdown or HTML line shows a code.
 - `unicode-hidden` evidence shows the bidi control it reports as an escape
   (`\u202e`) in every format.
 - An unknown ID is E13 (exit 2):
@@ -308,8 +309,11 @@ it can't be allowed again until you know why.` The HTML report shows the same te
 
 Defanging: inside code spans and the diff block `https://` becomes
 `hxxps://` and the last dot of a host name becomes `[.]`
-(`analytics.wpos-cdn[.]example`), unless the last label is a file
-extension such as `php`. All other package text goes through
+(`analytics.wpos-cdn[.]example`). A host name is a URL's host, a `www.`
+name or a host the update's findings report (or one below it); any
+other dotted name is code and stays as written (`http.get(...)`,
+`res.on('data', ...)`, `class-api.php`). The HTML report defangs the
+same way. All other package text goes through
 `term.EscapeMarkdown`, so mentions, links, images and HTML render as
 text. The report stays under 60,000 characters, trimming hunks first, with
 `> trimmed: see the HTML report`.

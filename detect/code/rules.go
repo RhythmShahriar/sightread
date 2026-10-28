@@ -208,7 +208,7 @@ func (r *Rule) compile() error {
 	case r.Signal == "":
 		return fail("signal", "missing; name the catalogue signal the rule fires")
 	case !known || info.Emitter != core.EmitDetect:
-		return fail("signal", "%q is not a signal ID a detector emits (rhythm sightread signals lists them)", r.Signal)
+		return fail("signal", "%q is not a signal ID a detector emits (%s signals lists them)", r.Signal, cli.Name())
 	case len(r.Files) == 0:
 		return fail("files", "missing; give at least one glob")
 	case r.MaxSize < 0:

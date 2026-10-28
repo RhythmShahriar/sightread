@@ -217,6 +217,9 @@ func upToDateNote(t *target) string {
 // carrying its code.
 func (r *reviewer) failure(t *target, err error) *result {
 	r.logf("%s:%s: %v", t.eco, t.name, err)
+	if t.toFile != "" && core.CodeOf(err) == core.EUnknownPackage {
+		err = installedSideUnknown(err)
+	}
 	r.problem(err)
 	res := &result{}
 	nc := core.NotChecked{Eco: t.eco, Name: t.name, Version: t.fromVersion}
@@ -224,6 +227,8 @@ func (r *reviewer) failure(t *target, err error) *result {
 	switch {
 	case errors.Is(err, core.ErrTooLarge) || code == core.ETooLarge:
 		nc.Reason, nc.Text, nc.Hint = core.TooLarge, firstLine(err), "raise --max-size"
+	case code == core.EUnknownPackage && isWP(t.eco) && t.toFile != "":
+		nc.Reason, nc.Text, nc.Hint = core.NotWPOrg, "not on WordPress.org (slug unknown)", InstalledSideHint
 	case code == core.EUnknownPackage && isWP(t.eco):
 		nc.Reason, nc.Text, nc.Hint = core.NotWPOrg, "not on WordPress.org (slug unknown)", "give the vendor's zip with --to-file"
 	default:
@@ -234,6 +239,27 @@ func (r *reviewer) failure(t *target, err error) *result {
 	}
 	res.notChecked = append(res.notChecked, nc)
 	return res
+}
+
+// InstalledSideHint is the fix line of E2 when --to-file already gives
+// the new side: only the installed side was looked up on WordPress.org.
+const InstalledSideHint = "--from is looked up on wordpress.org: give the installed copy with --from-file <zip>, or --path <site> without --from"
+
+// installedSideUnknown is err (E2) with InstalledSideHint in place of
+// the source's --to-file hint. A "did you mean" suggestion is kept.
+func installedSideUnknown(err error) error {
+	var e *core.Error
+	if !errors.As(err, &e) {
+		return err
+	}
+	c := *e
+	c.Hint = []string{InstalledSideHint}
+	if len(e.Hint) > 0 && strings.HasPrefix(e.Hint[0], "did you mean ") {
+		if i := strings.Index(e.Hint[0], "? "); i >= 0 {
+			c.Hint = []string{e.Hint[0][:i+2] + InstalledSideHint}
+		}
+	}
+	return &c
 }
 
 // UnverifiedHint is the fix line of E5 (PRD section 10).

@@ -5,9 +5,11 @@ package main
 
 import (
 	"cmp"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"maps"
 	"net/url"
 	"os"
@@ -571,8 +573,41 @@ func (f *reviewFlags) outputPlan(p *plan, env func(string) string, version strin
 		// the update when --soundcheck installs it there.
 		Soundcheck: f.soundcheck != "",
 		RerunFlags: rerunFlags(f),
+		HTMLReport: firstHTML(p.files),
 	}
 	return nil
+}
+
+// checkLocalFiles stats --from-file and --to-file before the review: a
+// mistyped path is a usage error (E13), not a package that couldn't be
+// downloaded.
+func checkLocalFiles(f *reviewFlags) error {
+	for _, v := range []struct{ name, path string }{{"--from-file", f.fromFile}, {"--to-file", f.toFile}} {
+		if v.path == "" {
+			continue
+		}
+		_, err := os.Stat(v.path)
+		if err == nil {
+			continue
+		}
+		what := fmt.Sprintf("%s %s: no such file or folder", v.name, shown(v.path))
+		if !errors.Is(err, fs.ErrNotExist) {
+			what = fmt.Sprintf("%s %s: can't read it (%v)", v.name, shown(v.path), errors.Unwrap(err))
+		}
+		return &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, What: what,
+			Hint: []string{"check the path; it names the zip, tgz or folder of the package"}}
+	}
+	return nil
+}
+
+// firstHTML is the path of the first HTML report in files, or "".
+func firstHTML(files []output) string {
+	for _, o := range files {
+		if o.format == core.FormatHTML {
+			return o.path
+		}
+	}
+	return ""
 }
 
 // rerunFlags are the flags of f that chose what the run read and

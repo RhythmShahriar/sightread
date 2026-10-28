@@ -235,6 +235,40 @@ func TestAllowRoundTrip(t *testing.T) {
 	}
 }
 
+// TestAllowUntil: --until before today is refused (E12) and writes
+// nothing; allow list marks an expired entry; adding the version again
+// replaces the expired entry without --force.
+func TestAllowUntil(t *testing.T) {
+	w := world(t)
+	p := installAllow(t, w)
+	w.Publish(core.NPM, "leftpadplus", "1.0.1")
+	code, out, errOut := execute(t, "allow", "npm:leftpadplus@1.0.1", "--reason", "ok", "--until", "2020-01-01")
+	if code != cli.ExitUsage || out != "" || errOut != "rhythm-sightread allow: --until 2020-01-01 is in the past, so the entry would never count\n"+
+		"  give today or a later date, or leave --until out\n" || len(p.Allow) != 0 {
+		t.Fatalf("past --until: exit %d %q %q, entries %d", code, out, errOut, len(p.Allow))
+	}
+	today := time.Now().Format(time.DateOnly)
+	if code, _, errOut := execute(t, "allow", "npm:leftpadplus@1.0.1", "--reason", "ok", "--until", today); code != cli.ExitOK {
+		t.Fatalf("--until today: exit %d %q", code, errOut)
+	}
+	// An entry from an older run that has run out since.
+	p.Allow[0].Until = "2020-01-01"
+	code, out, _ = execute(t, "allow", "list")
+	if code != cli.ExitOK || !strings.Contains(out, "2020-01-01 (expired)") {
+		t.Errorf("list: exit %d\n%s", code, out)
+	}
+	code, out, errOut = execute(t, "allow", "npm:leftpadplus@1.0.1", "--reason", "looked again")
+	if code != cli.ExitOK || !strings.HasPrefix(out, "allowed npm:leftpadplus@1.0.1 (sha256 ") {
+		t.Fatalf("again: exit %d %q %q", code, out, errOut)
+	}
+	if len(p.Allow) != 1 || p.Allow[0].Until != "" || p.Allow[0].Reason != "looked again" {
+		t.Errorf("entries %+v", p.Allow)
+	}
+	if code, out, _ := execute(t, "allow", "list"); code != cli.ExitOK || strings.Contains(out, "expired") {
+		t.Errorf("list after replace: exit %d\n%s", code, out)
+	}
+}
+
 // TestAllowOtherHash: allowing a version already allowed with other
 // bytes is refused with a pointer to --force; --force replaces the old
 // entry with a warning, so the file never holds two entries for one

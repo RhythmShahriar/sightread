@@ -65,7 +65,7 @@ var demoCommand = &simpleCommand{
 			}
 			terminal := cli.IsTerminal(stdout)
 			o := core.WriteOptions{Program: cli.Name(), Version: version, MaxFindings: defaultMaxFindings,
-				Plain: *plain || !terminal, Demo: true}
+				Plain: *plain || !terminal, Demo: true, HTMLReport: firstHTML(files)}
 			o.Color = !o.Plain && !*noColor && os.Getenv("NO_COLOR") == ""
 			if err := runDemo(ctx, demoRun{keep: *keep, files: files}, o, stdout, stderr); err != nil {
 				return err

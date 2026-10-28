@@ -204,8 +204,9 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 				Counts: text(soundcheckCounts(sc)), Error: text(sc.Error), NotCompared: sc.NotCompared})
 		}
 	}
-	codes, rest := r.PairErrors()
-	for i, n := range r.NotChecked {
+	// Error codes stay in the JSON: the text says what to do.
+	_, rest := r.PairErrors()
+	for _, n := range r.NotChecked {
 		line := text(n.Name)
 		if n.Version != "" {
 			line += " " + text(n.Version)
@@ -214,9 +215,6 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 			line += " (" + text(string(n.Eco)) + ")"
 		}
 		line += ": " + p.text(text(n.Text))
-		if codes[i] != "" {
-			line += " (" + text(string(codes[i])) + ")"
-		}
 		if n.Hint != "" {
 			line += ". " + capitalise(p.text(text(n.Hint)))
 		}
@@ -227,7 +225,7 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 		if e.Eco != "" {
 			line += " (" + text(string(e.Eco)) + ")"
 		}
-		v.Errors = append(v.Errors, line+": "+p.text(text(e.Message))+" ("+text(string(e.Code))+")")
+		v.Errors = append(v.Errors, line+": "+p.text(text(e.Message)))
 	}
 	for _, w := range r.Warnings {
 		v.Warnings = append(v.Warnings, p.text(text(w)))
@@ -319,7 +317,7 @@ func incompleteParts(r *core.Report) []string {
 func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) htmlCard {
 	c := htmlCard{Anchor: anchor, Verdict: strings.ToUpper(string(u.Verdict)), Class: string(u.Verdict),
 		Name: text(u.Name), Eco: text(string(u.Eco)), From: text(u.From.Version), To: text(u.To.Version),
-		Sites: texts(u.Sites), Source: text(u.To.Source), URL: defang(text(u.To.URL)), SHA256: text(u.To.SHA256),
+		Sites: texts(u.Sites), Source: text(u.To.Source), URL: defang(text(u.To.URL), nil), SHA256: text(u.To.SHA256),
 		Verified: u.To.Verified != "" && u.To.Verified != core.ByNone && u.To.Verified != core.ByFailed}
 	switch {
 	case u.Installed.Lockfile != "":
@@ -347,9 +345,10 @@ func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) ht
 		top := max(d.BytesFrom, d.BytesTo)
 		c.FromPct, c.ToPct = pct(d.BytesFrom, top), pct(d.BytesTo, top)
 	}
+	hosts := hostsOf(u)
 	for i := range u.Findings {
 		f := &u.Findings[i]
-		hf := newHTMLFinding(f)
+		hf := newHTMLFinding(f, hosts)
 		if f.Counted() {
 			c.Findings = append(c.Findings, hf)
 		} else {
@@ -464,9 +463,9 @@ func adds(u *core.Update) []htmlCount {
 	return out
 }
 
-func newHTMLFinding(f *core.Finding) htmlFinding {
+func newHTMLFinding(f *core.Finding, hosts hostSet) htmlFinding {
 	hf := htmlFinding{ID: text(f.ID), Title: text(f.Title), Severity: f.Severity.String(), Confidence: string(f.Confidence),
-		Evidence: defang(text(f.Evidence.String())), Advice: text(f.Advice), Demoted: text(f.Demoted)}
+		Evidence: defang(text(f.Evidence.String()), hosts), Advice: text(f.Advice), Demoted: text(f.Demoted)}
 	if !slices.Contains(severities, f.Severity) {
 		hf.Severity = cli.SeverityInfo.String()
 	}
@@ -480,7 +479,7 @@ func newHTMLFinding(f *core.Finding) htmlFinding {
 		hf.Raised = text(strings.Join(f.RaisedBy, ", "))
 	}
 	for _, d := range f.Domains {
-		hf.Domains = append(hf.Domains, defang(text(d)))
+		hf.Domains = append(hf.Domains, defangHost(text(d)))
 	}
 	switch {
 	case f.Allowed != nil:
@@ -512,6 +511,7 @@ const minifiedLine = 1000
 // diffFiles splits the hunks into the files with a counted finding
 // (shown open) and the rest, grouped by folder (collapsed).
 func diffFiles(u *core.Update) (flaggedFiles []htmlFile, rest []htmlDir, restCount int) {
+	hosts := hostsOf(u)
 	hot := flagged(u, counted(u))
 	isHot := func(h core.Hunk) bool {
 		for _, x := range hot {
@@ -525,10 +525,10 @@ func diffFiles(u *core.Update) (flaggedFiles []htmlFile, rest []htmlDir, restCou
 	add := func(files []htmlFile, h core.Hunk) []htmlFile {
 		p := text(h.Path)
 		if n := len(files); n > 0 && files[n-1].Path == p {
-			files[n-1].Hunks = append(files[n-1].Hunks, htmlHunkOf(h))
+			files[n-1].Hunks = append(files[n-1].Hunks, htmlHunkOf(h, hosts))
 			return files
 		}
-		return append(files, htmlFile{Path: p, Hunks: []htmlHunk{htmlHunkOf(h)}})
+		return append(files, htmlFile{Path: p, Hunks: []htmlHunk{htmlHunkOf(h, hosts)}})
 	}
 	for _, h := range u.Hunks {
 		if isHot(h) {
@@ -588,14 +588,14 @@ func summariseMinified(u *core.Update, f *htmlFile) {
 	f.Hunks = nil
 }
 
-func htmlHunkOf(h core.Hunk) htmlHunk {
+func htmlHunkOf(h core.Hunk, hosts hostSet) htmlHunk {
 	var out htmlHunk
 	if head := hunkHead(h); head != "" {
 		out.Lines = append(out.Lines, htmlLine{K: "@", Class: "hunk", Text: head})
 	}
 	oldN, newN := h.OldStart, h.NewStart
 	for _, raw := range h.Lines {
-		l := defang(strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(text(raw)))
+		l := defang(strings.NewReplacer("\r", `\r`, "\n", `\n`).Replace(text(raw)), hosts)
 		if noteLine(l) {
 			// Sightread's note: no line of either side, no number.
 			out.Lines = append(out.Lines, htmlLine{K: `\`, Class: "note", Text: strings.TrimPrefix(l, notePrefix)})
