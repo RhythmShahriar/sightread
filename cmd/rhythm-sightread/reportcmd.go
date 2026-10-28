@@ -37,7 +37,10 @@ var reportCommand = &simpleCommand{
 		var outputs cli.RepeatFlag
 		fs.Var(&outputs, "output", "write the merged report to this `file` (repeatable; .md, .html, .sarif or .json)")
 		sf.short(fs, "o", "output")
-		redact := fs.Bool("redact-paths", os.Getenv("CI") != "", "show paths relative to the project only (default on when CI is set)")
+		// The default is false so --help reads the same with or without CI
+		// set; the run below turns redaction on under CI unless the flag
+		// was given, as a review does.
+		redactFlag := fs.Bool("redact-paths", false, "show paths relative to the project only (default on when CI is set)")
 		diff := fs.Bool("diff", false, "keep every changed hunk the reports hold")
 		toStdout := map[string]*bool{
 			core.FormatMarkdown: fs.Bool("md", false, "print Markdown to stdout"),
@@ -78,7 +81,13 @@ var reportCommand = &simpleCommand{
 				reps = append(reps, rep)
 			}
 			merged := mergeReports(reps)
-			o := core.WriteOptions{Program: cli.Name(), Version: version, Plain: true, RedactPaths: *redact, ShowDiff: *diff}
+			redact := os.Getenv("CI") != ""
+			fs.Visit(func(fl *flag.Flag) {
+				if fl.Name == "redact-paths" {
+					redact = *redactFlag
+				}
+			})
+			o := core.WriteOptions{Program: cli.Name(), Version: version, Plain: true, RedactPaths: redact, ShowDiff: *diff}
 			wrote := stdout
 			if len(printed) > 0 {
 				wrote = stderr // stdout carries the report
