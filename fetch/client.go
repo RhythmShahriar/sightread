@@ -25,7 +25,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"github.com/RhythmShahriar/rhythm/kit/cache"
@@ -500,7 +499,7 @@ func reason(err error) string {
 	switch {
 	case errors.As(err, &dns) && dns.IsNotFound:
 		return "no such host"
-	case errors.Is(err, syscall.ECONNREFUSED):
+	case connRefused(err):
 		return "connection refused"
 	case errors.Is(err, httpx.ErrPrivate):
 		return "refused: not a public address"
@@ -508,7 +507,7 @@ func reason(err error) string {
 		return "certificate not trusted"
 	case errors.Is(err, context.DeadlineExceeded), errors.Is(err, os.ErrDeadlineExceeded), isTimeout(err):
 		return "timed out"
-	case errors.Is(err, io.ErrUnexpectedEOF), errors.Is(err, syscall.ECONNRESET):
+	case errors.Is(err, io.ErrUnexpectedEOF), connReset(err):
 		return "connection dropped"
 	}
 	return "network error"
