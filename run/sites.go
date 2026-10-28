@@ -121,10 +121,7 @@ func localPath(dir, p string) string {
 			return filepath.Join(home, rest)
 		}
 	}
-	// A rooted \var\www on Windows has no drive letter, so it isn't
-	// absolute there; it names the folder on the current drive and
-	// not one under dir. Neither does a drive-relative C:www.
-	if !filepath.IsAbs(p) && !strings.HasPrefix(p, string(filepath.Separator)) && filepath.VolumeName(p) == "" {
+	if !rooted(p) {
 		return filepath.Join(dir, p)
 	}
 	return p
@@ -184,4 +181,13 @@ func checkYAML(b []byte) error {
 		return nil
 	}
 	return walk(&root, 0, nil)
+}
+
+// rooted reports whether p names a place of its own and must not be
+// joined under a project or config folder. A rooted \var\www on
+// Windows has no drive letter, so filepath.IsAbs says no there, yet it
+// names the folder on the current drive. Neither does a drive-relative
+// C:www belong under another folder.
+func rooted(p string) bool {
+	return filepath.IsAbs(p) || strings.HasPrefix(p, string(filepath.Separator)) || filepath.VolumeName(p) != ""
 }

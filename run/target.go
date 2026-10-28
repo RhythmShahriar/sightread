@@ -474,7 +474,7 @@ func (r *reviewer) expandPath(p string) string {
 			return filepath.Join(home, rest) + trailingSep(p)
 		}
 	}
-	if !filepath.IsAbs(p) && r.cfgPath != "" {
+	if !rooted(p) && r.cfgPath != "" {
 		return filepath.Join(filepath.Dir(filepath.Dir(r.cfgPath)), p) + trailingSep(p)
 	}
 	return p
