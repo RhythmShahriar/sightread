@@ -80,8 +80,10 @@ func TestDemoFlow(t *testing.T) {
 	if code != cli.ExitOK || !ok {
 		t.Fatalf("--keep: exit %d stderr %q", code, errOut)
 	}
+	// The path is quoted when it needs it, as a Windows path with its
+	// backslashes does.
 	if want := "review two of them as local files: rhythm-sightread plugin share-kit --from-file " +
-		filepath.Join(kept, "archives", "share-kit.3.2.0.zip"); !strings.HasPrefix(next, want) {
+		shellQuote(filepath.Join(kept, "archives", "share-kit.3.2.0.zip")); !strings.HasPrefix(next, want) {
 		t.Errorf("--keep next step %q, want it to start %q", next, want)
 	}
 	archives, _ := os.ReadDir(filepath.Join(kept, "archives"))
