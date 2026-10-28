@@ -63,6 +63,10 @@ type Client struct {
 	debug    io.Writer
 	npmAddrs map[string]bool
 	gh       *ghBudget
+	// mirrors maps the address of each base that isn't the official
+	// one to the hint naming where it was set, so a mirror that can't
+	// be reached isn't blamed on the connection.
+	mirrors map[string]string
 }
 
 // New builds the run's Getter from cfg. A base or host that may not be
@@ -123,11 +127,15 @@ func newClient(cfg core.GetterConfig, hooks testHooks) (*Client, error) {
 		offline: cfg.Offline, jsonCap: MaxJSON, debug: cfg.Debug,
 		npmAddrs: map[string]bool{},
 		gh:       &ghBudget{anon: !hasGitHub, addrs: map[string]bool{githubAPI: true}},
+		mirrors:  map[string]string{},
 	}
 	for k, v := range bases {
 		u, err := url.Parse(v)
 		if err != nil {
 			continue
+		}
+		if v != defaultBases[k] {
+			c.mirrors[canonical(u)] = mirrorHint(k, v, os.Getenv)
 		}
 		if k == core.BaseNPM || strings.HasPrefix(k, core.BaseNPMScope) {
 			c.npmAddrs[canonical(u)] = true
@@ -326,7 +334,7 @@ func (c *Client) Download(ctx context.Context, rawURL string, limit int64, blobs
 	}
 	resp, err := c.do(c.dl, req)
 	if err != nil {
-		return core.Download{}, idle.explain(u, err)
+		return core.Download{}, idle.explain(u, err, c.networkHint)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	h256, h512, h1 := sha256.New(), sha512.New(), sha1.New() //nolint:gosec // see the import
@@ -342,7 +350,7 @@ func (c *Client) Download(ctx context.Context, rawURL string, limit int64, blobs
 		return core.Download{}, tooLargeError(archiveName(u), &SizeError{Limit: limit})
 	case err != nil && (src.err != nil || ctx.Err() != nil):
 		// The body failed, not the store: a network error.
-		return core.Download{}, idle.explain(u, c.netError(ctx, u, err))
+		return core.Download{}, idle.explain(u, c.netError(ctx, u, err), c.networkHint)
 	case err != nil:
 		return core.Download{}, fmt.Errorf("store %s: %w", archiveName(u), err)
 	}
@@ -462,7 +470,25 @@ func (c *Client) netError(ctx context.Context, u *url.URL, err error) error {
 	if errors.As(err, &r) {
 		return refusedError(r)
 	}
-	return networkError(u.Hostname(), reason(err), hintNetwork, err)
+	return networkError(u.Hostname(), reason(err), c.networkHint(u), err)
+}
+
+// networkHint is the fix line of an E7 for u: where its mirror was set,
+// or the connection and HTTPS_PROXY for an official source.
+func (c *Client) networkHint(u *url.URL) string {
+	if h, ok := c.mirrors[canonical(u)]; ok {
+		return h
+	}
+	return hintNetwork
+}
+
+// mirrorHint names where base key's mirror v came from: its SIGHTREAD_*
+// variable when that is set, else the config's sources.
+func mirrorHint(key, v string, getenv func(string) string) string {
+	if env := BaseEnv(key); env != "" && strings.TrimRight(strings.TrimSpace(getenv(env)), "/") == v {
+		return "check " + env + ", which points at " + v
+	}
+	return "check the mirror at " + v + ", which the config sets in place of the official source"
 }
 
 // reason is the short cause of a network failure, as PRD 10 prints it.
@@ -711,9 +737,9 @@ func newIdle(d time.Duration, cancel context.CancelFunc) *idle {
 func (i *idle) stop() { i.t.Stop() }
 
 // explain turns the cancellation an idle stop causes into E7 "timed out".
-func (i *idle) explain(u *url.URL, err error) error {
+func (i *idle) explain(u *url.URL, err error, hint func(*url.URL) string) error {
 	if i.fired.Load() && errors.Is(err, context.Canceled) {
-		return networkError(u.Hostname(), "timed out", hintNetwork, err)
+		return networkError(u.Hostname(), "timed out", hint(u), err)
 	}
 	return err
 }

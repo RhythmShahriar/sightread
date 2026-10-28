@@ -6,7 +6,8 @@ Config signals.severity changes a severity for one project. Read one in full
 with rhythm-sightread explain <id>.
 
 Flags:
-  --json   print the kind signals JSON document
+  --json   print the signals document as JSON (rhythm-sightread/v1, kind
+           signals)
 
 Examples:
   rhythm-sightread signals

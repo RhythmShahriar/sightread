@@ -168,7 +168,7 @@ func TestReadNPMShapedForReview(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if find(s, core.NPM, "xlsx") != nil || notCheckedReason(s, "xlsx") != core.VCS {
+	if find(s, core.NPM, "xlsx") != nil || notCheckedReason(s, "xlsx") != core.Tarball {
 		t.Errorf("xlsx from cdn.sheetjs.com: installed %v, reason %q", find(s, core.NPM, "xlsx"), notCheckedReason(s, "xlsx"))
 	}
 	b := find(s, core.NPM, "@acme/billing")

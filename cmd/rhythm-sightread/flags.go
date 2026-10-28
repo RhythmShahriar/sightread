@@ -161,11 +161,12 @@ func (f *reviewFlags) versionFlags(fs *flag.FlagSet) {
 		}
 	}
 	single := off("") // --to-file and --from-file have their own message
-	from, picks := reg, reg
+	from, picks, trans := reg, reg, reg
 	switch {
 	case f.changesOn:
 		from = off("changes reads the old and new versions from the lockfiles")
 		picks = from
+		trans = off("changes always reviews every package a lockfile change moves, transitive ones included")
 	case f.sitesOn:
 		from = off("all reads each installed version from the site or project; name one package with plugin, theme, composer or npm")
 	default:
@@ -184,7 +185,7 @@ func (f *reviewFlags) versionFlags(fs *flag.FlagSet) {
 	fs.StringVar(&f.fromTuner, picks("from-tuner"), "", "read installed plugin and theme versions from a rhythm-tuner JSON `report`")
 	fs.BoolVar(&f.allowDowngrade, picks("allow-downgrade"), false, "review a --to older than the installed version")
 	fs.BoolVar(&f.pre, picks("pre"), false, "let latest and wanted pick pre-releases")
-	fs.BoolVar(&f.transitive, reg("transitive"), false, "composer and npm: review transitive dependencies too")
+	fs.BoolVar(&f.transitive, trans("transitive"), false, "composer and npm: review transitive dependencies too")
 	fs.Var(&f.only, reg("only"), "only these `packages`: ecosystem IDs or <eco>:<name> globs, e.g. wp-plugin:*,npm:@acme/*")
 	fs.Var(&f.skip, reg("skip"), "leave these `packages` out (same form as --only)")
 }
@@ -610,14 +611,16 @@ func firstHTML(files []output) string {
 	return ""
 }
 
-// rerunFlags are the flags of f that chose what the run read and
-// compared, in a fixed order, for the terminal's "the full diff"
-// command. Output, gate and network flags are left out.
+// rerunFlags are the flags of f that chose what the run read, where it
+// read it from and what it counted, in a fixed order, for the terminal's
+// "the full diff" command, so the command repeats the same review.
+// Output and gate flags and network tuning are left out.
 func rerunFlags(f *reviewFlags) []string {
 	var out []string
 	for _, v := range []struct{ name, value string }{
 		{"--path", f.path}, {"--wp", f.wp}, {"--from-tuner", f.fromTuner}, {"--config", f.configFile},
 		{"--from", f.from}, {"--to", f.to}, {"--from-file", f.fromFile}, {"--to-file", f.toFile},
+		{"--baseline", f.baseline}, {"--min-confidence", f.minConfidence}, {"--min-age", f.minAge},
 	} {
 		if f.set[strings.TrimPrefix(v.name, "--")] && v.value != "" {
 			out = append(out, v.name, v.value)
@@ -626,7 +629,9 @@ func rerunFlags(f *reviewFlags) []string {
 	for _, v := range []struct {
 		name string
 		on   bool
-	}{{"--transitive", f.transitive}, {"--pre", f.pre}, {"--allow-downgrade", f.allowDowngrade}, {"--allow-unverified", f.allowUnverified}} {
+	}{{"--transitive", f.transitive}, {"--pre", f.pre}, {"--allow-downgrade", f.allowDowngrade}, {"--allow-unverified", f.allowUnverified},
+		{"--offline", f.offline}, {"--no-osv", f.noOSV}, {"--svn-check", f.svnCheck}, {"--no-config", f.noConfig},
+		{"--no-allow", f.noAllow}, {"--no-signal-updates", f.noSignalUpdates}} {
 		if v.on {
 			out = append(out, v.name)
 		}

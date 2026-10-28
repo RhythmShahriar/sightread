@@ -120,7 +120,7 @@ func TestComposerRepositories(t *testing.T) {
 	if len(nc) != 5 {
 		t.Errorf("not checked = %+v", p.NotChecked)
 	}
-	if h := nc["composer:acme/utils"]; h.Text != "git, path or tarball dependency" || h.Hint != "Sightread reviews registry releases only" {
+	if h := nc["composer:acme/utils"]; h.Text != "git, path or URL dependency" || h.Hint != "Sightread reviews registry releases only" {
 		t.Errorf("vcs text = %+v", h)
 	}
 

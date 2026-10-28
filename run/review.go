@@ -548,7 +548,7 @@ func stopReason(soft, work context.Context, hard <-chan struct{}, deadline time.
 }
 
 func notReviewed(t *target, why string) core.NotChecked {
-	return core.NotChecked{Eco: t.eco, Name: t.name, Version: t.fromVersion, Reason: core.FetchFailed,
+	return core.NotChecked{Eco: t.eco, Name: t.name, Version: t.fromVersion, To: t.toVersion(), Reason: core.FetchFailed,
 		Text: why + " was reviewed", Hint: "run again"}
 }
 
@@ -562,10 +562,9 @@ func finishReport(rep *core.Report) {
 		}
 		return len(core.Ecosystems())
 	}
-	slices.SortStableFunc(rep.Updates, func(a, b core.Update) int {
-		return cmp.Or(cmp.Compare(ecoRank(a.Eco), ecoRank(b.Eco)), strings.Compare(a.Name, b.Name),
-			strings.Compare(a.From.Version, b.From.Version), strings.Compare(a.To.Version, b.To.Version))
-	})
+	// Worst first, as every report lists them and explain numbers
+	// their findings.
+	slices.SortStableFunc(rep.Updates, func(a, b core.Update) int { return core.CompareUpdates(&a, &b) })
 	seen := map[string]bool{}
 	nc := rep.NotChecked[:0]
 	for _, n := range rep.NotChecked {

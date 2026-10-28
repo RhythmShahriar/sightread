@@ -68,9 +68,9 @@ func (c *simpleCommand) command() cli.Command {
 			if cli.HasFlag(args, "h") || cli.HasFlag(args, "help") {
 				fs.SetOutput(stdout) // help asked for is not an error, so it goes to stdout
 			}
-			pos, err := cli.ParseArgs(fs, args)
+			pos, err := parseFlags(fs, args, c.name)
 			if err != nil {
-				return err
+				return finish(stderr, err, false)
 			}
 			return finish(stderr, run(ctx, pos, stdout, stderr), sf.verbose)
 		},

@@ -131,7 +131,9 @@ run() {
   [ "${ALLOW_PARTIAL:-false}" != true ] || flags+=(--allow-partial)
   [ "${ALLOW_UNVERIFIED:-false}" != true ] || flags+=(--allow-unverified)
   [ -z "${BASELINE:-}" ] || flags+=(--baseline "$BASELINE")
-  [ "${TRANSITIVE:-false}" != true ] || flags+=(--transitive)
+  # changes always reviews transitive moves and refuses the flag.
+  local trans=()
+  [ "${TRANSITIVE:-false}" != true ] || trans=(--transitive)
   read -r -d '' -a extra <<< "${ARGS:-}" || true
   local outputs=(-o "$json" -o "$html" -o "$markdown")
   [ "${SARIF:-false}" != true ] || outputs+=(-o "$sarif")
@@ -151,7 +153,7 @@ run() {
     sightread changes --base "origin/$base" --path "$path" "${trust[@]}" "${flags[@]}" "${outputs[@]}" "${extra[@]}"
     ;;
   all)
-    sightread all "$path" "${flags[@]}" "${outputs[@]}" "${extra[@]}"
+    sightread all "$path" "${flags[@]}" "${trans[@]}" "${outputs[@]}" "${extra[@]}"
     ;;
   package)
     local line n=0 parts=() total=0 cmd name ver eco
@@ -170,7 +172,7 @@ run() {
       composer | npm) cmd=$eco ;;
       *) couldnt 2 "package: line $n: unknown ecosystem \"$eco\" (want wp-plugin, wp-theme, composer or npm)" ;;
       esac
-      sightread "$cmd" "$name" --to "$ver" --path "$path" "${flags[@]}" -o "$out/package-$n.json" "${extra[@]}"
+      sightread "$cmd" "$name" --to "$ver" --path "$path" "${flags[@]}" "${trans[@]}" -o "$out/package-$n.json" "${extra[@]}"
       total=$(worst "$total" "$code")
       [ ! -f "$out/package-$n.json" ] || parts+=("$out/package-$n.json")
     done <<< "${PACKAGE:-}"

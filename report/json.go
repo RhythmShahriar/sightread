@@ -199,7 +199,7 @@ func reviewJSON(r *core.Report, p paths) jsonReview {
 	}
 	for _, n := range r.NotChecked {
 		d.NotChecked = append(d.NotChecked, jsonNotChecked{Ecosystem: text(string(n.Eco)), Name: text(n.Name),
-			Version: text(n.Version), Reason: text(string(n.Reason)), Text: text(p.text(n.Text)), Hint: text(p.text(n.Hint))})
+			Version: text(n.Version), To: text(n.To), Reason: text(string(n.Reason)), Text: text(p.text(n.Text)), Hint: text(p.text(n.Hint))})
 	}
 	for _, s := range r.Warnings {
 		d.Warnings = append(d.Warnings, text(p.text(s)))

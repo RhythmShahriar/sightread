@@ -59,7 +59,7 @@ var allowCommand = &simpleCommand{
 		fs.Var(&f.signals, "signals", "only these signal `IDs` (default every finding of that version)")
 		fs.StringVar(&f.file, "file", "", "the allow `file` (default .sightread/allowed.yaml next to the config)")
 		fs.StringVar(&f.from, "from", "", "take every update of this saved JSON `report`")
-		fs.BoolVar(&f.asJSON, "json", false, "allow list: print the kind allowed JSON document")
+		fs.BoolVar(&f.asJSON, "json", false, "allow list: print the allowed document as JSON (rhythm-sightread/v1, kind allowed)")
 		fs.BoolVar(&f.offline, "offline", false, "use only cached archives (also RHYTHM_OFFLINE)")
 		fs.BoolVar(&f.force, "force", false, "replace an entry that allows the same version with another sha256")
 		fs.StringVar(&f.configFile, "config", "", "read this config `file` instead of the nearest .sightread/config.yaml")

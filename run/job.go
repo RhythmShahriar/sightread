@@ -222,7 +222,7 @@ func (r *reviewer) failure(t *target, err error) *result {
 	}
 	r.problem(err)
 	res := &result{}
-	nc := core.NotChecked{Eco: t.eco, Name: t.name, Version: t.fromVersion}
+	nc := core.NotChecked{Eco: t.eco, Name: t.name, Version: t.fromVersion, To: t.toVersion()}
 	code := core.CodeOf(err)
 	switch {
 	case errors.Is(err, core.ErrTooLarge) || code == core.ETooLarge:
@@ -286,6 +286,11 @@ func (r *reviewer) problem(err error) {
 		return
 	}
 	c := *e
+	// A source names its own review command ("npm"); the message names
+	// the one the user ran ("changes"). A tool-wide error keeps none.
+	if c.Command != "" && r.req.Command != "" {
+		c.Command = r.req.Command
+	}
 	c.What = secrets.Redact(c.What)
 	c.Hint = make([]string, len(e.Hint))
 	for i, h := range e.Hint {

@@ -67,7 +67,8 @@ These entries list what Sightread found but did not review, with the reason, the
 | `no-header` | theme folder has no Theme Name header in style.css | check the folder by hand or remove it |
 | `not-wporg` | not on WordPress.org | give the vendor's zip with --to-file |
 | `private` | private registry or repository | set the registry in .sightread/config.yaml sources |
-| `vcs` | git, path or tarball dependency | Sightread reviews registry releases only |
+| `vcs` | git, path or URL dependency | Sightread reviews registry releases only |
+| `tarball` | tarball from a URL outside the registries Sightread knows | Sightread reviews registry releases only; set SIGHTREAD_NPM_REGISTRY or sources.npm.registry when the URL is your mirror |
 | `mu-plugin` | must-use plugins and drop-ins have no update channel | |
 | `core` | WordPress core is out of scope in v1 | WordPress core updates come signed from WordPress.org |
 | `unsupported-lock` | bun.lockb is Bun's binary lockfile, which Sightread can't read | run bun install --save-text-lockfile once to write bun.lock |

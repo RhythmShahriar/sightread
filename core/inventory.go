@@ -18,6 +18,7 @@ const (
 	NotWPOrg        NotCheckedReason = "not-wporg"
 	Private         NotCheckedReason = "private"
 	VCS             NotCheckedReason = "vcs"
+	Tarball         NotCheckedReason = "tarball"
 	UnsupportedLock NotCheckedReason = "unsupported-lock"
 	FetchFailed     NotCheckedReason = "fetch-failed"
 	MUPlugin        NotCheckedReason = "mu-plugin"
@@ -38,10 +39,26 @@ func (r NotCheckedReason) Informational() bool {
 type NotChecked struct {
 	Eco     Ecosystem
 	Name    string
-	Version string
-	Reason  NotCheckedReason
-	Text    string
-	Hint    string
+	Version string // the installed version; "" for a package a change adds
+	// To is the version the update would move to, when the run knew it
+	// before it stopped (a lockfile change, --to); "" otherwise.
+	To     string
+	Reason NotCheckedReason
+	Text   string
+	Hint   string
+}
+
+// Versions is how a report names the entry's versions: "1.0.0",
+// "1.0.0 <arrow> 1.0.1" when it knows the move, "1.0.1" for an added
+// package, "" when it knows neither.
+func (n NotChecked) Versions(arrow string) string {
+	switch {
+	case n.To == "" || n.To == n.Version:
+		return n.Version
+	case n.Version == "":
+		return n.To
+	}
+	return n.Version + " " + arrow + " " + n.To
 }
 
 // CountNotChecked counts the entries that make a run partial, leaving

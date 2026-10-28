@@ -122,19 +122,19 @@ else
   bad "each use of the Action in a job gets its own artifact name"
 fi
 
-act action-run.sh run GITHUB_EVENT_NAME=push SR_PATH=web
-if [ "$code" = 0 ] && [ "$(sed -n 1,2p "$work/args" | tr '\n' ' ')" = "all web " ] && [ ! -e "$work/git" ]; then
-  ok "a push runs all on the path"
-else bad "a push runs all on the path"; fi
+act action-run.sh run GITHUB_EVENT_NAME=push SR_PATH=web TRANSITIVE=true
+if [ "$code" = 0 ] && [ "$(sed -n 1,2p "$work/args" | tr '\n' ' ')" = "all web " ] && [ ! -e "$work/git" ] && has "$work/args" --transitive; then
+  ok "a push runs all on the path, with --transitive"
+else bad "a push runs all on the path, with --transitive"; fi
 
 act action-run.sh run MODE=changes BASE=release/2.x TRUST_PR_ALLOW=true FAIL_ON=none MIN_CONFIDENCE=confirmed \
   ALLOW_PARTIAL=true ALLOW_UNVERIFIED=true BASELINE=old.json TRANSITIVE=true ARGS="--only wp-plugin:* --jobs 2" SARIF=true SUMMARY=false
 if [ "$code" = 0 ] && has "$work/args" origin/release/2.x && has "$work/args" --trust-pr-allow && has "$work/args" none &&
   has "$work/args" confirmed && has "$work/args" --allow-partial && has "$work/args" --allow-unverified && has "$work/args" old.json &&
-  has "$work/args" --transitive && has "$work/args" 'wp-plugin:*' && has "$work/args" "$temp/sightread-report/sightread.sarif" &&
+  ! has "$work/args" --transitive && has "$work/args" 'wp-plugin:*' && has "$work/args" "$temp/sightread-report/sightread.sarif" &&
   out "sarif-file=$temp/sightread-report/sightread.sarif" && [ ! -s "$work/runner/summary" ]; then
-  ok "every input reaches Sightread, args unglobbed, SARIF on, summary off"
-else bad "every input reaches Sightread, args unglobbed, SARIF on, summary off"; fi
+  ok "every input reaches Sightread but --transitive, which changes refuses; args unglobbed, SARIF on, summary off"
+else bad "every input reaches Sightread but --transitive, which changes refuses; args unglobbed, SARIF on, summary off"; fi
 
 act action-run.sh run MODE=changes FAKE_GIT_EXIT=1 BASE=main
 if [ "$code" = 0 ] && contains "$work/log" "::warning::Sightread: couldn't fetch origin/main" && has "$work/args" changes; then

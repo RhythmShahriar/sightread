@@ -1,15 +1,22 @@
-Usage: rhythm-sightread demo [--keep] [-o <file>]... [--open]
+Usage: rhythm-sightread demo [--keep] [-o <file>]... [--open] [--json] [-q] [--fail-on <level>]
 
 Reviews three updates of built-in example packages: a routine plugin update, a
 plugin update in the pattern of the 2025 Essential Plugin takeover and an npm
 update that adds an install script and a typosquatted dependency. A server on
 127.0.0.1 publishes them the way WordPress.org and npm do, so the demo runs the
 real review with no network. Nothing is installed and no package code runs.
---keep keeps the archives, the cache and the example site in a temporary folder
-and prints where. -o writes the report to a file as a review does; --open opens
-the HTML one.
+--keep keeps the archives, the cache and the example site in a folder under
+TMPDIR and prints where and what to run on them. -o writes the report to a file
+as a review does; --open opens the HTML one. --json, -q and --fail-on work as in
+a review, so "demo --fail-on high" shows the CI path: it exits 1 because two
+updates are on HOLD. The other review flags (--path, --offline, --to and the
+rest) don't apply to the built-in packages.
 
 Flags:
+  --fail-on <level>     exit 1 on a finding at or above this level: none, info,
+                        low, medium, high or critical
+  --json                print the rhythm-sightread/v1 JSON report instead of the
+                        terminal one
   --keep                keep the generated archives, cache and site and print
                         their folder
   --no-color            no color (NO_COLOR does the same)
@@ -17,8 +24,10 @@ Flags:
   -o, --output <file>   also write the report to this file (repeatable; .json,
                         .md, .html or .sarif)
   --plain               no color or symbols (also when stdout is not a terminal)
+  -q, --quiet           verdicts and findings only
 
 Examples:
   rhythm-sightread demo
   rhythm-sightread demo --keep
   rhythm-sightread demo -o review.html --open
+  rhythm-sightread demo --fail-on high -q

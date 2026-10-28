@@ -75,9 +75,14 @@ func TestDemoFlow(t *testing.T) {
 	}
 
 	code, _, errOut = execute(t, "demo", "--keep")
-	kept, ok := strings.CutPrefix(strings.TrimSpace(errOut), "kept the demo archives, cache and site in ")
+	first, next, _ := strings.Cut(strings.TrimSpace(errOut), "\n")
+	kept, ok := strings.CutPrefix(first, "kept the demo archives, cache and site in ")
 	if code != cli.ExitOK || !ok {
 		t.Fatalf("--keep: exit %d stderr %q", code, errOut)
+	}
+	if want := "review two of them as local files: rhythm-sightread plugin share-kit --from-file " +
+		filepath.Join(kept, "archives", "share-kit.3.2.0.zip"); !strings.HasPrefix(next, want) {
+		t.Errorf("--keep next step %q, want it to start %q", next, want)
 	}
 	archives, _ := os.ReadDir(filepath.Join(kept, "archives"))
 	if len(archives) != 7 {

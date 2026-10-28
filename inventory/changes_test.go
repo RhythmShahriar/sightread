@@ -409,7 +409,7 @@ func TestChangesSourceMove(t *testing.T) {
 	if !slices.Equal(bumpList(cs.Bumps), []string{"xlsx 0.18.5>0.20.3"}) || cs.Bumps[0].To.ResolvedKind != core.ResolvedTarball {
 		t.Fatalf("bumps = %q", bumpList(cs.Bumps))
 	}
-	if len(cs.NotChecked) != 1 || cs.NotChecked[0].Name != "fresh" || cs.NotChecked[0].Reason != core.VCS {
+	if len(cs.NotChecked) != 1 || cs.NotChecked[0].Name != "fresh" || cs.NotChecked[0].Reason != core.Tarball {
 		t.Errorf("not checked = %+v", cs.NotChecked)
 	}
 }
@@ -504,7 +504,7 @@ func TestLockBumpsPairing(t *testing.T) {
 	if got, want := bumpList(bumps), []string{"a 1.0.0>1.5.0", "a 1.0.0>0.9.0"}; !slices.Equal(got, want) {
 		t.Errorf("bumps = %q, want %q", got, want)
 	}
-	if len(nc) != 1 || nc[0].Name != "g" || nc[0].Version != "1.1.0" || nc[0].Text != "git, path or tarball dependency" {
+	if len(nc) != 1 || nc[0].Name != "g" || nc[0].Version != "1.1.0" || nc[0].Text != "git, path or URL dependency" {
 		t.Errorf("not checked = %+v", nc)
 	}
 	cOld := []core.Installed{{Ref: core.Ref{Eco: core.Composer, Name: "Acme/Log", Version: "1.0.0"}}}

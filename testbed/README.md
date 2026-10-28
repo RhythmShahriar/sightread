@@ -61,18 +61,24 @@ have ordinary tests that run with `go test ./...`.
 ### Run Sightread by hand
 
 `make -C testbed up` starts the registry, the canary and the webhook in
-the background. Then, from `testbed/`:
+the background. Then, from `testbed/`, `env.sh` points Sightread at the
+registry (every `SIGHTREAD_*` base, `SSL_CERT_FILE`, the npm key file and
+a closed `HTTPS_PROXY`, so nothing reaches a real registry):
 
 ```sh
-export SSL_CERT_FILE=$PWD/state/ca.pem SIGHTREAD_NPM_EXTRA_KEYS=$PWD/state/npm-keys.json
-export SIGHTREAD_WPORG_API=https://127.0.0.1:18900 SIGHTREAD_WPDL_API=https://127.0.0.1:18900
-export SIGHTREAD_WPSVN=https://127.0.0.1:18900/svn/plugins SIGHTREAD_WPTHEMESVN=https://127.0.0.1:18900/svn/themes
-export SIGHTREAD_PACKAGIST=https://127.0.0.1:18901 SIGHTREAD_PACKAGIST_META=https://127.0.0.1:18901
-export SIGHTREAD_GITHUB_API=https://127.0.0.1:18902 SIGHTREAD_GITHUB_CODELOAD=https://localhost:18908
-export SIGHTREAD_NPM_REGISTRY=https://127.0.0.1:18903 SIGHTREAD_OSV_API=https://127.0.0.1:18904
-export HTTPS_PROXY=http://127.0.0.1:23399 RHYTHM_NO_UPDATE_CHECK=1
-../bin/rhythm-sightread plugin b01-widget --path projects/wp
+make -C .. build                 # ../bin/rhythm-sightread
+. ./env.sh
+cd projects/wp
+../../../bin/rhythm-sightread plugin b01-widget
 ```
+
+The registry listens on 127.0.0.1:18900-18904 and localhost:18908. When
+those ports are taken, `make up PORT_BASE=38900` moves it to
+38900-38904 and 38908; the registry writes its base to
+`state/port-base` and `env.sh` reads it from there. `registry
+-port-base <port>` (or `PORT_BASE`) does the same for the binary on its
+own. The canary and the webhook keep 18905 and 18906. The benchmark
+always uses the documented ports.
 
 `./toggle.sh b01 good` withholds b01's candidate (the update is then
 already the latest); `./toggle.sh b01 bad` publishes it again. The

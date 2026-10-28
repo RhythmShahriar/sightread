@@ -17,7 +17,8 @@ Flags:
   --force           replace an entry that allows the same version with another
                     sha256
   --from <report>   take every update of this saved JSON report
-  --json            allow list: print the kind allowed JSON document
+  --json            allow list: print the allowed document as JSON
+                    (rhythm-sightread/v1, kind allowed)
   --no-config       read no config
   --offline         use only cached archives (also RHYTHM_OFFLINE)
   --reason <text>   why it is accepted, in text the next person understands

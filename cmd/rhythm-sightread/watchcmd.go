@@ -70,9 +70,9 @@ func watchCmd() cli.Command {
 			if cli.HasFlag(own, "h") || cli.HasFlag(own, "help") {
 				fs.SetOutput(stdout)
 			}
-			pos, err := cli.ParseArgs(fs, own)
+			pos, err := parseFlags(fs, own, c.name)
 			if err != nil {
-				return err
+				return finish(stderr, err, false)
 			}
 			if len(pos) > 0 {
 				return cli.Usagef("watch takes no arguments, got %q; review flags go after --", pos[0])

@@ -233,7 +233,7 @@ func finishNPM(lockName string, entries []npmEntry, m *npmManifest, src *npmSour
 		case in.Private && !src.configured[scopeOf(in.Ref.Name)]:
 			out.NotChecked = append(out.NotChecked, notChecked(core.NPM, in.Ref.Name, in.Ref.Version, core.Private))
 		case in.ResolvedKind != core.ResolvedRegistry:
-			out.NotChecked = append(out.NotChecked, notChecked(core.NPM, in.Ref.Name, in.Ref.Version, core.VCS))
+			out.NotChecked = append(out.NotChecked, notChecked(core.NPM, in.Ref.Name, in.Ref.Version, lockReason(&in)))
 		}
 	}
 	return out

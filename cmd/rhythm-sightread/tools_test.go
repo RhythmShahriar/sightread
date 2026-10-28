@@ -126,7 +126,7 @@ func TestExplainFinding(t *testing.T) {
 	if got := hunks.asked; len(got) != 1 || got[0] != "main.php 6" {
 		t.Errorf("hunks asked %q, want main.php with 6 lines of context", got)
 	}
-	fp := rep.Updates[1].Findings[0].Fingerprint
+	fp := rep.Updates[0].Findings[0].Fingerprint // the HOLD update comes first
 	if code, out, _ := execute(t, "explain", path, fp); code != cli.ExitOK || out != "explain finding "+fp+" (1 hunks)\n" {
 		t.Errorf("by fingerprint: exit %d %q", code, out)
 	}
@@ -139,7 +139,7 @@ func TestExplainFinding(t *testing.T) {
 	// sha256) is not used: the report's own hunk of the file is.
 	other := *rep
 	other.Updates = slices.Clone(rep.Updates)
-	u := &other.Updates[1]
+	u := &other.Updates[0]
 	u.To.SHA256 = strings.Repeat("0", 64)
 	u.Hunks = []core.Hunk{{Path: "main.php", Lines: []string{"+saved"}}, {Path: "other.php", Lines: []string{"+no"}}}
 	saved := saveReport(t, &other)
@@ -149,7 +149,7 @@ func TestExplainFinding(t *testing.T) {
 	}
 
 	// A --to-file side is never cached: the report's hunk, no diff.
-	u.To.SHA256, u.To.Source = rep.Updates[1].To.SHA256, core.SourceLocalFile
+	u.To.SHA256, u.To.Source = rep.Updates[0].To.SHA256, core.SourceLocalFile
 	saved = saveReport(t, &other)
 	if code, out, _ := execute(t, "explain", saved, "1"); code != cli.ExitOK || out != "explain finding 1 (1 hunks)\n" || len(hunks.asked) != asked {
 		t.Errorf("local file: exit %d %q, differ asked %q", code, out, hunks.asked[asked:])

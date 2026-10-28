@@ -36,6 +36,13 @@ them as text. It never runs their code. A clean result is a static diff, not pro
 an update is safe. This notice is shown once.
 `
 
+// firstRunDemoNote is the note when the first run is the demo, which
+// downloads nothing.
+const firstRunDemoNote = `Note: real reviews download packages from WordPress.org, Packagist and npm and read
+them as text; this demo stays on 127.0.0.1. Sightread never runs their code. A clean
+result is a static diff, not proof an update is safe. This notice is shown once.
+`
+
 // commands lists every command in PRD 6 order: the review commands, the
 // rest, update and the hidden picker.
 func commands() []cli.Command {
@@ -61,7 +68,11 @@ func tool(args []string) cli.Tool {
 	// -q or --json run, which must print nothing extra, leaves the note
 	// for a later run instead of using it up.
 	if !cli.QuietRun(args) {
-		t.FirstRun = func(stderr io.Writer) { fmt.Fprint(stderr, firstRunNote) }
+		note := firstRunNote
+		if len(args) > 0 && args[0] == "demo" {
+			note = firstRunDemoNote
+		}
+		t.FirstRun = func(stderr io.Writer) { fmt.Fprint(stderr, note) }
 		t.FirstRunKey = firstRunKey
 	}
 	return t

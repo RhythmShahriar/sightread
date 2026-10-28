@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"slices"
 	"strings"
@@ -63,7 +64,7 @@ var doctorCommand = &simpleCommand{
 	examples: []string{"doctor", "doctor --offline --json"},
 	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
 		offline := fs.Bool("offline", false, "skip the network checks (also RHYTHM_OFFLINE)")
-		asJSON := fs.Bool("json", false, "print the kind doctor JSON document")
+		asJSON := fs.Bool("json", false, "print the doctor document as JSON (rhythm-sightread/v1, kind doctor)")
 		plain := fs.Bool("plain", false, "no symbols or color (also when stdout is not a terminal)")
 		return func(ctx context.Context, pos []string, stdout, _ io.Writer) error {
 			if len(pos) > 0 {
@@ -277,12 +278,23 @@ type rateLimit struct {
 }
 
 // github checks the token and the requests left this hour.
+// A GitHub API mirror (SIGHTREAD_GITHUB_API) sets its own limits, so
+// the warning about api.github.com's 60 requests is left out for it.
 func (d *doctor) github(ctx context.Context, gc core.GetterConfig, offline bool) {
 	token := gc.GitHubToken != ""
+	host := "api.github.com"
+	if u, err := url.Parse(gc.Bases[core.BaseGitHubAPI]); err == nil && u.Hostname() != "" {
+		host = u.Hostname()
+	}
+	mirror := host != "api.github.com"
+	sentTo := "set (sent only to " + host + ")"
 	if offline {
-		if token {
-			d.add(core.DoctorOK, "GitHub token", "set (sent only to api.github.com)")
-		} else {
+		switch {
+		case token:
+			d.add(core.DoctorOK, "GitHub token", sentTo)
+		case mirror:
+			d.add(core.DoctorOK, "GitHub token", "not set; the GitHub API is the mirror at "+host)
+		default:
 			d.add(core.DoctorWarn, "GitHub token", "not set: api.github.com allows 60 requests an hour without one")
 		}
 		return
@@ -301,9 +313,13 @@ func (d *doctor) github(ctx context.Context, gc core.GetterConfig, offline bool)
 	}
 	switch {
 	case token && err == nil:
-		d.add(core.DoctorOK, "GitHub token", "set (sent only to api.github.com); "+left)
+		d.add(core.DoctorOK, "GitHub token", sentTo+"; "+left)
 	case token:
 		d.add(core.DoctorWarn, "GitHub token", "set; the rate left couldn't be read ("+firstLineOf(err)+")")
+	case mirror && err == nil:
+		d.add(core.DoctorOK, "GitHub token", "not set; the mirror at "+host+" reports "+left)
+	case mirror:
+		d.add(core.DoctorWarn, "GitHub token", "not set; the mirror at "+host+" didn't say how many requests are left ("+firstLineOf(err)+")")
 	case err == nil:
 		d.add(core.DoctorWarn, "GitHub token", "not set, so "+left+"; set GITHUB_TOKEN for Composer packages and tag checks")
 	default:

@@ -7,7 +7,8 @@ and 2 a missing file.
 
 Flags:
   --config <file>   read trusted_keys from this config file
-  --json            print the kind verify JSON document
+  --json            print the verify document as JSON (rhythm-sightread/v1, kind
+                    verify)
   --key <file>      also trust this public key file (repeatable)
 
 Examples:

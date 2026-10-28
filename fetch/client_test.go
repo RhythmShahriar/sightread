@@ -312,9 +312,29 @@ func TestSelfSignedRefused(t *testing.T) {
 	}
 	var v any
 	err = c.JSON(context.Background(), srv.URL+"/x", &v, KindMeta)
-	want := "rhythm sightread: can't reach 127.0.0.1 (certificate not trusted)\n  check the connection or HTTPS_PROXY"
+	want := "rhythm sightread: can't reach 127.0.0.1 (certificate not trusted)\n  check the mirror at " + srv.URL +
+		", which the config sets in place of the official source"
 	if err == nil || err.Error() != want {
 		t.Errorf("err\n%v\nwant\n%s", err, want)
+	}
+}
+
+// TestMirrorHint: an unreachable mirror is blamed on the variable that
+// set it, an official source on the connection.
+func TestMirrorHint(t *testing.T) {
+	env := map[string]string{"SIGHTREAD_NPM_REGISTRY": "https://127.0.0.1:38948/"}
+	getenv := func(k string) string { return env[k] }
+	if got, want := mirrorHint(core.BaseNPM, "https://127.0.0.1:38948", getenv),
+		"check SIGHTREAD_NPM_REGISTRY, which points at https://127.0.0.1:38948"; got != want {
+		t.Errorf("env mirror: %q, want %q", got, want)
+	}
+	if got := mirrorHint(core.BaseNPM, "https://npm.acme.example", getenv); !strings.Contains(got, "the config sets") {
+		t.Errorf("config mirror: %q", got)
+	}
+	c := &Client{mirrors: map[string]string{}}
+	u, _ := url.Parse("https://registry.npmjs.org/left-pad")
+	if got := c.networkHint(u); got != hintNetwork {
+		t.Errorf("official source: %q", got)
 	}
 }
 
@@ -555,16 +575,18 @@ func TestGoldenErrors(t *testing.T) {
 	// the range and run in other processes at the same time, so one may
 	// bind the port between Close and the request; a few fresh ports
 	// make that race harmless.
-	want := "rhythm sightread: can't reach 127.0.0.1 (connection refused)\n  check the connection or HTTPS_PROXY"
 	var (
-		err error
-		c   *Client
-		v   any
+		err  error
+		c    *Client
+		v    any
+		want string
 	)
 	for range 5 {
 		l := listen(t)
 		closed := "https://" + l.Addr().String()
 		_ = l.Close()
+		want = "rhythm sightread: can't reach 127.0.0.1 (connection refused)\n  check the mirror at " + closed +
+			", which the config sets in place of the official source"
 		c = client(t, core.GetterConfig{Retries: -1, Bases: map[string]string{core.BaseNPM: closed}})
 		if err = c.JSON(context.Background(), closed+"/left-pad", &v, KindVersions); err != nil && err.Error() == want {
 			break

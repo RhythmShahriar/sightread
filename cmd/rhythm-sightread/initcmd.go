@@ -219,6 +219,11 @@ func initCI(dir string, o ciOptions, stdout io.Writer) error {
 	if !inRepo {
 		fmt.Fprintf(stdout, "No git repository found above %s, so the workflow went there.\n", shown(dir))
 	}
+	if actionSHA == "" {
+		fmt.Fprintf(stdout, "Warning: this %s is a %s build, so it can't pin the Action to a release commit.\n"+
+			"The workflow uses RhythmShahriar/sightread@v1: pin it to a commit SHA and set the version input it names.\n\n",
+			cli.Name(), version)
+	}
 	fmt.Fprintf(stdout, "Wrote %s: reviews lockfile changes on pull requests and everything each Monday, %s.\n\nNext steps:\n", rel, gate)
 	fmt.Fprintf(stdout, "  1. Review the file, then commit and push it:\n       git add %s\n       git commit -m \"ci: review updates with sightread\"\n", rel)
 	fmt.Fprintln(stdout, "  2. Protect .sightread/allowed.yaml with CODEOWNERS, so a pull request can't approve its own update:")
@@ -235,15 +240,15 @@ func initCI(dir string, o ciOptions, stdout io.Writer) error {
 // ciWorkflow is the workflow file. A release build pins the Action to
 // its own commit and names its version: a commit isn't a release tag,
 // so without the version input the Action would install the latest
-// release. A dev build has no commit to pin, so it writes @v1 and says
-// to pin it.
+// release. A dev build has no commit to pin, so it writes @v1, says to
+// pin it and leaves the version input as a comment to fill in.
 func ciWorkflow(o ciOptions, sha, ver string) string {
 	quoted := make([]string, len(lockfilePaths))
 	for i, p := range lockfilePaths {
 		quoted[i] = `"` + p + `"`
 	}
 	action := "RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below"
-	pinned := ""
+	pinned := "          # version: 1.2.3  # the release the commit above belongs to\n"
 	if sha != "" {
 		v := strings.TrimPrefix(ver, "v")
 		action = "RhythmShahriar/sightread@" + sha + " # v" + v

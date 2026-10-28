@@ -455,3 +455,34 @@ func TestChangelogQuote(t *testing.T) {
 		}
 	}
 }
+
+// TestNumberedOrder: updates worst first, findings by severity within
+// one, the order the terminal shows and explain counts.
+func TestNumberedOrder(t *testing.T) {
+	ups := []core.Update{
+		{Name: "a", Verdict: core.Routine, Findings: []core.Finding{{ID: "a-low", Severity: cli.SeverityLow}}},
+		{Name: "b", Verdict: core.Hold, Findings: []core.Finding{{ID: "b-high", Severity: cli.SeverityHigh}, {ID: "b-crit", Severity: cli.SeverityCritical}}},
+		{Name: "c", Verdict: core.Unverified},
+	}
+	var got []string
+	for _, f := range core.Numbered(ups) {
+		got = append(got, f.ID)
+	}
+	if want := []string{"b-crit", "b-high", "a-low"}; !slices.Equal(got, want) {
+		t.Errorf("numbered %q, want %q", got, want)
+	}
+	var names []string
+	for _, u := range core.WorstFirst(ups) {
+		names = append(names, u.Name)
+	}
+	if want := []string{"b", "c", "a"}; !slices.Equal(names, want) || ups[0].Name != "a" {
+		t.Errorf("worst first %q, want %q, input untouched", names, want)
+	}
+	nc := core.NotChecked{Name: "leftpadx", Version: "1.0.0", To: "1.0.1"}
+	if got := nc.Versions("→"); got != "1.0.0 → 1.0.1" {
+		t.Errorf("versions %q", got)
+	}
+	if got := (core.NotChecked{To: "4.2.1"}).Versions("to"); got != "4.2.1" {
+		t.Errorf("added package versions %q", got)
+	}
+}

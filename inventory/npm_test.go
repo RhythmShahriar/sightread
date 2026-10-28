@@ -147,13 +147,13 @@ func TestPackageLockV3SourcesAndScopes(t *testing.T) {
 		"xlsx@0.20.3": {version: "0.20.3", kind: core.ResolvedTarball, constraint: "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
 			path: "node_modules/xlsx", direct: true},
 	})
-	if got := reasons(p); got != "@acme/billing private, @acme/ui-kit private, xlsx vcs" {
+	if got := reasons(p); got != "@acme/billing private, @acme/ui-kit private, xlsx tarball" {
 		t.Errorf("not checked = %s", got)
 	}
 	// With the scope in config it is private but reviewed from there.
 	opt.NPMScopes = map[string]string{"@acme": "https://npm.acme.example"}
 	p = readNPMFixture(t, "v3", opt)
-	if got := reasons(p); got != "xlsx vcs" {
+	if got := reasons(p); got != "xlsx tarball" {
 		t.Errorf("configured scope: not checked = %s", got)
 	}
 	for _, in := range p.Installed {
@@ -164,7 +164,7 @@ func TestPackageLockV3SourcesAndScopes(t *testing.T) {
 	// Negative: no .npmrc, no config: @acme is an ordinary scope and the
 	// billing tarball's host is not a registry.
 	p = readNPMFixture(t, "v3", Options{})
-	if got := reasons(p); got != "@acme/billing vcs, xlsx vcs" {
+	if got := reasons(p); got != "@acme/billing tarball, xlsx tarball" {
 		t.Errorf("no npmrc: not checked = %s", got)
 	}
 }
@@ -216,7 +216,7 @@ func TestPnpmLock(t *testing.T) {
 			path: "node_modules/xlsx", direct: true},
 		"zod@3.23.8": {version: "3.23.8", constraint: "^3.23.0", path: "packages/shared/node_modules/zod", direct: true},
 	})
-	if got := reasons(p); got != "xlsx vcs" {
+	if got := reasons(p); got != "xlsx tarball" {
 		t.Errorf("not checked = %s", got)
 	}
 	lock, _ := os.ReadFile("testdata/npm/pnpm9/pnpm-lock.yaml")
@@ -348,7 +348,7 @@ func TestBunLock(t *testing.T) {
 		"undici-types@5.26.5":  {version: "5.26.5", path: "node_modules/undici-types"},
 		"xlsx@":                {kind: core.ResolvedTarball, constraint: "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz", path: "node_modules/xlsx", direct: true},
 	})
-	if got := reasons(p); got != "xlsx vcs" {
+	if got := reasons(p); got != "xlsx tarball" {
 		t.Errorf("not checked = %s", got)
 	}
 	lock, _ := os.ReadFile("testdata/npm/bun/bun.lock")

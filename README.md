@@ -21,8 +21,9 @@
   <a href="https://github.com/RhythmShahriar/rhythm/wiki/Sightread-CI">CI</a>
 </p>
 
-<!-- Screenshot: replaced at release with a frame of a real `rhythm sightread demo` run
-     (CLICOLOR_FORCE=1 COLORTERM=truecolor, DejaVu Sans Mono). -->
+<p align="center">
+  <img alt="The start of a real rhythm sightread demo run: two of three updates on HOLD and the npm update's findings, a fetched script run with eval, a new install script and a typosquatted dependency, each with its number for explain" src="docs/assets/demo.svg" width="720">
+</p>
 
 WordPress.org plugins and themes, Composer and npm, in one local, free tool. It diffs only what changed, ranks it, explains it and keeps a review record you commit next to your code.
 
@@ -46,6 +47,15 @@ rhythm install sightread
 
 That needs rhythm 0.9.0 or later (`rhythm update` gets it). No `rhythm` yet? `curl -fsSL https://rythm.sh/install | sh` on macOS and Linux, `irm https://rythm.sh/install.ps1 | iex` in Windows PowerShell. With Go: `go install github.com/RhythmShahriar/sightread/cmd/rhythm-sightread@latest`.
 
+From source, with Go and no module proxy beyond the first download:
+
+```sh
+git clone https://github.com/RhythmShahriar/sightread && cd sightread
+make build          # bin/rhythm-sightread
+```
+
+A source build reports its version as `dev`, in `version` and as `"version": "dev"` in the JSON, unless HEAD is on a release tag, which `make build` stamps, or you set it: `make build VERSION=1.0.0` (it passes `-ldflags "-X main.version=1.0.0"`). Everything else works the same, apart from `init ci`, which can't pin the Action to a release commit from a dev build and says so.
+
 `rhythm-sightread` works on its own; `rhythm sightread` (or `rhythm sr`) is the same tool through the rhythm CLI. `rhythm-sightread --help` lists every command and `rhythm-sightread help <command>` every flag of one.
 
 ## Quick start
@@ -67,7 +77,7 @@ Each update gets a verdict:
 | **REVIEW** | a high or medium finding worth a look |
 | **ROUTINE** | only low or info findings, or none |
 | **ALLOWED** | every finding is covered by a review you recorded for these exact bytes |
-| **UNVERIFIED** | Sightread couldn't check where the bytes came from, so it didn't diff them (unless `--allow-unverified`) |
+| **UNVERIFIED** | Sightread couldn't check where the bytes came from, so it didn't diff them. With `--allow-unverified` it does and shows what the findings alone would make it: `UNVERIFIED (would be HOLD)` |
 
 | You want to… | Run |
 |---|---|
@@ -124,7 +134,7 @@ Sightread diffs bytes only after they match what the source publishes. The repor
 | WordPress.org plugins | matches WordPress.org's own checksums (both come from WordPress.org, so this proves the copy was not changed on the way, not what the author intended) |
 | WordPress.org themes | downloaded over TLS from WordPress.org; WordPress.org publishes no theme checksums (`--svn-check` compares each file with themes.svn.wordpress.org) |
 | Composer | pinned to commit `<sha>`; Packagist publishes no archive hash for most packages |
-| A local zip (`--to-file`) | nothing to check it against, so the update is UNVERIFIED |
+| A local zip, tgz or folder (`--to-file` or `--from-file`) | nothing to check it against, so the update is UNVERIFIED, whichever side is local |
 
 ## Honest limits
 
@@ -168,7 +178,7 @@ Dependabot and Renovate pull requests get a read-only token: the gate and the jo
 | 3 | couldn't fetch, verify or check a package (with `--fail-on`, unless `--allow-partial` or `--allow-unverified`), a failed Soundcheck run, or a notification that failed under `--notify-strict` |
 | 130 | interrupted |
 
-Without `--fail-on` a run with gaps still exits 0 and says so in the verdict box and in the JSON (`complete: false`).
+Without `--fail-on` a run with gaps still exits 0 and says so in the verdict box and in the JSON (`complete: false`). A run that reviewed nothing because every package failed to fetch (a registry down, `--offline` with an empty cache) exits 3 whatever the flags, with `verdict: "error"` and the `E7` entries in `data.errors`: `--allow-partial` covers the gaps of a run that reviewed something, never a dead registry. An existing file `init` would replace without `--force` is a usage error, 2.
 
 ## Docs
 
@@ -193,12 +203,13 @@ Without `--fail-on` a run with gaps still exits 0 and says so in the verdict box
 
 ```sh
 git clone https://github.com/RhythmShahriar/sightread && cd sightread
+make build   # bin/rhythm-sightread (version dev unless HEAD is on a release tag)
 make hooks   # Conventional Commits check
 make check   # lint + tests
 make testbed # the fixture registries on 127.0.0.1, for end-to-end tests and the benchmark
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how signals and their fixtures work and the [shared CONTRIBUTING](https://github.com/RhythmShahriar/.github/blob/master/CONTRIBUTING.md) for the Rhythm-wide rules. What comes next is in the [ROADMAP](ROADMAP.md). Found a vulnerability in Sightread itself? Please [report it privately](https://github.com/RhythmShahriar/sightread/security/advisories/new).
+`cd testbed && . ./env.sh` then points Sightread at the testbed, so `rhythm-sightread plugin b01-widget --path projects/wp` reviews a plugin takeover with no site and no network (`make testbed PORT_BASE=38900` when 18900 is taken). See [CONTRIBUTING.md](CONTRIBUTING.md) for how signals and their fixtures work and the [shared CONTRIBUTING](https://github.com/RhythmShahriar/.github/blob/master/CONTRIBUTING.md) for the Rhythm-wide rules. What comes next is in the [ROADMAP](ROADMAP.md). Found a vulnerability in Sightread itself? Please [report it privately](https://github.com/RhythmShahriar/sightread/security/advisories/new).
 
 ## License
 

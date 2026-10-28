@@ -354,22 +354,5 @@ func Verdict(u *core.Update) core.Verdict {
 	if u.To.Verified == core.ByNone || u.From.Version != "" && u.From.Verified == core.ByNone {
 		return core.Unverified
 	}
-	worst, allowed := cli.SeverityNone, 0
-	for _, f := range u.Findings {
-		if f.Allowed != nil {
-			allowed++
-		}
-		if f.Counted() {
-			worst = max(worst, f.Severity)
-		}
-	}
-	switch {
-	case worst == cli.SeverityCritical:
-		return core.Hold
-	case worst >= cli.SeverityMedium:
-		return core.Review
-	case worst == cli.SeverityNone && allowed > 0:
-		return core.Allowed
-	}
-	return core.Routine
+	return u.FindingsVerdict()
 }

@@ -313,7 +313,7 @@ func TestRunCounts(t *testing.T) {
 		want string
 	}{
 		{"github budget", &core.Error{Code: core.EGitHubLimit, Exit: cli.ExitUnavailable, What: "x", Err: &fetch.ErrGitHubBudget{Limit: 60, Needed: 111}},
-			"rhythm-sightread composer: api.github.com allows 60 requests an hour without a token and this run needs about 111\n" +
+			"rhythm-sightread all: api.github.com allows 60 requests an hour without a token and this run needs about 111\n" +
 				"  set GITHUB_TOKEN (sent only to api.github.com); 1 of 2 packages were reviewed\n" + partial},
 		{"offline", stageErr(core.ENetwork, cli.ExitUnavailable, "", "can't reach repo.packagist.org (offline and not cached)",
 			"with --offline only cached data and archives are used; run once without it to fill the cache"),

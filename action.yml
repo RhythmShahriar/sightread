@@ -85,7 +85,7 @@ inputs:
     required: false
     default: "false"
   transitive:
-    description: '"true" reviews transitive Composer and npm dependencies too.'
+    description: '"true" reviews transitive Composer and npm dependencies too. Mode changes always does.'
     required: false
     default: "false"
   sarif:

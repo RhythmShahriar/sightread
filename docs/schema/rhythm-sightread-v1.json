@@ -621,6 +621,9 @@
         "version": {
           "type": "string"
         },
+        "to": {
+          "type": "string"
+        },
         "reason": {
           "type": "string",
           "enum": [
@@ -628,6 +631,7 @@
             "not-wporg",
             "private",
             "vcs",
+            "tarball",
             "unsupported-lock",
             "fetch-failed",
             "mu-plugin",

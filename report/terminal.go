@@ -75,6 +75,10 @@ type termView struct {
 
 	brand, bold, muted, mutedBold, warn, good, danger lipgloss.Style
 	re                                                *lipgloss.Renderer
+
+	// num is each finding's number as explain <report.json> <n> takes
+	// it: counted from 1 over every finding in report order.
+	num map[*core.Finding]int
 }
 
 func newTermView(r *core.Report, o core.WriteOptions) *termView {
@@ -101,7 +105,24 @@ func newTermView(r *core.Report, o core.WriteOptions) *termView {
 	t.warn = re.NewStyle().Foreground(lipgloss.Color(ui.Warn)).Bold(true)
 	t.good = re.NewStyle().Foreground(lipgloss.Color(ui.Ok))
 	t.danger = re.NewStyle().Foreground(lipgloss.Color(ui.Danger)).Bold(true)
+	t.num = map[*core.Finding]int{}
+	for i, f := range core.Numbered(r.Updates) {
+		t.num[f] = i + 1
+	}
 	return t
+}
+
+// place is a finding's file:line and its number, "includes/sync.php:13
+// #4", so explain <report.json> <n> can name it.
+func (t *termView) place(f *core.Finding) string {
+	n, ok := t.num[f]
+	switch {
+	case !ok:
+		return where(f)
+	case where(f) == "":
+		return "#" + strconv.Itoa(n)
+	}
+	return where(f) + " #" + strconv.Itoa(n)
 }
 
 // line writes one line.
@@ -268,6 +289,14 @@ func (t *termView) fromTo(u *core.Update) string {
 		arrow = " to "
 	}
 	return tt(u.From.Version) + arrow + tt(u.To.Version)
+}
+
+// arrow is "→", or "to" in plain mode.
+func (t *termView) arrow() string {
+	if t.o.Plain {
+		return "to"
+	}
+	return "→"
 }
 
 // mark is a ✓ or ✗ after a fact; plain mode has none.
@@ -574,6 +603,9 @@ func (t *termView) plainFinding(f *core.Finding) {
 	if w := where(f); w != "" {
 		head += " - " + w
 	}
+	if n, ok := t.num[f]; ok {
+		head += " (#" + strconv.Itoa(n) + ")"
+	}
 	t.line(head)
 	for _, l := range t.evidence(f, 0) {
 		t.line("  evidence: " + l)
@@ -634,7 +666,7 @@ func (t *termView) badge(f *core.Finding) string {
 func (t *termView) card(f *core.Finding) {
 	content := t.width - 1 // " ▌ " plus content spans the rule's width
 	col := content - titleIndent
-	title, loc := tt(f.Title), where(f)
+	title, loc := tt(f.Title), t.place(f)
 	var body []string
 	if loc != "" && lipgloss.Width(title)+2+lipgloss.Width(loc) <= col {
 		body = append(body, t.badge(f)+"  "+ui.Pad(t.bold.Render(title), col-lipgloss.Width(loc))+t.muted.Render(loc))
@@ -694,7 +726,7 @@ func (t *termView) compact(f *core.Finding) {
 	}
 	lead := "    " + t.sevStyle(f.Severity).Render(g) + "  "
 	col := t.width - 5
-	title, loc := tt(f.Title), where(f)
+	title, loc := tt(f.Title), t.place(f)
 	if loc != "" && lipgloss.Width(title)+2+lipgloss.Width(loc) <= col {
 		t.line(lead + ui.Pad(title, col-lipgloss.Width(loc)) + t.muted.Render(loc))
 		return
@@ -708,7 +740,7 @@ func (t *termView) compact(f *core.Finding) {
 // multi writes the table, then a section per update with findings.
 func (t *termView) multi() {
 	if len(t.r.Updates) == 0 {
-		t.line("  No updates to review.")
+		t.line("  " + emptyHeadline(t.r) + ".")
 		t.blank()
 		return
 	}
@@ -864,7 +896,7 @@ func (t *termView) plainTable(ups []*core.Update) {
 		if from == "" {
 			from = "new"
 		}
-		rows = append(rows, []string{strings.ToUpper(string(u.Verdict)), tt(u.Name), from, tt(u.To.Version), tableFindings(u)})
+		rows = append(rows, []string{verdictLabel(u), tt(u.Name), from, tt(u.To.Version), tableFindings(u)})
 	}
 	widths := make([]int, len(head))
 	for i, h := range head {
@@ -890,7 +922,7 @@ func (t *termView) fleetTable(ups []*core.Update) {
 	head := []string{"UPDATE", "VERDICT", "FINDINGS"}
 	rows := make([][]string, 0, len(ups))
 	for _, u := range ups {
-		v := strings.ToUpper(string(u.Verdict))
+		v := verdictLabel(u)
 		if n := len(u.Sites); n > 0 {
 			v += " on " + plural(n, "site", "sites")
 		}
@@ -957,7 +989,7 @@ func (t *termView) updateHeading(u *core.Update) {
 	if n := len(u.Sites); n > 0 {
 		name += " on " + plural(n, "site", "sites")
 	}
-	verdict := strings.ToUpper(string(u.Verdict))
+	verdict := verdictLabel(u)
 	if t.o.Plain {
 		t.line(verdict + ": " + name)
 		return
@@ -1078,8 +1110,8 @@ func (t *termView) notChecked() {
 	t.sectionHead("NOT CHECKED", n, t.mutedBold)
 	for _, nc := range t.r.NotChecked {
 		s := tt(nc.Name)
-		if nc.Version != "" {
-			s += " " + tt(nc.Version)
+		if v := nc.Versions(t.arrow()); v != "" {
+			s += " " + tt(v)
 		}
 		if nc.Eco != "" {
 			s += " (" + tt(string(nc.Eco)) + ")"
@@ -1161,6 +1193,17 @@ func updateSummary(u *core.Update) core.Summary {
 	return s
 }
 
+// verdictLabel is an update's verdict as the reports print it: "HOLD",
+// or "UNVERIFIED (would be HOLD)" for an update reviewed with
+// --allow-unverified, so its findings still say how bad it is.
+func verdictLabel(u *core.Update) string {
+	v := strings.ToUpper(string(u.Verdict))
+	if u.Verdict == core.Unverified && diffed(u) {
+		v += " (would be " + strings.ToUpper(string(u.FindingsVerdict())) + ")"
+	}
+	return v
+}
+
 // box writes the verdict box.
 func (t *termView) box() {
 	inner := t.width - 6
@@ -1170,7 +1213,7 @@ func (t *termView) box() {
 	if t.single() {
 		u := &t.r.Updates[0]
 		s = updateSummary(u)
-		v := strings.ToUpper(string(u.Verdict))
+		v := verdictLabel(u)
 		color = verdictColors[u.Verdict]
 		if t.o.Plain {
 			top = "Verdict: " + v

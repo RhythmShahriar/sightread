@@ -75,6 +75,10 @@ Soundcheck pages end with `Arguments after -- go to rhythm-soundcheck snapshot.`
   an update is safe. This notice is shown once.
   ```
 
+  When the first command is `demo`, which downloads nothing, the note says so:
+  `Note: real reviews download packages from WordPress.org, Packagist and npm and read them as
+  text; this demo stays on 127.0.0.1. ...`
+
 - Read-only line: the review commands tell the terminal writer whether `--soundcheck` is on
   (`WriteOptions.Soundcheck`), so it prints `Read-only. Sightread changes nothing on your site and
   never runs the code it downloads.` or, with `--soundcheck`, `Read-only here. --soundcheck

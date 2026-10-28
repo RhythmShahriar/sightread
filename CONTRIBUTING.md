@@ -6,6 +6,7 @@ This page covers what is particular to Sightread: how a signal is added, how it 
 rules that keep the fixtures and the fuzz corpus safe.
 
 ```sh
+make build   # bin/rhythm-sightread (version dev unless HEAD is on a release tag)
 make hooks   # Conventional Commits check
 make check   # lint + tests
 make fuzz    # every fuzz target for 30s (FUZZTIME=10m for longer; SHARD=n SHARDS=m for a part)

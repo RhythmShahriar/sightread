@@ -9,7 +9,8 @@ of a local file (--from-file, --to-file) or one whose archives are no longer
 cached shows the hunk the report saved.
 
 Flags:
-  --json   print the kind explain JSON document
+  --json   print the explain document as JSON (rhythm-sightread/v1, kind
+           explain)
 
 Examples:
   rhythm-sightread explain remote-fetch-exec

@@ -12,7 +12,7 @@ Commands:
   npm [<pkg>...]                review npm updates in the lockfile
   all [<path>]                  review every update a site or project has
   changes [--base <ref>]        review every version a lockfile change moves
-  explain <signal-id>           what a signal means and how to review it
+  explain <id> | <report> <n>   what a signal means and how to review it
   allow <eco:name@version>...   record a reviewed version
   watch -l <sites.yaml>         check sites on a schedule
   report <report.json>...       render saved JSON as Markdown, HTML or SARIF

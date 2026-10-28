@@ -13,8 +13,12 @@ SHARDS ?= 1
 
 .PHONY: build test test-short test-integrated lint fmt check hooks fuzz signals-doc testbed testbed-down perf bench reproduce actionlint
 
-build: ## build bin/rhythm-sightread
-	go build -o bin/rhythm-sightread ./cmd/rhythm-sightread
+# The version build stamps: the release tag when HEAD is exactly on one
+# (v1.0.0 gives 1.0.0), else dev. make build VERSION=1.0.0 sets it by hand.
+VERSION ?= $(shell git describe --tags --exact-match --match 'v*' 2>/dev/null | sed 's/^v//')
+
+build: ## build bin/rhythm-sightread (version from the release tag at HEAD, else dev)
+	go build -ldflags "-X main.version=$(or $(VERSION),dev)" -o bin/rhythm-sightread ./cmd/rhythm-sightread
 
 test: ## run every Go test with the race detector
 	go test -race ./...

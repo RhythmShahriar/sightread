@@ -32,11 +32,11 @@ func TestRereview(t *testing.T) {
 	req := request(t, "all")
 	req.Rereview = true
 	rep := review(t, req)
-	want := []string{"beta 2.0.0→2.1.0 routine", "wpforms-lite 1.9.0→1.9.1 hold"}
+	want := []string{"wpforms-lite 1.9.0→1.9.1 hold", "beta 2.0.0→2.1.0 routine"} // worst first
 	if got := names(rep); !reflect.DeepEqual(got, want) {
 		t.Fatalf("updates %q, want %q", got, want)
 	}
-	if u := rep.Updates[1]; u.Installed.Drift {
+	if u := rep.Updates[0]; u.Installed.Drift {
 		t.Errorf("a rereview compared the installed copy with the older release: %+v", u.Installed)
 	}
 }

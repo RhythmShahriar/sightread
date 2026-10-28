@@ -109,6 +109,7 @@
       "Eco": "",
       "Name": "wordpress",
       "Version": "6.6.2",
+      "To": "",
       "Reason": "core",
       "Text": "WordPress core is out of scope in v1",
       "Hint": "WordPress core updates come signed from WordPress.org"
@@ -117,6 +118,7 @@
       "Eco": "wp-plugin",
       "Name": "wordfence",
       "Version": "",
+      "To": "",
       "Reason": "fetch-failed",
       "Text": "the Tuner report has no version for it",
       "Hint": "give the version with --from \u003cversion\u003e, or read the site with --path or --wp"
@@ -125,6 +127,7 @@
       "Eco": "wp-plugin",
       "Name": "acme+pro",
       "Version": "1.0.0",
+      "To": "",
       "Reason": "not-wporg",
       "Text": "not on WordPress.org",
       "Hint": "give the vendor's zip with --to-file"

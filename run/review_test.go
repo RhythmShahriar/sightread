@@ -61,7 +61,7 @@ func TestReviewAll(t *testing.T) {
 	w.Detector.Set("countdown", "remote-fetch-exec")
 	req := request(t, "all")
 	rep := review(t, req)
-	want := []string{"akismet 5.3.3→5.3.5 routine", "countdown 2.6.7→2.6.8 hold"}
+	want := []string{"countdown 2.6.7→2.6.8 hold", "akismet 5.3.3→5.3.5 routine"} // worst first
 	if got := names(rep); !reflect.DeepEqual(got, want) {
 		t.Fatalf("updates %q, want %q", got, want)
 	}
@@ -71,7 +71,7 @@ func TestReviewAll(t *testing.T) {
 	if rep.Target.Path != req.Inventory.Root || rep.MinConfidence != "likely" {
 		t.Errorf("target %+v, min confidence %q", rep.Target, rep.MinConfidence)
 	}
-	if u := rep.Updates[1]; !u.To.Latest || u.To.Verified != core.ByChecksums || u.To.SHA256 == "" {
+	if u := rep.Updates[0]; !u.To.Latest || u.To.Verified != core.ByChecksums || u.To.SHA256 == "" {
 		t.Errorf("candidate side %+v", u.To)
 	}
 }
@@ -757,7 +757,7 @@ func TestTooLarge(t *testing.T) {
 	req := request(t, "npm")
 	req.Eco = core.NPM
 	rep := review(t, req)
-	want := core.NotChecked{Eco: core.NPM, Name: "huge-pkg", Version: "1.3.0", Reason: core.TooLarge,
+	want := core.NotChecked{Eco: core.NPM, Name: "huge-pkg", Version: "1.3.0", To: "1.4.0", Reason: core.TooLarge,
 		Text: "the 1.4.0 tarball of huge-pkg is over 256 MiB", Hint: "raise --max-size"}
 	if len(rep.NotChecked) != 1 || !reflect.DeepEqual(rep.NotChecked[0], want) {
 		t.Errorf("not checked %+v", rep.NotChecked)
@@ -870,7 +870,7 @@ func TestChanges(t *testing.T) {
 	req := request(t, "changes")
 	req.Changes = &core.ChangesRequest{Before: "a.json", After: "b.json"}
 	rep := review(t, req)
-	if got := names(rep); !reflect.DeepEqual(got, []string{"axios 1.14.0→1.14.1 routine", "plain-crypto-js →4.2.1 review"}) {
+	if got := names(rep); !reflect.DeepEqual(got, []string{"plain-crypto-js →4.2.1 review", "axios 1.14.0→1.14.1 routine"}) {
 		t.Fatalf("updates %q", got)
 	}
 	for _, s := range w.Detector.Subjects() {
@@ -880,7 +880,7 @@ func TestChanges(t *testing.T) {
 	}
 	// The added package points at the head lockfile line that pins it,
 	// so SARIF has a file and a line rather than the repository root.
-	if got := rep.Updates[1].Installed; got.Lockfile != "package-lock.json" || got.LockLine != 9 || got.Path != "" {
+	if got := rep.Updates[0].Installed; got.Lockfile != "package-lock.json" || got.LockLine != 9 || got.Path != "" {
 		t.Errorf("added package installed %+v", got)
 	}
 }

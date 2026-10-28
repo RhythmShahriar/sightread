@@ -57,6 +57,16 @@ type result struct {
 	errs       []core.ErrorEntry
 }
 
+// toVersion is the version t would move to, as far as the run knows
+// it: the fixed one of a lockfile change or --to, else the picked
+// candidate, else "".
+func (t *target) toVersion() string {
+	if t.toFile != "" {
+		return ""
+	}
+	return cmp.Or(t.toFixed, t.cand.Version)
+}
+
 // installed returns the first member's installed entry, or nil.
 func (t *target) installed() *core.Installed {
 	for _, m := range t.members {
@@ -98,6 +108,16 @@ func (r *reviewer) resolve(ctx context.Context, rep *core.Report) ([]*target, er
 	return r.resolveSite(ctx, rep)
 }
 
+// inventorySources is the config's sources as inventory reads them,
+// with the npm registry of SIGHTREAD_NPM_REGISTRY, which beats the
+// config: a lockfile entry resolved from that mirror is a registry
+// release, not a tarball from somewhere else.
+func (r *reviewer) inventorySources() *core.SourcesConfig {
+	src := r.cfg.Sources
+	src.NPM.Registry = cmp.Or(r.req.Getter.Bases[core.BaseNPM], src.NPM.Registry)
+	return &src
+}
+
 // readSite reads one site's inventory.
 func (r *reviewer) readSite(ctx context.Context, req core.InventoryRequest) (*core.Site, string, error) {
 	if r.inv == nil {
@@ -108,7 +128,7 @@ func (r *reviewer) readSite(ctx context.Context, req core.InventoryRequest) (*co
 		return nil, "", err
 	}
 	req.Root = root
-	req.Command, req.Log, req.Sources = r.req.Command, r.req.Log, &r.cfg.Sources
+	req.Command, req.Log, req.Sources = r.req.Command, r.req.Log, r.inventorySources()
 	site, err := r.inv.Read(ctx, req)
 	if err != nil {
 		return nil, root, withCommand(err, r.req.Command)
@@ -320,7 +340,7 @@ func (r *reviewer) resolveChanges(ctx context.Context, rep *core.Report) ([]*tar
 		return nil, err
 	}
 	cr.Repo = repo
-	cr.Sources = &r.cfg.Sources
+	cr.Sources = r.inventorySources()
 	cs, err := r.inv.Changes(ctx, cr)
 	if err != nil {
 		return nil, withCommand(err, r.req.Command)

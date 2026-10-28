@@ -26,23 +26,40 @@ import (
 // reportCommand is `report` (PRD 6.8): it renders saved JSON reports,
 // merged into one, to Markdown, HTML, SARIF or JSON without network.
 var reportCommand = &simpleCommand{
-	name: "report", args: "<report.json>... -o <file>", brief: "<report.json>...", summary: "render saved JSON as Markdown, HTML or SARIF",
+	name: "report", args: "<report.json>... [-o <file>]... [--md | --html | --sarif | --json]", brief: "<report.json>...", summary: "render saved JSON as Markdown, HTML or SARIF",
 	long: "Renders one or more JSON reports a review saved into another format, by the extension of each -o file: " +
-		".md, .html, .sarif or .json. Several reports merge into one, for example the reports of several CI jobs. " +
-		"It needs no network.",
-	examples: []string{"report review.json -o review.html", "report web.json api.json -o all.md -o all.sarif"},
+		".md, .html, .sarif or .json. --md, --html, --sarif or --json prints that format to stdout instead, for " +
+		"example to append to $GITHUB_STEP_SUMMARY. Several reports merge into one, for example the reports of " +
+		"several CI jobs. The JSONL stream comes only from a review (--jsonl). It needs no network.",
+	examples: []string{"report review.json -o review.html", "report web.json api.json -o all.md -o all.sarif",
+		"report review.json --md >> \"$GITHUB_STEP_SUMMARY\""},
 	flags: func(fs *flag.FlagSet, sf *simpleFlags) runFunc {
 		var outputs cli.RepeatFlag
 		fs.Var(&outputs, "output", "write the merged report to this `file` (repeatable; .md, .html, .sarif or .json)")
 		sf.short(fs, "o", "output")
 		redact := fs.Bool("redact-paths", os.Getenv("CI") != "", "show paths relative to the project only (default on when CI is set)")
 		diff := fs.Bool("diff", false, "keep every changed hunk the reports hold")
-		return func(_ context.Context, pos []string, stdout, _ io.Writer) error {
+		toStdout := map[string]*bool{
+			core.FormatMarkdown: fs.Bool("md", false, "print Markdown to stdout"),
+			core.FormatHTML:     fs.Bool("html", false, "print the HTML report to stdout"),
+			core.FormatSARIF:    fs.Bool("sarif", false, "print SARIF 2.1.0 to stdout"),
+			core.FormatJSON:     fs.Bool("json", false, "print the merged rhythm-sightread/v1 JSON report to stdout"),
+		}
+		return func(_ context.Context, pos []string, stdout, stderr io.Writer) error {
 			if len(pos) == 0 {
 				return cli.Usagef("report needs a JSON report: %s report <report.json>... -o <file>", cli.Name())
 			}
-			if len(outputs) == 0 {
-				return badFlag("report writes files: give -o <file> ending in .md, .html, .sarif or .json")
+			var printed []string
+			for _, f := range []string{core.FormatMarkdown, core.FormatHTML, core.FormatSARIF, core.FormatJSON} {
+				if *toStdout[f] {
+					printed = append(printed, f)
+				}
+			}
+			if len(printed) > 1 {
+				return badFlag("--md, --html, --sarif and --json each print to stdout: pick one and write the others with -o")
+			}
+			if len(outputs) == 0 && len(printed) == 0 {
+				return badFlag("report needs somewhere to write: -o <file> ending in .md, .html, .sarif or .json, or --md to print Markdown")
 			}
 			var files []output
 			for _, path := range outputs {
@@ -62,6 +79,10 @@ var reportCommand = &simpleCommand{
 			}
 			merged := mergeReports(reps)
 			o := core.WriteOptions{Program: cli.Name(), Version: version, Plain: true, RedactPaths: *redact, ShowDiff: *diff}
+			wrote := stdout
+			if len(printed) > 0 {
+				wrote = stderr // stdout carries the report
+			}
 			for _, f := range files {
 				b, err := render(f.format, merged, o)
 				if err != nil {
@@ -70,7 +91,15 @@ var reportCommand = &simpleCommand{
 				if err := run.WriteFile(f.path, b); err != nil {
 					return fmt.Errorf("-o %s: %w", f.path, err)
 				}
-				fmt.Fprintf(stdout, "wrote %s\n", shown(f.path))
+				fmt.Fprintf(wrote, "wrote %s\n", shown(f.path))
+			}
+			if len(printed) == 1 {
+				b, err := render(printed[0], merged, o)
+				if err != nil {
+					return err
+				}
+				_, err = stdout.Write(b)
+				return err
 			}
 			return nil
 		}
@@ -132,6 +161,8 @@ func mergeReports(reps []*core.Report) *core.Report {
 		m.Errors = append(m.Errors, r.Errors...)
 		m.Notes = append(m.Notes, r.Notes...)
 	}
+	// Worst first, as a review lists them and explain numbers them.
+	slices.SortStableFunc(m.Updates, func(a, b core.Update) int { return core.CompareUpdates(&a, &b) })
 	if s := core.GetScorer(); s != nil {
 		s.Summarise(m)
 	}
@@ -150,7 +181,7 @@ var verifyCommand = &simpleCommand{
 	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
 		var keys cli.RepeatFlag
 		fs.Var(&keys, "key", "also trust this public key `file` (repeatable)")
-		asJSON := fs.Bool("json", false, "print the kind verify JSON document")
+		asJSON := fs.Bool("json", false, "print the verify document as JSON (rhythm-sightread/v1, kind verify)")
 		configFile := fs.String("config", "", "read trusted_keys from this config `file`")
 		return func(_ context.Context, pos []string, stdout, _ io.Writer) error {
 			if len(pos) != 1 {

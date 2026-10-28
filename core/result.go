@@ -3,7 +3,11 @@
 
 package core
 
-import "time"
+import (
+	"slices"
+	"strings"
+	"time"
+)
 
 // Verdict is the outcome for one update (PRD 5.6).
 type Verdict string
@@ -16,6 +20,64 @@ const (
 	Allowed    Verdict = "allowed"
 	Unverified Verdict = "unverified"
 )
+
+// verdictRank orders verdicts as every report lists them, worst first.
+var verdictRank = map[Verdict]int{Hold: 0, Review: 1, Unverified: 2, Allowed: 3, Routine: 4}
+
+// Rank is v's place in report order: 0 for HOLD, then REVIEW,
+// UNVERIFIED, ALLOWED and ROUTINE; anything else ranks 5.
+func (v Verdict) Rank() int {
+	if r, ok := verdictRank[v]; ok {
+		return r
+	}
+	return len(verdictRank)
+}
+
+// CompareUpdates orders updates the way the terminal, Markdown, HTML and
+// JSON reports all list them and explain numbers their findings: worst
+// verdict first, then by name, ecosystem and versions.
+func CompareUpdates(a, b *Update) int {
+	if d := a.Verdict.Rank() - b.Verdict.Rank(); d != 0 {
+		return d
+	}
+	if a.Name != b.Name {
+		return strings.Compare(a.Name, b.Name)
+	}
+	if d := Ecosystems(); a.Eco != b.Eco {
+		return slices.Index(d, a.Eco) - slices.Index(d, b.Eco)
+	}
+	if a.From.Version != b.From.Version {
+		return strings.Compare(a.From.Version, b.From.Version)
+	}
+	return strings.Compare(a.To.Version, b.To.Version)
+}
+
+// WorstFirst returns pointers to ups in report order (CompareUpdates),
+// leaving ups as it is.
+func WorstFirst(ups []Update) []*Update {
+	out := make([]*Update, len(ups))
+	for i := range ups {
+		out[i] = &ups[i]
+	}
+	slices.SortStableFunc(out, CompareUpdates)
+	return out
+}
+
+// Numbered returns every finding of ups in the order explain numbers
+// them from 1 and the terminal shows them: updates worst first
+// (WorstFirst); within one update by severity, worst first, keeping the
+// report's order among equals.
+func Numbered(ups []Update) []*Finding {
+	var out []*Finding
+	for _, u := range WorstFirst(ups) {
+		start := len(out)
+		for i := range u.Findings {
+			out = append(out, &u.Findings[i])
+		}
+		slices.SortStableFunc(out[start:], func(a, b *Finding) int { return int(b.Severity) - int(a.Severity) })
+	}
+	return out
+}
 
 // Side is one version of an update as the report shows it.
 type Side struct {

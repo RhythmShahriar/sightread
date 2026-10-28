@@ -52,6 +52,32 @@ type Finding struct {
 	BelowConfidence bool
 }
 
+// FindingsVerdict is the verdict u's counted findings give on their
+// own, leaving out whether its bytes were verified: HOLD for a critical
+// one, REVIEW for high or medium, ALLOWED when every finding is allowed
+// and ROUTINE otherwise. An UNVERIFIED update reviewed with
+// --allow-unverified shows it as "would be HOLD".
+func (u *Update) FindingsVerdict() Verdict {
+	worst, allowed := cli.SeverityNone, 0
+	for _, f := range u.Findings {
+		if f.Allowed != nil {
+			allowed++
+		}
+		if f.Counted() {
+			worst = max(worst, f.Severity)
+		}
+	}
+	switch {
+	case worst == cli.SeverityCritical:
+		return Hold
+	case worst >= cli.SeverityMedium:
+		return Review
+	case worst == cli.SeverityNone && allowed > 0:
+		return Allowed
+	}
+	return Routine
+}
+
 // Counted reports whether f counts for the verdict and the gate.
 func (f *Finding) Counted() bool {
 	return f.Allowed == nil && !f.Ignored && !f.Baselined && !f.BelowConfidence

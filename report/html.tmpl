@@ -132,7 +132,7 @@ footer { margin-top: 32px; font-size: 13px; color: var(--muted); }
 </table>
 </section>
 {{- else}}
-<section class="card"><p>No updates to review.</p></section>
+<section class="card"><p>{{.Empty}}</p></section>
 {{- end}}
 
 {{- if .HasDiff}}

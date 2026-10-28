@@ -20,6 +20,11 @@ BENCH    ?=
 # auto (npm audit, composer audit, GuardDog when installed), all (adds
 # Soundcheck, which needs up-wp and takes several minutes), none.
 TOOLS    ?= auto
+# Where make up puts the registry: WordPress.org on PORT_BASE, Packagist,
+# GitHub, npm and OSV on the next four ports and codeload on PORT_BASE+8.
+# The canary and the webhook stay on 18905 and 18906. The benchmark
+# always uses the documented ports.
+PORT_BASE ?= 18900
 
 export GOWORK := off
 
@@ -34,15 +39,15 @@ up: ## start the registry, canary and webhook on 127.0.0.1 in the background
 	@for svc in registry canary webhook; do \
 		if [ -f $(PIDS)/$$svc ] && kill -0 "$$(cat $(PIDS)/$$svc)" 2>/dev/null; then echo "$$svc already up"; continue; fi; \
 		case $$svc in \
-		registry) $(BIN)/registry -packages packages -state state > state/$$svc.out 2>&1 & ;; \
+		registry) $(BIN)/registry -packages packages -state state -port-base $(PORT_BASE) > state/$$svc.out 2>&1 & ;; \
 		*) $(BIN)/$$svc -state state > state/$$svc.out 2>&1 & ;; \
 		esac; \
 		echo $$! > $(PIDS)/$$svc; \
 	done
 	@for i in $$(seq 1 50); do [ -f state/ca.pem ] && break; sleep 0.2; done
-	@echo "registry: https://127.0.0.1:18900-18904 and https://localhost:18908 (CA in state/ca.pem)"
+	@echo "registry: https://127.0.0.1:$(PORT_BASE)-$$(($(PORT_BASE)+4)) and https://localhost:$$(($(PORT_BASE)+8)) (CA in state/ca.pem)"
 	@echo "canary:   127.0.0.1:18905    webhook: http://127.0.0.1:18906"
-	@echo "point Sightread at it: see README.md, Run Sightread by hand"
+	@echo "point Sightread at it: . ./env.sh (from testbed/)"
 
 up-wp: ## start the sealed Docker WordPress on 127.0.0.1:18907 and seed it (e15)
 	@mkdir -p state/wp-share

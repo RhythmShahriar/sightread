@@ -24,7 +24,7 @@ var signalsCommand = &simpleCommand{
 		"project. Read one in full with {prog} explain <id>.",
 	examples: []string{"signals", "signals --json"},
 	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
-		asJSON := fs.Bool("json", false, "print the kind signals JSON document")
+		asJSON := fs.Bool("json", false, "print the signals document as JSON (rhythm-sightread/v1, kind signals)")
 		return func(_ context.Context, pos []string, stdout, _ io.Writer) error {
 			if len(pos) > 0 {
 				return cli.Usagef("signals takes no arguments, got %q", pos[0])

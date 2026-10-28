@@ -77,6 +77,7 @@ type htmlView struct {
 	Notes      []string
 	Incomplete string
 	Rows       []htmlRow
+	Empty      string // what the page says when Rows is empty
 	Cards      []htmlCard
 	HasDiff    bool
 	Soundcheck []htmlSoundcheck
@@ -204,12 +205,13 @@ func newHTMLView(r *core.Report, o core.WriteOptions) htmlView {
 				Counts: text(soundcheckCounts(sc)), Error: text(sc.Error), NotCompared: sc.NotCompared})
 		}
 	}
+	v.Empty = emptyHeadline(r) + "."
 	// Error codes stay in the JSON: the text says what to do.
 	_, rest := r.PairErrors()
 	for _, n := range r.NotChecked {
 		line := text(n.Name)
-		if n.Version != "" {
-			line += " " + text(n.Version)
+		if v := n.Versions("→"); v != "" {
+			line += " " + text(v)
 		}
 		if n.Eco != "" {
 			line += " (" + text(string(n.Eco)) + ")"
@@ -255,17 +257,7 @@ func orText(s, none string) string {
 // byVerdict returns the updates worst first, then by name, keeping the
 // pipeline's order among equals.
 func byVerdict(r *core.Report) []*core.Update {
-	ups := make([]*core.Update, 0, len(r.Updates))
-	for i := range r.Updates {
-		ups = append(ups, &r.Updates[i])
-	}
-	slices.SortStableFunc(ups, func(a, b *core.Update) int {
-		if d := rank(a.Verdict) - rank(b.Verdict); d != 0 {
-			return d
-		}
-		return strings.Compare(a.Name, b.Name)
-	})
-	return ups
+	return core.WorstFirst(r.Updates)
 }
 
 // worst ranks the worst counted finding for sorting: 0 critical, 5 none.
@@ -315,7 +307,7 @@ func incompleteParts(r *core.Report) []string {
 }
 
 func newHTMLCard(u *core.Update, anchor string, p paths, o core.WriteOptions) htmlCard {
-	c := htmlCard{Anchor: anchor, Verdict: strings.ToUpper(string(u.Verdict)), Class: string(u.Verdict),
+	c := htmlCard{Anchor: anchor, Verdict: verdictLabel(u), Class: string(u.Verdict),
 		Name: text(u.Name), Eco: text(string(u.Eco)), From: text(u.From.Version), To: text(u.To.Version),
 		Sites: texts(u.Sites), Source: text(u.To.Source), URL: defang(text(u.To.URL), nil), SHA256: text(u.To.SHA256),
 		Verified: u.To.Verified != "" && u.To.Verified != core.ByNone && u.To.Verified != core.ByFailed}

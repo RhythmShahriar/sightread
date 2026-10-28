@@ -31,6 +31,11 @@ type Options struct {
 	// the documented one, so unit tests run beside make up or a bench.
 	// Port maps a documented port to the bound one.
 	AnyPort bool
+	// PortBase moves every listener so the WordPress.org one is on
+	// PortBase and the others keep their distance from it (Packagist on
+	// PortBase+1 and so on, codeload on PortBase+8). Zero means the
+	// documented ports. Port maps a documented port to the moved one.
+	PortBase int
 	// Now is the run start, against which relative publish times resolve.
 	// The zero value means time.Now at New.
 	Now time.Time
@@ -158,6 +163,9 @@ func (r *Registry) Port(port int) int {
 // AnyPort.
 func (r *Registry) serve(port int, service string, mux *http.ServeMux) error {
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	if r.opts.PortBase != 0 {
+		addr = fmt.Sprintf("127.0.0.1:%d", r.opts.PortBase+port-ports.WPOrg)
+	}
 	if r.opts.AnyPort {
 		addr = "127.0.0.1:0"
 	}

@@ -15,5 +15,6 @@ jobs:
         with: {fetch-depth: 0}
       - uses: RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below
         with:
+          # version: 1.2.3  # the release the commit above belongs to
           fail-on: high
           comment: true

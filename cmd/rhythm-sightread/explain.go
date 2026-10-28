@@ -28,7 +28,7 @@ const explainContext = 6
 // of a saved report with its diff hunk from the archive cache.
 var explainCommand = &simpleCommand{
 	name: "explain", args: "<signal-id> | <report.json> <n|fingerprint>",
-	brief:   "<signal-id>",
+	brief:   "<id> | <report> <n>",
 	summary: "what a signal means and how to review it",
 	long: "With a signal ID, prints what the signal means, why it matters, how to review it, its usual false alarms and " +
 		"the incidents it is built on. It needs no network. With a saved JSON report and a finding's number (as the " +
@@ -37,7 +37,7 @@ var explainCommand = &simpleCommand{
 		"whose archives are no longer cached shows the hunk the report saved.",
 	examples: []string{"explain remote-fetch-exec", "explain review.json 3", "explain review.json 9f2c41aa07d3b6e1"},
 	flags: func(fs *flag.FlagSet, _ *simpleFlags) runFunc {
-		asJSON := fs.Bool("json", false, "print the kind explain JSON document")
+		asJSON := fs.Bool("json", false, "print the explain document as JSON (rhythm-sightread/v1, kind explain)")
 		return func(ctx context.Context, pos []string, stdout, _ io.Writer) error {
 			r := core.GetExplainRenderer()
 			if r == nil {
@@ -88,18 +88,15 @@ func readReport(command, path string) (*core.Report, error) {
 	return core.ReadReport(f)
 }
 
-// pickFinding finds a finding by its 1-based number across the report's
-// updates, in report order, or by its fingerprint.
+// pickFinding finds a finding by its 1-based number (core.Numbered, the
+// order the terminal numbers them in) or by its fingerprint.
 func pickFinding(rep *core.Report, path, sel string) (*core.Update, *core.Finding, error) {
 	n, isNumber := strconv.Atoi(sel)
-	count := 0
-	for i := range rep.Updates {
-		u := &rep.Updates[i]
-		for j := range u.Findings {
-			count++
-			if f := &u.Findings[j]; isNumber == nil && count == n || f.Fingerprint == sel {
-				return u, f, nil
-			}
+	all := core.Numbered(rep.Updates)
+	count := len(all)
+	for i, f := range all {
+		if isNumber == nil && i+1 == n || f.Fingerprint == sel {
+			return updateOf(rep, f), f, nil
 		}
 	}
 	what := fmt.Sprintf("%s has no finding with fingerprint %s", shown(path), sel)
@@ -107,6 +104,19 @@ func pickFinding(rep *core.Report, path, sel string) (*core.Update, *core.Findin
 		what = fmt.Sprintf("%s has no finding %d (it has %d)", shown(path), n, count)
 	}
 	return nil, nil, &core.Error{Code: core.EBadFlag, Exit: cli.ExitUsage, Command: "explain", What: what}
+}
+
+// updateOf is the update of rep that holds f.
+func updateOf(rep *core.Report, f *core.Finding) *core.Update {
+	for i := range rep.Updates {
+		u := &rep.Updates[i]
+		for j := range u.Findings {
+			if &u.Findings[j] == f {
+				return u
+			}
+		}
+	}
+	return nil
 }
 
 // findingHunks returns the hunks of the finding's file: diffed again

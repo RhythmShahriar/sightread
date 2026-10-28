@@ -455,7 +455,7 @@ func lockBumps(old, cur []core.Installed) ([]core.Bump, []core.NotChecked) {
 			k := to.Ref.String()
 			if !listed[k] {
 				listed[k] = true
-				nc = append(nc, notChecked(to.Ref.Eco, to.Ref.Name, to.Ref.Version, core.VCS))
+				nc = append(nc, notChecked(to.Ref.Eco, to.Ref.Name, to.Ref.Version, lockReason(&to)))
 			}
 			continue
 		}

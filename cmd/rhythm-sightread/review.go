@@ -73,7 +73,7 @@ var reviewCommands = []*reviewCommand{
 			"all --only wp-plugin:* --fail-on high"},
 		contacts: true},
 	{name: "changes", args: "[--base <ref>] [flags]", summary: "review every version a lockfile change moves",
-		long: "Reviews every package a lockfile change adds or moves, transitive ones included: each lockfile at --base " +
+		long: "Reviews every package a lockfile change adds or moves, direct and transitive alike (it takes no --transitive): each lockfile at --base " +
 			"against the working tree, or --before against --after with no git. Allow entries count from the base ref " +
 			"only, so a pull request can't approve its own update. This is what the GitHub Action runs on pull requests.",
 		examples: []string{"changes --base origin/main --fail-on high --md",
@@ -115,7 +115,7 @@ func (c *reviewCommand) parse(args []string, stdout, stderr io.Writer) (*plan, [
 	if cli.HasFlag(own, "h") || cli.HasFlag(own, "help") {
 		fs.SetOutput(stdout) // help asked for is not an error, so it goes to stdout
 	}
-	pos, err := cli.ParseArgs(fs, own)
+	pos, err := parseFlags(fs, own, c.name)
 	if err != nil {
 		return nil, nil, err
 	}

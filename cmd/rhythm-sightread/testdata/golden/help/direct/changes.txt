@@ -1,15 +1,14 @@
 Usage: rhythm-sightread changes [--base <ref>] [flags]
 
-Reviews every package a lockfile change adds or moves, transitive ones included:
-each lockfile at --base against the working tree, or --before against --after
-with no git. Allow entries count from the base ref only, so a pull request can't
-approve its own update. This is what the GitHub Action runs on pull requests.
+Reviews every package a lockfile change adds or moves, direct and transitive
+alike (it takes no --transitive): each lockfile at --base against the working
+tree, or --before against --after with no git. Allow entries count from the base
+ref only, so a pull request can't approve its own update. This is what the
+GitHub Action runs on pull requests.
 
 Versions:
   --path <folder>                the git repository folder whose lockfiles
                                  --base compares (default .)
-  --transitive                   composer and npm: review transitive
-                                 dependencies too
   --only <packages>              only these packages: ecosystem IDs or
                                  <eco>:<name> globs, e.g.
                                  wp-plugin:*,npm:@acme/*

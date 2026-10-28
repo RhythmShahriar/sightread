@@ -7,7 +7,8 @@ when the config has a soundcheck section, rhythm-soundcheck and rhythm-roadie
 are installed. --offline skips the network checks. Exit 1 when a check fails.
 
 Flags:
-  --json      print the kind doctor JSON document
+  --json      print the doctor document as JSON (rhythm-sightread/v1, kind
+              doctor)
   --offline   skip the network checks (also RHYTHM_OFFLINE)
   --plain     no symbols or color (also when stdout is not a terminal)
 

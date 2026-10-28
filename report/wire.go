@@ -170,6 +170,7 @@ type jsonNotChecked struct {
 	Ecosystem string `json:"ecosystem"`
 	Name      string `json:"name"`
 	Version   string `json:"version"`
+	To        string `json:"to,omitempty"`
 	Reason    string `json:"reason"`
 	Text      string `json:"text"`
 	Hint      string `json:"hint"`

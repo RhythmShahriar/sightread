@@ -153,7 +153,7 @@ func reportFromJSON(env *readEnvelope, d *jsonReview) (*core.Report, error) {
 	}
 	for _, n := range d.NotChecked {
 		r.NotChecked = append(r.NotChecked, core.NotChecked{Eco: core.Ecosystem(text(n.Ecosystem)), Name: text(n.Name),
-			Version: text(n.Version), Reason: core.NotCheckedReason(text(n.Reason)), Text: text(n.Text), Hint: text(n.Hint)})
+			Version: text(n.Version), To: text(n.To), Reason: core.NotCheckedReason(text(n.Reason)), Text: text(n.Text), Hint: text(n.Hint)})
 	}
 	if d.Updates != nil {
 		for i, ju := range *d.Updates {

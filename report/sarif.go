@@ -307,8 +307,8 @@ func sarifNotifications(r *core.Report) (notes []sarifNotification, failed bool)
 	}
 	for _, n := range r.NotChecked {
 		msg := text(n.Name)
-		if n.Version != "" {
-			msg += " " + text(n.Version)
+		if v := n.Versions("to"); v != "" {
+			msg += " " + text(v)
 		}
 		add("note", msg+" not checked: "+text(cmp.Or(n.Text, string(n.Reason))))
 	}

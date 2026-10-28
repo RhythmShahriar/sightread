@@ -1,16 +1,25 @@
-Usage: rhythm-sightread report <report.json>... -o <file>
+Usage: rhythm-sightread report <report.json>... [-o <file>]... [--md | --html | --sarif | --json]
 
 Renders one or more JSON reports a review saved into another format, by the
-extension of each -o file: .md, .html, .sarif or .json. Several reports merge
-into one, for example the reports of several CI jobs. It needs no network.
+extension of each -o file: .md, .html, .sarif or .json. --md, --html, --sarif or
+--json prints that format to stdout instead, for example to append to
+$GITHUB_STEP_SUMMARY. Several reports merge into one, for example the reports of
+several CI jobs. The JSONL stream comes only from a review (--jsonl). It needs
+no network.
 
 Flags:
   --diff                keep every changed hunk the reports hold
+  --html                print the HTML report to stdout
+  --json                print the merged rhythm-sightread/v1 JSON report to
+                        stdout
+  --md                  print Markdown to stdout
   -o, --output <file>   write the merged report to this file (repeatable; .md,
                         .html, .sarif or .json)
   --redact-paths        show paths relative to the project only (default on when
                         CI is set)
+  --sarif               print SARIF 2.1.0 to stdout
 
 Examples:
   rhythm-sightread report review.json -o review.html
   rhythm-sightread report web.json api.json -o all.md -o all.sarif
+  rhythm-sightread report review.json --md >> "$GITHUB_STEP_SUMMARY"

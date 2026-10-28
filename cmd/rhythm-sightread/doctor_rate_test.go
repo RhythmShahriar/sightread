@@ -23,8 +23,10 @@ func TestDoctorGitHubRate(t *testing.T) {
 	for _, c := range []struct {
 		name, token, want string
 	}{
-		{"token", coretest.FakeKey(coretest.KeyGitHub), "ok    GitHub token: set (sent only to api.github.com); 4321 of 5000 requests left this hour\n"},
-		{"no token", "", "warn  GitHub token: not set, so 57 of 60 requests left this hour; set GITHUB_TOKEN for Composer packages and tag checks\n"},
+		// The fake is a mirror, so the token goes to it and the
+		// api.github.com warning is left out.
+		{"token", coretest.FakeKey(coretest.KeyGitHub), "ok    GitHub token: set (sent only to 127.0.0.1); 4321 of 5000 requests left this hour\n"},
+		{"no token", "", "ok    GitHub token: not set; the mirror at 127.0.0.1 reports 57 of 60 requests left this hour\n"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			world(t)
