@@ -1,5 +1,5 @@
 Warning: this rhythm-sightread is a dev build, so it can't pin the Action to a release commit.
-The workflow uses RhythmShahriar/sightread@v1: pin it to a commit SHA and set the version input it names.
+The workflow uses RhythmShahriar/sightread@v1 with version: latest: pin it to a release commit SHA and set version to that release.
 
 Wrote ../.github/workflows/sightread.yml: reviews lockfile changes on pull requests and everything each Monday, fails on high or worse.
 

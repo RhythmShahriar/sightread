@@ -149,6 +149,20 @@ func TestInitCI(t *testing.T) {
 	// A release build pins the Action to its commit; this is PRD 16's file.
 	release := ciWorkflow(ciOptions{failOn: "high", comment: true}, "0123456789abcdef0123456789abcdef01234567", "1.0.0")
 	coretest.Golden(t, "init/sightread-release.yml", []byte(release))
+	// A dev or go install build writes a version line too, with a
+	// comment that matches it.
+	dev := string(b)
+	if !strings.Contains(dev, "uses: RhythmShahriar/sightread@v1 # pin this to a release commit SHA and set version below to that release\n") ||
+		!strings.Contains(dev, "\n          version: latest  # replace with the release of the commit pinned above, e.g. 1.2.3\n") ||
+		strings.Contains(dev, "# version:") {
+		t.Errorf("dev workflow without a version line:\n%s", dev)
+	}
+	// A build with a release version but no commit uses that release.
+	tagged := ciWorkflow(ciOptions{failOn: "high"}, "", "1.2.3")
+	if !strings.Contains(tagged, "uses: RhythmShahriar/sightread@v1.2.3 # pin this to the commit SHA of the v1.2.3 tag\n") ||
+		!strings.Contains(tagged, "\n          version: 1.2.3\n") {
+		t.Errorf("tagged workflow:\n%s", tagged)
+	}
 	sarif := ciWorkflow(ciOptions{failOn: "critical", sarif: true}, "", "dev")
 	if !strings.Contains(sarif, "  security-events: write\n") || !strings.Contains(sarif, "          sarif: true\n") ||
 		strings.Contains(sarif, "pull-requests") || strings.Contains(sarif, "comment:") {

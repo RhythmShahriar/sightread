@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -219,9 +220,15 @@ func initCI(dir string, o ciOptions, stdout io.Writer) error {
 	if !inRepo {
 		fmt.Fprintf(stdout, "No git repository found above %s, so the workflow went there.\n", shown(dir))
 	}
-	if actionSHA == "" {
+	switch {
+	case actionSHA != "":
+	case releaseVersion.MatchString(version):
+		v := strings.TrimPrefix(version, "v")
+		fmt.Fprintf(stdout, "Warning: this %s %s build doesn't know its release commit, so it can't pin the Action to it.\n"+
+			"The workflow uses the v%s tag with version: %s: pin the Action to that tag's commit SHA.\n\n", cli.Name(), v, v, v)
+	default:
 		fmt.Fprintf(stdout, "Warning: this %s is a %s build, so it can't pin the Action to a release commit.\n"+
-			"The workflow uses RhythmShahriar/sightread@v1: pin it to a commit SHA and set the version input it names.\n\n",
+			"The workflow uses RhythmShahriar/sightread@v1 with version: latest: pin it to a release commit SHA and set version to that release.\n\n",
 			cli.Name(), version)
 	}
 	fmt.Fprintf(stdout, "Wrote %s: reviews lockfile changes on pull requests and everything each Monday, %s.\n\nNext steps:\n", rel, gate)
@@ -237,22 +244,33 @@ func initCI(dir string, o ciOptions, stdout io.Writer) error {
 	return nil
 }
 
+// releaseVersion matches a release version such as 1.2.3 (or v1.2.3).
+var releaseVersion = regexp.MustCompile(`^v?[0-9]+\.[0-9]+\.[0-9]+$`)
+
 // ciWorkflow is the workflow file. A release build pins the Action to
 // its own commit and names its version: a commit isn't a release tag,
 // so without the version input the Action would install the latest
-// release. A dev build has no commit to pin, so it writes @v1, says to
-// pin it and leaves the version input as a comment to fill in.
+// release. A build with a release version but no commit (make build
+// VERSION=1.2.3) uses that release's tag and version. A dev or go
+// install build has neither: it writes @v1 with version: latest, which
+// is what @v1 installs anyway. It says to pin both.
 func ciWorkflow(o ciOptions, sha, ver string) string {
 	quoted := make([]string, len(lockfilePaths))
 	for i, p := range lockfilePaths {
 		quoted[i] = `"` + p + `"`
 	}
-	action := "RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below"
-	pinned := "          # version: 1.2.3  # the release the commit above belongs to\n"
-	if sha != "" {
-		v := strings.TrimPrefix(ver, "v")
+	v := strings.TrimPrefix(ver, "v")
+	var action, pinned string
+	switch {
+	case sha != "":
 		action = "RhythmShahriar/sightread@" + sha + " # v" + v
 		pinned = "          version: " + v + "\n"
+	case releaseVersion.MatchString(ver):
+		action = "RhythmShahriar/sightread@v" + v + " # pin this to the commit SHA of the v" + v + " tag"
+		pinned = "          version: " + v + "\n"
+	default:
+		action = "RhythmShahriar/sightread@v1 # pin this to a release commit SHA and set version below to that release"
+		pinned = "          version: latest  # replace with the release of the commit pinned above, e.g. 1.2.3\n"
 	}
 	var b strings.Builder
 	b.WriteString("name: Sightread\non:\n  pull_request:\n    paths: [" + strings.Join(quoted, ", ") + "]\n")

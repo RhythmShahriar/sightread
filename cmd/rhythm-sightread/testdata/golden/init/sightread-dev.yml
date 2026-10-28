@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with: {fetch-depth: 0}
-      - uses: RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below
+      - uses: RhythmShahriar/sightread@v1 # pin this to a release commit SHA and set version below to that release
         with:
-          # version: 1.2.3  # the release the commit above belongs to
+          version: latest  # replace with the release of the commit pinned above, e.g. 1.2.3
           fail-on: high
           comment: true

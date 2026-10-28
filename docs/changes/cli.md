@@ -332,8 +332,11 @@ when compare has changes at `--soundcheck-fail-on`.
   `rhythm sightread all`, `rhythm sightread init ci`).
 - `init ci [--fail-on high] [--sarif] [--comment] [--force]` writes
   `.github/workflows/sightread.yml` at the repository root (PRD 16's file, actions pinned by
-  commit with `version: <x.y.z>` under `with:`; a dev build writes
-  `RhythmShahriar/sightread@v1 # pin this to a commit SHA and set version below`). Output:
+  commit with `version: <x.y.z>` under `with:`; a build with a release version but no commit
+  uses that release's tag with `version: <x.y.z>`; a dev or `go install` build writes
+  `RhythmShahriar/sightread@v1 # pin this to a release commit SHA and set version below to that
+  release` with `version: latest  # replace with the release of the commit pinned above, e.g.
+  1.2.3`). Output:
 
   ```
   Wrote .github/workflows/sightread.yml: reviews lockfile changes on pull requests and everything each Monday, fails on high or worse.
