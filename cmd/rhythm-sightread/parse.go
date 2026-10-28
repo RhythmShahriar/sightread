@@ -42,7 +42,7 @@ var flagErr = []struct {
 }
 
 // parseFlags parses args with fs the way cli.ParseArgs does, flags
-// before or after the arguments, but reports a bad flag the PRD 10 way
+// before or after the arguments. It reports a bad flag the PRD 10 way
 // instead of the flag package's: the flag as the user typed it, one
 // hint and where every flag is listed, without dumping the help page.
 // -h and --help still print the help page and return cli.ErrHelp.

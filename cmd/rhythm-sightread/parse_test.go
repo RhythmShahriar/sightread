@@ -10,7 +10,7 @@ import (
 )
 
 // TestFlagErrors: a bad flag is named as typed, with one hint and where
-// the flags are listed, and no help page.
+// the flags are listed. No help page follows.
 func TestFlagErrors(t *testing.T) {
 	world(t)
 	for _, c := range []struct {
