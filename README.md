@@ -36,13 +36,15 @@ WordPress.org plugins and themes, Composer and npm, in one local, free tool. It 
 | [Roadie](https://github.com/RhythmShahriar/roadie) | Is my staging a safe copy of production? | the copy you test on |
 | **Sightread** | **What will this update really change?** | **the code an update brings** |
 
+All five run through [rhythm](https://github.com/RhythmShahriar/rhythm), one CLI that installs, updates and verifies them. They work on the same change: Tuner says a plugin needs updating, Sightread reads the update, Roadie gives you a safe staging copy, Soundcheck shows what the update did to the pages and Echo what it did to the messages.
+
 ## Install
 
 ```sh
 rhythm install sightread
 ```
 
-No `rhythm` yet? `curl -fsSL https://rythm.sh/install | sh` on macOS and Linux, `irm https://rythm.sh/install.ps1 | iex` in Windows PowerShell. With Go: `go install github.com/RhythmShahriar/sightread/cmd/rhythm-sightread@latest`.
+That needs rhythm 0.9.0 or later (`rhythm update` gets it). No `rhythm` yet? `curl -fsSL https://rythm.sh/install | sh` on macOS and Linux, `irm https://rythm.sh/install.ps1 | iex` in Windows PowerShell. With Go: `go install github.com/RhythmShahriar/sightread/cmd/rhythm-sightread@latest`.
 
 `rhythm-sightread` works on its own; `rhythm sightread` (or `rhythm sr`) is the same tool through the rhythm CLI. `rhythm-sightread --help` lists every command and `rhythm-sightread help <command>` every flag of one.
 
@@ -172,14 +174,20 @@ Without `--fail-on` a run with gaps still exits 0 and says so in the verdict box
 
 | | |
 |---|---|
+| [Overview](https://github.com/RhythmShahriar/rhythm/wiki/Sightread) | where Sightread fits, what it catches, how it works |
 | [Your first review](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-First-Review) | demo, one plugin, a whole site |
 | [Signal reference](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Signal-Reference) | every signal, its false-alarm guard and how to review it |
-| [Allow and baseline](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Allow-And-Baseline) | the review record and saved reports |
+| [Allow and baseline](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Allow-And-Baseline) | the review record, ignore entries and saved reports |
+| [Sources and integrity](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Sources-And-Integrity) | what each source can prove, premium plugins, mirrors |
+| [With Soundcheck and Roadie](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-With-Soundcheck) | install on staging and compare before and after |
 | [Watch](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Watch) | fleets on a schedule, notifications |
-| [With Soundcheck](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-With-Soundcheck) | install on staging and compare before and after |
-| [Sources and integrity](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Sources-And-Integrity) | what each source can prove |
-| [Configuration](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Configuration) | `.sightread/config.yaml` |
+| [CI and the GitHub Action](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-CI) | `init ci`, every input and output, Dependabot and Renovate |
+| [Configuration](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Configuration) | `.sightread/config.yaml`, sites files, the cache |
+| [Output and reports](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Output) | terminal, JSON, Markdown, HTML, SARIF, signed reports |
+| [Security model](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Security-Model) | what it runs, contacts, sends and writes |
 | [CLI reference](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-CLI-Reference) | every command, flag, exit code and file |
+| [FAQ and honest limits](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-FAQ) | common questions, errors and what a clean result doesn't prove |
+| [Benchmark](https://github.com/RhythmShahriar/rhythm/wiki/Sightread-Benchmark) | 23 bad and 15 good updates, how they're judged, the results |
 
 ## Contributing
 
