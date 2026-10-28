@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"unicode"
 
 	"github.com/RhythmShahriar/rhythm/kit/secrets"
 	"github.com/RhythmShahriar/rhythm/kit/term"
@@ -117,13 +118,38 @@ func (p paths) text(s string) string {
 		return s
 	}
 	if p.root != "" && strings.Contains(s, p.root) {
-		s = strings.ReplaceAll(s, p.root+string(filepath.Separator), "")
+		s = replacePrefix(s, p.root+string(filepath.Separator), "")
 		s = strings.ReplaceAll(s, p.root, ".")
 	}
 	if p.home != "" && strings.Contains(s, p.home) {
+		s = replacePrefix(s, p.home+string(filepath.Separator), "~/")
 		s = strings.ReplaceAll(s, p.home, "~")
 	}
 	return s
+}
+
+// replacePrefix replaces each prefix in s with repl and writes the rest
+// of that path with forward slashes, as path does, so a Windows path in
+// a message reads ~/other/x.php and not ~/other\x.php. The path runs to
+// the next space, quote or punctuation that ends it in a sentence.
+func replacePrefix(s, prefix, repl string) string {
+	var b strings.Builder
+	for {
+		i := strings.Index(s, prefix)
+		if i < 0 {
+			b.WriteString(s)
+			return b.String()
+		}
+		b.WriteString(s[:i])
+		b.WriteString(repl)
+		s = s[i+len(prefix):]
+		end := strings.IndexFunc(s, func(r rune) bool { return unicode.IsSpace(r) || strings.ContainsRune("\"'`:;,)]", r) })
+		if end < 0 {
+			end = len(s)
+		}
+		b.WriteString(filepath.ToSlash(s[:end]))
+		s = s[end:]
+	}
 }
 
 // toolVersion is the version a report names, "dev" when unset.
