@@ -87,6 +87,11 @@ func mutatePHP(src string, seed uint64) string {
 		if halted || i+1 >= len(toks) || !code(t.Kind) || !code(toks[i+1].Kind) {
 			continue
 		}
+		// "<?php(" is the short tag "<?" then the name php; a blank after
+		// php would make "<?php " the full open tag and drop that name.
+		if i > 0 && toks[i-1].Kind == php.OpenTag && toks[i-1].Text == "<?" && strings.EqualFold(text, "php") {
+			continue
+		}
 		// A small LCG picks about one gap in eight and a filler for it.
 		r = r*6364136223846793005 + 1442695040888963407
 		if r>>61 != 0 {
