@@ -57,8 +57,8 @@ testbed: ## start the fixture registries on 127.0.0.1
 testbed-down:
 	$(MAKE) -C testbed down
 
-perf: ## hold the speed targets: 2 s per plugin side and 50 MB/s of lexing
-	SIGHTREAD_PERF=1 go test -count=1 -run 'TestAnalyzePluginTime|TestLexThroughput' ./analyze ./lex/...
+perf: ## hold the speed targets: 2 s per plugin side, 50 MB/s of lexing and a 3 s demo
+	SIGHTREAD_PERF=1 go test -count=1 -run 'TestAnalyzePluginTime|TestLexThroughput|TestDemoIntegrated' ./analyze ./lex/... ./cmd/rhythm-sightread
 	go test -run '^$$' -bench BenchmarkAnalyzeWordPressPlugin -benchtime 3x ./analyze
 
 bench: build perf ## the speed targets, then the benchmark against the testbed; writes docs/benchmark.md

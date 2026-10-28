@@ -90,10 +90,29 @@ func TestDemoFlow(t *testing.T) {
 	}
 }
 
+// demoTarget is the demo's wall-clock budget: 3s when SIGHTREAD_PERF is
+// "1", twice that otherwise.
+func demoTarget(perf string) time.Duration {
+	if perf == "1" {
+		return 3 * time.Second
+	}
+	return 6 * time.Second
+}
+
+// TestDemoTarget pins the budget the demo is held to.
+func TestDemoTarget(t *testing.T) {
+	if got := demoTarget("1"); got != 3*time.Second {
+		t.Errorf("SIGHTREAD_PERF=1: %v, want 3s", got)
+	}
+	if got := demoTarget(""); got != 6*time.Second {
+		t.Errorf("default: %v, want 6s", got)
+	}
+}
+
 // TestDemoIntegrated runs the real pipeline against the demo server:
-// one ROUTINE and two HOLDs, in under 3 seconds, with nothing sent off
-// the machine (runDemo fails if anything tried). It needs every stage,
-// so it runs once the lanes are linked.
+// one ROUTINE and two HOLDs, in under 3 seconds without the race
+// detector, with nothing sent off the machine (runDemo fails if anything
+// tried). It needs every stage, so it runs once the lanes are linked.
 func TestDemoIntegrated(t *testing.T) {
 	for _, eco := range []core.Ecosystem{core.WPPlugin, core.NPM} {
 		coretest.NeedSource(t, eco)
@@ -108,8 +127,12 @@ func TestDemoIntegrated(t *testing.T) {
 	t.Setenv("RHYTHM_CONFIG_DIR", t.TempDir())
 	start := time.Now()
 	code, out, errOut := execute(t, "demo", "--plain")
-	if took := time.Since(start); took > 3*time.Second {
-		t.Errorf("the demo took %v, over 3s", took)
+	// The race detector slows the same work down several times over, so
+	// the 3s target is checked only without it. Shared runners vary, so by
+	// default it fails only past twice the target; SIGHTREAD_PERF=1 (make
+	// perf, the release checklist) holds it to the target.
+	if took := time.Since(start); !raceEnabled && took > demoTarget(os.Getenv("SIGHTREAD_PERF")) {
+		t.Errorf("the demo took %v, over %v", took, demoTarget(os.Getenv("SIGHTREAD_PERF")))
 	}
 	if code != cli.ExitOK || !strings.HasSuffix(out, endLines) {
 		t.Fatalf("exit %d\n%s\n%s", code, out, errOut)
