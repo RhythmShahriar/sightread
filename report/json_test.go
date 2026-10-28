@@ -213,6 +213,34 @@ func TestJSONFieldOrder(t *testing.T) {
 	}
 }
 
+// withoutHiddenFindings turns doc into a report written before hidden
+// findings were kept: the findings marked hidden and the flag removed.
+func withoutHiddenFindings(t *testing.T, doc []byte) []byte {
+	t.Helper()
+	var m map[string]any
+	if err := json.Unmarshal(doc, &m); err != nil {
+		t.Fatal(err)
+	}
+	for _, u := range m["data"].(map[string]any)["updates"].([]any) {
+		u := u.(map[string]any)
+		var kept []any
+		for _, f := range u["findings"].([]any) {
+			f := f.(map[string]any)
+			if f["hidden"] == true {
+				continue
+			}
+			delete(f, "hidden")
+			kept = append(kept, f)
+		}
+		u["findings"] = append([]any{}, kept...)
+	}
+	out, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
 func TestSummaryHasEveryKey(t *testing.T) {
 	doc := writeWith(t, core.FormatJSON, &core.Report{Kind: core.KindReview}, testOpts)
 	var r struct {
@@ -222,13 +250,14 @@ func TestSummaryHasEveryKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, k := range []string{"updates", "hold", "review", "routine", "allowed", "unverified", "critical", "high", "medium",
-		"low", "info", "baselined", "allowed_findings", "ignored", "demoted", "not_checked", "from_cache", "hidden"} {
+		"low", "info", "baselined", "allowed_findings", "ignored", "demoted", "not_checked", "from_cache", "hidden",
+		"counted", "counted_hidden", "not_counted_severe"} {
 		if n := r.Summary[k]; n == nil || *n != 0 {
 			t.Errorf("summary.%s = %v, want 0", k, n)
 		}
 	}
-	if len(r.Summary) != 18 {
-		t.Errorf("summary has %d keys, want 18", len(r.Summary))
+	if len(r.Summary) != 21 {
+		t.Errorf("summary has %d keys, want 21", len(r.Summary))
 	}
 	if !bytes.Contains(doc, []byte(`"updates": []`)) || !bytes.Contains(doc, []byte(`"errors": []`)) {
 		t.Errorf("empty lists are not written as []:\n%s", doc)
@@ -252,10 +281,44 @@ func TestEnvelopeVerdict(t *testing.T) {
 		{"update error", core.Report{Updates: []core.Update{{Errors: []core.ErrorEntry{{Code: core.EUnverifiable}}}}}, core.VerdictError},
 		{"interrupted", core.Report{StoppedBy: "interrupted"}, core.VerdictError},
 		{"not checked only", core.Report{NotChecked: []core.NotChecked{{Name: "x"}}}, core.VerdictOK},
+		{"hidden counted finding", core.Report{Updates: []core.Update{{Hidden: []core.Finding{counted}}}}, core.VerdictFindings},
+		{"blank hidden stand-in", core.Report{Updates: []core.Update{{Hidden: []core.Finding{{}}}}}, core.VerdictOK},
 	} {
 		if got := envelopeVerdict(&c.r); got != c.want {
 			t.Errorf("%s: %s, want %s", c.name, got, c.want)
 		}
+	}
+}
+
+// TestJSONHiddenFindings: hidden findings stay in data.updates[].findings
+// marked hidden. The summary counts them as the verdict does.
+func TestJSONHiddenFindings(t *testing.T) {
+	doc := writeWith(t, core.FormatJSON, hiddenReport(), testOpts)
+	var r struct {
+		Summary map[string]int `json:"summary"`
+		Verdict string         `json:"verdict"`
+		Data    struct {
+			Updates []struct {
+				Findings []struct {
+					ID     string `json:"id"`
+					Hidden bool   `json:"hidden"`
+				} `json:"findings"`
+				Hidden int `json:"hidden"`
+			} `json:"updates"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(doc, &r); err != nil {
+		t.Fatal(err)
+	}
+	fs := r.Data.Updates[0].Findings
+	if len(fs) != 1 || fs[0].ID != "cron-new-hook" || !fs[0].Hidden || r.Data.Updates[0].Hidden != 1 {
+		t.Errorf("findings %+v hidden %d, want the hidden finding marked", fs, r.Data.Updates[0].Hidden)
+	}
+	if s := r.Summary; s["low"] != 1 || s["counted"] != 1 || s["counted_hidden"] != 1 || s["hidden"] != 1 {
+		t.Errorf("summary %v, want the hidden low finding counted", s)
+	}
+	if r.Verdict != core.VerdictFindings {
+		t.Errorf("verdict %q, want findings", r.Verdict)
 	}
 }
 
@@ -341,14 +404,24 @@ func TestReadReportRoundTrip(t *testing.T) {
 			t.Errorf("%s: the report read back differs:\n%s", name, firstLineDiff(doc, again))
 		}
 	}
-	// Hidden findings come back as their number only.
+	// Hidden findings come back whole, as hidden ones.
 	hid := hiddenReport()
 	got, err := ReadReport(bytes.NewReader(writeWith(t, core.FormatJSON, hid, testOpts)))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if n := len(got.Updates[0].Hidden); n != 1 || got.Summary.Hidden != 1 || got.Updates[0].Hidden[0].Severity != cli.SeverityNone {
-		t.Errorf("hidden read back as %+v, summary %d", got.Updates[0].Hidden, got.Summary.Hidden)
+	if h := got.Updates[0].Hidden; len(h) != 1 || h[0].ID != "cron-new-hook" || h[0].Severity != cli.SeverityLow ||
+		len(got.Updates[0].Findings) != len(hid.Updates[0].Findings) || got.Summary.Hidden != 1 || got.Summary.CountedHidden != 1 {
+		t.Errorf("hidden read back as %+v, summary %+v", h, got.Summary)
+	}
+	// A report from before the hidden flag kept only their number: blank
+	// findings stand in for them.
+	got, err = ReadReport(bytes.NewReader(withoutHiddenFindings(t, writeWith(t, core.FormatJSON, hid, testOpts))))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if h := got.Updates[0].Hidden; len(h) != 1 || h[0].Severity != cli.SeverityNone {
+		t.Errorf("older hidden read back as %+v", h)
 	}
 	bad := bytes.ReplaceAll(writeWith(t, core.FormatJSON, hid, testOpts), []byte(`"hidden": 1`), []byte(`"hidden": -1`))
 	if _, err := ReadReport(bytes.NewReader(bad)); err == nil || !strings.Contains(err.Error(), "hidden -1") {

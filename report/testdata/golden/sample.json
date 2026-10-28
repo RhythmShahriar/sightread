@@ -22,7 +22,10 @@
     "demoted": 1,
     "not_checked": 1,
     "from_cache": 1,
-    "hidden": 0
+    "hidden": 0,
+    "counted": 51,
+    "counted_hidden": 0,
+    "not_counted_severe": 0
   },
   "verdict": "findings",
   "data": {
@@ -122,7 +125,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "version-republished",
@@ -142,7 +146,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "approved-version-changed",
@@ -162,7 +167,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "known-malicious",
@@ -182,7 +188,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "wporg-closed",
@@ -202,7 +209,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "archive-path-escape",
@@ -222,7 +230,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "remote-fetch-exec",
@@ -244,7 +253,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "decode-exec",
@@ -264,7 +274,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "admin-user-hidden",
@@ -284,7 +295,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "dependency-confusion",
@@ -304,7 +316,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "eval-dynamic",
@@ -326,7 +339,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           }
         ],
         "hunks": [
@@ -418,7 +432,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "archive-link",
@@ -438,7 +453,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "archive-collision",
@@ -458,7 +474,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "unanalysed",
@@ -478,7 +495,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "eval-dynamic",
@@ -498,7 +516,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "obfuscation",
@@ -518,7 +537,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "input-unserialize",
@@ -538,7 +558,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "write-outside-package",
@@ -558,7 +579,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "admin-user-create",
@@ -578,7 +600,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "capability-change",
@@ -598,7 +621,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "update-suppression",
@@ -618,7 +642,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "bot-cloaking",
@@ -638,7 +663,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "credential-access",
@@ -658,7 +684,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "data-exfil",
@@ -678,7 +705,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "code-in-asset",
@@ -698,7 +726,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "npm-install-script-new",
@@ -718,7 +747,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "composer-plugin-new",
@@ -738,7 +768,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "owner-change",
@@ -758,7 +789,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "provenance-dropped",
@@ -778,7 +810,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "typosquat",
@@ -798,7 +831,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "known-vulnerable",
@@ -818,7 +852,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "outbound-new-domain",
@@ -838,7 +873,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "rest-open-route",
@@ -858,7 +894,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "changelog-mismatch",
@@ -878,7 +915,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "dependency-new",
@@ -898,7 +936,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "composer-autoload-files",
@@ -918,7 +957,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "fresh-release",
@@ -938,7 +978,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "dormant-release",
@@ -958,7 +999,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "git-tag-missing",
@@ -978,7 +1020,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "size-jump",
@@ -998,7 +1041,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "unicode-hidden",
@@ -1018,7 +1062,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "secret-added",
@@ -1038,7 +1083,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "obfuscation",
@@ -1058,7 +1104,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "outbound-new-domain",
@@ -1078,7 +1125,8 @@
             "allowed": null,
             "baselined": true,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "outbound-new-domain",
@@ -1098,7 +1146,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": true,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "bot-cloaking",
@@ -1118,7 +1167,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": true
+            "below_confidence": true,
+            "hidden": false
           }
         ],
         "hunks": [],
@@ -1196,7 +1246,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "license-change",
@@ -1216,7 +1267,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "abandoned",
@@ -1236,7 +1288,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "local-drift",
@@ -1256,7 +1309,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "php-requirement",
@@ -1276,7 +1330,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           },
           {
             "id": "files-removed",
@@ -1296,7 +1351,8 @@
             "allowed": null,
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           }
         ],
         "hunks": [],
@@ -1384,7 +1440,8 @@
             },
             "baselined": false,
             "ignored": false,
-            "below_confidence": false
+            "below_confidence": false,
+            "hidden": false
           }
         ],
         "hunks": [],

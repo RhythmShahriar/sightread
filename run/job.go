@@ -807,6 +807,46 @@ func joinOr(parts []string) string {
 	return strings.Join(parts[:len(parts)-1], ", ") + " or " + parts[len(parts)-1]
 }
 
+// notCountedNote is the report note for findings --baseline or a config
+// ignore set aside, "" when there are none. It says how many and why,
+// so a report they leave without counted findings never reads as clean,
+// and warns when one of them is critical or high.
+func notCountedNote(s core.Summary) string {
+	n := s.Baselined + s.Ignored
+	if n == 0 {
+		return ""
+	}
+	var why []string
+	if s.Baselined > 0 {
+		why = append(why, fmt.Sprintf("%d in the --baseline report", s.Baselined))
+	}
+	if s.Ignored > 0 {
+		why = append(why, fmt.Sprintf("%d ignored by config", s.Ignored))
+	}
+	what := fmt.Sprintf("%d findings were", n)
+	if n == 1 {
+		what = "1 finding was"
+	}
+	note := fmt.Sprintf("%s not counted (%s)", what, joinAnd(why))
+	switch sev := s.NotCountedSevere; {
+	case sev == 1 && n == 1:
+		note += "; it is critical or high, so check it before you update"
+	case sev > 0:
+		note += fmt.Sprintf("; %d of them critical or high, so check them before you update", sev)
+	default:
+		note += "; the verdicts leave them out"
+	}
+	return note
+}
+
+// joinAnd lists parts as "a", "a and b" or "a, b and c".
+func joinAnd(parts []string) string {
+	if len(parts) < 2 {
+		return strings.Join(parts, "")
+	}
+	return strings.Join(parts[:len(parts)-1], ", ") + " and " + parts[len(parts)-1]
+}
+
 // hunks returns the hunks of the files counted findings point at, or of
 // every changed file with --diff or an HTML report.
 func (r *reviewer) hunks(ctx context.Context, d *core.Diff, u *core.Update) []core.Hunk {

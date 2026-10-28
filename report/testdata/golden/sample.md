@@ -7,7 +7,7 @@
 | Verdict | Update | From | To | Findings |
 |---|---|---|---|---|
 | 🛑 HOLD | countdown-timer-ultimate (wp-plugin) | 2.6.7 | 2.6.8 | 11 critical |
-| ⚠️ REVIEW | \@acme/widgets (npm) | 1.4.0 | 1.5.0 | 21 high, 12 medium |
+| ⚠️ REVIEW | \@acme/widgets (npm) | 1.4.0 | 1.5.0 | 21 high, 12 medium, 2 not counted |
 | ⚠️ UNVERIFIED | astra (wp-theme) | 4.8.0 | 4.8.1 | none |
 | ✅ ALLOWED | wordfence (wp-plugin) | 7.11.6 | 7.11.7 | 1 allowed |
 | ✅ ROUTINE | monolog/monolog (composer) | 3.12.0 | 3.12.1 | 3 low, 3 info |

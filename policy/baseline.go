@@ -38,13 +38,15 @@ type baselineDoc struct {
 				File        string       `json:"file"`
 				Evidence    core.Snippet `json:"evidence"`
 				Fingerprint string       `json:"fingerprint"`
+				Hidden      bool         `json:"hidden"`
 			} `json:"findings"`
 		} `json:"updates"`
 	} `json:"data"`
 }
 
 // LoadBaseline reads a saved kind review report and returns the
-// fingerprints of its findings (see core.Policy). A finding saved
+// fingerprints of its findings (see core.Policy), leaving out the ones
+// the report marks hidden. A finding saved
 // without a fingerprint gets the one core.Fingerprint gives it. A file
 // that is not a rhythm-sightread/v1 review report is an E12.
 func (s *Store) LoadBaseline(path string) (map[string]bool, error) {
@@ -79,6 +81,11 @@ func parseBaseline(r io.Reader, path string) (map[string]bool, error) {
 	set := map[string]bool{}
 	for _, u := range doc.Data.Updates {
 		for _, fd := range u.Findings {
+			if fd.Hidden {
+				// --id, --exclude-id or --severity kept it out of that
+				// report, so nobody saw it there.
+				continue
+			}
 			fp := fd.Fingerprint
 			if fp == "" {
 				fp = core.Fingerprint(u.Ecosystem, u.Name, u.To.Version, fd.ID, fd.File, fd.Evidence)

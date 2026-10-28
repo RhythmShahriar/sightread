@@ -1154,11 +1154,16 @@ func (t *termView) countsLine(s core.Summary) string {
 			parts = append(parts, t.sevStyle(c.sev).Render("■")+fmt.Sprintf(" %d %s", c.n, c.sev))
 		}
 	}
+	// The severity counts take in the hidden findings that count; this
+	// says how many those are.
+	if s.CountedHidden > 0 && len(parts) > 0 {
+		parts = append(parts, fmt.Sprintf("%d of them hidden", s.CountedHidden))
+	}
 	if s.AllowedFindings > 0 {
 		parts = append(parts, fmt.Sprintf("%d allowed", s.AllowedFindings))
 	}
-	if s.Hidden > 0 {
-		parts = append(parts, fmt.Sprintf("%d hidden", s.Hidden))
+	if n := s.Hidden - s.CountedHidden; n > 0 {
+		parts = append(parts, fmt.Sprintf("%d hidden", n))
 	}
 	if t.o.Plain {
 		return strings.Join(parts, ", ")
@@ -1166,13 +1171,18 @@ func (t *termView) countsLine(s core.Summary) string {
 	return strings.Join(parts, "   ")
 }
 
-// updateSummary counts one update the way Summarise counts a report.
+// updateSummary counts one update the way Summarise counts a report:
+// the severity counts take in the hidden findings that count.
 func updateSummary(u *core.Update) core.Summary {
 	var s core.Summary
-	for i := range u.Findings {
-		f := &u.Findings[i]
+	all := slices.Concat(u.Findings, u.Hidden)
+	for i := range all {
+		f := &all[i]
 		switch {
 		case f.Counted():
+			if i >= len(u.Findings) && f.Severity > cli.SeverityNone {
+				s.CountedHidden++
+			}
 			switch f.Severity {
 			case cli.SeverityCritical:
 				s.Critical++
@@ -1187,10 +1197,27 @@ func updateSummary(u *core.Update) core.Summary {
 			}
 		case f.Allowed != nil:
 			s.AllowedFindings++
+		case f.Ignored:
+			s.Ignored++
+		case f.Baselined:
+			s.Baselined++
 		}
 	}
 	s.Hidden = len(u.Hidden)
+	s.NotCountedSevere = u.SetAsideSevere()
 	return s
+}
+
+// notCountedBoxLine is the verdict box's line for a run whose findings
+// were all set aside by --baseline or a config ignore, in place of the
+// clean line: such a run is not clean, only quiet.
+func notCountedBoxLine(s core.Summary) string {
+	n := s.Baselined + s.Ignored
+	line := plural(n, "finding was", "findings were") + " not counted, so this is not a clean result."
+	if s.NotCountedSevere > 0 {
+		line += " Check the critical and high ones before you update."
+	}
+	return line
 }
 
 // verdictLabel is an update's verdict as the reports print it: "HOLD",
@@ -1267,7 +1294,11 @@ func (t *termView) box() {
 	}
 	unverified := s.Unverified > 0 || t.single() && t.r.Updates[0].Verdict == core.Unverified
 	if s.Critical+s.High+s.Medium+s.Low+s.Info == 0 && s.AllowedFindings == 0 && s.Hidden == 0 && !unverified && len(t.r.Updates) > 0 {
-		lines = append(lines, cleanLine)
+		if s.Baselined+s.Ignored > 0 {
+			lines = append(lines, notCountedBoxLine(s))
+		} else {
+			lines = append(lines, cleanLine)
+		}
 	}
 	incomplete := incompleteText(t.r)
 	if incomplete != "" {
@@ -1444,8 +1475,9 @@ func (t *termView) updateCommands() []string {
 	var one *core.Update
 	for _, u := range byVerdict(t.r) {
 		// An update with hidden findings is not offered: the reader
-		// hasn't seen what they say.
-		if u.Verdict != core.Routine && u.Verdict != core.Allowed || u.To.Version == "" || len(u.Hidden) > 0 {
+		// hasn't seen what they say. Nor is one with a critical or high
+		// finding the baseline or a config ignore set aside.
+		if u.Verdict != core.Routine && u.Verdict != core.Allowed || u.To.Version == "" || len(u.Hidden) > 0 || u.SetAsideSevere() > 0 {
 			continue
 		}
 		one = u

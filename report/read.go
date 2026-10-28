@@ -146,7 +146,8 @@ func reportFromJSON(env *readEnvelope, d *jsonReview) (*core.Report, error) {
 		Summary: core.Summary{Updates: s.Updates, Hold: s.Hold, Review: s.Review, Routine: s.Routine, Allowed: s.Allowed,
 			Unverified: s.Unverified, Critical: s.Critical, High: s.High, Medium: s.Medium, Low: s.Low, Info: s.Info,
 			Baselined: s.Baselined, AllowedFindings: s.AllowedFindings, Ignored: s.Ignored, Demoted: s.Demoted,
-			NotChecked: s.NotChecked, FromCache: s.FromCache, Hidden: s.Hidden},
+			NotChecked: s.NotChecked, FromCache: s.FromCache, Hidden: s.Hidden, CountedHidden: s.CountedHidden,
+			NotCountedSevere: s.NotCountedSevere},
 		Warnings: nilIfEmpty(texts(d.Warnings)),
 		Notes:    nilIfEmpty(texts(d.Notes)),
 		Errors:   errorsFromJSON(d.Errors),
@@ -208,13 +209,6 @@ func updateFromJSON(j *jsonUpdate) (core.Update, error) {
 	if j.Hidden < 0 {
 		return u, fmt.Errorf("hidden %d: want 0 or more", j.Hidden)
 	}
-	// The report keeps only the number of hidden findings. Blank ones
-	// stand in for them so a merged report counts them again; they have
-	// no severity, so they never trip a gate. The cap keeps a hostile
-	// number from allocating much.
-	if j.Hidden > 0 {
-		u.Hidden = make([]core.Finding, min(j.Hidden, maxHiddenRead))
-	}
 	var err error
 	if u.From, err = sideFromJSON("from", j.From); err != nil {
 		return u, err
@@ -230,7 +224,18 @@ func updateFromJSON(j *jsonUpdate) (core.Update, error) {
 		if err != nil {
 			return u, fmt.Errorf("findings[%d]: %w", i, err)
 		}
-		u.Findings = append(u.Findings, f)
+		if j.Findings[i].Hidden {
+			u.Hidden = append(u.Hidden, f)
+		} else {
+			u.Findings = append(u.Findings, f)
+		}
+	}
+	// A report older than the hidden flag keeps only the number of its
+	// hidden findings. Blank ones stand in for the rest so a merged
+	// report counts them again; they have no severity, so they never
+	// trip a gate. The cap keeps a hostile number from allocating much.
+	if n := min(j.Hidden, maxHiddenRead) - len(u.Hidden); n > 0 {
+		u.Hidden = append(u.Hidden, make([]core.Finding, n)...)
 	}
 	for _, h := range j.Hunks {
 		u.Hunks = append(u.Hunks, core.Hunk{Path: text(h.Path), OldStart: h.OldStart, OldLines: h.OldLines,

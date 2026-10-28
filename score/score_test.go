@@ -644,6 +644,32 @@ func TestSummarise(t *testing.T) {
 	}
 }
 
+// TestSummariseHiddenAndSetAside: the severity counts take in hidden
+// findings that count, so they agree with the verdict. Baselined
+// or ignored critical and high findings are counted apart.
+func TestSummariseHiddenAndSetAside(t *testing.T) {
+	crit := core.Finding{ID: "remote-fetch-exec", Severity: cli.SeverityCritical}
+	high := core.Finding{ID: "owner-change", Severity: cli.SeverityHigh}
+	low := core.Finding{ID: "cron-new-hook", Severity: cli.SeverityLow}
+	baselined, ignored, ignoredLow := crit, high, low
+	baselined.Baselined, ignored.Ignored, ignoredLow.Ignored = true, true, true
+	r := &core.Report{Updates: []core.Update{
+		{Verdict: core.Hold, Findings: []core.Finding{low}, Hidden: []core.Finding{crit, high, {}}},
+		{Verdict: core.Routine, Findings: []core.Finding{baselined, ignored, ignoredLow}},
+	}}
+	testScorer().Summarise(r)
+	s := r.Summary
+	if s.Critical != 1 || s.High != 1 || s.Low != 1 {
+		t.Errorf("severity counts %+v, want the hidden critical and high counted", s)
+	}
+	if s.Hidden != 3 || s.CountedHidden != 2 {
+		t.Errorf("hidden %d counted hidden %d, want 3 and 2 (a blank one never counts)", s.Hidden, s.CountedHidden)
+	}
+	if s.Baselined != 1 || s.Ignored != 2 || s.NotCountedSevere != 2 {
+		t.Errorf("baselined %d ignored %d severe %d, want 1, 2 and 2", s.Baselined, s.Ignored, s.NotCountedSevere)
+	}
+}
+
 func TestUnanalysedNote(t *testing.T) {
 	cfg := &core.Config{Signals: core.SignalConfig{Severity: map[string]string{"unanalysed": "medium"}}}
 	s := testScorer()

@@ -79,6 +79,24 @@ func TestLoadBaseline(t *testing.T) {
 	}
 }
 
+// TestLoadBaselineSkipsHidden: a finding --id, --exclude-id or
+// --severity hid in the saved report was never seen there, so it does
+// not join the baseline.
+func TestLoadBaselineSkipsHidden(t *testing.T) {
+	dir := inProject(t)
+	p := filepath.Join(dir, "base.json")
+	writeFile(t, p, `{"schema":"rhythm-sightread/v1","kind":"review","data":{"updates":[{"ecosystem":"npm","name":"a",
+		"to":{"version":"1.1.0"},"findings":[{"id":"cron-new-hook","fingerprint":"shown0000000000a"},
+		{"id":"eval-dynamic","fingerprint":"hidden000000000b","hidden":true}]}]}}`)
+	got, err := testStore(nil).LoadBaseline(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got["shown0000000000a"] || got["hidden000000000b"] || len(got) != 1 {
+		t.Errorf("baseline %v, want only the shown finding", got)
+	}
+}
+
 func TestLoadBaselineErrors(t *testing.T) {
 	dir := inProject(t)
 	cases := []struct{ name, content, want string }{

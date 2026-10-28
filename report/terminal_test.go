@@ -413,11 +413,56 @@ func TestTerminalHiddenNotClean(t *testing.T) {
 		if strings.Contains(out, "update it") {
 			t.Errorf("plain %v: the update hint with a hidden finding:\n%s", plain, out)
 		}
-		for _, want := range []string{"1 hidden", "1 finding is hidden by --severity medium"} {
+		for _, want := range []string{"1 low", "1 of them hidden", "1 finding is hidden by --severity medium"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("plain %v: missing %q:\n%s", plain, want, out)
 			}
 		}
+	}
+}
+
+// setAsideReport is smallReport with a critical finding the baseline
+// set aside and a low one config ignored: nothing counts.
+func setAsideReport() *core.Report {
+	r := smallReport()
+	r.Updates[0].Findings = []core.Finding{
+		{ID: "remote-fetch-exec", Title: "Fetches remote code and runs it", Severity: cli.SeverityCritical, Baselined: true},
+		{ID: "cron-new-hook", Title: "Schedules a new background task", Severity: cli.SeverityLow, Ignored: true},
+	}
+	coretest.FakeScorer{}.Summarise(r)
+	r.Complete = true
+	r.Notes = []string{"2 findings were not counted (1 in the --baseline report and 1 ignored by config); 1 of them critical or high, so check them before you update"}
+	return r
+}
+
+// TestTerminalSetAsideNotClean: a run whose findings the baseline or a
+// config ignore set aside never says it found no risk signals and, with
+// a critical or high one among them, never offers the update.
+func TestTerminalSetAsideNotClean(t *testing.T) {
+	for _, plain := range []bool{false, true} {
+		o := termOpts(120)
+		o.Plain = plain
+		out := writeTerm(t, setAsideReport(), o)
+		if strings.Contains(out, cleanLine) || strings.Contains(out, "No risk signals") {
+			t.Errorf("plain %v: the clean line with set-aside findings:\n%s", plain, out)
+		}
+		if strings.Contains(out, "update it") || strings.Contains(out, "npm install") {
+			t.Errorf("plain %v: the update hint with a set-aside critical finding:\n%s", plain, out)
+		}
+		for _, want := range []string{"2 findings were not counted, so this is not a clean result.", "1 in the baseline", "1 ignored by config"} {
+			if !strings.Contains(strings.Join(strings.Fields(out), " "), want) {
+				t.Errorf("plain %v: missing %q:\n%s", plain, want, out)
+			}
+		}
+	}
+	// Only a low finding set aside: still not clean. The update may
+	// be offered.
+	r := setAsideReport()
+	r.Updates[0].Findings = r.Updates[0].Findings[1:]
+	coretest.FakeScorer{}.Summarise(r)
+	out := writeTerm(t, r, termOpts(120))
+	if strings.Contains(out, cleanLine) || !strings.Contains(out, "1 finding was not counted") || !strings.Contains(out, "update it") {
+		t.Errorf("a low set-aside finding:\n%s", out)
 	}
 }
 

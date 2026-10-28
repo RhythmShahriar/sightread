@@ -180,6 +180,9 @@ func Review(ctx context.Context, req Request) (*core.Report, error) {
 	if n := rep.Summary.Hidden; n > 0 {
 		rep.Notes = append(rep.Notes, hiddenNote(&r.req, n))
 	}
+	if n := notCountedNote(rep.Summary); n != "" {
+		rep.Notes = append(rep.Notes, n)
+	}
 	if _, err := saveRun(r.cache, rep, r.req.Version, started); err != nil {
 		r.logf("runs: %v", err)
 	}

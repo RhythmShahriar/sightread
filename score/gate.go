@@ -18,10 +18,12 @@ import (
 // checked for a reason that is not informational (core and mu-plugin
 // are listed but never make a run partial) or the run stopped early. It
 // also adds the Notes lines Score left for the report's updates.
-// Severity counts are of counted findings only; allowed, ignored and
-// baselined findings have their own counts, findings --id, --exclude-id
-// and --severity hid are counted in Hidden alone and below-confidence
-// ones are in none.
+// Severity counts are of counted findings only, shown or hidden, so
+// they always agree with the verdicts: findings --id, --exclude-id and
+// --severity hid are counted there as well as in Hidden (and in
+// CountedHidden when they count). Allowed, ignored and baselined
+// findings have their own counts and below-confidence ones are in
+// none.
 func (s *Scorer) Summarise(r *core.Report) {
 	sum := core.Summary{Updates: len(r.Updates), NotChecked: core.CountNotChecked(r.NotChecked)}
 	errs := len(r.Errors)
@@ -43,8 +45,9 @@ func (s *Scorer) Summarise(r *core.Report) {
 			sum.FromCache++
 		}
 		sum.Hidden += len(u.Hidden)
+		sum.NotCountedSevere += u.SetAsideSevere()
 		errs += len(u.Errors)
-		for _, f := range u.Findings {
+		for j, f := range slices.Concat(u.Findings, u.Hidden) {
 			switch {
 			case f.Allowed != nil:
 				sum.AllowedFindings++
@@ -57,6 +60,11 @@ func (s *Scorer) Summarise(r *core.Report) {
 				continue
 			case f.BelowConfidence:
 				continue
+			}
+			// A report read back from an older JSON file stands in for
+			// its hidden findings with blank ones, which have no severity.
+			if j >= len(u.Findings) && f.Severity > cli.SeverityNone {
+				sum.CountedHidden++
 			}
 			if f.Demoted != "" {
 				sum.Demoted++

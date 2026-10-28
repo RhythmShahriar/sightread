@@ -78,6 +78,30 @@ func (u *Update) FindingsVerdict() Verdict {
 	return Routine
 }
 
+// SetAside is whether --baseline or a config ignore took f out of the
+// count. An allowed finding is not set aside: it was reviewed.
+func (f *Finding) SetAside() bool {
+	return f.Allowed == nil && (f.Baselined || f.Ignored)
+}
+
+// Severe reports whether f is critical or high.
+func (f *Finding) Severe() bool { return f.Severity >= cli.SeverityHigh }
+
+// SetAsideSevere counts u's findings, shown or hidden, that --baseline
+// or a config ignore took out of the count while they are critical or
+// high. Such an update is never offered as safe to install.
+func (u *Update) SetAsideSevere() int {
+	n := 0
+	for _, fs := range [][]Finding{u.Findings, u.Hidden} {
+		for i := range fs {
+			if fs[i].SetAside() && fs[i].Severe() {
+				n++
+			}
+		}
+	}
+	return n
+}
+
 // Counted reports whether f counts for the verdict and the gate.
 func (f *Finding) Counted() bool {
 	return f.Allowed == nil && !f.Ignored && !f.Baselined && !f.BelowConfidence

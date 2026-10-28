@@ -831,6 +831,11 @@ func TestFilters(t *testing.T) {
 	if rep.Summary.Hidden != 2 {
 		t.Errorf("summary.hidden %d, want 2", rep.Summary.Hidden)
 	}
+	// The summary counts what the verdicts rest on, the hidden findings
+	// included.
+	if s := rep.Summary; s.Critical != 2 || s.Low != 1 || s.CountedHidden != 2 {
+		t.Errorf("summary %+v, want 2 critical, 1 low, 2 of them hidden", s)
+	}
 	want := "2 findings are hidden by --severity medium or --exclude-id (they still count for the verdict and --fail-on)"
 	if !slices.Contains(rep.Notes, want) {
 		t.Errorf("notes %q, want %q", rep.Notes, want)

@@ -22,7 +22,10 @@
     "demoted": 0,
     "not_checked": 0,
     "from_cache": 0,
-    "hidden": 0
+    "hidden": 0,
+    "counted": 0,
+    "counted_hidden": 0,
+    "not_counted_severe": 0
   },
   "verdict": "ok",
   "data": {
@@ -69,7 +72,8 @@
       "allowed": null,
       "baselined": false,
       "ignored": false,
-      "below_confidence": false
+      "below_confidence": false,
+      "hidden": false
     },
     "hunks": [
       {

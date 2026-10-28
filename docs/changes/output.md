@@ -115,6 +115,25 @@ Findings with those fingerprints are set aside (`baselined: true`) and
 don't count; unignorable signals are never baselined. A file that is not
 a review report is E12 with the hint
 `--baseline takes the JSON a review wrote, such as -o sightread.json`.
+A finding the saved report marks `hidden` is not taken into the baseline.
+
+A run where the baseline or a config ignore set findings aside never
+reads as clean. The report note says how many and why:
+`7 findings were not counted (7 in the --baseline report); 5 of them
+critical or high, so check them before you update`. The terminal box
+reads `7 findings were not counted, so this is not a clean result.`, the
+Markdown heading `## Sightread: 1 update, 7 findings not counted` and the
+Findings cell `7 not counted`. The JSON summary keeps `baselined`,
+`ignored` and `not_counted_severe` (how many of them are critical or
+high). With a critical or high one among them no update command is
+offered.
+
+`--id`, `--exclude-id` and `--severity` only hide findings. Hidden
+findings stay in the JSON with `"hidden": true` and still count: the
+summary's severity counts and `counted` take them in, `counted_hidden`
+says how many of those are hidden and `hidden` counts every hidden
+finding. The terminal and the Findings cell read `1 critical, 2 high, 2
+of them hidden`.
 
 When `signals.severity.unanalysed` is below high the header says so and
 names the config file in use: `unanalysed lowered to medium by .sightread/config.yaml`.

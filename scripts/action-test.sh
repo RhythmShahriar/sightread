@@ -171,6 +171,18 @@ JSON
 act action-run.sh run MODE=all FAKE_JSON="$work/allowed.json"
 if out verdict=allowed; then ok "allowed outranks routine"; else bad "allowed outranks routine"; fi
 
+# The findings output counts what the verdicts rest on, hidden findings
+# included: summary.counted, not the sum of the severities a filter
+# could leave short.
+cat > "$work/hidden.json" <<'JSON'
+{"schema": "rhythm-sightread/v1", "kind": "review", "complete": true,
+ "summary": {"updates": 1, "hold": 1, "critical": 1, "high": 0, "medium": 0, "low": 0, "info": 0, "hidden": 3, "counted": 4,
+             "counted_hidden": 3},
+ "data": {"updates": [{"verdict": "hold"}]}}
+JSON
+act action-run.sh run MODE=all FAKE_JSON="$work/hidden.json"
+if out findings=4; then ok "findings counts hidden findings that count"; else bad "findings counts hidden findings that count"; fi
+
 # Findings at fail-on: exit 1 is passed on as the exit-code output.
 act action-run.sh run MODE=all FAKE_EXIT=1
 if [ "$code" = 0 ] && out exit-code=1 && out verdict=hold; then

@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 
+	"github.com/RhythmShahriar/rhythm/kit/cli"
 	"github.com/RhythmShahriar/sightread/core"
 )
 
@@ -133,8 +135,9 @@ func envelopeVerdict(r *core.Report) string {
 	failed := len(r.Errors) > 0 || r.StoppedBy != ""
 	for i := range r.Updates {
 		u := &r.Updates[i]
-		for j := range u.Findings {
-			if u.Findings[j].Counted() {
+		// A hidden finding still counts: it only left the report.
+		for _, f := range slices.Concat(u.Findings, u.Hidden) {
+			if f.Counted() && f.Severity > cli.SeverityNone {
 				return core.VerdictFindings
 			}
 		}
@@ -178,6 +181,7 @@ func summaryJSON(s core.Summary) jsonSummary {
 		Critical: s.Critical, High: s.High, Medium: s.Medium, Low: s.Low, Info: s.Info,
 		Baselined: s.Baselined, AllowedFindings: s.AllowedFindings, Ignored: s.Ignored, Demoted: s.Demoted,
 		NotChecked: s.NotChecked, FromCache: s.FromCache, Hidden: s.Hidden,
+		Counted: s.Critical + s.High + s.Medium + s.Low + s.Info, CountedHidden: s.CountedHidden, NotCountedSevere: s.NotCountedSevere,
 	}
 }
 
@@ -244,7 +248,7 @@ func updateJSON(u *core.Update, p paths) jsonUpdate {
 		Diff: jsonDiff{FilesChanged: u.Diff.FilesChanged, FilesAdded: u.Diff.FilesAdded, FilesRemoved: u.Diff.FilesRemoved,
 			LinesAdded: u.Diff.LinesAdded, LinesRemoved: u.Diff.LinesRemoved, BytesFrom: u.Diff.BytesFrom, BytesTo: u.Diff.BytesTo},
 		Changelog: []jsonChangelog{},
-		Findings:  make([]jsonFinding, 0, len(u.Findings)),
+		Findings:  make([]jsonFinding, 0, len(u.Findings)+len(u.Hidden)),
 		Hunks:     hunksJSON(u.Hunks),
 		Errors:    errorsJSON(u.Errors, p),
 		Sites:     list(texts(u.Sites)),
@@ -256,6 +260,17 @@ func updateJSON(u *core.Update, p paths) jsonUpdate {
 	}
 	for i := range u.Findings {
 		j.Findings = append(j.Findings, findingJSON(&u.Findings[i]))
+	}
+	// Hidden findings stay in the file, marked, after the shown ones: a
+	// script reading it sees what the verdict rests on. A blank one
+	// stands in for a finding an older report kept only the number of.
+	for i := range u.Hidden {
+		if u.Hidden[i].ID == "" {
+			continue
+		}
+		f := findingJSON(&u.Hidden[i])
+		f.Hidden = true
+		j.Findings = append(j.Findings, f)
 	}
 	if sc := u.Soundcheck; sc != nil {
 		j.Soundcheck = &jsonSoundcheck{Staging: text(sc.Staging), RoadieVerify: text(sc.RoadieVerify), Snapshot: text(sc.Snapshot),

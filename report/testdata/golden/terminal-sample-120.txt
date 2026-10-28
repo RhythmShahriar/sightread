@@ -6,7 +6,7 @@
 
   UPDATE                                  VERDICT             FINDINGS
   countdown-timer-ultimate 2.6.7 → 2.6.8  HOLD                11 critical
-  @acme/widgets 1.4.0 → 1.5.0             REVIEW              21 high, 12 medium
+  @acme/widgets 1.4.0 → 1.5.0             REVIEW              21 high, 12 medium, 2 not counted
   astra 4.8.0 → 4.8.1                     UNVERIFIED          not verified
   wordfence 7.11.6 → 7.11.7               ALLOWED             1 allowed
   monolog/monolog 3.12.0 → 3.12.1         ROUTINE             3 low, 3 info

@@ -199,7 +199,8 @@ func (FakeScorer) Summarise(r *core.Report) {
 			s.FromCache++
 		}
 		s.Hidden += len(u.Hidden)
-		for _, f := range u.Findings {
+		s.NotCountedSevere += u.SetAsideSevere()
+		for j, f := range slices.Concat(u.Findings, u.Hidden) {
 			switch {
 			case f.Allowed != nil:
 				s.AllowedFindings++
@@ -210,6 +211,9 @@ func (FakeScorer) Summarise(r *core.Report) {
 			case f.Ignored:
 				s.Ignored++
 				continue
+			}
+			if j >= len(u.Findings) && f.Severity > cli.SeverityNone {
+				s.CountedHidden++
 			}
 			if f.Demoted != "" {
 				s.Demoted++

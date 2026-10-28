@@ -156,7 +156,7 @@ outputs:
     description: How many updates were reviewed.
     value: ${{ steps.run.outputs.updates }}
   findings:
-    description: How many findings count, at every severity.
+    description: How many findings count, at every severity, including any --id, --exclude-id or --severity hid.
     value: ${{ steps.run.outputs.findings }}
   report:
     description: Path of the JSON report.

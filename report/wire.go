@@ -42,6 +42,14 @@ type jsonSummary struct {
 	NotChecked      int `json:"not_checked"`
 	FromCache       int `json:"from_cache"`
 	Hidden          int `json:"hidden"`
+	// Counted is every finding the verdicts rest on, shown or hidden:
+	// the sum of the severity counts. CountedHidden is how many of them
+	// --id, --exclude-id or --severity left out of the report.
+	Counted       int `json:"counted"`
+	CountedHidden int `json:"counted_hidden"`
+	// NotCountedSevere is how many baselined or ignored findings are
+	// critical or high.
+	NotCountedSevere int `json:"not_counted_severe"`
 }
 
 type jsonTarget struct {
@@ -130,6 +138,9 @@ type jsonFinding struct {
 	Baselined       bool             `json:"baselined"`
 	Ignored         bool             `json:"ignored"`
 	BelowConfidence bool             `json:"below_confidence"`
+	// Hidden marks a finding --id, --exclude-id or --severity left out
+	// of the report. It still counts for the verdict and --fail-on.
+	Hidden bool `json:"hidden"`
 }
 
 type jsonHunk struct {

@@ -239,11 +239,18 @@ func (m mdReport) heading() string {
 		return "## Sightread: " + joinAnd(parts)
 	case len(m.r.Updates) == 0:
 		return "## Sightread: " + lowerFirst(emptyHeadline(m.r))
-	case s.Hidden > 0:
-		// Hidden findings may be the very risk signals; the note says
-		// which flags hid them.
-		return fmt.Sprintf("## Sightread: %s, %s", plural(len(m.r.Updates), "update", "updates"),
-			plural(s.Hidden, "finding hidden", "findings hidden"))
+	}
+	// Hidden or set-aside findings may be the very risk signals; the
+	// notes say which flags hid them and why the others were not counted.
+	var aside []string
+	if s.Hidden > 0 {
+		aside = append(aside, plural(s.Hidden, "finding hidden", "findings hidden"))
+	}
+	if n := s.Baselined + s.Ignored; n > 0 {
+		aside = append(aside, plural(n, "finding not counted", "findings not counted"))
+	}
+	if len(aside) > 0 {
+		return fmt.Sprintf("## Sightread: %s, %s", plural(len(m.r.Updates), "update", "updates"), joinAnd(aside))
 	}
 	return fmt.Sprintf("## Sightread: no risk signals in %s", plural(len(m.r.Updates), "update", "updates"))
 }
@@ -289,18 +296,26 @@ func plural(n int, one, many string) string {
 // severities lists the levels worst first.
 var severities = []cli.Severity{cli.SeverityCritical, cli.SeverityHigh, cli.SeverityMedium, cli.SeverityLow, cli.SeverityInfo}
 
-// findingCounts is "2 critical, 1 high", "1 allowed", "3 hidden" or
-// "none".
+// findingCounts is "2 critical, 1 high, 1 of them hidden", "1 allowed", "3
+// hidden", "2 not counted" or "none". The severity counts take in the
+// hidden findings that count, as the verdict does. A part after them
+// says how many of those are hidden.
 func findingCounts(u *core.Update) string {
 	n := map[cli.Severity]int{}
-	allowed := 0
-	for i := range u.Findings {
-		f := &u.Findings[i]
+	allowed, aside, hiddenCounted := 0, 0, 0
+	all := slices.Concat(u.Findings, u.Hidden)
+	for i := range all {
+		f := &all[i]
 		switch {
-		case f.Counted():
+		case f.Counted() && f.Severity > cli.SeverityNone:
 			n[f.Severity]++
+			if i >= len(u.Findings) {
+				hiddenCounted++
+			}
 		case f.Allowed != nil:
 			allowed++
+		case f.SetAside():
+			aside++
 		}
 	}
 	var parts []string
@@ -309,11 +324,17 @@ func findingCounts(u *core.Update) string {
 			parts = append(parts, fmt.Sprintf("%d %s", n[s], s))
 		}
 	}
+	if hiddenCounted > 0 {
+		parts = append(parts, fmt.Sprintf("%d of them hidden", hiddenCounted))
+	}
 	if allowed > 0 {
 		parts = append(parts, fmt.Sprintf("%d allowed", allowed))
 	}
-	if n := len(u.Hidden); n > 0 {
+	if n := len(u.Hidden) - hiddenCounted; n > 0 {
 		parts = append(parts, fmt.Sprintf("%d hidden", n))
+	}
+	if aside > 0 {
+		parts = append(parts, fmt.Sprintf("%d not counted", aside))
 	}
 	if len(parts) == 0 {
 		return "none"
@@ -367,9 +388,11 @@ func (m mdReport) table(b *strings.Builder) {
 }
 
 // quiet reports whether u folds into the "with no risk signals" line: a
-// ROUTINE update with no finding hidden, since a hidden one may be a
-// risk signal.
-func quiet(u *core.Update) bool { return u.Verdict == core.Routine && len(u.Hidden) == 0 }
+// ROUTINE update with no finding hidden or set aside by --baseline or a
+// config ignore, since such a finding may be a risk signal.
+func quiet(u *core.Update) bool {
+	return u.Verdict == core.Routine && len(u.Hidden) == 0 && !slices.ContainsFunc(u.Findings, func(f core.Finding) bool { return f.SetAside() })
+}
 
 func countVerdict(ups []*core.Update, v core.Verdict) int {
 	n := 0

@@ -537,11 +537,32 @@ func TestMarkdownIncompleteLine(t *testing.T) {
 	}
 }
 
+// TestMarkdownSetAside: findings the baseline or a config ignore set
+// aside show in the heading, the row and the notes; the heading never
+// says there are no risk signals. The HTML table and notes say the same.
+func TestMarkdownSetAside(t *testing.T) {
+	out := writeMD(t, setAsideReport())
+	for _, want := range []string{"## Sightread: 1 update, 2 findings not counted", "| 2 not counted |", "2 findings were not counted"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "no risk signals") {
+		t.Errorf("says no risk signals:\n%s", out)
+	}
+	html := writeHTML(t, setAsideReport())
+	for _, want := range []string{">2 not counted</td>", "2 findings were not counted"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("HTML missing %q", want)
+		}
+	}
+}
+
 // TestMarkdownHidden: hidden findings show in the heading, the row and
 // the notes; the heading never says there are no risk signals.
 func TestMarkdownHidden(t *testing.T) {
 	out := writeMD(t, hiddenReport())
-	for _, want := range []string{"## Sightread: 1 update, 1 finding hidden", "| 1 hidden |", "1 finding is hidden by --severity medium"} {
+	for _, want := range []string{"## Sightread: 1 update, 1 finding hidden", "| 1 low, 1 of them hidden |", "1 finding is hidden by --severity medium"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q:\n%s", want, out)
 		}

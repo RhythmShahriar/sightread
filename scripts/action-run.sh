@@ -197,7 +197,10 @@ run() {
   local verdict updates findings
   verdict=$(jq -r '[.data.updates[]?.verdict] as $v | first(("hold", "review", "unverified", "allowed", "routine") as $w | select($v | index($w)) | $w) // "none"' "$json" 2> /dev/null || echo none)
   updates=$(jq -r '.summary.updates // 0' "$json" 2> /dev/null || echo 0)
-  findings=$(jq -r '[.summary.critical, .summary.high, .summary.medium, .summary.low, .summary.info] | map(. // 0) | add' "$json" 2> /dev/null || echo 0)
+  # findings is every finding the verdicts rest on, those --id,
+  # --exclude-id or --severity hid included: summary.counted. A report
+  # from before that field gets the sum of its severity counts.
+  findings=$(jq -r '.summary.counted // ([.summary.critical, .summary.high, .summary.medium, .summary.low, .summary.info] | map(. // 0) | add)' "$json" 2> /dev/null || echo 0)
   [ "${SUMMARY:-true}" != true ] || cat "$markdown" >> "$jobsummary" 2> /dev/null || true
   {
     echo "exit-code=$code"

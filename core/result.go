@@ -164,6 +164,14 @@ type Summary struct {
 	Critical, High, Medium, Low, Info                                   int
 	Baselined, AllowedFindings, Ignored, Demoted, NotChecked, FromCache int
 	Hidden                                                              int // left out by --id, --exclude-id or --severity
+	// CountedHidden is how many of the Hidden findings count for the
+	// verdict. The severity counts include them: they count every
+	// finding the verdicts rest on, shown or not.
+	CountedHidden int
+	// NotCountedSevere is how many of the Baselined and Ignored findings
+	// are critical or high. A report with one never reads as clean and
+	// never offers the update.
+	NotCountedSevere int
 }
 
 // Report is one review run, the data of a kind review document.
