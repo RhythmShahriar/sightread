@@ -58,18 +58,23 @@ func Render(r *Results, corpus string) string {
 	w("\n")
 
 	w("## 1.0 targets\n\n")
-	if r.Met() {
+	notRun := r.NotRunTargets()
+	switch {
+	case r.Met():
 		w("**Every target is met.**\n\n")
-	} else {
+	case !r.Partial && len(r.Failed()) == 0 && len(notRun) > 0:
+		var names []string
+		for _, t := range notRun {
+			names = append(names, t.Name+" ("+t.NotRun+")")
+		}
+		w("**Not every target was run, so not every target is met.** Nothing that ran failed. Not run on this machine: %s.\n\n",
+			strings.Join(names, "; "))
+	default:
 		w("**Not every target is met.** The bench exits non-zero until they are.\n\n")
 	}
 	w("| Target | Result | Detail |\n|---|---|---|\n")
 	for _, t := range r.Targets() {
-		res := "met"
-		if !t.Met {
-			res = "**NOT MET**"
-		}
-		w("| %s | %s | %s |\n", t.Name, res, cell(t.Detail))
+		w("| %s | %s | %s |\n", t.Name, t.Result(), cell(t.Detail))
 	}
 	w("\n")
 

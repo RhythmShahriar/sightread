@@ -6,14 +6,14 @@ We wrote Sightread and the testbed, so read this as a regression suite with a sc
 
 | | |
 |---|---|
-| Run | 2026-10-26 13:58 UTC, took 1m15s |
+| Run | 2026-10-28 15:51 UTC, took 3m14s |
 | Binary | rhythm-sightread dev |
 | Machine | linux/amd64, 16 CPUs, go1.27.3 |
 | Compared tools | none |
 
 ## 1.0 targets
 
-**Every target is met.**
+**Not every target was run, so not every target is met.** Nothing that ran failed. Not run on this machine: Every environment scenario passes (e13).
 
 | Target | Result | Detail |
 |---|---|---|
@@ -23,10 +23,10 @@ We wrote Sightread and the testbed, so read this as a regression suite with a sc
 | Exit codes, verdicts and Not checked as expected | met | none |
 | Zero false alarms in the control pass | met | 10 rounds, 150 runs, 0 false alarms, unstable: none |
 | Zero canary, egress, outside-write, unmasked-key and forwarded-token events | met | canary 0 connections and 0 files, egress 0, outside writes 0, unmasked keys 0, tokens sent to codeload 0 |
-| Every environment scenario passes | met | failed: none; not run here: e13, e15, applies, hold, production, roadie-failed, roadie-stale, roadie-unsealed, roadie-missing, remote-wp |
+| Every environment scenario passes | not run | 22 of 23 passed; failed: none; not run here: e13 |
 | Cold and warm runs agree | met | differ: none |
-| p01-large under 10 s warm and 512 MB RSS | met | warm 1.6 s, peak 80 MB (cold 1.8 s, 80 MB), exit 0 |
-| Full benchmark under 10 minutes | met | 1m15s |
+| p01-large under 10 s warm and 512 MB RSS | met | warm 1.5 s, peak 87 MB (cold 1.4 s, 87 MB), exit 0 |
+| Full benchmark under 10 minutes | met | 3m14s |
 
 ## Scoreboard
 
@@ -141,7 +141,7 @@ Each runs the real binary against the registry, the probes or a misbehaving fron
 | e12 | version unpublished from npm | pass | - |
 | e13 | Windows run catches b10 | not run | Windows only; the nightly bench-windows job runs it on windows-latest with -only e13 -plain-http |
 | e14 | bidi and ANSI escapes in the name and changelog | pass | - |
-| e15 | --soundcheck on the Docker WordPress with the Roadie stub | not run | 0 of 8 cases passed, 8 not run (see the e15 table) |
+| e15 | --soundcheck on the Docker WordPress with the Roadie stub | pass | 8 of 8 cases passed, 0 not run (see the e15 table) |
 
 ## --soundcheck end to end (e15)
 
@@ -149,14 +149,14 @@ Against the sealed Docker WordPress on 127.0.0.1:18907 with the Roadie stub. The
 
 | ID | Situation | Result | Notes |
 |---|---|---|---|
-| applies | update lands in the container only | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| hold | refused: hold | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| production | refused: production | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| roadie-failed | refused: roadie-failed | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| roadie-stale | refused: roadie-stale | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| roadie-unsealed | refused: roadie-unsealed | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| roadie-missing | refused: rhythm-roadie missing | not run | the Docker WordPress is not up (make -C testbed up-wp) |
-| remote-wp | refused: remote --wp prefix | not run | the Docker WordPress is not up (make -C testbed up-wp) |
+| applies | update lands in the container only | pass | exit 0, e15-soundcheck 1.0.0 to 1.1.0; Soundcheck's Chrome tried 202 outside calls; its own proxy guard refused every one (not counted as Sightread egress) |
+| hold | refused: hold | pass | exit 1, b01-widget 2.6.7 to 2.6.7 |
+| production | refused: production | pass | exit 2, e15-soundcheck 1.0.0 to 1.0.0 |
+| roadie-failed | refused: roadie-failed | pass | exit 3, e15-soundcheck 1.0.0 to 1.0.0 |
+| roadie-stale | refused: roadie-stale | pass | exit 3, e15-soundcheck 1.0.0 to 1.0.0 |
+| roadie-unsealed | refused: roadie-unsealed | pass | exit 3, e15-soundcheck 1.0.0 to 1.0.0 |
+| roadie-missing | refused: rhythm-roadie missing | pass | exit 3, e15-soundcheck 1.0.0 to 1.0.0 |
+| remote-wp | refused: remote --wp prefix | pass | exit 2, e15-soundcheck 1.0.0 to 1.0.0 |
 
 ## Reproducibility
 
@@ -166,50 +166,50 @@ Cold and warm runs gave the same outcome for 38 of 38 scenarios. `make -C testbe
 
 Wall time and peak RSS of the rhythm-sightread process (from its rusage), on the machine above. Cold is an empty cache, warm the second run on the same cache.
 
-p01-large (4021 files, 40 MB, not a scored scenario): cold 1.83 s and 80 MB, warm 1.62 s and 80 MB; target under 10s warm and under 512 MB.
+p01-large (4021 files, 40 MB, not a scored scenario): cold 1.40 s and 87 MB, warm 1.54 s and 87 MB; target under 10s warm and under 512 MB.
 
-Full benchmark: 1m15s; target under 10m0s.
+Full benchmark: 3m14s; target under 10m0s.
 
 | Scenario | Cold s | Warm s | Peak RSS MB |
 |---|---|---|---|
-| b01 | 0.13 | 0.02 | 80 |
-| b02 | 0.10 | 0.02 | 80 |
-| b03 | 0.10 | 0.02 | 80 |
-| b04 | 0.10 | 0.02 | 80 |
-| b05 | 0.16 | 0.02 | 80 |
-| b06 | 0.15 | 0.02 | 80 |
-| b07 | 0.15 | 0.02 | 80 |
-| b08 | 0.13 | 0.02 | 80 |
-| b09 | 0.12 | 0.02 | 80 |
-| b10 | 0.16 | 0.04 | 80 |
-| b11 | 0.18 | 0.04 | 80 |
-| b12 | 0.16 | 0.03 | 80 |
-| b13 | 0.15 | 0.05 | 80 |
-| b14 | 0.09 | 0.03 | 80 |
-| b15 | 0.06 | 0.03 | 80 |
-| b16 | 0.12 | 0.03 | 80 |
-| b17 | 0.18 | 0.05 | 80 |
-| b18 | 0.17 | 0.02 | 80 |
-| b19 | 0.19 | 0.03 | 80 |
-| b20 | 0.45 | 0.04 | 80 |
-| b21 | 0.49 | 0.02 | 80 |
-| b22 | 0.06 | 0.02 | 80 |
-| b23 | 0.34 | 0.04 | 80 |
-| g01 | 0.56 | 0.02 | 80 |
-| g02 | 0.33 | 0.02 | 80 |
-| g03 | 0.42 | 0.02 | 80 |
-| g04 | 0.22 | 0.03 | 80 |
-| g05 | 0.24 | 0.02 | 80 |
-| g06 | 0.31 | 0.02 | 80 |
-| g07 | 0.23 | 0.02 | 80 |
-| g08 | 0.27 | 0.03 | 80 |
-| g09 | 0.26 | 0.04 | 80 |
-| g10 | 1.48 | 0.03 | 80 |
-| g11 | 0.27 | 0.03 | 80 |
-| g12 | 0.09 | 0.03 | 80 |
-| g13 | 0.09 | 0.04 | 80 |
-| g14 | 0.67 | 0.04 | 80 |
-| g15 | 0.11 | 0.02 | 80 |
+| b01 | 0.11 | 0.02 | 87 |
+| b02 | 0.10 | 0.03 | 87 |
+| b03 | 0.10 | 0.02 | 87 |
+| b04 | 0.12 | 0.02 | 87 |
+| b05 | 0.10 | 0.02 | 87 |
+| b06 | 0.09 | 0.02 | 87 |
+| b07 | 0.10 | 0.02 | 87 |
+| b08 | 0.10 | 0.02 | 87 |
+| b09 | 0.08 | 0.04 | 87 |
+| b10 | 0.10 | 0.04 | 87 |
+| b11 | 0.11 | 0.05 | 87 |
+| b12 | 0.19 | 0.04 | 87 |
+| b13 | 0.11 | 0.04 | 87 |
+| b14 | 0.10 | 0.03 | 87 |
+| b15 | 0.09 | 0.03 | 87 |
+| b16 | 0.11 | 0.03 | 87 |
+| b17 | 0.17 | 0.04 | 87 |
+| b18 | 0.07 | 0.02 | 87 |
+| b19 | 0.06 | 0.03 | 87 |
+| b20 | 0.14 | 0.04 | 87 |
+| b21 | 0.09 | 0.02 | 87 |
+| b22 | 0.02 | 0.02 | 87 |
+| b23 | 0.10 | 0.03 | 87 |
+| g01 | 0.10 | 0.02 | 87 |
+| g02 | 0.09 | 0.02 | 87 |
+| g03 | 0.10 | 0.02 | 87 |
+| g04 | 0.10 | 0.02 | 87 |
+| g05 | 0.11 | 0.02 | 87 |
+| g06 | 0.10 | 0.02 | 87 |
+| g07 | 0.08 | 0.05 | 87 |
+| g08 | 0.12 | 0.02 | 87 |
+| g09 | 0.10 | 0.03 | 87 |
+| g10 | 0.16 | 0.03 | 87 |
+| g11 | 0.10 | 0.03 | 87 |
+| g12 | 0.08 | 0.03 | 87 |
+| g13 | 0.08 | 0.03 | 87 |
+| g14 | 0.61 | 0.05 | 87 |
+| g15 | 0.10 | 0.02 | 87 |
 
 ## Compared tools
 

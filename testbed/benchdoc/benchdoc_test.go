@@ -11,7 +11,8 @@ import (
 	"time"
 )
 
-// passing is a complete run that meets every target.
+// passing is a complete run where nothing fails. e13 is not run, as on
+// any machine but Windows; ranEverything runs it too.
 func passing() *Results {
 	ok := func(id, kind, status string, exit int) ScenarioResult {
 		return ScenarioResult{ID: id, Kind: kind, Title: id + " title", Status: status, Verdict: "HOLD", WantVerdict: "HOLD",
@@ -36,19 +37,57 @@ func passing() *Results {
 	}
 }
 
-func TestPassingRunMeetsEveryTarget(t *testing.T) {
+// ranEverything is passing with every environment scenario run: it
+// meets every target.
+func ranEverything() *Results {
 	r := passing()
+	r.Env[1].Result, r.Env[1].Notes = ResultPass, nil
+	return r
+}
+
+func TestPassingRunMeetsEveryTarget(t *testing.T) {
+	r := ranEverything()
 	for _, tg := range r.Targets() {
-		if !tg.Met {
+		if !tg.Met || tg.NotRun != "" || tg.Result() != "met" {
 			t.Errorf("%s not met: %s", tg.Name, tg.Detail)
 		}
 	}
-	if !r.Met() {
+	if !r.Met() || len(r.Failed()) != 0 {
 		t.Error("Met() = false for a passing run")
+	}
+	if page := Render(r, CorpusBlock("")); !strings.Contains(page, "**Every target is met.**") {
+		t.Error("a run that met every target does not say so")
 	}
 	r.Partial = true
 	if r.Met() {
 		t.Error("a partial run claimed the targets")
+	}
+}
+
+// TestNotRunIsNeverMet: a target whose cases did not all run is reported
+// as not run, never as met, though nothing failed.
+func TestNotRunIsNeverMet(t *testing.T) {
+	r := passing()
+	if r.Met() {
+		t.Error("Met() = true with e13 not run")
+	}
+	if f := r.Failed(); len(f) != 0 {
+		t.Errorf("not run counted as a failure: %+v", f)
+	}
+	nr := r.NotRunTargets()
+	if len(nr) != 1 || nr[0].Name != "Every environment scenario passes" || nr[0].NotRun != "e13" || nr[0].Result() != "not run" {
+		t.Errorf("not run targets %+v", nr)
+	}
+	page := Render(r, CorpusBlock(""))
+	if strings.Contains(page, "**Every target is met.**") || strings.Contains(page, "| Every environment scenario passes | met |") {
+		t.Errorf("a run with e13 not run claims every target:\n%s", page)
+	}
+	for _, want := range []string{"**Not every target was run, so not every target is met.**",
+		"Not run on this machine: Every environment scenario passes (e13).",
+		"| Every environment scenario passes | not run | 2 of 3 passed; failed: none; not run here: e13 |"} {
+		if !strings.Contains(page, want) {
+			t.Errorf("page misses %q", want)
+		}
 	}
 }
 
@@ -80,9 +119,9 @@ func TestEachFailureBreaksATarget(t *testing.T) {
 		"no report":       func(r *Results) { r.Scenarios[1].Status, r.Scenarios[1].WarmStatus = "no-report", "no-report" },
 	}
 	for name, breakIt := range cases {
-		r := passing()
+		r := ranEverything()
 		breakIt(r)
-		if r.Met() {
+		if r.Met() || len(r.Failed()) == 0 {
 			t.Errorf("%s: the run still meets every target", name)
 		}
 	}
@@ -90,7 +129,7 @@ func TestEachFailureBreaksATarget(t *testing.T) {
 	r := passing()
 	r.Scenarios[0].Status, r.Scenarios[0].Pending, r.Scenarios[0].Exit = "pending", "detector not merged", 0
 	r.Scenarios[0].WarmStatus, r.Scenarios[0].WarmExit = "pending", 0
-	if !r.Met() {
+	if len(r.Failed()) != 0 {
 		t.Errorf("a pending scenario broke the gate: %+v", r.Targets())
 	}
 }
@@ -101,7 +140,7 @@ func TestRender(t *testing.T) {
 	for _, want := range []string{
 		"# Sightread benchmark\n\n" + Header + "\n\n" + Framing,
 		"| Binary | rhythm-sightread 1.0.0 |",
-		"**Every target is met.**",
+		"**Not every target was run, so not every target is met.**",
 		"## Scoreboard",
 		"| b01 | b01 title | caught |",
 		"## False alarms",

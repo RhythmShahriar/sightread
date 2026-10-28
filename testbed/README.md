@@ -34,14 +34,17 @@ make -C testbed down
 The benchmark (`go run -tags testbed ./testbed/bench`) builds
 `bin/rhythm-sightread` from the checkout and starts its own registry,
 canary, webhook receiver, probes, fronts and proxy guard, so stop a
-`make up` first. It exits non-zero until every 1.0 target is met: every
+`make up` first. It exits non-zero while something that ran misses a 1.0 target: every
 non-pending bad scenario caught, zero false alarms on the good scenarios
 and in a 10-round control pass, every run writing a report, zero
 canary, egress, outside-write, unmasked-key and forwarded-token events,
 every environment scenario passing, cold and warm runs agreeing, p01-large under 10 s warm
 and 512 MB RSS, the whole run under 10 minutes. A run that wrote no
 report (a crash, a usage error, a timeout) is shown as NO REPORT, apart
-from misses and false alarms. A partial run (`-only`) never claims the
+from misses and false alarms. A target whose cases did not all run on
+the machine (e13 off Windows, the e15 cases without the Docker
+WordPress) is shown as not run, never as met. The page says which; it
+does not fail the exit. A partial run (`-only`) never claims the
 targets; it exits 0 when every scenario that ran passed.
 
 e13 runs only on Windows, where Go ignores `SSL_CERT_FILE`. There the

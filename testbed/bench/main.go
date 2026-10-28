@@ -10,7 +10,9 @@
 // testbed/scenarios.yaml through the real binary with every SIGHTREAD_*
 // base pointed at the registry, checks each review against its
 // expectation and writes docs/benchmark.md (see testbed/benchdoc). It
-// exits non-zero when a 1.0 target is not met.
+// exits non-zero when a 1.0 target is not met. A target whose cases did
+// not all run here is reported as not run, never as met. It does not
+// fail the exit.
 //
 // Run from the module root:
 //
@@ -110,13 +112,20 @@ func main() {
 		fmt.Println("bench: partial run (-only): every scenario that ran passed; the 1.0 targets are not claimed")
 		return
 	}
-	if !res.Met() {
-		for _, t := range res.Targets() {
-			if !t.Met {
-				fmt.Fprintf(os.Stderr, "bench: NOT MET: %s (%s)\n", t.Name, t.Detail)
-			}
+	if failed := res.Failed(); len(failed) > 0 {
+		for _, t := range failed {
+			fmt.Fprintf(os.Stderr, "bench: NOT MET: %s (%s)\n", t.Name, t.Detail)
 		}
 		os.Exit(1)
+	}
+	if !res.Met() {
+		// Nothing failed. Still, a target whose cases did not all run here
+		// is not met: say which, without failing the run.
+		for _, t := range res.NotRunTargets() {
+			fmt.Printf("bench: NOT RUN: %s (not run here: %s)\n", t.Name, t.NotRun)
+		}
+		fmt.Println("bench: nothing that ran failed; the targets above were not run here, so they are not met")
+		return
 	}
 	fmt.Println("bench: every 1.0 target met")
 }

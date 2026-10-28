@@ -11,11 +11,26 @@ import (
 	"github.com/RhythmShahriar/sightread/testbed/scenario"
 )
 
-// Target is one 1.0 target of PRD 19 and qa.md section 9.
+// Target is one 1.0 target of PRD 19 and qa.md section 9. Met is false
+// when something that ran failed it. NotRun lists what it covers that
+// did not run on this machine ("" when everything ran): such a target
+// is reported as not run, never as met, even when nothing failed.
 type Target struct {
 	Name   string
 	Met    bool
+	NotRun string
 	Detail string
+}
+
+// Result is the target's cell on the page: met, not run or NOT MET.
+func (t Target) Result() string {
+	switch {
+	case !t.Met:
+		return "**NOT MET**"
+	case t.NotRun != "":
+		return "not run"
+	}
+	return "met"
 }
 
 // Targets checks r against every 1.0 target, in the order the page
@@ -72,15 +87,21 @@ func (r *Results) Targets() []Target {
 		s.CanaryConnections, len(s.CanaryFiles), len(s.Egress), len(s.OutsideWrites), len(s.Unmasked), len(s.Forwarded))
 
 	var failed, notRun []string
-	for _, e := range append(append([]EnvResult(nil), r.Env...), r.Staging...) {
+	passed := 0
+	envs := append(append([]EnvResult(nil), r.Env...), r.Staging...)
+	for _, e := range envs {
 		switch e.Result {
+		case ResultPass:
+			passed++
 		case ResultFail:
 			failed = append(failed, e.ID)
 		case ResultNotRun:
 			notRun = append(notRun, e.ID)
 		}
 	}
-	add("Every environment scenario passes", len(failed) == 0, "failed: %s; not run here: %s", listOrNone(failed), listOrNone(notRun))
+	add("Every environment scenario passes", len(failed) == 0, "%d of %d passed; failed: %s; not run here: %s",
+		passed, len(envs), listOrNone(failed), listOrNone(notRun))
+	t[len(t)-1].NotRun = strings.Join(notRun, ", ")
 	add("Cold and warm runs agree", len(unstable) == 0, "differ: %s", listOrNone(unstable))
 	l := r.Large
 	if l.Ran {
@@ -94,17 +115,44 @@ func (r *Results) Targets() []Target {
 	return t
 }
 
-// Met reports whether every target is met by a complete run.
+// Met reports whether every target is met by a complete run: nothing
+// failed and everything ran. A target not run here is never met.
 func (r *Results) Met() bool {
 	if r.Partial {
 		return false
 	}
 	for _, t := range r.Targets() {
-		if !t.Met {
+		if !t.Met || t.NotRun != "" {
 			return false
 		}
 	}
 	return true
+}
+
+// Failed returns the targets something that ran failed. A complete run
+// exits non-zero when there is one; a target that was only not run here
+// (e13 off Windows, e15 without the Docker WordPress) does not fail the
+// exit. The page and the bench still never call it met.
+func (r *Results) Failed() []Target {
+	var out []Target
+	for _, t := range r.Targets() {
+		if !t.Met {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// NotRunTargets returns the targets nothing failed but some of whose
+// cases did not run here.
+func (r *Results) NotRunTargets() []Target {
+	var out []Target
+	for _, t := range r.Targets() {
+		if t.Met && t.NotRun != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // listOrNone joins ss, or says none.

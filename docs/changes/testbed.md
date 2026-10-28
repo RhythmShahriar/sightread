@@ -35,8 +35,11 @@ webhook, probes, fronts and proxy guard (stop a `make up` first). Flags:
 `-tools` (`auto`, `all`, `none` or names), `-rounds` (default 10),
 `-timeout` (default 2m), `-large`, `-plain-http` (default on Windows),
 `-diff a.json b.json`. It prints `bench: NOT MET: <target> (<detail>)`
-per failed target or `bench: every 1.0 target met`. Exit codes: 0 every
-target met, 1 a target not met, 2 a setup error. A partial run (`-only`)
+per failed target, `bench: NOT RUN: <target> (not run here: <ids>)` per
+target whose cases did not all run on the machine (e13 off Windows, e15
+without the Docker WordPress) or `bench: every 1.0 target met`. A target
+not run is never reported as met, on the page or in the output. Exit
+codes: 0 nothing that ran failed, 1 a target not met, 2 a setup error. A partial run (`-only`)
 never claims the targets: it prints `bench: partial run (-only): every
 scenario that ran passed; the 1.0 targets are not claimed` and exits 0,
 or `bench: partial run (-only): failed: <ids>` and exits 1.
