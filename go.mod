@@ -3,15 +3,15 @@ module github.com/RhythmShahriar/sightread
 go 1.27.3
 
 require (
-	github.com/RhythmShahriar/rhythm v0.8.0
+	github.com/RhythmShahriar/rhythm v0.9.0
 	github.com/charmbracelet/huh v1.0.0
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/x/term v0.2.2
 	github.com/muesli/termenv v0.16.0
-	golang.org/x/net v0.61.0
-	golang.org/x/sync v0.24.0
-	golang.org/x/sys v0.49.0
-	golang.org/x/text v0.43.0
+	golang.org/x/net v0.62.0
+	golang.org/x/sync v0.25.0
+	golang.org/x/sys v0.50.0
+	golang.org/x/text v0.44.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -96,7 +96,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
-	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/term v0.47.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
